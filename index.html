@@ -10,152 +10,151 @@
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Assistant:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#FAF9F6;
+  --paper:#FBFBFD;
   --card:#FFFFFF;
-  --ink:#1B2130;
-  --muted:#6E7480;
-  --line:#E8E5DE;
+  --ink:#1C1C22;
+  --muted:#71717A;
+  --line:#E8E8ED;
   --blue:#1E4E8C;
   --blue-d:#173E71;
-  --blue-soft:#EDF3FB;
+  --blue-soft:#EEF3FA;
   --gold:#A8873B;
-  --gold-soft:#F6F0E2;
+  --gold-soft:#F7F1E3;
   --green:#2E7D5B;
-  --green-soft:#E8F3EE;
-  --red:#B4433A;
+  --green-soft:#E9F4EF;
+  --red:#C0453C;
   --red-soft:#FBEDEC;
-  --radius:16px;
-  --shadow:0 1px 2px rgba(27,33,48,.05), 0 6px 24px rgba(27,33,48,.06);
+  --radius:18px;
+  --shadow:0 1px 2px rgba(28,28,34,.04), 0 8px 28px rgba(28,28,34,.06);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
-body{
-  font-family:'Assistant',system-ui,sans-serif;
-  background:var(--paper);
-  color:var(--ink);
-  min-height:100vh;
-  font-size:16px;
-  line-height:1.55;
-}
+body{font-family:'Assistant',system-ui,sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;font-size:16px;line-height:1.55}
 h1,h2,h3,.serif{font-family:'Frank Ruhl Libre',serif}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;font-size:inherit}
 input,textarea,select{font-family:inherit;font-size:16px;color:var(--ink)}
-::placeholder{color:#A9AEB8}
+::placeholder{color:#ABABB4}
 :focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:6px}
 
 /* ---------- Auth ---------- */
 .auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
-  background:linear-gradient(180deg,#F4F1EA 0%, var(--paper) 60%)}
+  background:linear-gradient(180deg,#F3F3F7 0%, var(--paper) 55%)}
 .auth-card{width:100%;max-width:400px;background:var(--card);border:1px solid var(--line);
-  border-radius:24px;padding:40px 32px;box-shadow:var(--shadow);text-align:center}
-.auth-mark{width:64px;height:64px;border-radius:18px;background:var(--blue);color:#fff;
+  border-radius:26px;padding:40px 32px 32px;box-shadow:var(--shadow);text-align:center;position:relative}
+.auth-mark{width:64px;height:64px;border-radius:19px;background:var(--blue);color:#fff;
   display:flex;align-items:center;justify-content:center;margin:0 auto 18px;
-  font-family:'Frank Ruhl Libre',serif;font-size:34px;font-weight:700;box-shadow:0 8px 20px rgba(30,78,140,.25)}
+  font-family:'Frank Ruhl Libre',serif;font-size:34px;font-weight:700;box-shadow:0 10px 24px rgba(30,78,140,.28)}
 .auth-card h1{font-size:30px;font-weight:900;margin-bottom:4px}
 .auth-sub{color:var(--muted);margin-bottom:26px;font-size:15px}
-.field{text-align:right;margin-bottom:14px}
+.auth-lang{position:absolute;top:16px;inset-inline-end:16px}
+.field{text-align:start;margin-bottom:14px}
 .field label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px}
-.field input, .field textarea, .field select{
-  width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#FCFBF9}
-.field input:focus, .field textarea:focus, .field select:focus{border-color:var(--blue);outline:none;background:#fff}
-.auth-err{display:none;background:var(--red-soft);color:var(--red);border-radius:10px;
-  padding:10px 14px;font-size:14px;margin-bottom:14px;text-align:right}
+.field input,.field textarea,.field select{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:13px;background:#FBFBFD}
+.field input:focus,.field textarea:focus{border-color:var(--blue);outline:none;background:#fff}
+.auth-err{display:none;background:var(--red-soft);color:var(--red);border-radius:11px;padding:10px 14px;font-size:14px;margin-bottom:14px;text-align:start}
 .auth-switch{margin-top:18px;font-size:14px;color:var(--muted)}
 .auth-switch button{color:var(--blue);font-weight:600}
 
 /* ---------- Buttons ---------- */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  background:var(--blue);color:#fff;font-weight:600;font-size:15px;
-  padding:11px 22px;border-radius:999px;transition:background .15s, transform .1s}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--blue);color:#fff;
+  font-weight:600;font-size:15px;padding:11px 22px;border-radius:999px;transition:background .15s, transform .1s}
 .btn:hover{background:var(--blue-d)}
 .btn:active{transform:scale(.98)}
 .btn.full{width:100%}
 .btn.ghost{background:transparent;color:var(--blue);border:1px solid #C9D6E8}
 .btn.ghost:hover{background:var(--blue-soft)}
 .btn.soft{background:var(--blue-soft);color:var(--blue)}
-.btn.soft:hover{background:#DFEAF8}
-.btn.danger{background:transparent;color:var(--red);border:1px solid #E7C9C6}
+.btn.soft:hover{background:#E1EAF6}
+.btn.danger{background:transparent;color:var(--red);border:1px solid #EACFCC}
 .btn.danger:hover{background:var(--red-soft)}
-.btn.sm{padding:7px 14px;font-size:14px}
+.btn.sm{padding:7px 15px;font-size:14px}
 .btn:disabled{opacity:.5;cursor:default}
-.iconbtn{width:36px;height:36px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;
-  color:var(--muted);transition:background .15s}
-.iconbtn:hover{background:#F0EEE8;color:var(--ink)}
+.iconbtn{width:36px;height:36px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);transition:background .15s;flex:none}
+.iconbtn:hover{background:#EFEFF4;color:var(--ink)}
 
-/* ---------- Header / Nav ---------- */
-header{position:sticky;top:0;z-index:50;background:rgba(250,249,246,.85);
-  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
-.hbar{max-width:920px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:14px}
-.hmark{width:38px;height:38px;border-radius:11px;background:var(--blue);color:#fff;flex:none;
+/* ---------- Header ---------- */
+header{position:sticky;top:0;z-index:50;background:rgba(251,251,253,.82);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
+.hbar{max-width:940px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:12px}
+.hmark{width:38px;height:38px;border-radius:12px;background:var(--blue);color:#fff;flex:none;
   display:flex;align-items:center;justify-content:center;font-family:'Frank Ruhl Libre',serif;font-size:20px;font-weight:700}
-.htitle{font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:19px}
+.htitle{font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:19px;white-space:nowrap}
 .hspace{flex:1}
-.huser{font-size:14px;color:var(--muted)}
-.huser b{color:var(--ink)}
-nav.tabs{max-width:920px;margin:0 auto;padding:0 20px 10px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.langtoggle{display:flex;background:#EFEFF4;border-radius:999px;padding:3px;flex:none}
+.langtoggle button{padding:4px 12px;border-radius:999px;font-weight:700;font-size:12.5px;color:var(--muted);transition:all .15s}
+.langtoggle button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.avatarbtn{display:flex;align-items:center;gap:9px;padding:4px;padding-inline-end:13px;border-radius:999px;transition:background .15s;max-width:210px}
+.avatarbtn:hover{background:#EFEFF4}
+.avatarbtn .nm{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;overflow:hidden;flex:none}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.avatar.big{width:100px;height:100px;font-size:40px;border-radius:50%}
+nav.tabs{max-width:940px;margin:0 auto;padding:0 20px 10px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
 nav.tabs::-webkit-scrollbar{display:none}
 .navtab{padding:8px 16px;border-radius:999px;font-weight:600;font-size:14.5px;color:var(--muted);white-space:nowrap;transition:all .15s}
 .navtab.on{background:var(--ink);color:#fff}
-.navtab:not(.on):hover{background:#F0EEE8;color:var(--ink)}
+.navtab:not(.on):hover{background:#EFEFF4;color:var(--ink)}
 
-main{max-width:920px;margin:0 auto;padding:26px 20px 150px}
+main{max-width:940px;margin:0 auto;padding:26px 20px 160px}
 
-/* ---------- Home: simanim ---------- */
+/* ---------- Home ---------- */
 .pagehead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap}
 .pagehead h2{font-size:28px;font-weight:900}
 .pagehead .sub{color:var(--muted);font-size:14.5px;margin-top:2px}
 .siman-list{display:flex;flex-direction:column;gap:12px}
-.siman-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-  padding:18px 20px;display:flex;align-items:center;gap:16px;cursor:pointer;
-  transition:border-color .15s, box-shadow .15s}
+.siman-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;
+  display:flex;align-items:center;gap:16px;cursor:pointer;transition:border-color .15s, box-shadow .15s}
 .siman-card:hover{border-color:#CBD6E5;box-shadow:var(--shadow)}
-.siman-med{width:52px;height:52px;flex:none;border-radius:14px;background:var(--blue-soft);color:var(--blue);
+.siman-med{width:52px;height:52px;flex:none;border-radius:15px;background:var(--blue-soft);color:var(--blue);
   display:flex;align-items:center;justify-content:center;font-family:'Frank Ruhl Libre',serif;font-size:23px;font-weight:700}
 .siman-info{flex:1;min-width:0}
 .siman-info .t{font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:18.5px}
 .siman-info .m{color:var(--muted);font-size:13.5px;margin-top:2px}
-.siman-arrow{color:#C4C8D0;font-size:20px}
+.siman-arrow{color:#C6C6CE;font-size:20px}
+html[dir=ltr] .siman-arrow{transform:scaleX(-1)}
 
 /* ---------- Siman view ---------- */
-.crumb{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-weight:600;font-size:14px;
-  margin-bottom:14px;padding:6px 12px;border-radius:999px}
-.crumb:hover{background:#F0EEE8;color:var(--ink)}
+.qnav{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 12px;scrollbar-width:none;align-items:center}
+.qnav::-webkit-scrollbar{display:none}
+.qchip{min-width:42px;height:38px;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:var(--card);
+  font-family:'Frank Ruhl Libre',serif;font-size:16px;font-weight:700;color:var(--muted);flex:none;transition:all .15s;display:flex;align-items:center;justify-content:center}
+.qchip:hover{border-color:var(--blue);color:var(--blue)}
+.qchip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.qback{flex:none;font-family:'Assistant';font-size:14px;font-weight:600;color:var(--muted);padding:0 10px;height:38px;display:flex;align-items:center;border-radius:999px}
+.qback:hover{background:#EFEFF4;color:var(--ink)}
 .siman-head{margin-bottom:8px}
 .siman-head .eyebrow{color:var(--gold);font-weight:700;font-size:14px}
 .siman-head h2{font-size:32px;font-weight:900;line-height:1.2}
-.saif-row{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 6px}
-.saif-chip{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);
+.saif-row{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 6px}
+.saif-chip{min-width:44px;height:44px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);
   font-family:'Frank Ruhl Libre',serif;font-size:18px;font-weight:700;color:var(--ink);
   display:flex;align-items:center;justify-content:center;transition:all .15s}
 .saif-chip:hover{border-color:var(--blue)}
 .saif-chip.on{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 6px 14px rgba(30,78,140,.28)}
+.saif-chip.alt{font-family:'Assistant';font-size:14px;font-weight:700}
 .saif-title-line{color:var(--muted);font-size:14.5px;min-height:22px;margin-bottom:14px}
-.seg{display:flex;background:#F0EEE8;border-radius:14px;padding:4px;gap:4px;margin-bottom:22px;overflow-x:auto;scrollbar-width:none}
+.seg{display:flex;background:#EFEFF4;border-radius:15px;padding:4px;gap:4px;margin-bottom:22px;overflow-x:auto;scrollbar-width:none}
 .seg::-webkit-scrollbar{display:none}
-.seg button{flex:1;padding:9px 12px;border-radius:10px;font-weight:600;font-size:14.5px;color:var(--muted);white-space:nowrap;transition:all .15s}
+.seg button{flex:1;padding:9px 12px;border-radius:11px;font-weight:600;font-size:14.5px;color:var(--muted);white-space:nowrap;transition:all .15s}
 .seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.09)}
 
-/* ---------- Content blocks ---------- */
+/* ---------- Panels / items ---------- */
 .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
 .mare-text{font-family:'Frank Ruhl Libre',serif;font-size:19px;line-height:2;white-space:pre-wrap}
 .item-list{display:flex;flex-direction:column;gap:10px}
-.item{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-  padding:14px 16px;display:flex;align-items:center;gap:14px}
-.item .ic{width:44px;height:44px;flex:none;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;gap:13px;flex-wrap:wrap}
+.item .ic{width:44px;height:44px;flex:none;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:20px}
 .ic.pdf{background:var(--red-soft)}
 .ic.file{background:var(--blue-soft)}
-.ic.audio{background:var(--gold-soft)}
-.item .body{flex:1;min-width:0}
-.item .t{font-weight:600;font-size:15.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .body{flex:1;min-width:180px}
+.item .t{font-weight:600;font-size:15.5px}
 .item .m{color:var(--muted);font-size:13px;margin-top:1px}
-.badge{display:inline-block;background:var(--blue-soft);color:var(--blue);font-size:12.5px;font-weight:700;
-  padding:2px 10px;border-radius:999px}
+.badge{display:inline-block;background:var(--blue-soft);color:var(--blue);font-size:12.5px;font-weight:700;padding:2px 10px;border-radius:999px;white-space:nowrap}
 .badge.gold{background:var(--gold-soft);color:var(--gold)}
 .badge.green{background:var(--green-soft);color:var(--green)}
 .badge.red{background:var(--red-soft);color:var(--red)}
-.badge.gray{background:#F0EEE8;color:var(--muted)}
-.playbtn{width:46px;height:46px;flex:none;border-radius:50%;background:var(--blue);color:#fff;
-  display:flex;align-items:center;justify-content:center;transition:background .15s, transform .1s}
+.badge.gray{background:#EFEFF4;color:var(--muted)}
+.playbtn{width:46px;height:46px;flex:none;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;transition:background .15s, transform .1s}
 .playbtn:hover{background:var(--blue-d)}
 .playbtn:active{transform:scale(.95)}
 .playbtn.playing{background:var(--gold)}
@@ -164,106 +163,126 @@ main{max-width:920px;margin:0 auto;padding:26px 20px 150px}
 .empty .e-ic{font-size:34px;margin-bottom:10px;opacity:.55}
 .empty .e-t{font-weight:600;color:var(--ink);margin-bottom:2px;font-size:16px}
 .addrow{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap}
+.allsaif-block{margin-bottom:30px}
+.allsaif-head{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+.allsaif-head .med{width:38px;height:38px;border-radius:12px;background:var(--blue-soft);color:var(--blue);flex:none;
+  display:flex;align-items:center;justify-content:center;font-family:'Frank Ruhl Libre',serif;font-size:17px;font-weight:700}
+.allsaif-head .t{font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:18px}
+.subhead{font-size:13px;font-weight:700;color:var(--muted);margin:14px 0 8px}
 
 /* ---------- Exams ---------- */
 .exam-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-bottom:12px}
-.exam-top{display:flex;align-items:flex-start;gap:12px}
-.exam-top .body{flex:1}
+.exam-top{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.exam-top .body{flex:1;min-width:200px}
 .exam-top .t{font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:18px}
 .exam-top .m{color:var(--muted);font-size:13.5px;margin-top:2px}
 .exam-actions{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .grade-big{font-family:'Frank Ruhl Libre',serif;font-size:30px;font-weight:900;color:var(--blue)}
-.q-card{border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;background:#FCFBF9}
+.q-card{border:1px solid var(--line);border-radius:15px;padding:16px;margin-bottom:14px;background:#FBFBFD}
 .q-card .qt{font-weight:700;margin-bottom:10px;font-size:15.5px}
-.opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;
-  margin-bottom:8px;cursor:pointer;background:#fff;transition:all .12s;font-size:15px}
+.opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;cursor:pointer;background:#fff;transition:all .12s;font-size:15px}
 .opt:hover{border-color:var(--blue)}
 .opt.sel{border-color:var(--blue);background:var(--blue-soft)}
 .opt.correct{border-color:var(--green);background:var(--green-soft)}
 .opt.wrong{border-color:var(--red);background:var(--red-soft)}
 .opt input{accent-color:var(--blue)}
 
-/* ---------- Tables (admin) ---------- */
+/* ---------- Notas ---------- */
+.notes-toolbar{display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding:10px 12px;border:1px solid var(--line);border-bottom:none;border-radius:16px 16px 0 0;background:#FBFBFD;position:sticky;top:106px;z-index:5}
+.ntb{min-width:34px;height:34px;padding:0 8px;border-radius:9px;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;color:var(--ink);transition:background .12s}
+.ntb:hover{background:#EFEFF4}
+.ntb u{text-decoration-thickness:2px}
+.ntsep{width:1px;height:22px;background:var(--line);margin:0 4px}
+.colordot{width:22px;height:22px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line);flex:none;transition:transform .12s}
+.colordot:hover{transform:scale(1.15)}
+.notes-editor{min-height:280px;border:1px solid var(--line);border-radius:0 0 16px 16px;padding:18px;background:#fff;line-height:1.85;font-size:16px}
+.notes-editor:focus{outline:none;border-color:#C9D6E8}
+.notes-editor:empty:before{content:attr(data-ph);color:#ABABB4}
+.note-prev{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-bottom:12px;cursor:pointer;transition:border-color .15s, box-shadow .15s}
+.note-prev:hover{border-color:#CBD6E5;box-shadow:var(--shadow)}
+.note-prev .h{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.note-prev .body{color:var(--muted);font-size:14px;max-height:66px;overflow:hidden}
+
+/* ---------- Perfil ---------- */
+.profile-top{display:flex;flex-direction:column;align-items:center;gap:12px;padding:30px 20px 24px;text-align:center}
+.profile-top h2{font-size:26px;font-weight:900}
+.photo-edit{position:relative;cursor:pointer}
+.photo-edit .cam{position:absolute;bottom:0;inset-inline-end:0;width:32px;height:32px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;border:3px solid var(--paper);font-size:14px}
+
+/* ---------- Tablas ---------- */
 .tbl{width:100%;border-collapse:collapse;font-size:14.5px}
-.tbl th{text-align:right;color:var(--muted);font-weight:600;font-size:13px;padding:8px 10px;border-bottom:1px solid var(--line)}
-.tbl td{padding:11px 10px;border-bottom:1px solid #F0EEE8;vertical-align:middle}
+.tbl th{text-align:start;color:var(--muted);font-weight:600;font-size:13px;padding:8px 10px;border-bottom:1px solid var(--line)}
+.tbl td{padding:11px 10px;border-bottom:1px solid #F1F1F4;vertical-align:middle}
 .tbl tr:last-child td{border-bottom:none}
 .tblwrap{overflow-x:auto}
 
 /* ---------- Modal ---------- */
-.overlay{position:fixed;inset:0;background:rgba(20,25,38,.45);backdrop-filter:blur(3px);
-  z-index:100;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay{position:fixed;inset:0;background:rgba(22,22,28,.45);backdrop-filter:blur(3px);z-index:100;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
 .overlay.open{opacity:1;pointer-events:auto}
-.sheet{background:var(--card);width:100%;max-width:640px;max-height:88vh;overflow-y:auto;
-  border-radius:22px 22px 0 0;padding:26px 24px 34px;transform:translateY(30px);transition:transform .22s}
+.sheet{background:var(--card);width:100%;max-width:640px;max-height:88vh;overflow-y:auto;border-radius:24px 24px 0 0;padding:26px 24px 34px;transform:translateY(30px);transition:transform .22s}
+.sheet.wide{max-width:940px}
 .overlay.open .sheet{transform:translateY(0)}
 @media(min-width:700px){
   .overlay{align-items:center;padding:24px}
-  .sheet{border-radius:22px;padding:30px}
+  .sheet{border-radius:24px;padding:30px}
   .overlay.open .sheet{transform:none}
 }
-.sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:10px}
 .sheet-head h3{font-size:21px;font-weight:900}
-.xbtn{width:34px;height:34px;border-radius:50%;background:#F0EEE8;color:var(--muted);
-  display:flex;align-items:center;justify-content:center;font-size:15px}
-.xbtn:hover{background:#E6E3DB;color:var(--ink)}
+.xbtn{width:34px;height:34px;border-radius:50%;background:#EFEFF4;color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:15px;flex:none}
+.xbtn:hover{background:#E4E4EA;color:var(--ink)}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
-.chips .chip{padding:8px 14px;min-width:42px;border-radius:999px;border:1px solid var(--line);background:#fff;
-  font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:15px;transition:all .12s;text-align:center}
+.chips .chip{padding:8px 14px;min-width:42px;border-radius:999px;border:1px solid var(--line);background:#fff;font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:15px;transition:all .12s;text-align:center}
 .chips .chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
-.progress{height:8px;background:#F0EEE8;border-radius:99px;overflow:hidden;margin-top:14px;display:none}
+.progress{height:8px;background:#EFEFF4;border-radius:99px;overflow:hidden;margin-top:14px;display:none}
 .progress .bar{height:100%;width:0;background:var(--blue);border-radius:99px;transition:width .2s}
 .hint{font-size:13px;color:var(--muted);margin-top:6px}
+.viewer-frame{width:100%;height:72vh;border:none;border-radius:14px;background:#EFEFF4}
+.viewer-img{width:100%;max-height:72vh;object-fit:contain;border-radius:14px;background:#EFEFF4}
 
 /* ---------- Player ---------- */
 #player{position:fixed;bottom:0;left:0;right:0;z-index:80;transform:translateY(120%);transition:transform .25s}
 #player.show{transform:translateY(0)}
-.pl-inner{max-width:920px;margin:0 auto;padding:0 12px 12px}
-.pl-card{background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  border:1px solid var(--line);border-radius:20px;box-shadow:0 -4px 30px rgba(27,33,48,.14);padding:12px 16px}
+.pl-inner{max-width:940px;margin:0 auto;padding:0 12px 12px}
+.pl-card{background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:22px;box-shadow:0 -4px 30px rgba(28,28,34,.14);padding:12px 16px}
 .pl-top{display:flex;align-items:center;gap:10px}
 .pl-info{flex:1;min-width:0}
 .pl-info .t{font-weight:700;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pl-info .m{font-size:12.5px;color:var(--muted)}
 .pl-ctrl{display:flex;align-items:center;gap:4px}
 .pl-btn{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink);transition:background .15s;flex:none}
-.pl-btn:hover{background:#F0EEE8}
+.pl-btn:hover{background:#EFEFF4}
 .pl-btn.main{width:46px;height:46px;background:var(--blue);color:#fff}
 .pl-btn.main:hover{background:var(--blue-d)}
 .pl-btn svg{width:20px;height:20px}
-.pl-speed{font-weight:700;font-size:13px;min-width:46px;height:32px;border-radius:999px;background:#F0EEE8;color:var(--ink);flex:none}
-.pl-speed:hover{background:#E6E3DB}
+.pl-speed{font-weight:700;font-size:13px;min-width:46px;height:32px;border-radius:999px;background:#EFEFF4;color:var(--ink);flex:none}
+.pl-speed:hover{background:#E4E4EA}
 .pl-seek{display:flex;align-items:center;gap:10px;margin-top:8px}
 .pl-time{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:42px;text-align:center}
-input[type=range].seek{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:99px;
-  background:linear-gradient(to left, var(--blue) var(--fill,0%), #E6E3DB var(--fill,0%));cursor:pointer}
-input[type=range].seek::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;
-  background:#fff;border:2px solid var(--blue);box-shadow:0 1px 4px rgba(0,0,0,.2)}
+input[type=range].seek{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:99px;background:linear-gradient(to left, var(--blue) var(--fill,0%), #E4E4EA var(--fill,0%));cursor:pointer}
+html[dir=ltr] input[type=range].seek{background:linear-gradient(to right, var(--blue) var(--fill,0%), #E4E4EA var(--fill,0%))}
+input[type=range].seek::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--blue);box-shadow:0 1px 4px rgba(0,0,0,.2)}
 input[type=range].seek::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--blue)}
 
-/* ---------- Toast ---------- */
-#toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(20px);
-  background:var(--ink);color:#fff;padding:11px 22px;border-radius:999px;font-size:14.5px;font-weight:600;
-  z-index:200;opacity:0;pointer-events:none;transition:all .25s;box-shadow:0 8px 24px rgba(0,0,0,.25);white-space:nowrap}
+/* ---------- Toast / setup / misc ---------- */
+#toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 22px;border-radius:999px;font-size:14.5px;font-weight:600;z-index:200;opacity:0;pointer-events:none;transition:all .25s;box-shadow:0 8px 24px rgba(0,0,0,.25);white-space:nowrap}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-/* ---------- Setup screen ---------- */
-.setup{max-width:600px;margin:50px auto;padding:0 20px;direction:rtl}
+.setup{max-width:600px;margin:50px auto;padding:0 20px}
 .setup .panel{padding:30px}
 .setup h2{font-size:24px;margin-bottom:10px}
 .setup p{margin-bottom:8px;color:var(--muted)}
-.setup code{background:#F0EEE8;padding:2px 7px;border-radius:6px;font-size:14px;direction:ltr;display:inline-block}
-
-.spin{width:22px;height:22px;border:3px solid #D9DEE8;border-top-color:var(--blue);border-radius:50%;
-  animation:sp .7s linear infinite;margin:0 auto}
+.setup code{background:#EFEFF4;padding:2px 7px;border-radius:6px;font-size:14px;direction:ltr;display:inline-block}
+.spin{width:22px;height:22px;border:3px solid #DEDEE6;border-top-color:var(--blue);border-radius:50%;animation:sp .7s linear infinite;margin:0 auto}
 @keyframes sp{to{transform:rotate(360deg)}}
 .loading-full{min-height:100vh;display:flex;align-items:center;justify-content:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media(max-width:520px){
   .pagehead h2{font-size:24px}
   .siman-head h2{font-size:26px}
-  main{padding:20px 14px 160px}
+  main{padding:20px 14px 170px}
   .pl-btn{width:36px;height:36px}
+  .avatarbtn .nm{display:none}
+  .notes-toolbar{top:98px}
 }
 </style>
 </head>
@@ -271,7 +290,6 @@ input[type=range].seek::-moz-range-thumb{width:16px;height:16px;border-radius:50
 
 <div id="app"><div class="loading-full"><div class="spin"></div></div></div>
 
-<!-- ══════════ Reproductor de shiurim ══════════ -->
 <div id="player">
   <div class="pl-inner"><div class="pl-card">
     <div class="pl-top">
@@ -280,25 +298,25 @@ input[type=range].seek::-moz-range-thumb{width:16px;height:16px;border-radius:50
         <div class="m" id="pl-sub"></div>
       </div>
       <div class="pl-ctrl">
-        <button class="pl-speed" id="pl-speed" onclick="cycleSpeed()" title="מהירות">1x</button>
-        <button class="pl-btn" onclick="skip(-30)" title="30 שניות אחורה">
+        <button class="pl-speed" id="pl-speed" onclick="cycleSpeed()">1x</button>
+        <button class="pl-btn" onclick="skip(-30)" title="-30s">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2-9.4L1 10"/></svg>
         </button>
-        <button class="pl-btn main" id="pl-play" onclick="togglePlay()" title="ניגון / השהיה">
+        <button class="pl-btn main" id="pl-play" onclick="togglePlay()">
           <svg id="pl-ic-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
           <svg id="pl-ic-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
         </button>
-        <button class="pl-btn" onclick="skip(30)" title="30 שניות קדימה">
+        <button class="pl-btn" onclick="skip(30)" title="+30s">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.5 15a9 9 0 1 1-2-9.4L23 10"/></svg>
         </button>
-        <button class="pl-btn" onclick="closePlayer()" title="סגירה" style="color:var(--muted)">
+        <button class="pl-btn" onclick="closePlayer()" style="color:var(--muted)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
     </div>
     <div class="pl-seek">
       <span class="pl-time" id="pl-cur">0:00</span>
-      <input type="range" class="seek" id="pl-seek" min="0" max="100" value="0" step="0.1" aria-label="מיקום בשיעור">
+      <input type="range" class="seek" id="pl-seek" min="0" max="100" value="0" step="0.1">
       <span class="pl-time" id="pl-dur">0:00</span>
     </div>
   </div></div>
@@ -307,101 +325,231 @@ input[type=range].seek::-moz-range-thumb{width:16px;height:16px;border-radius:50
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
 <div id="toast"></div>
+<input type="file" id="photo-input" accept="image/*" style="display:none">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-/* ═══════════════════════════════════════════════════════════
-   CONFIGURACIÓN — pega aquí tus datos de Supabase
-   (Project Settings → Data API: URL · API Keys: anon/publishable)
-   ═══════════════════════════════════════════════════════════ */
+/* ═══════════ CONFIGURACIÓN ═══════════ */
 const SUPABASE_URL = "https://enkofkroxudsblewxxos.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_nAsf0qU7fPUOZ5K7OgqwYw_hUPgzOrZ";
-const BUCKET = "jabura";                 // bucket de Storage (lo crea el SQL)
-const APP_NAME = "חבורת הלכה";           // Nombre de la jabura (puedes cambiarlo)
+const BUCKET = "jabura";
+const APP_NAME = "חבורת הלכה";
 
-/* ═══════════════ Init ═══════════════ */
 const $ = id => document.getElementById(id);
 const app = $('app');
 function configOK(){ return !SUPABASE_URL.includes('PEGA') && !SUPABASE_ANON_KEY.includes('PEGA'); }
-let sb = null;
-if (configOK()) sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let sb = configOK() ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-// nombres de tablas en Supabase
 const T = { users:'usuarios', simanim:'simanim', mare:'mare',
-            materials:'materiales', shiurim:'shiurim', exams:'examenes', subs:'entregas' };
-
+            materials:'materiales', shiurim:'shiurim', exams:'examenes', subs:'entregas', notes:'notas' };
 function fail(error){ if (error) throw new Error(error.message || error); }
 
-/* ═══════════════ Helpers ═══════════════ */
+/* ═══════════ Idioma ═══════════ */
+let LANG = localStorage.getItem('jh_lang') || 'he';
+const STR = {
+he:{
+  navSimanim:'סימנים', navMyContent:'התוכן שלי', hello:'שלום', adminBadge:'מנהל', memberBadge:'חבר', logout:'יציאה',
+  authSub:'לימוד הלכה יומי · סימן אחר סימן', fullName:'שם מלא', namePh:'לדוגמה: חיים עטח', password:'סיסמה', password2:'אימות סיסמה',
+  login:'כניסה', register:'הרשמה לחבורה', haveAccount:'כבר יש לך חשבון?', newHere:'חדש בחבורה?', registerLink:'הרשמה', wait:'רק רגע…',
+  errName:'נא להזין שם מלא.', errPass4:'הסיסמה צריכה להכיל לפחות 4 תווים.', errPassMatch:'הסיסמאות אינן תואמות.',
+  errUserExists:'כבר קיים משתמש בשם הזה. נסה שם מעט שונה או היכנס.', errUserNotFound:'לא נמצא משתמש בשם הזה.', errWrongPass:'סיסמה שגויה.',
+  err:'שגיאה: ', errFill:'נא למלא שם וסיסמה.', welcomeFirst:'ברוך הבא! נרשמת כמנהל הראשון', welcome:'ברוך הבא לחבורה!',
+  pageSimanim:'סימני הלימוד', pageSimanimSub:'בחר סימן כדי לראות מראי מקומות, תוכן, שיעורים ומבחנים',
+  newSiman:'＋ סימן חדש', emptySimanimT:'עדיין אין סימנים', emptySimanimA:'צור את הסימן הראשון כדי להתחיל.', emptySimanimM:'המנהל עדיין לא פתח סימנים ללימוד.',
+  saifimWord:'סעיפים', allSimanim:'כל הסימנים', siman:'סימן', saif:'סעיף', all:'הכל',
+  tabMare:'מראי מקומות', tabContent:'תוכן', tabShiurim:'שיעורים', tabExams:'מבחנים', tabNotes:'ההערות שלי',
+  editMareBtn:'✏️ עריכת מראי המקומות', emptyMareT:'אין עדיין מראי מקומות לסעיף זה', emptyMareA:'לחץ על "עריכה" כדי להוסיף.', emptyMareM:'הרב עדיין לא העלה מראי מקומות.',
+  mareLabel:'מה צריך לראות לקראת הלימוד', marePh:'טור ובית יוסף סימן קנח\nשולחן ערוך סעיפים א–ג\nמשנה ברורה ס״ק א–ז',
+  save:'שמירה', mareSaved:'מראי המקומות נשמרו',
+  open:'פתיחה', viewHere:'צפייה', emptyContentT:'אין עדיין תוכן לסעיף זה', emptyContentA:'העלה PDF או כל קובץ אחר ללימוד.', emptyContentM:'הרב עדיין לא העלה תוכן.',
+  uploadFileBtn:'＋ העלאת קובץ', uploadShiurBtn:'＋ העלאת שיעור', uploadFileT:'העלאת קובץ', uploadShiurT:'העלאת שיעור',
+  titleLabel:'כותרת', titlePhFile:'לדוגמה: דף מקורות מודפס', titlePhShiur:'לדוגמה: שיעור על סעיפים א–ג',
+  fileLabelShiur:'קובץ שמע (MP3 / M4A / OPUS…)', fileLabelAny:'קובץ (PDF, Word, תמונה…)',
+  belongsSaifim:'שייך לסעיפים', multiSaifHint:'(שיעור אחד יכול לכסות כמה סעיפים)',
+  upload:'העלאה', uploading:'מעלה…', uploadedOk:'הועלה בהצלחה 🎉', ofWord:'מתוך', netErr:'שגיאת רשת בהעלאה',
+  needTitle:'נא להזין כותרת', needFile:'נא לבחור קובץ', needSaif:'נא לבחור לפחות סעיף אחד',
+  emptyShiurT:'אין עדיין שיעורים לסעיף זה', emptyShiurA:'העלה את הקלטת השיעור של הרב.', emptyShiurM:'השיעור יעלה לכאן אחרי מסירתו.',
+  emptyExamT:'אין עדיין מבחנים לסעיף זה', emptyExamA:'צור מבחן חדש לחבורה.', emptyExamM:'המבחן יעלה לכאן כשהרב יפרסם אותו.',
+  notTaken:'טרם נענה', startExam:'התחלת המבחן', pendingRav:'ממתין לבדיקת הרב', myAnswers:'צפייה בתשובות שלי', gradeWord:'ציון',
+  questionsWord:'שאלות', subsBtn:'הגשות ובדיקה', newExamBtn:'＋ מבחן חדש', delExamTitle:'מחיקת המבחן',
+  examNew:'מבחן חדש', examName:'שם המבחן', examNamePh:'לדוגמה: מבחן על סעיפים א–ג', addMC:'＋ שאלה אמריקאית', addOpen:'＋ שאלה פתוחה',
+  publish:'פרסום המבחן', autoHint:'מבחן שכולו שאלות אמריקאיות נבדק אוטומטית · שאלות פתוחות ממתינות לבדיקתך',
+  mcBadge:'אמריקאית', openBadge:'פתוחה', qPh:'נוסח השאלה', optPh:'אפשרות', markCorrect:'סמן בעיגול הירוק את התשובה הנכונה', addOpt:'＋ אפשרות',
+  needExamName:'נא להזין שם למבחן', needSaifim:'נא לבחור סעיפים', needQ:'נא להוסיף לפחות שאלה אחת', missingQ:'חסר נוסח לשאלה', emptyOpt:'יש אפשרות ריקה בשאלה',
+  published:'המבחן פורסם 📝', oneAttempt:'ענה על כל השאלות ולחץ על הגשה. ניתן להגיש פעם אחת בלבד.', answerPh:'כתוב את תשובתך כאן…',
+  submitExam:'הגשת המבחן', missingAns:'חסרה תשובה לשאלה', submittedGrade:'הוגש! הציון שלך: ', submittedPending:'הוגש! ממתין לבדיקת הרב',
+  examNotFound:'המבחן לא נמצא', autoChecked:'נבדק אוטומטית',
+  subsTitle:'הגשות', nameCol:'שם', statusCol:'מצב', gradeCol:'ציון', checked:'נבדק', pendingBadge:'ממתין', check:'בדיקה', viewUpdate:'צפייה / עדכון',
+  noSubsT:'אין עדיין הגשות', gradingTitle:'בדיקה', mcOf:'אמריקאיות:', correctOf:'נכונות', openOnly:'שאלות פתוחות בלבד',
+  answered:'ענה:', correctIs:'נכון:', correctBadge:'נכון', wrongBadge:'שגוי',
+  finalGrade:'ציון סופי (0–100)', fbLabel:'הערה לתלמיד (לא חובה)', fbPh:'כל הכבוד! / חזור על סעיף ב', saveGrade:'שמירת הציון', gradeSaved:'הציון נשמר ✓', gradeRange:'נא להזין ציון בין 0 ל‑100',
+  myContentT:'התוכן שלי', myContentSub:'כל ההערות שלך, מסודרות לפי סימן וסעיף', downloadPdf:'הורדת PDF', emptyNotesT:'עדיין אין לך הערות', emptyNotesD:'פתח סעיף, עבור ל"ההערות שלי" והתחל לכתוב.',
+  notesPh:'כתוב כאן את ההערות שלך…', saveNotes:'שמירת ההערות', notesSaved:'ההערות נשמרו ✓', notesTitlePdf:'ההערות שלי',
+  boldT:'מודגש', underT:'קו תחתון', italT:'נטוי', highT:'מרקר', clearT:'ניקוי עיצוב',
+  profileT:'הפרופיל שלי', changePhoto:'החלפת תמונה', photoUpdated:'התמונה עודכנה', changePass:'שינוי סיסמה', newPassLabel:'סיסמה חדשה', passChanged:'הסיסמה שונתה ✓',
+  adminZone:'ניהול החבורה', checkExams:'בדיקת מבחנים', members:'חברי החבורה', roleCol:'תפקיד', youWord:'(אתה)',
+  makeAdmin:'מינוי למנהל', removeAdmin:'הסרת ניהול', resetPassBtn:'איפוס סיסמה', min4:'לפחות 4 תווים', passReset:'הסיסמה אופסה',
+  delUserT:'מחיקת המשתמש', delUserConfirm:' — למחוק מהחבורה? הציונים שלו יימחקו.', userDeleted:'המשתמש נמחק', roleUpdated:'התפקיד עודכן',
+  noPendingT:'אין מבחנים שממתינים לבדיקה', noPendingD:'כל ההגשות נבדקו. כל הכבוד!',
+  confirmT:'אישור', yesDelete:'כן, למחוק', cancel:'ביטול', deleted:'נמחק',
+  delFileQ:'למחוק את הקובץ?', delShiurQ:'למחוק את השיעור?', delExamQ:'למחוק את המבחן?', delSimanQ:'למחוק את הסימן על כל התוכן, השיעורים והמבחנים שבו?',
+  simanNew:'סימן חדש', simanEdit:'עריכת סימן', simanNumL:'מספר הסימן', simanNumPh:'340 או שמ', saifCountL:'כמה סעיפים יש בסימן?', saifCountPh:'12 או יב',
+  titleOpt:'כותרת (לא חובה)', simanTitlePh:'לדוגמה: דיני נטילת ידיים', createSiman:'יצירת הסימן', saveChanges:'שמירת שינויים', delSimanBtn:'מחיקת הסימן כולו',
+  addSaif:'＋ הוספת סעיף', saifTitlePh:'כותרת הסעיף (לא חובה)', invalidNum:'מספר סימן לא תקין (נסה 340 או שמ)', invalidCount:'מספר סעיפים לא תקין (נסה 12 או יב)',
+  simanCreated:'הסימן נוצר', simanUpdated:'הסימן עודכן', simanDeleted:'הסימן נמחק', willCreate:'ייווצרו',
+  setupT:'⚙️ חסרה הגדרת Supabase', notesFor:'הערות על'
+},
+es:{
+  navSimanim:'Simanim', navMyContent:'Mi contenido', hello:'Hola', adminBadge:'Admin', memberBadge:'Miembro', logout:'Salir',
+  authSub:'Estudio diario de halajá · siman por siman', fullName:'Nombre completo', namePh:'Ejemplo: Jaime Atach', password:'Contraseña', password2:'Confirmar contraseña',
+  login:'Entrar', register:'Registrarme', haveAccount:'¿Ya tienes cuenta?', newHere:'¿Nuevo en la jabura?', registerLink:'Regístrate', wait:'Un momento…',
+  errName:'Escribe tu nombre completo.', errPass4:'La contraseña necesita al menos 4 caracteres.', errPassMatch:'Las contraseñas no coinciden.',
+  errUserExists:'Ya existe un usuario con ese nombre. Usa uno ligeramente distinto o inicia sesión.', errUserNotFound:'No existe un usuario con ese nombre.', errWrongPass:'Contraseña incorrecta.',
+  err:'Error: ', errFill:'Escribe tu nombre y contraseña.', welcomeFirst:'¡Bienvenido! Quedaste como el primer administrador', welcome:'¡Bienvenido a la jabura!',
+  pageSimanim:'Simanim de estudio', pageSimanimSub:'Elige un siman para ver mare mekomot, contenido, shiurim y exámenes',
+  newSiman:'＋ Nuevo siman', emptySimanimT:'Aún no hay simanim', emptySimanimA:'Crea el primer siman para comenzar.', emptySimanimM:'El administrador aún no abre simanim de estudio.',
+  saifimWord:'saifim', allSimanim:'Todos los simanim', siman:'Simán', saif:'Saif', all:'Todo',
+  tabMare:'Mare Mekomot', tabContent:'Contenido', tabShiurim:'Shiurim', tabExams:'Exámenes', tabNotes:'Mis notas',
+  editMareBtn:'✏️ Editar mare mekomot', emptyMareT:'Aún no hay mare mekomot para este saif', emptyMareA:'Toca "Editar" para agregarlos.', emptyMareM:'El Rab aún no sube los mare mekomot.',
+  mareLabel:'Qué hay que ver para el estudio', marePh:'Tur y Beit Yosef siman 158\nShulján Aruj saifim 1–3\nMishná Berurá s"k 1–7',
+  save:'Guardar', mareSaved:'Mare mekomot guardados',
+  open:'Abrir', viewHere:'Ver aquí', emptyContentT:'Aún no hay contenido para este saif', emptyContentA:'Sube un PDF o cualquier archivo de estudio.', emptyContentM:'El Rab aún no sube contenido.',
+  uploadFileBtn:'＋ Subir archivo', uploadShiurBtn:'＋ Subir shiur', uploadFileT:'Subir archivo', uploadShiurT:'Subir shiur',
+  titleLabel:'Título', titlePhFile:'Ejemplo: Hoja de fuentes', titlePhShiur:'Ejemplo: Shiur de saifim 1–3',
+  fileLabelShiur:'Archivo de audio (MP3 / M4A / OPUS…)', fileLabelAny:'Archivo (PDF, Word, imagen…)',
+  belongsSaifim:'Pertenece a los saifim', multiSaifHint:'(un shiur puede abarcar varios saifim)',
+  upload:'Subir', uploading:'Subiendo…', uploadedOk:'Subido con éxito 🎉', ofWord:'de', netErr:'Error de red al subir',
+  needTitle:'Escribe un título', needFile:'Elige un archivo', needSaif:'Elige al menos un saif',
+  emptyShiurT:'Aún no hay shiurim para este saif', emptyShiurA:'Sube la grabación del shiur del Rab.', emptyShiurM:'El shiur aparecerá aquí después de darse.',
+  emptyExamT:'Aún no hay exámenes para este saif', emptyExamA:'Crea un examen para la jabura.', emptyExamM:'El examen aparecerá cuando el Rab lo publique.',
+  notTaken:'Sin responder', startExam:'Comenzar examen', pendingRav:'Esperando revisión del Rab', myAnswers:'Ver mis respuestas', gradeWord:'Calificación',
+  questionsWord:'preguntas', subsBtn:'Entregas y revisión', newExamBtn:'＋ Nuevo examen', delExamTitle:'Eliminar examen',
+  examNew:'Nuevo examen', examName:'Nombre del examen', examNamePh:'Ejemplo: Examen de saifim 1–3', addMC:'＋ Opción múltiple', addOpen:'＋ Pregunta abierta',
+  publish:'Publicar examen', autoHint:'Un examen 100% de opción múltiple se califica solo · las preguntas abiertas esperan tu revisión',
+  mcBadge:'Opción múltiple', openBadge:'Abierta', qPh:'Texto de la pregunta', optPh:'Opción', markCorrect:'Marca con el círculo verde la respuesta correcta', addOpt:'＋ Opción',
+  needExamName:'Escribe el nombre del examen', needSaifim:'Elige los saifim', needQ:'Agrega al menos una pregunta', missingQ:'Falta el texto de la pregunta', emptyOpt:'Hay una opción vacía en la pregunta',
+  published:'Examen publicado 📝', oneAttempt:'Responde todas las preguntas y envía. Solo se puede entregar una vez.', answerPh:'Escribe tu respuesta aquí…',
+  submitExam:'Entregar examen', missingAns:'Falta responder la pregunta', submittedGrade:'¡Entregado! Tu calificación: ', submittedPending:'¡Entregado! Esperando revisión del Rab',
+  examNotFound:'No se encontró el examen', autoChecked:'Calificado automáticamente',
+  subsTitle:'Entregas', nameCol:'Nombre', statusCol:'Estado', gradeCol:'Calif.', checked:'Revisado', pendingBadge:'Pendiente', check:'Revisar', viewUpdate:'Ver / actualizar',
+  noSubsT:'Aún no hay entregas', gradingTitle:'Revisión', mcOf:'Opción múltiple:', correctOf:'correctas', openOnly:'Solo preguntas abiertas',
+  answered:'Respondió:', correctIs:'Correcta:', correctBadge:'Correcta', wrongBadge:'Incorrecta',
+  finalGrade:'Calificación final (0–100)', fbLabel:'Comentario para el alumno (opcional)', fbPh:'¡Muy bien! / Repasa el saif 2', saveGrade:'Guardar calificación', gradeSaved:'Calificación guardada ✓', gradeRange:'Escribe una calificación entre 0 y 100',
+  myContentT:'Mi contenido', myContentSub:'Todas tus notas, ordenadas por siman y saif', downloadPdf:'Descargar PDF', emptyNotesT:'Aún no tienes notas', emptyNotesD:'Abre un saif, entra a "Mis notas" y empieza a escribir.',
+  notesPh:'Escribe aquí tus notas…', saveNotes:'Guardar notas', notesSaved:'Notas guardadas ✓', notesTitlePdf:'Mis notas',
+  boldT:'Negritas', underT:'Subrayar', italT:'Cursiva', highT:'Marcador', clearT:'Limpiar formato',
+  profileT:'Mi perfil', changePhoto:'Cambiar foto', photoUpdated:'Foto actualizada', changePass:'Cambiar contraseña', newPassLabel:'Nueva contraseña', passChanged:'Contraseña cambiada ✓',
+  adminZone:'Administración de la jabura', checkExams:'Revisar exámenes', members:'Miembros', roleCol:'Rol', youWord:'(tú)',
+  makeAdmin:'Hacer admin', removeAdmin:'Quitar admin', resetPassBtn:'Restablecer contraseña', min4:'Mínimo 4 caracteres', passReset:'Contraseña restablecida',
+  delUserT:'Eliminar usuario', delUserConfirm:' — ¿eliminarlo de la jabura? Sus calificaciones se borran.', userDeleted:'Usuario eliminado', roleUpdated:'Rol actualizado',
+  noPendingT:'No hay exámenes pendientes de revisar', noPendingD:'Todas las entregas están revisadas. ¡Kol hakavod!',
+  confirmT:'Confirmar', yesDelete:'Sí, eliminar', cancel:'Cancelar', deleted:'Eliminado',
+  delFileQ:'¿Eliminar el archivo?', delShiurQ:'¿Eliminar el shiur?', delExamQ:'¿Eliminar el examen?', delSimanQ:'¿Eliminar el siman con todo su contenido, shiurim y exámenes?',
+  simanNew:'Nuevo siman', simanEdit:'Editar siman', simanNumL:'Número del siman', simanNumPh:'340 o שמ', saifCountL:'¿Cuántos saifim tiene el siman?', saifCountPh:'12 o יב',
+  titleOpt:'Título (opcional)', simanTitlePh:'Ejemplo: Dinim de netilat yadaim', createSiman:'Crear siman', saveChanges:'Guardar cambios', delSimanBtn:'Eliminar todo el siman',
+  addSaif:'＋ Agregar saif', saifTitlePh:'Título del saif (opcional)', invalidNum:'Número de siman no válido (prueba 340 o שמ)', invalidCount:'Cantidad de saifim no válida (prueba 12 o יב)',
+  simanCreated:'Siman creado', simanUpdated:'Siman actualizado', simanDeleted:'Siman eliminado', willCreate:'Se crearán',
+  setupT:'⚙️ Falta la configuración de Supabase', notesFor:'Notas de'
+}};
+const t = k => (STR[LANG] && STR[LANG][k]) || STR.he[k] || k;
+function applyDir(){
+  document.documentElement.dir  = LANG === 'he' ? 'rtl' : 'ltr';
+  document.documentElement.lang = LANG;
+}
+function setLang(l){
+  if (l === LANG) return;
+  LANG = l; localStorage.setItem('jh_lang', l);
+  applyDir();
+  if (ME) renderApp(); else renderAuth(window._authMode || 'login');
+}
+function langToggleHTML(){
+  return `<div class="langtoggle">
+    <button class="${LANG==='he'?'on':''}" onclick="setLang('he')">עברית</button>
+    <button class="${LANG==='es'?'on':''}" onclick="setLang('es')">ES</button>
+  </div>`;
+}
+applyDir();
+
+/* ═══════════ Helpers ═══════════ */
 const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
-function gem(n){ // número → letras hebreas (guematria)
+function gem(n){
   n = parseInt(n);
-  if (!n || n < 1 || n > 499) return String(n);
+  if (!n || n < 1 || n > 999) return String(n);
   const ones=['','א','ב','ג','ד','ה','ו','ז','ח','ט'];
   const tens=['','י','כ','ל','מ','נ','ס','ע','פ','צ'];
-  const hunds=['','ק','ר','ש','ת'];
+  const hunds=['','ק','ר','ש','ת','תק','תר','תש','תת','תתק'];
   let s = hunds[Math.floor(n/100)]; n %= 100;
   if (n === 15) return s + 'טו';
   if (n === 16) return s + 'טז';
   return (s + tens[Math.floor(n/10)] + ones[n%10]) || String(n);
 }
-
-function saifLabel(saifim){ // [2,3,4] → "סעיפים ב–ד"
+function parseHebNum(str){ // acepta "340" o "שמ" → 340
+  str = String(str||'').trim().replace(/["'׳״\s.]/g,'');
+  if (!str) return NaN;
+  if (/^\d+$/.test(str)) return parseInt(str);
+  const map = {'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,'כ':20,'ך':20,'ל':30,'מ':40,'ם':40,'נ':50,'ן':50,'ס':60,'ע':70,'פ':80,'ף':80,'צ':90,'ץ':90,'ק':100,'ר':200,'ש':300,'ת':400};
+  let n = 0;
+  for (const ch of str){ if (!(ch in map)) return NaN; n += map[ch]; }
+  return n || NaN;
+}
+function saifLabel(saifim){
   if (!saifim || !saifim.length) return '';
   const s = [...saifim].sort((a,b)=>a-b);
-  if (s.length === 1) return 'סעיף ' + gem(s[0]);
+  const w = { he:['סעיף ','סעיפים '], es:['Saif ','Saifim '] }[LANG] || ['סעיף ','סעיפים '];
+  if (s.length === 1) return w[0] + gem(s[0]);
   const contiguous = s.every((v,i)=> i===0 || v === s[i-1]+1);
-  if (contiguous) return 'סעיפים ' + gem(s[0]) + '–' + gem(s[s.length-1]);
-  return 'סעיפים ' + s.map(gem).join(', ');
+  if (contiguous) return w[1] + gem(s[0]) + '–' + gem(s[s.length-1]);
+  return w[1] + s.map(gem).join(', ');
 }
-
 function fmtSize(b){ if(!b) return ''; if(b<1024*1024) return Math.round(b/1024)+' KB'; return (b/1048576).toFixed(1)+' MB'; }
-function fmtDate(ts){ try{ const d = new Date(ts); if(isNaN(d)) return ''; return d.toLocaleDateString('he-IL',{day:'numeric',month:'short',year:'numeric'});}catch(e){return ''} }
+function fmtDate(ts){ try{ const d=new Date(ts); if(isNaN(d)) return ''; return d.toLocaleDateString(LANG==='he'?'he-IL':'es-MX',{day:'numeric',month:'short',year:'numeric'});}catch(e){return ''} }
 function fmtTime(sec){ if(!isFinite(sec)) return '0:00'; sec=Math.max(0,Math.floor(sec)); const m=Math.floor(sec/60), s=sec%60; return m+':'+String(s).padStart(2,'0'); }
-
 async function sha256(text){
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
   return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 function randSalt(){ return [...crypto.getRandomValues(new Uint8Array(12))].map(b=>b.toString(16).padStart(2,'0')).join(''); }
-
 let toastTimer;
 function toast(msg){
-  const t = $('toast'); t.textContent = msg; t.classList.add('show');
-  clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.remove('show'), 2600);
+  const el = $('toast'); el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>el.classList.remove('show'), 2600);
 }
-
-function openSheet(html){ $('sheet').innerHTML = html; $('overlay').classList.add('open'); }
+function openSheet(html, wide){
+  const sh = $('sheet');
+  sh.classList.toggle('wide', !!wide);
+  sh.innerHTML = html;
+  $('overlay').classList.add('open');
+}
 function closeSheet(){ $('overlay').classList.remove('open'); }
 $('overlay').addEventListener('click', e => { if (e.target === $('overlay')) closeSheet(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
-
 function sheetHead(title){
   return `<div class="sheet-head"><h3>${esc(title)}</h3><button class="xbtn" onclick="closeSheet()">✕</button></div>`;
 }
-
 async function confirmDlg(msg){
   return new Promise(res => {
-    openSheet(`${sheetHead('אישור')}
+    openSheet(`${sheetHead(t('confirmT'))}
       <p style="margin-bottom:22px;font-size:16px">${esc(msg)}</p>
       <div style="display:flex;gap:10px">
-        <button class="btn danger" style="flex:1" id="cf-yes">כן, למחוק</button>
-        <button class="btn ghost" style="flex:1" id="cf-no">ביטול</button>
+        <button class="btn danger" style="flex:1" id="cf-yes">${t('yesDelete')}</button>
+        <button class="btn ghost" style="flex:1" id="cf-no">${t('cancel')}</button>
       </div>`);
     $('cf-yes').onclick = ()=>{ closeSheet(); res(true); };
     $('cf-no').onclick  = ()=>{ closeSheet(); res(false); };
   });
 }
+function avatarHTML(user, cls){
+  const letter = (user.name||'?').trim()[0] || '?';
+  return `<div class="avatar ${cls||''}">${user.photo ? `<img src="${esc(user.photo)}" alt="">` : esc(letter)}</div>`;
+}
 
-/* ═══════════════ Estado ═══════════════ */
-let ME = null;              // {id, name, role}
+/* ═══════════ Estado ═══════════ */
+let ME = null;
 let SIMANIM = [];
-let CUR = { view:'home', simanId:null, saif:1, tab:'mare' };
+let CUR = { view:'home', simanId:null, saif:1, tab:'mare' };  // saif 0 = ver todo
 const isAdmin = () => ME && ME.role === 'admin';
-
-/* ═══════════════ Sesión ═══════════════ */
-function saveSession(){ localStorage.setItem('jh_session', JSON.stringify(ME)); }
+function saveSession(){ localStorage.setItem('jh_session', JSON.stringify({id:ME.id})); }
 function clearSession(){ localStorage.removeItem('jh_session'); }
 
 async function boot(){
@@ -410,42 +558,42 @@ async function boot(){
   if (saved){
     try {
       const u = JSON.parse(saved);
-      const { data } = await sb.from(T.users).select('id,name,role').eq('id', u.id).maybeSingle();
-      if (data){ ME = { id: data.id, name: data.name, role: data.role }; saveSession(); }
+      const { data } = await sb.from(T.users).select('id,name,role,photo').eq('id', u.id).maybeSingle();
+      if (data){ ME = data; saveSession(); }
     } catch(e){}
   }
   if (ME){ await loadSimanim(); renderApp(); }
   else renderAuth();
 }
-
 function renderSetup(err){
   app.innerHTML = `<div class="setup"><div class="panel">
-    <h2>⚙️ חסרה הגדרת Supabase</h2>
+    <h2>${t('setupT')}</h2>
     ${err ? `<p style="color:var(--red);font-weight:600">${esc(err)}</p>` : ''}
-    <p>פתח את הקובץ <code>index.html</code> והדבק את ה‑<code>SUPABASE_URL</code> ואת ה‑<code>SUPABASE_ANON_KEY</code> שלך במקום שבו כתוב <code>PEGA_AQUI</code>.</p>
-    <p style="margin-top:10px">Supabase → Project Settings → Data API (URL) · API Keys (anon / publishable).</p>
+    <p>index.html → <code>SUPABASE_URL</code> / <code>SUPABASE_ANON_KEY</code></p>
   </div></div>`;
 }
 
-/* ═══════════════ Auth (registro / login) ═══════════════ */
+/* ═══════════ Auth ═══════════ */
 function renderAuth(mode='login'){
+  window._authMode = mode;
   const isReg = mode === 'register';
   app.innerHTML = `
   <div class="auth-wrap"><div class="auth-card">
+    <div class="auth-lang">${langToggleHTML()}</div>
     <div class="auth-mark">ה</div>
     <h1>${esc(APP_NAME)}</h1>
-    <div class="auth-sub">לימוד הלכה יומי · סימן אחר סימן</div>
+    <div class="auth-sub">${t('authSub')}</div>
     <div class="auth-err" id="a-err"></div>
-    <div class="field"><label>שם מלא</label>
-      <input id="a-name" autocomplete="username" placeholder="לדוגמה: חיים עטח"></div>
-    <div class="field"><label>סיסמה</label>
+    <div class="field"><label>${t('fullName')}</label>
+      <input id="a-name" autocomplete="username" placeholder="${t('namePh')}"></div>
+    <div class="field"><label>${t('password')}</label>
       <input id="a-pass" type="password" autocomplete="${isReg?'new-password':'current-password'}" placeholder="••••••"></div>
-    ${isReg ? `<div class="field"><label>אימות סיסמה</label>
+    ${isReg ? `<div class="field"><label>${t('password2')}</label>
       <input id="a-pass2" type="password" autocomplete="new-password" placeholder="••••••"></div>` : ''}
-    <button class="btn full" id="a-go" style="margin-top:6px">${isReg?'הרשמה לחבורה':'כניסה'}</button>
+    <button class="btn full" id="a-go" style="margin-top:6px">${isReg?t('register'):t('login')}</button>
     <div class="auth-switch">${isReg
-      ? 'כבר יש לך חשבון? <button onclick="renderAuth(\'login\')">כניסה</button>'
-      : 'חדש בחבורה? <button onclick="renderAuth(\'register\')">הרשמה</button>'}</div>
+      ? `${t('haveAccount')} <button onclick="renderAuth('login')">${t('login')}</button>`
+      : `${t('newHere')} <button onclick="renderAuth('register')">${t('registerLink')}</button>`}</div>
   </div></div>`;
   const go = $('a-go');
   const submit = () => isReg ? doRegister() : doLogin();
@@ -453,22 +601,21 @@ function renderAuth(mode='login'){
   app.querySelectorAll('input').forEach(i => i.addEventListener('keydown', e => { if (e.key==='Enter') submit(); }));
   $('a-name').focus();
 }
-
 function authErr(msg){ const e=$('a-err'); e.textContent=msg; e.style.display='block'; }
 const userId = name => name.trim().replace(/\s+/g,' ').toLowerCase();
 
 async function doRegister(){
   const name = $('a-name').value.trim().replace(/\s+/g,' ');
   const p1 = $('a-pass').value, p2 = $('a-pass2').value;
-  if (name.length < 2) return authErr('נא להזין שם מלא.');
-  if (p1.length < 4)   return authErr('הסיסמה צריכה להכיל לפחות 4 תווים.');
-  if (p1 !== p2)       return authErr('הסיסמאות אינן תואמות.');
-  const btn = $('a-go'); btn.disabled = true; btn.textContent = 'רק רגע…';
+  if (name.length < 2) return authErr(t('errName'));
+  if (p1.length < 4)   return authErr(t('errPass4'));
+  if (p1 !== p2)       return authErr(t('errPassMatch'));
+  const btn = $('a-go'); btn.disabled = true; btn.textContent = t('wait');
   try {
     const id = userId(name);
     const { data: exist, error: e1 } = await sb.from(T.users).select('id').eq('id', id).maybeSingle();
     fail(e1);
-    if (exist){ authErr('כבר קיים משתמש בשם הזה. נסה שם מעט שונה או היכנס.'); btn.disabled=false; btn.textContent='הרשמה לחבורה'; return; }
+    if (exist){ authErr(t('errUserExists')); btn.disabled=false; btn.textContent=t('register'); return; }
     const { count, error: e2 } = await sb.from(T.users).select('id', { count:'exact', head:true });
     fail(e2);
     const first = !count;
@@ -476,47 +623,44 @@ async function doRegister(){
     const hash = await sha256(salt + p1);
     const { error: e3 } = await sb.from(T.users).insert({ id, name, salt, hash, role: first ? 'admin' : 'member' });
     fail(e3);
-    ME = { id, name, role: first ? 'admin' : 'member' };
+    ME = { id, name, role: first ? 'admin' : 'member', photo: null };
     saveSession();
-    toast(first ? 'ברוך הבא! נרשמת כמנהל הראשון' : 'ברוך הבא לחבורה!');
+    toast(first ? t('welcomeFirst') : t('welcome'));
     await loadSimanim(); renderApp();
-  } catch(e){ authErr('שגיאה: ' + e.message); btn.disabled=false; btn.textContent='הרשמה לחבורה'; }
+  } catch(e){ authErr(t('err') + e.message); btn.disabled=false; btn.textContent=t('register'); }
 }
-
 async function doLogin(){
   const name = $('a-name').value.trim();
   const pass = $('a-pass').value;
-  if (!name || !pass) return authErr('נא למלא שם וסיסמה.');
-  const btn = $('a-go'); btn.disabled = true; btn.textContent = 'רק רגע…';
+  if (!name || !pass) return authErr(t('errFill'));
+  const btn = $('a-go'); btn.disabled = true; btn.textContent = t('wait');
   try {
     const { data: u, error } = await sb.from(T.users).select('*').eq('id', userId(name)).maybeSingle();
     fail(error);
-    if (!u){ authErr('לא נמצא משתמש בשם הזה.'); btn.disabled=false; btn.textContent='כניסה'; return; }
+    if (!u){ authErr(t('errUserNotFound')); btn.disabled=false; btn.textContent=t('login'); return; }
     const hash = await sha256(u.salt + pass);
-    if (hash !== u.hash){ authErr('סיסמה שגויה.'); btn.disabled=false; btn.textContent='כניסה'; return; }
-    ME = { id: u.id, name: u.name, role: u.role };
+    if (hash !== u.hash){ authErr(t('errWrongPass')); btn.disabled=false; btn.textContent=t('login'); return; }
+    ME = { id: u.id, name: u.name, role: u.role, photo: u.photo };
     saveSession();
     await loadSimanim(); renderApp();
-  } catch(e){ authErr('שגיאה: ' + e.message); btn.disabled=false; btn.textContent='כניסה'; }
+  } catch(e){ authErr(t('err') + e.message); btn.disabled=false; btn.textContent=t('login'); }
 }
-
 function logout(){ ME = null; clearSession(); closePlayer(); renderAuth(); }
 
-/* ═══════════════ Datos ═══════════════ */
+/* ═══════════ Datos ═══════════ */
 async function loadSimanim(){
   const { data, error } = await sb.from(T.simanim).select('*').order('number', { ascending:true });
   fail(error);
   SIMANIM = data || [];
 }
 const getSiman = id => SIMANIM.find(s => s.id === id);
-
 async function fetchBySiman(table, simanId){
   const { data, error } = await sb.from(table).select('*').eq('simanId', simanId).order('createdAt', { ascending:true });
   fail(error);
   return data || [];
 }
 
-/* ═══════════════ Layout principal ═══════════════ */
+/* ═══════════ Layout ═══════════ */
 function renderApp(){
   app.innerHTML = `
   <header>
@@ -524,9 +668,10 @@ function renderApp(){
       <div class="hmark">ה</div>
       <div class="htitle">${esc(APP_NAME)}</div>
       <div class="hspace"></div>
-      <div class="huser">שלום, <b>${esc(ME.name)}</b>${isAdmin()?' · <span class="badge gold">מנהל</span>':''}</div>
-      <button class="iconbtn" onclick="logout()" title="יציאה">
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      ${langToggleHTML()}
+      <button class="avatarbtn" onclick="go('profile')" title="${t('profileT')}">
+        ${avatarHTML(ME)}
+        <span class="nm">${esc(ME.name)}</span>
       </button>
     </div>
     <nav class="tabs" id="nav"></nav>
@@ -535,149 +680,287 @@ function renderApp(){
   renderNav();
   go(CUR.view === 'siman' && !getSiman(CUR.simanId) ? 'home' : CUR.view);
 }
-
 function renderNav(){
-  const tabs = [ ['home','סימנים'], ['grades','הציונים שלי'] ];
-  if (isAdmin()) tabs.push(['admin','ניהול']);
+  const tabs = [ ['home', t('navSimanim')], ['mycontent', t('navMyContent')] ];
   $('nav').innerHTML = tabs.map(([v,l]) =>
     `<button class="navtab ${ (CUR.view===v || (v==='home'&&CUR.view==='siman')) ? 'on':''}" onclick="go('${v}')">${l}</button>`).join('');
 }
-
 function go(view, simanId){
   CUR.view = view;
   if (simanId !== undefined){ CUR.simanId = simanId; CUR.saif = 1; CUR.tab = 'mare'; }
   renderNav();
   window.scrollTo({top:0});
-  if (view === 'home')   renderHome();
-  if (view === 'siman')  renderSiman();
-  if (view === 'grades') renderGrades();
-  if (view === 'admin')  renderAdmin();
+  if (view === 'home')      renderHome();
+  if (view === 'siman')     renderSiman();
+  if (view === 'mycontent') renderMyContent();
+  if (view === 'profile')   renderProfile();
 }
 
-/* ═══════════════ Inicio: lista de simanim ═══════════════ */
+/* ═══════════ Inicio ═══════════ */
 function renderHome(){
   const m = $('main');
   const list = SIMANIM.length ? `<div class="siman-list">` + SIMANIM.map(s => `
     <div class="siman-card" onclick="go('siman','${s.id}')">
       <div class="siman-med">${gem(s.number)}</div>
       <div class="siman-info">
-        <div class="t">סימן ${gem(s.number)}${s.title ? ' · ' + esc(s.title) : ''}</div>
-        <div class="m">${(s.saifim||[]).length} סעיפים</div>
+        <div class="t">${t('siman')} ${gem(s.number)}${s.title ? ' · ' + esc(s.title) : ''}</div>
+        <div class="m">${(s.saifim||[]).length} ${t('saifimWord')}</div>
       </div>
-      ${isAdmin() ? `<button class="iconbtn" onclick="event.stopPropagation();openSimanEditor('${s.id}')" title="עריכת הסימן">
+      ${isAdmin() ? `<button class="iconbtn" onclick="event.stopPropagation();openSimanEditor('${s.id}')" title="${t('simanEdit')}">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
       </button>` : ''}
       <div class="siman-arrow">‹</div>
     </div>`).join('') + `</div>`
   : `<div class="panel"><div class="empty">
       <div class="e-ic">📖</div>
-      <div class="e-t">עדיין אין סימנים</div>
-      <div>${isAdmin() ? 'צור את הסימן הראשון כדי להתחיל.' : 'המנהל עדיין לא פתח סימנים ללימוד.'}</div>
+      <div class="e-t">${t('emptySimanimT')}</div>
+      <div>${isAdmin() ? t('emptySimanimA') : t('emptySimanimM')}</div>
     </div></div>`;
-
   m.innerHTML = `
     <div class="pagehead">
-      <div><h2>סימני הלימוד</h2><div class="sub">בחר סימן כדי לראות מראי מקומות, תוכן, שיעורים ומבחנים</div></div>
-      ${isAdmin() ? `<button class="btn" onclick="openSimanEditor()">＋ סימן חדש</button>` : ''}
+      <div><h2>${t('pageSimanim')}</h2><div class="sub">${t('pageSimanimSub')}</div></div>
+      ${isAdmin() ? `<button class="btn" onclick="openSimanEditor()">${t('newSiman')}</button>` : ''}
     </div>
     ${list}`;
 }
 
-/* ─── Editor de siman (admin) ─── */
+/* ═══════════ Crear / editar siman ═══════════ */
 function openSimanEditor(id){
   const s = id ? getSiman(id) : null;
-  const saifim = s ? (s.saifim||[]) : [{n:1,title:''}];
-  openSheet(`${sheetHead(s ? 'עריכת סימן' : 'סימן חדש')}
+  if (!s){
+    // Creación rápida: número (340 o שמ) + cantidad de saifim (12 o יב)
+    openSheet(`${sheetHead(t('simanNew'))}
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div class="field" style="flex:1;min-width:140px"><label>${t('simanNumL')}</label>
+          <input id="se-num" placeholder="${t('simanNumPh')}" oninput="sePreview()"></div>
+        <div class="field" style="flex:1;min-width:140px"><label>${t('saifCountL')}</label>
+          <input id="se-count" placeholder="${t('saifCountPh')}" oninput="sePreview()"></div>
+      </div>
+      <div class="field"><label>${t('titleOpt')}</label>
+        <input id="se-title" placeholder="${t('simanTitlePh')}"></div>
+      <div class="hint" id="se-preview" style="margin:-4px 0 16px;font-size:14.5px"></div>
+      <button class="btn full" onclick="createSimanQuick()">${t('createSiman')}</button>`);
+    setTimeout(()=>$('se-num').focus(), 100);
+    return;
+  }
+  // Edición: títulos de saifim, agregar/quitar
+  const saifim = s.saifim || [];
+  openSheet(`${sheetHead(t('simanEdit'))}
     <div style="display:flex;gap:12px">
-      <div class="field" style="width:110px"><label>מספר הסימן</label>
-        <input id="se-num" type="number" min="1" max="499" value="${s?s.number:''}" placeholder="1"></div>
-      <div class="field" style="flex:1"><label>כותרת (לא חובה)</label>
-        <input id="se-title" value="${s?esc(s.title||''):''}" placeholder="לדוגמה: דיני נטילת ידיים"></div>
+      <div class="field" style="width:130px"><label>${t('simanNumL')}</label>
+        <input id="se-num" value="${s.number}"></div>
+      <div class="field" style="flex:1"><label>${t('titleOpt')}</label>
+        <input id="se-title" value="${esc(s.title||'')}" placeholder="${t('simanTitlePh')}"></div>
     </div>
-    <div class="field"><label>סעיפים</label><div id="se-saifim"></div>
-      <button class="btn soft sm" style="margin-top:8px" onclick="seAddSaif()">＋ הוספת סעיף</button>
+    <div class="field"><label>${t('saifimWord')}</label><div id="se-saifim"></div>
+      <button class="btn soft sm" style="margin-top:8px" onclick="seAddSaif()">${t('addSaif')}</button>
     </div>
-    <button class="btn full" onclick="saveSiman('${id||''}')">${s?'שמירת שינויים':'יצירת הסימן'}</button>
-    ${s ? `<button class="btn danger full sm" style="margin-top:10px" onclick="deleteSiman('${id}')">מחיקת הסימן כולו</button>` : ''}
-  `);
+    <button class="btn full" onclick="saveSimanEdit('${id}')">${t('saveChanges')}</button>
+    <button class="btn danger full sm" style="margin-top:10px" onclick="deleteSiman('${id}')">${t('delSimanBtn')}</button>`);
   window._seSaifim = JSON.parse(JSON.stringify(saifim));
   seRender();
+}
+function sePreview(){
+  const n = parseHebNum($('se-num').value);
+  const c = parseHebNum($('se-count').value);
+  const el = $('se-preview'); if (!el) return;
+  if (n && c) el.innerHTML = `✓ ${t('siman')} <b class="serif">${gem(n)}</b> (${n}) · ${t('willCreate')} <b>${c}</b> ${t('saifimWord')}: <span class="serif">${gem(1)}–${gem(c)}</span>`;
+  else el.textContent = '';
+}
+async function createSimanQuick(){
+  const number = parseHebNum($('se-num').value);
+  const count  = parseHebNum($('se-count').value);
+  if (!number || number < 1 || number > 999) return toast(t('invalidNum'));
+  if (!count  || count  < 1 || count  > 200) return toast(t('invalidCount'));
+  const saifim = Array.from({length:count}, (_,i)=>({ n:i+1, title:'' }));
+  try {
+    const { data, error } = await sb.from(T.simanim)
+      .insert({ number, title: $('se-title').value.trim(), saifim }).select().single();
+    fail(error);
+    closeSheet(); toast(t('simanCreated'));
+    await loadSimanim();
+    go('siman', data.id);
+  } catch(e){ toast(t('err') + e.message); }
 }
 function seRender(){
   $('se-saifim').innerHTML = window._seSaifim.map((sf,i)=>`
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
       <div style="width:40px;height:40px;border-radius:50%;background:var(--blue-soft);color:var(--blue);flex:none;display:flex;align-items:center;justify-content:center;font-family:'Frank Ruhl Libre',serif;font-weight:700">${gem(i+1)}</div>
-      <input style="flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#FCFBF9"
-        value="${esc(sf.title||'')}" placeholder="כותרת הסעיף (לא חובה)" oninput="window._seSaifim[${i}].title=this.value">
-      ${i === window._seSaifim.length-1 && window._seSaifim.length>1 ? `<button class="iconbtn" onclick="window._seSaifim.pop();seRender()" title="הסרה">✕</button>`:''}
+      <input style="flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#FBFBFD"
+        value="${esc(sf.title||'')}" placeholder="${t('saifTitlePh')}" oninput="window._seSaifim[${i}].title=this.value">
+      ${i === window._seSaifim.length-1 && window._seSaifim.length>1 ? `<button class="iconbtn" onclick="window._seSaifim.pop();seRender()">✕</button>`:''}
     </div>`).join('');
 }
 function seAddSaif(){ window._seSaifim.push({n:window._seSaifim.length+1,title:''}); seRender(); }
-
-async function saveSiman(id){
-  const number = parseInt($('se-num').value);
-  if (!number || number < 1) return toast('נא להזין מספר סימן');
-  const row = {
-    number,
-    title: $('se-title').value.trim(),
-    saifim: window._seSaifim.map((sf,i)=>({ n:i+1, title:(sf.title||'').trim() }))
-  };
+async function saveSimanEdit(id){
+  const number = parseHebNum($('se-num').value);
+  if (!number || number < 1) return toast(t('invalidNum'));
   try {
-    if (id){ const { error } = await sb.from(T.simanim).update(row).eq('id', id); fail(error); }
-    else   { const { error } = await sb.from(T.simanim).insert(row); fail(error); }
-    closeSheet(); toast(id ? 'הסימן עודכן' : 'הסימן נוצר');
+    const { error } = await sb.from(T.simanim).update({
+      number, title: $('se-title').value.trim(),
+      saifim: window._seSaifim.map((sf,i)=>({ n:i+1, title:(sf.title||'').trim() }))
+    }).eq('id', id);
+    fail(error);
+    closeSheet(); toast(t('simanUpdated'));
     await loadSimanim();
     CUR.view === 'siman' ? renderSiman() : renderHome();
-  } catch(e){ toast('שגיאה: ' + e.message); }
+  } catch(e){ toast(t('err') + e.message); }
 }
-
 async function deleteSiman(id){
   closeSheet();
-  if (!await confirmDlg('למחוק את הסימן על כל התוכן, השיעורים והמבחנים שבו?')) return;
+  if (!await confirmDlg(t('delSimanQ'))) return;
   try {
-    // borrar archivos de Storage de este siman
     const paths = [];
     for (const tbl of [T.materials, T.shiurim]){
       const { data } = await sb.from(tbl).select('storagePath').eq('simanId', id);
       (data||[]).forEach(r => { if (r.storagePath) paths.push(r.storagePath); });
     }
     if (paths.length){ try { await sb.storage.from(BUCKET).remove(paths); } catch(e){} }
-    for (const tbl of [T.materials, T.shiurim, T.exams, T.mare, T.subs]){
-      const { error } = await sb.from(tbl).delete().eq('simanId', id);
-      if (error && !/does not exist/.test(error.message)) fail(error);
+    for (const tbl of [T.materials, T.shiurim, T.exams, T.mare, T.subs, T.notes]){
+      await sb.from(tbl).delete().eq('simanId', id);
     }
     const { error } = await sb.from(T.simanim).delete().eq('id', id); fail(error);
-    toast('הסימן נמחק');
+    toast(t('simanDeleted'));
     await loadSimanim(); go('home');
-  } catch(e){ toast('שגיאה: ' + e.message); }
+  } catch(e){ toast(t('err') + e.message); }
 }
 
-/* ═══════════════ Vista de siman ═══════════════ */
+/* ═══════════ Vista de siman ═══════════ */
 async function renderSiman(){
   const s = getSiman(CUR.simanId);
   if (!s) return go('home');
   const saifim = s.saifim || [];
-  if (CUR.saif > saifim.length) CUR.saif = 1;
+  if (CUR.saif !== 0 && CUR.saif > saifim.length) CUR.saif = 1;
   const curSaif = saifim[CUR.saif-1] || {};
-  const tabs = [ ['mare','מראי מקומות'], ['content','תוכן'], ['shiurim','שיעורים'], ['exams','מבחנים'] ];
+  const tabs = [ ['mare',t('tabMare')], ['content',t('tabContent')], ['shiurim',t('tabShiurim')], ['exams',t('tabExams')], ['notes',t('tabNotes')] ];
 
   $('main').innerHTML = `
-    <button class="crumb" onclick="go('home')">‹ כל הסימנים</button>
+    <div class="qnav">
+      <button class="qback" onclick="go('home')">‹ ${t('allSimanim')}</button>
+      ${SIMANIM.map(x => `<button class="qchip ${x.id===s.id?'on':''}" onclick="go('siman','${x.id}')" title="${t('siman')} ${gem(x.number)}">${gem(x.number)}</button>`).join('')}
+    </div>
     <div class="siman-head">
-      <div class="eyebrow">סימן ${gem(s.number)}</div>
-      <h2>${esc(s.title || ('סימן ' + gem(s.number)))}</h2>
+      <div class="eyebrow">${t('siman')} ${gem(s.number)}</div>
+      <h2>${esc(s.title || (t('siman') + ' ' + gem(s.number)))}</h2>
     </div>
-    <div class="saif-row">${saifim.map(sf => `
-      <button class="saif-chip ${sf.n===CUR.saif?'on':''}" onclick="CUR.saif=${sf.n};renderSiman()" title="סעיף ${gem(sf.n)}">${gem(sf.n)}</button>`).join('')}
+    <div class="saif-row">
+      ${saifim.map(sf => `
+        <button class="saif-chip ${CUR.saif===sf.n?'on':''}" onclick="CUR.saif=${sf.n};renderSiman()" title="${t('saif')} ${gem(sf.n)}">${gem(sf.n)}</button>`).join('')}
+      <button class="saif-chip alt ${CUR.saif===0?'on':''}" onclick="CUR.saif=0;renderSiman()">${t('all')}</button>
     </div>
-    <div class="saif-title-line">${curSaif.title ? 'סעיף ' + gem(CUR.saif) + ' · ' + esc(curSaif.title) : 'סעיף ' + gem(CUR.saif)}</div>
-    <div class="seg">${tabs.map(([t,l]) => `<button class="${CUR.tab===t?'on':''}" onclick="CUR.tab='${t}';renderSiman()">${l}</button>`).join('')}</div>
+    ${CUR.saif !== 0 ? `
+      <div class="saif-title-line">${curSaif.title ? t('saif') + ' ' + gem(CUR.saif) + ' · ' + esc(curSaif.title) : t('saif') + ' ' + gem(CUR.saif)}</div>
+      <div class="seg">${tabs.map(([tb,l]) => `<button class="${CUR.tab===tb?'on':''}" onclick="CUR.tab='${tb}';renderSiman()">${l}</button>`).join('')}</div>`
+    : `<div class="saif-title-line"></div>`}
     <div id="tabbody"><div style="padding:40px"><div class="spin"></div></div></div>`;
 
+  if (CUR.saif === 0) return renderAllSaifim(s);
   if (CUR.tab === 'mare')    renderMare(s);
   if (CUR.tab === 'content') renderContent(s);
   if (CUR.tab === 'shiurim') renderShiurim(s);
   if (CUR.tab === 'exams')   renderExams(s);
+  if (CUR.tab === 'notes')   renderNotes(s);
+}
+
+/* ─── helpers de items reutilizables ─── */
+function fileIcon(name){
+  const ext = (name||'').split('.').pop().toLowerCase();
+  if (ext === 'pdf') return ['pdf','📕'];
+  if (['jpg','jpeg','png','gif','webp','heic'].includes(ext)) return ['file','🖼️'];
+  if (['doc','docx'].includes(ext)) return ['file','📄'];
+  return ['file','📎'];
+}
+function isViewable(name){
+  const ext = (name||'').split('.').pop().toLowerCase();
+  return ['pdf','jpg','jpeg','png','gif','webp'].includes(ext);
+}
+function materialHTML(m){
+  const [cls,ic] = fileIcon(m.fileName);
+  return `<div class="item">
+    <div class="ic ${cls}">${ic}</div>
+    <div class="body">
+      <div class="t">${esc(m.title)}</div>
+      <div class="m">${saifLabel(m.saifim)} · ${fmtSize(m.size)} · ${fmtDate(m.createdAt)}</div>
+    </div>
+    ${isViewable(m.fileName) ? `<button class="btn soft sm" onclick="openViewer('${m.id}')">${t('viewHere')}</button>` : ''}
+    <a class="btn ghost sm" href="${esc(m.url)}" target="_blank" rel="noopener" style="text-decoration:none">${t('open')}</a>
+    ${isAdmin() ? `<button class="iconbtn" onclick="deleteItem('${T.materials}','${m.id}','${esc(m.storagePath||'')}')">🗑️</button>`:''}
+  </div>`;
+}
+function shiurHTML(x){
+  const on = PL.id===x.id && PL.playing;
+  return `<div class="item">
+    <button class="playbtn ${on?'playing':''}" id="pb-${x.id}" onclick="playShiur('${x.id}')">
+      ${on ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>'
+           : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'}
+    </button>
+    <div class="body">
+      <div class="t">${esc(x.title)}</div>
+      <div class="m">${fmtDate(x.createdAt)}</div>
+    </div>
+    <span class="badge ${(x.saifim||[]).length>1?'gold':''}">${saifLabel(x.saifim)}</span>
+    ${isAdmin() ? `<button class="iconbtn" onclick="deleteItem('${T.shiurim}','${x.id}','${esc(x.storagePath||'')}')">🗑️</button>`:''}
+  </div>`;
+}
+function examHTML(e, sub){
+  let status, action;
+  if (!sub){
+    status = `<span class="badge">${t('notTaken')}</span>`;
+    action = `<button class="btn sm" onclick="openTakeExam('${e.id}')">${t('startExam')}</button>`;
+  } else if (sub.status === 'pending'){
+    status = `<span class="badge gold">${t('pendingRav')}</span>`;
+    action = `<button class="btn ghost sm" onclick="openMySub('${sub.id}')">${t('myAnswers')}</button>`;
+  } else {
+    status = `<div class="grade-big">${sub.grade}</div>`;
+    action = `<button class="btn ghost sm" onclick="openMySub('${sub.id}')">${t('myAnswers')}</button>`;
+  }
+  return `<div class="exam-card">
+    <div class="exam-top">
+      <div class="body">
+        <div class="t">${esc(e.title)}</div>
+        <div class="m">${saifLabel(e.saifim)} · ${e.questions.length} ${t('questionsWord')} · ${fmtDate(e.createdAt)}</div>
+        ${sub && sub.status==='graded' && sub.feedback ? `<div class="m" style="margin-top:6px;color:var(--ink)">💬 ${esc(sub.feedback)}</div>`:''}
+      </div>
+      ${status}
+    </div>
+    <div class="exam-actions">
+      ${action}
+      ${isAdmin() ? `<button class="btn ghost sm" onclick="openExamSubs('${e.id}')">${t('subsBtn')}</button>
+                     <button class="iconbtn" onclick="deleteItem('${T.exams}','${e.id}','')" title="${t('delExamTitle')}">🗑️</button>` : ''}
+    </div>
+  </div>`;
+}
+
+/* ─── Ver todo el siman por saif ─── */
+async function renderAllSaifim(s){
+  const [mareRows, mats, shiurs, exams, mySubsQ] = await Promise.all([
+    sb.from(T.mare).select('*').eq('simanId', s.id).then(r=>r.data||[]),
+    fetchBySiman(T.materials, s.id),
+    fetchBySiman(T.shiurim, s.id),
+    fetchBySiman(T.exams, s.id),
+    sb.from(T.subs).select('*').eq('userId', ME.id)
+  ]);
+  SHIUR_CACHE = shiurs;
+  window._MATS = mats;
+  const mySubs = mySubsQ.data || [];
+  const body = $('tabbody'); if (!body) return;
+  body.innerHTML = (s.saifim||[]).map(sf => {
+    const mare = mareRows.find(r => r.saif === sf.n);
+    const mm = mats.filter(m => (m.saifim||[]).includes(sf.n));
+    const sh = shiurs.filter(x => (x.saifim||[]).includes(sf.n));
+    const ex = exams.filter(e => (e.saifim||[]).includes(sf.n));
+    if (!mare?.text && !mm.length && !sh.length && !ex.length) return '';
+    return `<div class="allsaif-block">
+      <div class="allsaif-head">
+        <div class="med">${gem(sf.n)}</div>
+        <div class="t">${t('saif')} ${gem(sf.n)}${sf.title ? ' · ' + esc(sf.title) : ''}</div>
+      </div>
+      ${mare?.text ? `<div class="panel" style="margin-bottom:10px"><div class="subhead" style="margin-top:0">${t('tabMare')}</div><div class="mare-text" style="font-size:17px">${esc(mare.text)}</div></div>` : ''}
+      ${mm.length ? `<div class="subhead">${t('tabContent')}</div><div class="item-list">${mm.map(materialHTML).join('')}</div>` : ''}
+      ${sh.length ? `<div class="subhead">${t('tabShiurim')}</div><div class="item-list">${sh.map(shiurHTML).join('')}</div>` : ''}
+      ${ex.length ? `<div class="subhead">${t('tabExams')}</div>${ex.map(e => examHTML(e, mySubs.find(x=>x.examId===e.id))).join('')}` : ''}
+    </div>`;
+  }).join('') || `<div class="panel"><div class="empty"><div class="e-ic">📖</div><div class="e-t">${t('emptyContentT')}</div></div></div>`;
 }
 
 /* ─── מראי מקומות ─── */
@@ -693,63 +976,53 @@ async function renderMare(s){
     <div class="panel">
       ${text ? `<div class="mare-text">${esc(text)}</div>` : `
         <div class="empty"><div class="e-ic">✍️</div>
-          <div class="e-t">אין עדיין מראי מקומות לסעיף זה</div>
-          <div>${isAdmin() ? 'לחץ על "עריכה" כדי להוסיף.' : 'הרב עדיין לא העלה מראי מקומות.'}</div>
+          <div class="e-t">${t('emptyMareT')}</div>
+          <div>${isAdmin() ? t('emptyMareA') : t('emptyMareM')}</div>
         </div>`}
     </div>
-    ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="editMare('${docId}')">✏️ עריכת מראי המקומות</button></div>` : ''}`;
+    ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="editMare('${docId}')">${t('editMareBtn')}</button></div>` : ''}`;
   window._mareText = text;
 }
 function editMare(docId){
-  openSheet(`${sheetHead('מראי מקומות · סעיף ' + gem(CUR.saif))}
-    <div class="field"><label>מה צריך לראות לקראת הלימוד</label>
-      <textarea id="mm-text" rows="9" placeholder="לדוגמה:
-טור ובית יוסף סימן קנח
-שולחן ערוך סעיפים א–ג
-משנה ברורה ס״ק א–ז">${esc(window._mareText||'')}</textarea></div>
-    <button class="btn full" onclick="saveMare('${docId}')">שמירה</button>`);
+  openSheet(`${sheetHead(t('tabMare') + ' · ' + t('saif') + ' ' + gem(CUR.saif))}
+    <div class="field"><label>${t('mareLabel')}</label>
+      <textarea id="mm-text" rows="9" placeholder="${t('marePh')}">${esc(window._mareText||'')}</textarea></div>
+    <button class="btn full" onclick="saveMare('${docId}')">${t('save')}</button>`);
 }
 async function saveMare(docId){
-  const text = $('mm-text').value.trim();
   try {
     const { error } = await sb.from(T.mare).upsert({
-      id: docId, simanId: CUR.simanId, saif: CUR.saif, text,
-      updatedAt: new Date().toISOString()
+      id: docId, simanId: CUR.simanId, saif: CUR.saif,
+      text: $('mm-text').value.trim(), updatedAt: new Date().toISOString()
     });
     fail(error);
-    closeSheet(); toast('מראי המקומות נשמרו'); renderSiman();
-  } catch(e){ toast('שגיאה: ' + e.message); }
+    closeSheet(); toast(t('mareSaved')); renderSiman();
+  } catch(e){ toast(t('err') + e.message); }
 }
 
-/* ─── Iconos ─── */
-function fileIcon(name){
-  const ext = (name||'').split('.').pop().toLowerCase();
-  if (ext === 'pdf') return ['pdf','📕'];
-  if (['jpg','jpeg','png','gif','webp'].includes(ext)) return ['file','🖼️'];
-  if (['doc','docx'].includes(ext)) return ['file','📄'];
-  return ['file','📎'];
-}
-
-/* ─── תוכן (PDFs y archivos) ─── */
+/* ─── תוכן ─── */
 async function renderContent(s){
-  const items = (await fetchBySiman(T.materials, s.id)).filter(m => (m.saifim||[]).includes(CUR.saif));
+  const all = await fetchBySiman(T.materials, s.id);
+  window._MATS = all;
+  const items = all.filter(m => (m.saifim||[]).includes(CUR.saif));
   const body = $('tabbody'); if (!body) return;
   body.innerHTML = `
-    ${items.length ? `<div class="item-list">` + items.map(m => {
-      const [cls,ic] = fileIcon(m.fileName);
-      return `<div class="item">
-        <div class="ic ${cls}">${ic}</div>
-        <div class="body">
-          <div class="t">${esc(m.title)}</div>
-          <div class="m">${saifLabel(m.saifim)} · ${fmtSize(m.size)} · ${fmtDate(m.createdAt)}</div>
-        </div>
-        <a class="btn soft sm" href="${esc(m.url)}" target="_blank" rel="noopener" style="text-decoration:none">פתיחה</a>
-        ${isAdmin() ? `<button class="iconbtn" onclick="deleteItem('${T.materials}','${m.id}','${esc(m.storagePath||'')}')" title="מחיקה">🗑️</button>`:''}
-      </div>`;}).join('') + `</div>`
+    ${items.length ? `<div class="item-list">` + items.map(materialHTML).join('') + `</div>`
     : `<div class="panel"><div class="empty"><div class="e-ic">📚</div>
-        <div class="e-t">אין עדיין תוכן לסעיף זה</div>
-        <div>${isAdmin()?'העלה PDF או כל קובץ אחר ללימוד.':'הרב עדיין לא העלה תוכן.'}</div></div></div>`}
-    ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="openUpload('${T.materials}')">＋ העלאת קובץ</button></div>` : ''}`;
+        <div class="e-t">${t('emptyContentT')}</div>
+        <div>${isAdmin()?t('emptyContentA'):t('emptyContentM')}</div></div></div>`}
+    ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="openUpload('${T.materials}')">${t('uploadFileBtn')}</button></div>` : ''}`;
+}
+function openViewer(id){
+  const m = (window._MATS||[]).find(x => x.id === id) ||
+            (window._ALLMATS||[]).find(x => x.id === id);
+  if (!m) return;
+  const ext = (m.fileName||'').split('.').pop().toLowerCase();
+  const inner = ['jpg','jpeg','png','gif','webp'].includes(ext)
+    ? `<img class="viewer-img" src="${esc(m.url)}" alt="">`
+    : `<iframe class="viewer-frame" src="${esc(m.url)}"></iframe>`;
+  openSheet(`${sheetHead(m.title)}${inner}
+    <div style="margin-top:14px;text-align:center"><a class="btn ghost sm" href="${esc(m.url)}" target="_blank" rel="noopener" style="text-decoration:none">${t('open')} ↗</a></div>`, true);
 }
 
 /* ─── שיעורים ─── */
@@ -760,59 +1033,44 @@ async function renderShiurim(s){
   const items = all.filter(x => (x.saifim||[]).includes(CUR.saif));
   const body = $('tabbody'); if (!body) return;
   body.innerHTML = `
-    ${items.length ? `<div class="item-list">` + items.map(x => `
-      <div class="item">
-        <button class="playbtn ${PL.id===x.id && PL.playing ? 'playing':''}" id="pb-${x.id}" onclick="playShiur('${x.id}')" title="ניגון">
-          ${PL.id===x.id && PL.playing
-            ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>'
-            : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'}
-        </button>
-        <div class="body">
-          <div class="t">${esc(x.title)}</div>
-          <div class="m">${fmtDate(x.createdAt)}</div>
-        </div>
-        <span class="badge ${(x.saifim||[]).length>1?'gold':''}">${saifLabel(x.saifim)}</span>
-        ${isAdmin() ? `<button class="iconbtn" onclick="deleteItem('${T.shiurim}','${x.id}','${esc(x.storagePath||'')}')" title="מחיקה">🗑️</button>`:''}
-      </div>`).join('') + `</div>`
+    ${items.length ? `<div class="item-list">` + items.map(shiurHTML).join('') + `</div>`
     : `<div class="panel"><div class="empty"><div class="e-ic">🎧</div>
-        <div class="e-t">אין עדיין שיעורים לסעיף זה</div>
-        <div>${isAdmin()?'העלה את הקלטת השיעור של הרב.':'השיעור יעלה לכאן אחרי מסירתו.'}</div></div></div>`}
-    ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="openUpload('${T.shiurim}')">＋ העלאת שיעור</button></div>` : ''}`;
+        <div class="e-t">${t('emptyShiurT')}</div>
+        <div>${isAdmin()?t('emptyShiurA'):t('emptyShiurM')}</div></div></div>`}
+    ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="openUpload('${T.shiurim}')">${t('uploadShiurBtn')}</button></div>` : ''}`;
 }
 
 /* ─── Borrar item ─── */
 async function deleteItem(tbl, id, storagePath){
-  const names = {}; names[T.materials]='הקובץ'; names[T.shiurim]='השיעור'; names[T.exams]='המבחן';
-  if (!await confirmDlg('למחוק את ' + (names[tbl]||'הפריט') + '?')) return;
+  const q = tbl===T.materials ? t('delFileQ') : tbl===T.shiurim ? t('delShiurQ') : t('delExamQ');
+  if (!await confirmDlg(q)) return;
   try {
-    if (tbl === T.exams){
-      const { error } = await sb.from(T.subs).delete().eq('examId', id); fail(error);
-    }
+    if (tbl === T.exams){ await sb.from(T.subs).delete().eq('examId', id); }
     const { error } = await sb.from(tbl).delete().eq('id', id); fail(error);
     if (storagePath){ try { await sb.storage.from(BUCKET).remove([storagePath]); } catch(e){} }
-    toast('נמחק');
+    toast(t('deleted'));
     renderSiman();
-  } catch(e){ toast('שגיאה: ' + e.message); }
+  } catch(e){ toast(t('err') + e.message); }
 }
 
-/* ═══════════════ Subida de archivos (admin) ═══════════════ */
+/* ═══════════ Subida de archivos ═══════════ */
 function openUpload(tbl){
   const s = getSiman(CUR.simanId);
   const isShiur = tbl === T.shiurim;
-  openSheet(`${sheetHead(isShiur ? 'העלאת שיעור' : 'העלאת קובץ')}
-    <div class="field"><label>כותרת</label>
-      <input id="up-title" placeholder="${isShiur?'לדוגמה: שיעור על סעיפים א–ג':'לדוגמה: דף מקורות מודפס'}"></div>
-    <div class="field"><label>${isShiur ? 'קובץ שמע (MP3 / M4A)' : 'קובץ (PDF, Word, תמונה…)'}</label>
-      <input id="up-file" type="file" accept="${isShiur?'audio/*':'*/*'}"></div>
-    <div class="field"><label>שייך לסעיפים ${isShiur?'(שיעור אחד יכול לכסות כמה סעיפים)':''}</label>
+  const preSaif = CUR.saif || 1;
+  openSheet(`${sheetHead(isShiur ? t('uploadShiurT') : t('uploadFileT'))}
+    <div class="field"><label>${t('titleLabel')}</label>
+      <input id="up-title" placeholder="${isShiur?t('titlePhShiur'):t('titlePhFile')}"></div>
+    <div class="field"><label>${isShiur ? t('fileLabelShiur') : t('fileLabelAny')}</label>
+      <input id="up-file" type="file" ${isShiur?'accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.opus,.amr,.aif,.aiff,.caf,.wma"':''}></div>
+    <div class="field"><label>${t('belongsSaifim')} ${isShiur?t('multiSaifHint'):''}</label>
       <div class="chips" id="up-chips">${(s.saifim||[]).map(sf =>
-        `<button class="chip ${sf.n===CUR.saif?'on':''}" data-n="${sf.n}" onclick="this.classList.toggle('on')">${gem(sf.n)}</button>`).join('')}</div>
+        `<button class="chip ${sf.n===preSaif?'on':''}" data-n="${sf.n}" onclick="this.classList.toggle('on')">${gem(sf.n)}</button>`).join('')}</div>
     </div>
-    <button class="btn full" id="up-go" onclick="doUpload('${tbl}')">העלאה</button>
+    <button class="btn full" id="up-go" onclick="doUpload('${tbl}')">${t('upload')}</button>
     <div class="progress" id="up-prog"><div class="bar" id="up-bar"></div></div>
     <div class="hint" id="up-hint"></div>`);
 }
-
 function uploadWithProgress(path, file){
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -824,24 +1082,23 @@ function uploadWithProgress(path, file){
       if (!e.lengthComputable) return;
       const pct = Math.round(e.loaded / e.total * 100);
       $('up-bar').style.width = pct + '%';
-      $('up-hint').textContent = pct + '% · ' + fmtSize(e.loaded) + ' מתוך ' + fmtSize(e.total);
+      $('up-hint').textContent = pct + '% · ' + fmtSize(e.loaded) + ' ' + t('ofWord') + ' ' + fmtSize(e.total);
     };
     xhr.onload = () => xhr.status < 300 ? resolve() : reject(new Error('HTTP ' + xhr.status + ' — ' + xhr.responseText.slice(0,200)));
-    xhr.onerror = () => reject(new Error('שגיאת רשת בהעלאה'));
+    xhr.onerror = () => reject(new Error(t('netErr')));
     xhr.send(file);
   });
 }
-
 async function doUpload(tbl){
   const title = $('up-title').value.trim();
   const file = $('up-file').files[0];
   const saifim = [...document.querySelectorAll('#up-chips .chip.on')].map(c => parseInt(c.dataset.n));
-  if (!title)  return toast('נא להזין כותרת');
-  if (!file)   return toast('נא לבחור קובץ');
-  if (!saifim.length) return toast('נא לבחור לפחות סעיף אחד');
-  const btn = $('up-go'); btn.disabled = true; btn.textContent = 'מעלה…';
+  if (!title)  return toast(t('needTitle'));
+  if (!file)   return toast(t('needFile'));
+  if (!saifim.length) return toast(t('needSaif'));
+  const btn = $('up-go'); btn.disabled = true; btn.textContent = t('uploading');
   $('up-prog').style.display = 'block';
-  const path = tbl + '/' + Date.now() + '_' + file.name.replace(/[^\w.\-]+/g,'_');
+  const path = tbl + '/' + Date.now() + '_' + (file.name || 'archivo').replace(/[^\w.\-]+/g,'_');
   try {
     await uploadWithProgress(path, file);
     const url = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
@@ -850,18 +1107,17 @@ async function doUpload(tbl){
       fileName: file.name, size: file.size, storagePath: path, uploadedBy: ME.name
     });
     fail(error);
-    closeSheet(); toast('הועלה בהצלחה 🎉'); renderSiman();
+    closeSheet(); toast(t('uploadedOk')); renderSiman();
   } catch(e){
-    toast('שגיאה: ' + e.message);
-    btn.disabled = false; btn.textContent = 'העלאה';
+    toast(t('err') + e.message);
+    btn.disabled = false; btn.textContent = t('upload');
   }
 }
 
-/* ═══════════════ Reproductor ═══════════════ */
+/* ═══════════ Reproductor ═══════════ */
 const audio = $('audio');
 let PL = { id:null, playing:false };
 const SPEEDS = [1, 1.25, 1.5, 1.75, 2, 2.5, 3, 0.75];
-
 function playShiur(id){
   const x = SHIUR_CACHE.find(s => s.id === id);
   if (!x) return;
@@ -876,7 +1132,7 @@ function playShiur(id){
   });
   const sm = getSiman(x.simanId);
   $('pl-title').textContent = x.title;
-  $('pl-sub').textContent = 'סימן ' + gem(sm?.number||'') + ' · ' + saifLabel(x.saifim);
+  $('pl-sub').textContent = t('siman') + ' ' + gem(sm?.number||'') + ' · ' + saifLabel(x.saifim);
   $('player').classList.add('show');
   audio.play();
   if ('mediaSession' in navigator){
@@ -912,7 +1168,7 @@ audio.addEventListener('timeupdate', ()=>{
   if (!PL.id || !isFinite(audio.duration)) return;
   const pct = audio.currentTime / audio.duration * 100;
   const seek = $('pl-seek');
-  if (!seek.matches(':active')){ seek.value = pct; }
+  if (!seek.matches(':active')) seek.value = pct;
   seek.style.setProperty('--fill', pct + '%');
   $('pl-cur').textContent = fmtTime(audio.currentTime);
   $('pl-dur').textContent = fmtTime(audio.duration);
@@ -926,7 +1182,7 @@ $('pl-seek').addEventListener('input', e => {
   }
 });
 
-/* ═══════════════ Exámenes — vista del miembro ═══════════════ */
+/* ═══════════ Exámenes ═══════════ */
 async function renderExams(s){
   const [exams, mySubsQ] = await Promise.all([
     fetchBySiman(T.exams, s.id),
@@ -936,50 +1192,20 @@ async function renderExams(s){
   const mySubs = mySubsQ.data || [];
   const items = exams.filter(e => (e.saifim||[]).includes(CUR.saif));
   const body = $('tabbody'); if (!body) return;
-
   body.innerHTML = `
-    ${items.length ? items.map(e => {
-      const sub = mySubs.find(x => x.examId === e.id);
-      let status, action;
-      if (!sub){
-        status = `<span class="badge">טרם נענה</span>`;
-        action = `<button class="btn sm" onclick="openTakeExam('${e.id}')">התחלת המבחן</button>`;
-      } else if (sub.status === 'pending'){
-        status = `<span class="badge gold">ממתין לבדיקת הרב</span>`;
-        action = `<button class="btn ghost sm" onclick="openMySub('${sub.id}')">צפייה בתשובות שלי</button>`;
-      } else {
-        status = `<span class="badge green">ציון: ${sub.grade}</span>`;
-        action = `<button class="btn ghost sm" onclick="openMySub('${sub.id}')">צפייה בתשובות שלי</button>`;
-      }
-      return `<div class="exam-card">
-        <div class="exam-top">
-          <div class="body">
-            <div class="t">${esc(e.title)}</div>
-            <div class="m">${saifLabel(e.saifim)} · ${e.questions.length} שאלות · ${fmtDate(e.createdAt)}</div>
-          </div>
-          ${status}
-        </div>
-        <div class="exam-actions">
-          ${action}
-          ${isAdmin() ? `<button class="btn ghost sm" onclick="openExamSubs('${e.id}')">הגשות ובדיקה</button>
-                         <button class="iconbtn" onclick="deleteItem('${T.exams}','${e.id}','')" title="מחיקת המבחן">🗑️</button>` : ''}
-        </div>
-      </div>`;
-    }).join('')
+    ${items.length ? items.map(e => examHTML(e, mySubs.find(x => x.examId === e.id))).join('')
     : `<div class="panel"><div class="empty"><div class="e-ic">📝</div>
-        <div class="e-t">אין עדיין מבחנים לסעיף זה</div>
-        <div>${isAdmin()?'צור מבחן חדש לחבורה.':'המבחן יעלה לכאן כשהרב יפרסם אותו.'}</div></div></div>`}
-    ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="openExamBuilder()">＋ מבחן חדש</button></div>` : ''}`;
+        <div class="e-t">${t('emptyExamT')}</div>
+        <div>${isAdmin()?t('emptyExamA'):t('emptyExamM')}</div></div></div>`}
+    ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="openExamBuilder()">${t('newExamBtn')}</button></div>` : ''}`;
 }
-
-/* ─── Responder examen ─── */
 async function openTakeExam(examId){
   const { data: e, error } = await sb.from(T.exams).select('*').eq('id', examId).maybeSingle();
-  if (error || !e) return toast('המבחן לא נמצא');
+  if (error || !e) return toast(t('examNotFound'));
   window._exam = e;
   window._answers = e.questions.map(()=>null);
   openSheet(`${sheetHead(e.title)}
-    <div class="hint" style="margin:-10px 0 18px">ענה על כל השאלות ולחץ על הגשה. ניתן להגיש פעם אחת בלבד.</div>
+    <div class="hint" style="margin:-10px 0 18px">${t('oneAttempt')}</div>
     ${e.questions.map((q,qi)=>`
       <div class="q-card">
         <div class="qt">${qi+1}. ${esc(q.text)}</div>
@@ -989,9 +1215,9 @@ async function openTakeExam(examId){
               <input type="radio" name="q${qi}"> <span>${esc(op)}</span>
             </label>`).join('')
           : `<textarea rows="4" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:11px;background:#fff"
-              placeholder="כתוב את תשובתך כאן…" oninput="window._answers[${qi}]=this.value"></textarea>`}
+              placeholder="${t('answerPh')}" oninput="window._answers[${qi}]=this.value"></textarea>`}
       </div>`).join('')}
-    <button class="btn full" onclick="submitExam()">הגשת המבחן</button>`);
+    <button class="btn full" onclick="submitExam()">${t('submitExam')}</button>`);
 }
 function pickOpt(qi, oi){
   window._answers[qi] = oi;
@@ -1002,7 +1228,7 @@ function pickOpt(qi, oi){
 async function submitExam(){
   const e = window._exam, ans = window._answers;
   for (let i = 0; i < ans.length; i++){
-    if (ans[i] === null || ans[i] === '' ) return toast('חסרה תשובה לשאלה ' + (i+1));
+    if (ans[i] === null || ans[i] === '') return toast(t('missingAns') + ' ' + (i+1));
   }
   const mcIdx = e.questions.map((q,i)=> q.type==='mc' ? i : -1).filter(i=>i>=0);
   const mcOK  = mcIdx.filter(i => ans[i] === e.questions[i].correct).length;
@@ -1013,18 +1239,16 @@ async function submitExam(){
     answers: ans, mcScore: mcOK, mcTotal: mcIdx.length,
     status: allMC ? 'graded' : 'pending',
     grade: allMC ? Math.round(mcOK / mcIdx.length * 100) : null,
-    feedback: allMC ? 'נבדק אוטומטית' : ''
+    feedback: allMC ? t('autoChecked') : ''
   };
   try {
     const { error } = await sb.from(T.subs).insert(row);
     fail(error);
     closeSheet();
-    toast(allMC ? 'הוגש! הציון שלך: ' + row.grade : 'הוגש! ממתין לבדיקת הרב');
+    toast(allMC ? t('submittedGrade') + row.grade : t('submittedPending'));
     renderSiman();
-  } catch(err){ toast('שגיאה: ' + err.message); }
+  } catch(err){ toast(t('err') + err.message); }
 }
-
-/* ─── Ver mis respuestas ─── */
 async function openMySub(subId){
   const { data: sub } = await sb.from(T.subs).select('*').eq('id', subId).maybeSingle();
   if (!sub) return;
@@ -1034,7 +1258,7 @@ async function openMySub(subId){
     ${sub.status==='graded'
       ? `<div style="text-align:center;margin-bottom:20px"><div class="grade-big">${sub.grade}</div>
          <div class="hint">${esc(sub.feedback||'')}</div></div>`
-      : `<div style="text-align:center;margin-bottom:20px"><span class="badge gold">ממתין לבדיקת הרב</span></div>`}
+      : `<div style="text-align:center;margin-bottom:20px"><span class="badge gold">${t('pendingRav')}</span></div>`}
     ${exam.questions.map((q,qi)=>{
       const a = sub.answers[qi];
       if (q.type === 'mc'){
@@ -1050,25 +1274,24 @@ async function openMySub(subId){
         <div style="background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px;white-space:pre-wrap">${esc(a)}</div></div>`;
     }).join('')}`);
 }
-
-/* ═══════════════ Creador de exámenes (admin) ═══════════════ */
 function openExamBuilder(){
   const s = getSiman(CUR.simanId);
   window._qs = [];
-  openSheet(`${sheetHead('מבחן חדש')}
-    <div class="field"><label>שם המבחן</label>
-      <input id="ex-title" placeholder="לדוגמה: מבחן על סעיפים א–ג"></div>
-    <div class="field"><label>שייך לסעיפים</label>
+  const preSaif = CUR.saif || 1;
+  openSheet(`${sheetHead(t('examNew'))}
+    <div class="field"><label>${t('examName')}</label>
+      <input id="ex-title" placeholder="${t('examNamePh')}"></div>
+    <div class="field"><label>${t('belongsSaifim')}</label>
       <div class="chips" id="ex-chips">${(s.saifim||[]).map(sf =>
-        `<button class="chip ${sf.n===CUR.saif?'on':''}" data-n="${sf.n}" onclick="this.classList.toggle('on')">${gem(sf.n)}</button>`).join('')}</div></div>
-    <div class="field"><label>שאלות</label><div id="ex-qs"></div>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <button class="btn soft sm" onclick="addQ('mc')">＋ שאלה אמריקאית</button>
-        <button class="btn soft sm" onclick="addQ('open')">＋ שאלה פתוחה</button>
+        `<button class="chip ${sf.n===preSaif?'on':''}" data-n="${sf.n}" onclick="this.classList.toggle('on')">${gem(sf.n)}</button>`).join('')}</div></div>
+    <div class="field"><label>${t('questionsWord')}</label><div id="ex-qs"></div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn soft sm" onclick="addQ('mc')">${t('addMC')}</button>
+        <button class="btn soft sm" onclick="addQ('open')">${t('addOpen')}</button>
       </div>
     </div>
-    <button class="btn full" onclick="saveExam()">פרסום המבחן</button>
-    <div class="hint" style="text-align:center;margin-top:8px">מבחן שכולו שאלות אמריקאיות נבדק אוטומטית · שאלות פתוחות ממתינות לבדיקתך</div>`);
+    <button class="btn full" onclick="saveExam()">${t('publish')}</button>
+    <div class="hint" style="text-align:center;margin-top:8px">${t('autoHint')}</div>`);
   addQ('mc');
 }
 function addQ(type){
@@ -1079,142 +1302,263 @@ function renderQs(){
   $('ex-qs').innerHTML = window._qs.map((q,qi)=>`
     <div class="q-card">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-        <span class="badge ${q.type==='mc'?'':'gold'}">${q.type==='mc'?'אמריקאית':'פתוחה'}</span>
+        <span class="badge ${q.type==='mc'?'':'gold'}">${q.type==='mc'?t('mcBadge'):t('openBadge')}</span>
         <div style="flex:1"></div>
-        <button class="iconbtn" onclick="window._qs.splice(${qi},1);renderQs()" title="הסרת השאלה">✕</button>
+        <button class="iconbtn" onclick="window._qs.splice(${qi},1);renderQs()">✕</button>
       </div>
       <input style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;margin-bottom:10px"
-        placeholder="נוסח השאלה" value="${esc(q.text)}" oninput="window._qs[${qi}].text=this.value">
+        placeholder="${t('qPh')}" value="${esc(q.text)}" oninput="window._qs[${qi}].text=this.value">
       ${q.type === 'mc' ? `
         ${q.options.map((op,oi)=>`
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
             <input type="radio" name="exc-${qi}" ${q.correct===oi?'checked':''} onclick="window._qs[${qi}].correct=${oi}"
-              title="סימון כתשובה הנכונה" style="accent-color:var(--green);width:18px;height:18px;flex:none">
+              style="accent-color:var(--green);width:18px;height:18px;flex:none">
             <input style="flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#fff"
-              placeholder="אפשרות ${oi+1}" value="${esc(op)}" oninput="window._qs[${qi}].options[${oi}]=this.value">
+              placeholder="${t('optPh')} ${oi+1}" value="${esc(op)}" oninput="window._qs[${qi}].options[${oi}]=this.value">
             ${q.options.length > 2 ? `<button class="iconbtn" onclick="window._qs[${qi}].options.splice(${oi},1);if(window._qs[${qi}].correct>=window._qs[${qi}].options.length)window._qs[${qi}].correct=0;renderQs()">✕</button>`:''}
           </div>`).join('')}
-        <button class="btn ghost sm" onclick="window._qs[${qi}].options.push('');renderQs()" ${q.options.length>=6?'disabled':''}>＋ אפשרות</button>
-        <div class="hint">סמן בעיגול הירוק את התשובה הנכונה</div>` : ''}
+        <button class="btn ghost sm" onclick="window._qs[${qi}].options.push('');renderQs()" ${q.options.length>=6?'disabled':''}>${t('addOpt')}</button>
+        <div class="hint">${t('markCorrect')}</div>` : ''}
     </div>`).join('');
 }
 async function saveExam(){
   const title = $('ex-title').value.trim();
   const saifim = [...document.querySelectorAll('#ex-chips .chip.on')].map(c => parseInt(c.dataset.n));
-  if (!title) return toast('נא להזין שם למבחן');
-  if (!saifim.length) return toast('נא לבחור סעיפים');
-  if (!window._qs.length) return toast('נא להוסיף לפחות שאלה אחת');
+  if (!title) return toast(t('needExamName'));
+  if (!saifim.length) return toast(t('needSaifim'));
+  if (!window._qs.length) return toast(t('needQ'));
   for (const [i,q] of window._qs.entries()){
-    if (!q.text.trim()) return toast('חסר נוסח לשאלה ' + (i+1));
-    if (q.type === 'mc' && q.options.some(o=>!o.trim())) return toast('יש אפשרות ריקה בשאלה ' + (i+1));
+    if (!q.text.trim()) return toast(t('missingQ') + ' ' + (i+1));
+    if (q.type === 'mc' && q.options.some(o=>!o.trim())) return toast(t('emptyOpt') + ' ' + (i+1));
   }
   try {
     const { error } = await sb.from(T.exams).insert({
-      simanId: CUR.simanId, saifim, title,
-      questions: window._qs, createdBy: ME.name
+      simanId: CUR.simanId, saifim, title, questions: window._qs, createdBy: ME.name
     });
     fail(error);
-    closeSheet(); toast('המבחן פורסם 📝'); renderSiman();
-  } catch(e){ toast('שגיאה: ' + e.message); }
+    closeSheet(); toast(t('published')); renderSiman();
+  } catch(e){ toast(t('err') + e.message); }
 }
-
-/* ═══════════════ Calificación (admin) ═══════════════ */
 async function openExamSubs(examId){
   const { data, error } = await sb.from(T.subs).select('*').eq('examId', examId).order('createdAt', { ascending:false });
   fail(error);
   const subs = data || [];
-  openSheet(`${sheetHead('הגשות')}
+  openSheet(`${sheetHead(t('subsTitle'))}
     ${subs.length ? `<div class="tblwrap"><table class="tbl">
-      <tr><th>שם</th><th>מצב</th><th>ציון</th><th></th></tr>
+      <tr><th>${t('nameCol')}</th><th>${t('statusCol')}</th><th>${t('gradeCol')}</th><th></th></tr>
       ${subs.map(s=>`<tr>
         <td><b>${esc(s.userName)}</b><div class="hint">${fmtDate(s.createdAt)}</div></td>
-        <td>${s.status==='graded'?'<span class="badge green">נבדק</span>':'<span class="badge gold">ממתין</span>'}</td>
+        <td>${s.status==='graded'?`<span class="badge green">${t('checked')}</span>`:`<span class="badge gold">${t('pendingBadge')}</span>`}</td>
         <td>${s.status==='graded'?'<b>'+s.grade+'</b>':'—'}</td>
-        <td style="text-align:left"><button class="btn soft sm" onclick="openGrade('${s.id}')">${s.status==='graded'?'צפייה / עדכון':'בדיקה'}</button></td>
+        <td style="text-align:end"><button class="btn soft sm" onclick="openGrade('${s.id}')">${s.status==='graded'?t('viewUpdate'):t('check')}</button></td>
       </tr>`).join('')}
-    </table></div>` : `<div class="empty"><div class="e-ic">📭</div><div class="e-t">אין עדיין הגשות</div></div>`}`);
+    </table></div>` : `<div class="empty"><div class="e-ic">📭</div><div class="e-t">${t('noSubsT')}</div></div>`}`);
 }
-
 async function openGrade(subId){
   const { data: sub } = await sb.from(T.subs).select('*').eq('id', subId).maybeSingle();
   if (!sub) return;
   const { data: e } = await sb.from(T.exams).select('*').eq('id', sub.examId).maybeSingle();
   const exam = e || { questions: [] };
-  openSheet(`${sheetHead('בדיקה · ' + sub.userName)}
-    <div class="hint" style="margin:-8px 0 16px">${esc(sub.examTitle)} · ${sub.mcTotal ? 'אמריקאיות: ' + sub.mcScore + '/' + sub.mcTotal + ' נכונות' : 'שאלות פתוחות בלבד'}</div>
+  openSheet(`${sheetHead(t('gradingTitle') + ' · ' + sub.userName)}
+    <div class="hint" style="margin:-8px 0 16px">${esc(sub.examTitle)} · ${sub.mcTotal ? t('mcOf') + ' ' + sub.mcScore + '/' + sub.mcTotal + ' ' + t('correctOf') : t('openOnly')}</div>
     ${exam.questions.map((q,qi)=>{
       const a = sub.answers[qi];
       if (q.type === 'mc'){
         const ok = a === q.correct;
-        return `<div class="q-card"><div class="qt">${qi+1}. ${esc(q.text)} ${ok?'<span class="badge green">נכון</span>':'<span class="badge red">שגוי</span>'}</div>
-          <div class="hint">ענה: ${esc(q.options[a] ?? '—')} · נכון: ${esc(q.options[q.correct])}</div></div>`;
+        return `<div class="q-card"><div class="qt">${qi+1}. ${esc(q.text)} ${ok?`<span class="badge green">${t('correctBadge')}</span>`:`<span class="badge red">${t('wrongBadge')}</span>`}</div>
+          <div class="hint">${t('answered')} ${esc(q.options[a] ?? '—')} · ${t('correctIs')} ${esc(q.options[q.correct])}</div></div>`;
       }
-      return `<div class="q-card"><div class="qt">${qi+1}. ${esc(q.text)} <span class="badge gold">פתוחה</span></div>
+      return `<div class="q-card"><div class="qt">${qi+1}. ${esc(q.text)} <span class="badge gold">${t('openBadge')}</span></div>
         <div style="background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px;white-space:pre-wrap">${esc(a)}</div></div>`;
     }).join('')}
-    <div style="display:flex;gap:12px;align-items:flex-end">
-      <div class="field" style="width:120px"><label>ציון סופי (0–100)</label>
+    <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+      <div class="field" style="width:150px"><label>${t('finalGrade')}</label>
         <input id="gr-grade" type="number" min="0" max="100" value="${sub.grade ?? (sub.mcTotal ? Math.round(sub.mcScore/sub.mcTotal*100) : '')}"></div>
-      <div class="field" style="flex:1"><label>הערה לתלמיד (לא חובה)</label>
-        <input id="gr-fb" value="${esc(sub.feedback||'')}" placeholder="כל הכבוד! / חזור על סעיף ב"></div>
+      <div class="field" style="flex:1;min-width:200px"><label>${t('fbLabel')}</label>
+        <input id="gr-fb" value="${esc(sub.feedback||'')}" placeholder="${t('fbPh')}"></div>
     </div>
-    <button class="btn full" onclick="saveGrade('${sub.id}')">שמירת הציון</button>`);
+    <button class="btn full" onclick="saveGrade('${sub.id}')">${t('saveGrade')}</button>`);
 }
 async function saveGrade(subId){
   const grade = parseInt($('gr-grade').value);
-  if (isNaN(grade) || grade < 0 || grade > 100) return toast('נא להזין ציון בין 0 ל‑100');
+  if (isNaN(grade) || grade < 0 || grade > 100) return toast(t('gradeRange'));
   try {
     const { error } = await sb.from(T.subs).update({
       grade, feedback: $('gr-fb').value.trim(), status: 'graded',
       gradedBy: ME.name, gradedAt: new Date().toISOString()
     }).eq('id', subId);
     fail(error);
-    closeSheet(); toast('הציון נשמר ✓');
-    if (CUR.view === 'admin') renderAdmin(); else renderSiman();
-  } catch(e){ toast('שגיאה: ' + e.message); }
+    closeSheet(); toast(t('gradeSaved'));
+    if (CUR.view === 'profile') renderProfile('pending'); else renderSiman();
+  } catch(e){ toast(t('err') + e.message); }
 }
 
-/* ═══════════════ הציונים שלי ═══════════════ */
-async function renderGrades(){
-  const { data, error } = await sb.from(T.subs).select('*').eq('userId', ME.id).order('createdAt', { ascending:false });
+/* ═══════════ Mis notas (editor por saif) ═══════════ */
+const noteId = (simanId, saif) => ME.id + '|' + simanId + '|' + saif;
+async function renderNotes(s){
+  let html = '';
+  try {
+    const { data } = await sb.from(T.notes).select('html').eq('id', noteId(s.id, CUR.saif)).maybeSingle();
+    if (data) html = data.html || '';
+  } catch(e){}
+  const body = $('tabbody'); if (!body) return;
+  const dot = (c, title) => `<button class="colordot" style="background:${c}" title="${title}" onmousedown="event.preventDefault()" onclick="nCmd('foreColor','${c}')"></button>`;
+  body.innerHTML = `
+    <div class="notes-toolbar">
+      <button class="ntb" title="${t('boldT')}" onmousedown="event.preventDefault()" onclick="nCmd('bold')"><b>B</b></button>
+      <button class="ntb" title="${t('underT')}" onmousedown="event.preventDefault()" onclick="nCmd('underline')"><u>U</u></button>
+      <button class="ntb" title="${t('italT')}" onmousedown="event.preventDefault()" onclick="nCmd('italic')"><i>I</i></button>
+      <div class="ntsep"></div>
+      <button class="colordot" style="background:linear-gradient(135deg,#FFE58A 50%,#fff 50%)" title="${t('highT')}" onmousedown="event.preventDefault()" onclick="nCmd('hiliteColor','#FFE58A')"></button>
+      <button class="colordot" style="background:linear-gradient(135deg,#BDE3C8 50%,#fff 50%)" title="${t('highT')}" onmousedown="event.preventDefault()" onclick="nCmd('hiliteColor','#BDE3C8')"></button>
+      <div class="ntsep"></div>
+      ${dot('#1C1C22','—')}${dot('#1E4E8C','—')}${dot('#C0453C','—')}${dot('#2E7D5B','—')}${dot('#A8873B','—')}
+      <div class="ntsep"></div>
+      <button class="ntb" title="${t('clearT')}" style="font-size:13px" onmousedown="event.preventDefault()" onclick="nCmd('removeFormat')">✕A</button>
+      <div style="flex:1"></div>
+      <button class="btn sm" onclick="saveNotes('${s.id}')">${t('saveNotes')}</button>
+    </div>
+    <div class="notes-editor" id="note-ed" contenteditable="true" data-ph="${t('notesPh')}">${html}</div>`;
+}
+function nCmd(cmd, val){
+  $('note-ed').focus();
+  if (cmd === 'hiliteColor'){ try{ document.execCommand('hiliteColor', false, val); }catch(e){ document.execCommand('backColor', false, val); } return; }
+  document.execCommand(cmd, false, val || null);
+}
+async function saveNotes(simanId){
+  try {
+    const { error } = await sb.from(T.notes).upsert({
+      id: noteId(simanId, CUR.saif), userId: ME.id, simanId, saif: CUR.saif,
+      html: $('note-ed').innerHTML, updatedAt: new Date().toISOString()
+    });
+    fail(error);
+    toast(t('notesSaved'));
+  } catch(e){ toast(t('err') + e.message); }
+}
+
+/* ═══════════ Mi contenido ═══════════ */
+async function renderMyContent(){
+  const { data, error } = await sb.from(T.notes).select('*').eq('userId', ME.id).order('updatedAt', { ascending:false });
   fail(error);
-  const subs = data || [];
-  const graded = subs.filter(s=>s.status==='graded');
-  const avg = graded.length ? Math.round(graded.reduce((t,s)=>t+s.grade,0)/graded.length) : null;
+  const notes = (data||[]).filter(n => (n.html||'').replace(/<[^>]*>/g,'').trim());
+  window._MYNOTES = notes;
   $('main').innerHTML = `
-    <div class="pagehead"><div><h2>הציונים שלי</h2>
-      <div class="sub">${avg !== null ? 'ממוצע: ' + avg + ' · ' + graded.length + ' מבחנים שנבדקו' : 'כאן יופיעו הציונים שלך'}</div></div></div>
-    ${subs.length ? subs.map(s=>{
-      const sm = getSiman(s.simanId);
-      return `<div class="exam-card"><div class="exam-top">
-        <div class="body">
-          <div class="t">${esc(s.examTitle)}</div>
-          <div class="m">${sm ? 'סימן ' + gem(sm.number) + ' · ' : ''}${saifLabel(s.saifim)} · ${fmtDate(s.createdAt)}</div>
-          ${s.feedback && s.status==='graded' ? `<div class="m" style="margin-top:6px;color:var(--ink)">💬 ${esc(s.feedback)}</div>`:''}
-        </div>
-        ${s.status==='graded' ? `<div class="grade-big">${s.grade}</div>` : '<span class="badge gold">ממתין לבדיקה</span>'}
-      </div>
-      <div class="exam-actions"><button class="btn ghost sm" onclick="openMySub('${s.id}')">צפייה בתשובות</button></div>
+    <div class="pagehead">
+      <div><h2>${t('myContentT')}</h2><div class="sub">${t('myContentSub')}</div></div>
+      ${notes.length ? `<button class="btn" onclick="notesPdf()">⤓ ${t('downloadPdf')}</button>` : ''}
+    </div>
+    ${notes.length ? notes.map(n => {
+      const sm = getSiman(n.simanId);
+      const label = (sm ? t('siman') + ' ' + gem(sm.number) + (sm.title? ' · '+esc(sm.title):'') : '') + ' · ' + t('saif') + ' ' + gem(n.saif);
+      const preview = esc((n.html||'').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,180));
+      return `<div class="note-prev" onclick="openNoteFromList('${n.simanId}',${n.saif})">
+        <div class="h"><span class="badge">${label}</span><span class="hint" style="margin:0">${fmtDate(n.updatedAt)}</span></div>
+        <div class="body">${preview}</div>
       </div>`;
     }).join('')
-    : `<div class="panel"><div class="empty"><div class="e-ic">🎓</div>
-        <div class="e-t">עדיין לא הגשת מבחנים</div><div>גש למבחנים דרך הסעיפים בסימנים.</div></div></div>`}`;
+    : `<div class="panel"><div class="empty"><div class="e-ic">📒</div>
+        <div class="e-t">${t('emptyNotesT')}</div><div>${t('emptyNotesD')}</div></div></div>`}`;
+}
+function openNoteFromList(simanId, saif){
+  if (!getSiman(simanId)) return;
+  CUR.simanId = simanId; CUR.saif = saif; CUR.tab = 'notes'; CUR.view = 'siman';
+  renderNav(); renderSiman(); window.scrollTo({top:0});
+}
+function notesPdf(){
+  const notes = window._MYNOTES || [];
+  const dir = LANG === 'he' ? 'rtl' : 'ltr';
+  const blocks = notes.map(n => {
+    const sm = getSiman(n.simanId);
+    const label = (sm ? t('siman') + ' ' + gem(sm.number) + (sm.title? ' · '+esc(sm.title):'') : '') + ' · ' + t('saif') + ' ' + gem(n.saif);
+    return `<div class="nb"><h2>${label}</h2><div class="nc">${n.html}</div></div>`;
+  }).join('');
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html lang="${LANG}" dir="${dir}"><head><meta charset="utf-8">
+    <title>${esc(APP_NAME)} · ${t('notesTitlePdf')}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@700;900&family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+      body{font-family:'Assistant',sans-serif;color:#1C1C22;max-width:760px;margin:40px auto;padding:0 24px;line-height:1.8}
+      h1{font-family:'Frank Ruhl Libre',serif;font-size:28px;margin-bottom:4px}
+      .sub{color:#71717A;margin-bottom:34px;font-size:14px}
+      .nb{margin-bottom:34px;page-break-inside:avoid}
+      h2{font-family:'Frank Ruhl Libre',serif;font-size:18px;color:#1E4E8C;border-bottom:2px solid #EEF3FA;padding-bottom:6px;margin-bottom:12px}
+      @media print{ body{margin:10mm auto} }
+    </style></head><body>
+    <h1>${esc(APP_NAME)} · ${t('notesTitlePdf')}</h1>
+    <div class="sub">${esc(ME.name)} · ${fmtDate(new Date())}</div>
+    ${blocks}
+    </body></html>`);
+  w.document.close();
+  setTimeout(()=>{ try{ w.focus(); w.print(); }catch(e){} }, 700);
 }
 
-/* ═══════════════ Panel de administración ═══════════════ */
-async function renderAdmin(sub='pending'){
-  const m = $('main');
-  m.innerHTML = `
-    <div class="pagehead"><div><h2>ניהול</h2><div class="sub">בדיקת מבחנים וניהול חברי החבורה</div></div></div>
-    <div class="seg" style="max-width:420px">
-      <button class="${sub==='pending'?'on':''}" onclick="renderAdmin('pending')">בדיקת מבחנים</button>
-      <button class="${sub==='users'?'on':''}" onclick="renderAdmin('users')">חברי החבורה</button>
+/* ═══════════ Perfil ═══════════ */
+async function renderProfile(adminTab){
+  CUR.view = 'profile'; renderNav();
+  $('main').innerHTML = `
+    <div class="panel" style="padding:0;overflow:hidden">
+      <div class="profile-top">
+        <div class="photo-edit" onclick="$('photo-input').click()" title="${t('changePhoto')}">
+          ${avatarHTML(ME,'big')}
+          <div class="cam">📷</div>
+        </div>
+        <div>
+          <h2>${esc(ME.name)}</h2>
+          <div style="margin-top:6px">${isAdmin()?`<span class="badge gold">${t('adminBadge')}</span>`:`<span class="badge gray">${t('memberBadge')}</span>`}</div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px">
+          <button class="btn ghost sm" onclick="openChangePass()">${t('changePass')}</button>
+          <button class="btn danger sm" onclick="logout()">${t('logout')}</button>
+        </div>
+      </div>
     </div>
-    <div id="adm-body"><div style="padding:40px"><div class="spin"></div></div></div>`;
-  if (sub === 'pending') renderAdmPending();
-  if (sub === 'users')   renderAdmUsers();
+    ${isAdmin() ? `
+      <div class="pagehead" style="margin-top:30px"><div><h2 style="font-size:22px">${t('adminZone')}</h2></div></div>
+      <div class="seg" style="max-width:460px">
+        <button class="${(adminTab||'pending')==='pending'?'on':''}" onclick="renderProfile('pending')">${t('checkExams')}</button>
+        <button class="${adminTab==='users'?'on':''}" onclick="renderProfile('users')">${t('members')}</button>
+      </div>
+      <div id="adm-body"><div style="padding:40px"><div class="spin"></div></div></div>` : ''}`;
+  if (isAdmin()){
+    if ((adminTab||'pending') === 'pending') renderAdmPending();
+    else renderAdmUsers();
+  }
+}
+$('photo-input').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const path = 'avatars/' + ME.id.replace(/[^\w]+/g,'_') + '_' + Date.now() + '.' + (file.name.split('.').pop() || 'jpg');
+    const { error: e1 } = await sb.storage.from(BUCKET).upload(path, file, { upsert: true });
+    fail(e1);
+    const url = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+    const { error: e2 } = await sb.from(T.users).update({ photo: url }).eq('id', ME.id);
+    fail(e2);
+    ME.photo = url;
+    toast(t('photoUpdated'));
+    renderApp(); go('profile');
+  } catch(err){ toast(t('err') + err.message); }
+  e.target.value = '';
+});
+function openChangePass(){
+  openSheet(`${sheetHead(t('changePass'))}
+    <div class="field"><label>${t('newPassLabel')}</label><input id="cp-1" type="password" placeholder="••••••"></div>
+    <div class="field"><label>${t('password2')}</label><input id="cp-2" type="password" placeholder="••••••"></div>
+    <button class="btn full" onclick="doChangePass()">${t('save')}</button>`);
+}
+async function doChangePass(){
+  const p1 = $('cp-1').value, p2 = $('cp-2').value;
+  if (p1.length < 4) return toast(t('errPass4'));
+  if (p1 !== p2) return toast(t('errPassMatch'));
+  try {
+    const salt = randSalt();
+    const { error } = await sb.from(T.users).update({ salt, hash: await sha256(salt + p1) }).eq('id', ME.id);
+    fail(error);
+    closeSheet(); toast(t('passChanged'));
+  } catch(e){ toast(t('err') + e.message); }
 }
 
+/* ═══════════ Admin: pendientes y usuarios ═══════════ */
 async function renderAdmPending(){
   const { data, error } = await sb.from(T.subs).select('*').eq('status','pending').order('createdAt', { ascending:true });
   fail(error);
@@ -1225,73 +1569,72 @@ async function renderAdmPending(){
     return `<div class="exam-card"><div class="exam-top">
       <div class="body">
         <div class="t">${esc(s.userName)}</div>
-        <div class="m">${esc(s.examTitle)} · ${sm ? 'סימן ' + gem(sm.number) + ' · ':''}${saifLabel(s.saifim)} · ${fmtDate(s.createdAt)}</div>
+        <div class="m">${esc(s.examTitle)} · ${sm ? t('siman')+' '+gem(sm.number)+' · ':''}${saifLabel(s.saifim)} · ${fmtDate(s.createdAt)}</div>
       </div>
-      <span class="badge gold">ממתין</span>
+      <span class="badge gold">${t('pendingBadge')}</span>
     </div>
-    <div class="exam-actions"><button class="btn sm" onclick="openGrade('${s.id}')">בדיקת המבחן</button></div>
+    <div class="exam-actions"><button class="btn sm" onclick="openGrade('${s.id}')">${t('check')}</button></div>
     </div>`;
   }).join('')
   : `<div class="panel"><div class="empty"><div class="e-ic">✅</div>
-      <div class="e-t">אין מבחנים שממתינים לבדיקה</div><div>כל ההגשות נבדקו. כל הכבוד!</div></div></div>`;
+      <div class="e-t">${t('noPendingT')}</div><div>${t('noPendingD')}</div></div></div>`;
 }
-
 async function renderAdmUsers(){
-  const { data, error } = await sb.from(T.users).select('id,name,role').order('name', { ascending:true });
+  const { data, error } = await sb.from(T.users).select('id,name,role,photo').order('name', { ascending:true });
   fail(error);
   const users = data || [];
   const body = $('adm-body'); if (!body) return;
   body.innerHTML = `<div class="panel"><div class="tblwrap"><table class="tbl">
-    <tr><th>שם</th><th>תפקיד</th><th style="text-align:left"></th></tr>
+    <tr><th>${t('nameCol')}</th><th>${t('roleCol')}</th><th style="text-align:end"></th></tr>
     ${users.map(u=>`<tr>
-      <td><b>${esc(u.name)}</b>${u.id===ME.id?' <span class="hint">(אתה)</span>':''}</td>
-      <td>${u.role==='admin'?'<span class="badge gold">מנהל</span>':'<span class="badge gray">חבר</span>'}</td>
-      <td style="text-align:left;white-space:nowrap">
+      <td><div style="display:flex;align-items:center;gap:10px">${avatarHTML(u)}<b>${esc(u.name)}</b>${u.id===ME.id?` <span class="hint" style="margin:0">${t('youWord')}</span>`:''}</div></td>
+      <td>${u.role==='admin'?`<span class="badge gold">${t('adminBadge')}</span>`:`<span class="badge gray">${t('memberBadge')}</span>`}</td>
+      <td style="text-align:end;white-space:nowrap">
         ${u.id!==ME.id ? `
-          <button class="btn ghost sm" onclick="toggleRole('${u.id}','${u.role}')">${u.role==='admin'?'הסרת ניהול':'מינוי למנהל'}</button>
-          <button class="btn ghost sm" onclick="resetPass('${u.id}')">איפוס סיסמה</button>
-          <button class="iconbtn" onclick="deleteUser('${u.id}')" title="מחיקת המשתמש">🗑️</button>` : ''}
+          <button class="btn ghost sm" onclick="toggleRole('${u.id}','${u.role}')">${u.role==='admin'?t('removeAdmin'):t('makeAdmin')}</button>
+          <button class="btn ghost sm" onclick="resetPass('${u.id}')">${t('resetPassBtn')}</button>
+          <button class="iconbtn" onclick="deleteUser('${u.id}')" title="${t('delUserT')}">🗑️</button>` : ''}
       </td>
     </tr>`).join('')}
   </table></div></div>`;
 }
-
 async function toggleRole(id, role){
   try {
     const { error } = await sb.from(T.users).update({ role: role==='admin' ? 'member' : 'admin' }).eq('id', id);
     fail(error);
-    toast('התפקיד עודכן'); renderAdmin('users');
-  } catch(e){ toast('שגיאה: ' + e.message); }
+    toast(t('roleUpdated')); renderProfile('users');
+  } catch(e){ toast(t('err') + e.message); }
 }
 async function resetPass(id){
   const { data } = await sb.from(T.users).select('name').eq('id', id).maybeSingle();
   const name = data ? data.name : '';
-  openSheet(`${sheetHead('איפוס סיסמה · ' + esc(name))}
-    <div class="field"><label>סיסמה חדשה</label><input id="rp-pass" type="text" placeholder="לפחות 4 תווים"></div>
-    <button class="btn full" onclick="doResetPass('${id}')">שמירה</button>`);
+  openSheet(`${sheetHead(t('resetPassBtn') + ' · ' + esc(name))}
+    <div class="field"><label>${t('newPassLabel')}</label><input id="rp-pass" type="text" placeholder="${t('min4')}"></div>
+    <button class="btn full" onclick="doResetPass('${id}')">${t('save')}</button>`);
 }
 async function doResetPass(id){
   const p = $('rp-pass').value;
-  if (p.length < 4) return toast('לפחות 4 תווים');
+  if (p.length < 4) return toast(t('min4'));
   try {
     const salt = randSalt();
     const { error } = await sb.from(T.users).update({ salt, hash: await sha256(salt + p) }).eq('id', id);
     fail(error);
-    closeSheet(); toast('הסיסמה אופסה');
-  } catch(e){ toast('שגיאה: ' + e.message); }
+    closeSheet(); toast(t('passReset'));
+  } catch(e){ toast(t('err') + e.message); }
 }
 async function deleteUser(id){
   const { data } = await sb.from(T.users).select('name').eq('id', id).maybeSingle();
   const name = data ? data.name : '';
-  if (!await confirmDlg('למחוק את ' + name + ' מהחבורה? הציונים שלו יימחקו.')) return;
+  if (!await confirmDlg(name + t('delUserConfirm'))) return;
   try {
-    const { error: e1 } = await sb.from(T.subs).delete().eq('userId', id); fail(e1);
-    const { error: e2 } = await sb.from(T.users).delete().eq('id', id); fail(e2);
-    toast('המשתמש נמחק'); renderAdmin('users');
-  } catch(e){ toast('שגיאה: ' + e.message); }
+    await sb.from(T.subs).delete().eq('userId', id);
+    await sb.from(T.notes).delete().eq('userId', id);
+    const { error } = await sb.from(T.users).delete().eq('id', id); fail(error);
+    toast(t('userDeleted')); renderProfile('users');
+  } catch(e){ toast(t('err') + e.message); }
 }
 
-/* ═══════════════ Go ═══════════════ */
+/* ═══════════ Go ═══════════ */
 boot();
 </script>
 </body>
