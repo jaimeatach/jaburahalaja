@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>חבורת הלכה</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231E4E8C'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='serif'>ה</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Assistant:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FAF9F6;
+  --card:#FFFFFF;
+  --ink:#1B2130;
+  --muted:#6E7480;
+  --line:#E8E5DE;
+  --blue:#1E4E8C;
+  --blue-d:#173E71;
+  --blue-soft:#EDF3FB;
+  --gold:#A8873B;
+  --gold-soft:#F6F0E2;
+  --green:#2E7D5B;
+  --green-soft:#E8F3EE;
+  --red:#B4433A;
+  --red-soft:#FBEDEC;
+  --radius:16px;
+  --shadow:0 1px 2px rgba(27,33,48,.05), 0 6px 24px rgba(27,33,48,.06);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Assistant',system-ui,sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  min-height:100vh;
+  font-size:16px;
+  line-height:1.55;
+}
+h1,h2,h3,.serif{font-family:'Frank Ruhl Libre',serif}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;font-size:inherit}
+input,textarea,select{font-family:inherit;font-size:16px;color:var(--ink)}
+::placeholder{color:#A9AEB8}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:6px}
+
+/* ---------- Auth ---------- */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:linear-gradient(180deg,#F4F1EA 0%, var(--paper) 60%)}
+.auth-card{width:100%;max-width:400px;background:var(--card);border:1px solid var(--line);
+  border-radius:24px;padding:40px 32px;box-shadow:var(--shadow);text-align:center}
+.auth-mark{width:64px;height:64px;border-radius:18px;background:var(--blue);color:#fff;
+  display:flex;align-items:center;justify-content:center;margin:0 auto 18px;
+  font-family:'Frank Ruhl Libre',serif;font-size:34px;font-weight:700;box-shadow:0 8px 20px rgba(30,78,140,.25)}
+.auth-card h1{font-size:30px;font-weight:900;margin-bottom:4px}
+.auth-sub{color:var(--muted);margin-bottom:26px;font-size:15px}
+.field{text-align:right;margin-bottom:14px}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px}
+.field input, .field textarea, .field select{
+  width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#FCFBF9}
+.field input:focus, .field textarea:focus, .field select:focus{border-color:var(--blue);outline:none;background:#fff}
+.auth-err{display:none;background:var(--red-soft);color:var(--red);border-radius:10px;
+  padding:10px 14px;font-size:14px;margin-bottom:14px;text-align:right}
+.auth-switch{margin-top:18px;font-size:14px;color:var(--muted)}
+.auth-switch button{color:var(--blue);font-weight:600}
+
+/* ---------- Buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--blue);color:#fff;font-weight:600;font-size:15px;
+  padding:11px 22px;border-radius:999px;transition:background .15s, transform .1s}
+.btn:hover{background:var(--blue-d)}
+.btn:active{transform:scale(.98)}
+.btn.full{width:100%}
+.btn.ghost{background:transparent;color:var(--blue);border:1px solid #C9D6E8}
+.btn.ghost:hover{background:var(--blue-soft)}
+.btn.soft{background:var(--blue-soft);color:var(--blue)}
+.btn.soft:hover{background:#DFEAF8}
+.btn.danger{background:transparent;color:var(--red);border:1px solid #E7C9C6}
+.btn.danger:hover{background:var(--red-soft)}
+.btn.sm{padding:7px 14px;font-size:14px}
+.btn:disabled{opacity:.5;cursor:default}
+.iconbtn{width:36px;height:36px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;
+  color:var(--muted);transition:background .15s}
+.iconbtn:hover{background:#F0EEE8;color:var(--ink)}
+
+/* ---------- Header / Nav ---------- */
+header{position:sticky;top:0;z-index:50;background:rgba(250,249,246,.85);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.hbar{max-width:920px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:14px}
+.hmark{width:38px;height:38px;border-radius:11px;background:var(--blue);color:#fff;flex:none;
+  display:flex;align-items:center;justify-content:center;font-family:'Frank Ruhl Libre',serif;font-size:20px;font-weight:700}
+.htitle{font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:19px}
+.hspace{flex:1}
+.huser{font-size:14px;color:var(--muted)}
+.huser b{color:var(--ink)}
+nav.tabs{max-width:920px;margin:0 auto;padding:0 20px 10px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+.navtab{padding:8px 16px;border-radius:999px;font-weight:600;font-size:14.5px;color:var(--muted);white-space:nowrap;transition:all .15s}
+.navtab.on{background:var(--ink);color:#fff}
+.navtab:not(.on):hover{background:#F0EEE8;color:var(--ink)}
+
+main{max-width:920px;margin:0 auto;padding:26px 20px 150px}
+
+/* ---------- Home: simanim ---------- */
+.pagehead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.pagehead h2{font-size:28px;font-weight:900}
+.pagehead .sub{color:var(--muted);font-size:14.5px;margin-top:2px}
+.siman-list{display:flex;flex-direction:column;gap:12px}
+.siman-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;display:flex;align-items:center;gap:16px;cursor:pointer;
+  transition:border-color .15s, box-shadow .15s}
+.siman-card:hover{border-color:#CBD6E5;box-shadow:var(--shadow)}
+.siman-med{width:52px;height:52px;flex:none;border-radius:14px;background:var(--blue-soft);color:var(--blue);
+  display:flex;align-items:center;justify-content:center;font-family:'Frank Ruhl Libre',serif;font-size:23px;font-weight:700}
+.siman-info{flex:1;min-width:0}
+.siman-info .t{font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:18.5px}
+.siman-info .m{color:var(--muted);font-size:13.5px;margin-top:2px}
+.siman-arrow{color:#C4C8D0;font-size:20px}
+
+/* ---------- Siman view ---------- */
+.crumb{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-weight:600;font-size:14px;
+  margin-bottom:14px;padding:6px 12px;border-radius:999px}
+.crumb:hover{background:#F0EEE8;color:var(--ink)}
+.siman-head{margin-bottom:8px}
+.siman-head .eyebrow{color:var(--gold);font-weight:700;font-size:14px}
+.siman-head h2{font-size:32px;font-weight:900;line-height:1.2}
+.saif-row{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 6px}
+.saif-chip{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);
+  font-family:'Frank Ruhl Libre',serif;font-size:18px;font-weight:700;color:var(--ink);
+  display:flex;align-items:center;justify-content:center;transition:all .15s}
+.saif-chip:hover{border-color:var(--blue)}
+.saif-chip.on{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 6px 14px rgba(30,78,140,.28)}
+.saif-title-line{color:var(--muted);font-size:14.5px;min-height:22px;margin-bottom:14px}
+.seg{display:flex;background:#F0EEE8;border-radius:14px;padding:4px;gap:4px;margin-bottom:22px;overflow-x:auto;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg button{flex:1;padding:9px 12px;border-radius:10px;font-weight:600;font-size:14.5px;color:var(--muted);white-space:nowrap;transition:all .15s}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.09)}
+
+/* ---------- Content blocks ---------- */
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.mare-text{font-family:'Frank Ruhl Libre',serif;font-size:19px;line-height:2;white-space:pre-wrap}
+.item-list{display:flex;flex-direction:column;gap:10px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px 16px;display:flex;align-items:center;gap:14px}
+.item .ic{width:44px;height:44px;flex:none;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.ic.pdf{background:var(--red-soft)}
+.ic.file{background:var(--blue-soft)}
+.ic.audio{background:var(--gold-soft)}
+.item .body{flex:1;min-width:0}
+.item .t{font-weight:600;font-size:15.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .m{color:var(--muted);font-size:13px;margin-top:1px}
+.badge{display:inline-block;background:var(--blue-soft);color:var(--blue);font-size:12.5px;font-weight:700;
+  padding:2px 10px;border-radius:999px}
+.badge.gold{background:var(--gold-soft);color:var(--gold)}
+.badge.green{background:var(--green-soft);color:var(--green)}
+.badge.red{background:var(--red-soft);color:var(--red)}
+.badge.gray{background:#F0EEE8;color:var(--muted)}
+.playbtn{width:46px;height:46px;flex:none;border-radius:50%;background:var(--blue);color:#fff;
+  display:flex;align-items:center;justify-content:center;transition:background .15s, transform .1s}
+.playbtn:hover{background:var(--blue-d)}
+.playbtn:active{transform:scale(.95)}
+.playbtn.playing{background:var(--gold)}
+.playbtn svg{width:18px;height:18px}
+.empty{text-align:center;color:var(--muted);padding:44px 20px}
+.empty .e-ic{font-size:34px;margin-bottom:10px;opacity:.55}
+.empty .e-t{font-weight:600;color:var(--ink);margin-bottom:2px;font-size:16px}
+.addrow{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap}
+
+/* ---------- Exams ---------- */
+.exam-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-bottom:12px}
+.exam-top{display:flex;align-items:flex-start;gap:12px}
+.exam-top .body{flex:1}
+.exam-top .t{font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:18px}
+.exam-top .m{color:var(--muted);font-size:13.5px;margin-top:2px}
+.exam-actions{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grade-big{font-family:'Frank Ruhl Libre',serif;font-size:30px;font-weight:900;color:var(--blue)}
+.q-card{border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;background:#FCFBF9}
+.q-card .qt{font-weight:700;margin-bottom:10px;font-size:15.5px}
+.opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;
+  margin-bottom:8px;cursor:pointer;background:#fff;transition:all .12s;font-size:15px}
+.opt:hover{border-color:var(--blue)}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.correct{border-color:var(--green);background:var(--green-soft)}
+.opt.wrong{border-color:var(--red);background:var(--red-soft)}
+.opt input{accent-color:var(--blue)}
+
+/* ---------- Tables (admin) ---------- */
+.tbl{width:100%;border-collapse:collapse;font-size:14.5px}
+.tbl th{text-align:right;color:var(--muted);font-weight:600;font-size:13px;padding:8px 10px;border-bottom:1px solid var(--line)}
+.tbl td{padding:11px 10px;border-bottom:1px solid #F0EEE8;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tblwrap{overflow-x:auto}
+
+/* ---------- Modal ---------- */
+.overlay{position:fixed;inset:0;background:rgba(20,25,38,.45);backdrop-filter:blur(3px);
+  z-index:100;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.open{opacity:1;pointer-events:auto}
+.sheet{background:var(--card);width:100%;max-width:640px;max-height:88vh;overflow-y:auto;
+  border-radius:22px 22px 0 0;padding:26px 24px 34px;transform:translateY(30px);transition:transform .22s}
+.overlay.open .sheet{transform:translateY(0)}
+@media(min-width:700px){
+  .overlay{align-items:center;padding:24px}
+  .sheet{border-radius:22px;padding:30px}
+  .overlay.open .sheet{transform:none}
+}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.sheet-head h3{font-size:21px;font-weight:900}
+.xbtn{width:34px;height:34px;border-radius:50%;background:#F0EEE8;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;font-size:15px}
+.xbtn:hover{background:#E6E3DB;color:var(--ink)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chips .chip{padding:8px 14px;min-width:42px;border-radius:999px;border:1px solid var(--line);background:#fff;
+  font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:15px;transition:all .12s;text-align:center}
+.chips .chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.progress{height:8px;background:#F0EEE8;border-radius:99px;overflow:hidden;margin-top:14px;display:none}
+.progress .bar{height:100%;width:0;background:var(--blue);border-radius:99px;transition:width .2s}
+.hint{font-size:13px;color:var(--muted);margin-top:6px}
+
+/* ---------- Player ---------- */
+#player{position:fixed;bottom:0;left:0;right:0;z-index:80;transform:translateY(120%);transition:transform .25s}
+#player.show{transform:translateY(0)}
+.pl-inner{max-width:920px;margin:0 auto;padding:0 12px 12px}
+.pl-card{background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--line);border-radius:20px;box-shadow:0 -4px 30px rgba(27,33,48,.14);padding:12px 16px}
+.pl-top{display:flex;align-items:center;gap:10px}
+.pl-info{flex:1;min-width:0}
+.pl-info .t{font-weight:700;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-info .m{font-size:12.5px;color:var(--muted)}
+.pl-ctrl{display:flex;align-items:center;gap:4px}
+.pl-btn{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink);transition:background .15s;flex:none}
+.pl-btn:hover{background:#F0EEE8}
+.pl-btn.main{width:46px;height:46px;background:var(--blue);color:#fff}
+.pl-btn.main:hover{background:var(--blue-d)}
+.pl-btn svg{width:20px;height:20px}
+.pl-speed{font-weight:700;font-size:13px;min-width:46px;height:32px;border-radius:999px;background:#F0EEE8;color:var(--ink);flex:none}
+.pl-speed:hover{background:#E6E3DB}
+.pl-seek{display:flex;align-items:center;gap:10px;margin-top:8px}
+.pl-time{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:42px;text-align:center}
+input[type=range].seek{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:99px;
+  background:linear-gradient(to left, var(--blue) var(--fill,0%), #E6E3DB var(--fill,0%));cursor:pointer}
+input[type=range].seek::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:#fff;border:2px solid var(--blue);box-shadow:0 1px 4px rgba(0,0,0,.2)}
+input[type=range].seek::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--blue)}
+
+/* ---------- Toast ---------- */
+#toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:#fff;padding:11px 22px;border-radius:999px;font-size:14.5px;font-weight:600;
+  z-index:200;opacity:0;pointer-events:none;transition:all .25s;box-shadow:0 8px 24px rgba(0,0,0,.25);white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ---------- Setup screen ---------- */
+.setup{max-width:600px;margin:50px auto;padding:0 20px;direction:rtl}
+.setup .panel{padding:30px}
+.setup h2{font-size:24px;margin-bottom:10px}
+.setup p{margin-bottom:8px;color:var(--muted)}
+.setup code{background:#F0EEE8;padding:2px 7px;border-radius:6px;font-size:14px;direction:ltr;display:inline-block}
+
+.spin{width:22px;height:22px;border:3px solid #D9DEE8;border-top-color:var(--blue);border-radius:50%;
+  animation:sp .7s linear infinite;margin:0 auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.loading-full{min-height:100vh;display:flex;align-items:center;justify-content:center}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media(max-width:520px){
+  .pagehead h2{font-size:24px}
+  .siman-head h2{font-size:26px}
+  main{padding:20px 14px 160px}
+  .pl-btn{width:36px;height:36px}
+}
+</style>
+</head>
+<body>
+
+<div id="app"><div class="loading-full"><div class="spin"></div></div></div>
+
+<!-- ══════════ Reproductor de shiurim ══════════ -->
+<div id="player">
+  <div class="pl-inner"><div class="pl-card">
+    <div class="pl-top">
+      <div class="pl-info">
+        <div class="t" id="pl-title"></div>
+        <div class="m" id="pl-sub"></div>
+      </div>
+      <div class="pl-ctrl">
+        <button class="pl-speed" id="pl-speed" onclick="cycleSpeed()" title="מהירות">1x</button>
+        <button class="pl-btn" onclick="skip(-30)" title="30 שניות אחורה">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2-9.4L1 10"/></svg>
+        </button>
+        <button class="pl-btn main" id="pl-play" onclick="togglePlay()" title="ניגון / השהיה">
+          <svg id="pl-ic-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="pl-ic-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+        </button>
+        <button class="pl-btn" onclick="skip(30)" title="30 שניות קדימה">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.5 15a9 9 0 1 1-2-9.4L23 10"/></svg>
+        </button>
+        <button class="pl-btn" onclick="closePlayer()" title="סגירה" style="color:var(--muted)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="pl-seek">
+      <span class="pl-time" id="pl-cur">0:00</span>
+      <input type="range" class="seek" id="pl-seek" min="0" max="100" value="0" step="0.1" aria-label="מיקום בשיעור">
+      <span class="pl-time" id="pl-dur">0:00</span>
+    </div>
+  </div></div>
+</div>
+<audio id="audio"></audio>
+
+<div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════
+   CONFIGURACIÓN — pega aquí tus datos de Supabase
+   (Project Settings → Data API: URL · API Keys: anon/publishable)
+   ═══════════════════════════════════════════════════════════ */
+const SUPABASE_URL = "https://enkofkroxudsblewxxos.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_nAsf0qU7fPUOZ5K7OgqwYw_hUPgzOrZ";
+const BUCKET = "jabura";                 // bucket de Storage (lo crea el SQL)
+const APP_NAME = "חבורת הלכה";           // Nombre de la jabura (puedes cambiarlo)
+
+/* ═══════════════ Init ═══════════════ */
+const $ = id => document.getElementById(id);
+const app = $('app');
+function configOK(){ return !SUPABASE_URL.includes('PEGA') && !SUPABASE_ANON_KEY.includes('PEGA'); }
+let sb = null;
+if (configOK()) sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// nombres de tablas en Supabase
+const T = { users:'usuarios', simanim:'simanim', mare:'mare',
+            materials:'materiales', shiurim:'shiurim', exams:'examenes', subs:'entregas' };
+
+function fail(error){ if (error) throw new Error(error.message || error); }
+
+/* ═══════════════ Helpers ═══════════════ */
+const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+function gem(n){ // número → letras hebreas (guematria)
+  n = parseInt(n);
+  if (!n || n < 1 || n > 499) return String(n);
+  const ones=['','א','ב','ג','ד','ה','ו','ז','ח','ט'];
+  const tens=['','י','כ','ל','מ','נ','ס','ע','פ','צ'];
+  const hunds=['','ק','ר','ש','ת'];
+  let s = hunds[Math.floor(n/100)]; n %= 100;
+  if (n === 15) return s + 'טו';
+  if (n === 16) return s + 'טז';
+  return (s + tens[Math.floor(n/10)] + ones[n%10]) || String(n);
+}
+
+function saifLabel(saifim){ // [2,3,4] → "סעיפים ב–ד"
+  if (!saifim || !saifim.length) return '';
+  const s = [...saifim].sort((a,b)=>a-b);
+  if (s.length === 1) return 'סעיף ' + gem(s[0]);
+  const contiguous = s.every((v,i)=> i===0 || v === s[i-1]+1);
+  if (contiguous) return 'סעיפים ' + gem(s[0]) + '–' + gem(s[s.length-1]);
+  return 'סעיפים ' + s.map(gem).join(', ');
+}
+
+function fmtSize(b){ if(!b) return ''; if(b<1024*1024) return Math.round(b/1024)+' KB'; return (b/1048576).toFixed(1)+' MB'; }
+function fmtDate(ts){ try{ const d = new Date(ts); if(isNaN(d)) return ''; return d.toLocaleDateString('he-IL',{day:'numeric',month:'short',year:'numeric'});}catch(e){return ''} }
+function fmtTime(sec){ if(!isFinite(sec)) return '0:00'; sec=Math.max(0,Math.floor(sec)); const m=Math.floor(sec/60), s=sec%60; return m+':'+String(s).padStart(2,'0'); }
+
+async function sha256(text){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function randSalt(){ return [...crypto.getRandomValues(new Uint8Array(12))].map(b=>b.toString(16).padStart(2,'0')).join(''); }
+
+let toastTimer;
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+function openSheet(html){ $('sheet').innerHTML = html; $('overlay').classList.add('open'); }
+function closeSheet(){ $('overlay').classList.remove('open'); }
+$('overlay').addEventListener('click', e => { if (e.target === $('overlay')) closeSheet(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+
+function sheetHead(title){
+  return `<div class="sheet-head"><h3>${esc(title)}</h3><button class="xbtn" onclick="closeSheet()">✕</button></div>`;
+}
+
+async function confirmDlg(msg){
+  return new Promise(res => {
+    openSheet(`${sheetHead('אישור')}
+      <p style="margin-bottom:22px;font-size:16px">${esc(msg)}</p>
+      <div style="display:flex;gap:10px">
+        <button class="btn danger" style="flex:1" id="cf-yes">כן, למחוק</button>
+        <button class="btn ghost" style="flex:1" id="cf-no">ביטול</button>
+      </div>`);
+    $('cf-yes').onclick = ()=>{ closeSheet(); res(true); };
+    $('cf-no').onclick  = ()=>{ closeSheet(); res(false); };
+  });
+}
+
+/* ═══════════════ Estado ═══════════════ */
+let ME = null;              // {id, name, role}
+let SIMANIM = [];
+let CUR = { view:'home', simanId:null, saif:1, tab:'mare' };
+const isAdmin = () => ME && ME.role === 'admin';
+
+/* ═══════════════ Sesión ═══════════════ */
+function saveSession(){ localStorage.setItem('jh_session', JSON.stringify(ME)); }
+function clearSession(){ localStorage.removeItem('jh_session'); }
+
+async function boot(){
+  if (!configOK()){ renderSetup(); return; }
+  const saved = localStorage.getItem('jh_session');
+  if (saved){
+    try {
+      const u = JSON.parse(saved);
+      const { data } = await sb.from(T.users).select('id,name,role').eq('id', u.id).maybeSingle();
+      if (data){ ME = { id: data.id, name: data.name, role: data.role }; saveSession(); }
+    } catch(e){}
+  }
+  if (ME){ await loadSimanim(); renderApp(); }
+  else renderAuth();
+}
+
+function renderSetup(err){
+  app.innerHTML = `<div class="setup"><div class="panel">
+    <h2>⚙️ חסרה הגדרת Supabase</h2>
+    ${err ? `<p style="color:var(--red);font-weight:600">${esc(err)}</p>` : ''}
+    <p>פתח את הקובץ <code>index.html</code> והדבק את ה‑<code>SUPABASE_URL</code> ואת ה‑<code>SUPABASE_ANON_KEY</code> שלך במקום שבו כתוב <code>PEGA_AQUI</code>.</p>
+    <p style="margin-top:10px">Supabase → Project Settings → Data API (URL) · API Keys (anon / publishable).</p>
+  </div></div>`;
+}
+
+/* ═══════════════ Auth (registro / login) ═══════════════ */
+function renderAuth(mode='login'){
+  const isReg = mode === 'register';
+  app.innerHTML = `
+  <div class="auth-wrap"><div class="auth-card">
+    <div class="auth-mark">ה</div>
+    <h1>${esc(APP_NAME)}</h1>
+    <div class="auth-sub">לימוד הלכה יומי · סימן אחר סימן</div>
+    <div class="auth-err" id="a-err"></div>
+    <div class="field"><label>שם מלא</label>
+      <input id="a-name" autocomplete="username" placeholder="לדוגמה: חיים עטח"></div>
+    <div class="field"><label>סיסמה</label>
+      <input id="a-pass" type="password" autocomplete="${isReg?'new-password':'current-password'}" placeholder="••••••"></div>
+    ${isReg ? `<div class="field"><label>אימות סיסמה</label>
+      <input id="a-pass2" type="password" autocomplete="new-password" placeholder="••••••"></div>` : ''}
+    <button class="btn full" id="a-go" style="margin-top:6px">${isReg?'הרשמה לחבורה':'כניסה'}</button>
+    <div class="auth-switch">${isReg
+      ? 'כבר יש לך חשבון? <button onclick="renderAuth(\'login\')">כניסה</button>'
+      : 'חדש בחבורה? <button onclick="renderAuth(\'register\')">הרשמה</button>'}</div>
+  </div></div>`;
+  const go = $('a-go');
+  const submit = () => isReg ? doRegister() : doLogin();
+  go.onclick = submit;
+  app.querySelectorAll('input').forEach(i => i.addEventListener('keydown', e => { if (e.key==='Enter') submit(); }));
+  $('a-name').focus();
+}
+
+function authErr(msg){ const e=$('a-err'); e.textContent=msg; e.style.display='block'; }
+const userId = name => name.trim().replace(/\s+/g,' ').toLowerCase();
+
+async function doRegister(){
+  const name = $('a-name').value.trim().replace(/\s+/g,' ');
+  const p1 = $('a-pass').value, p2 = $('a-pass2').value;
+  if (name.length < 2) return authErr('נא להזין שם מלא.');
+  if (p1.length < 4)   return authErr('הסיסמה צריכה להכיל לפחות 4 תווים.');
+  if (p1 !== p2)       return authErr('הסיסמאות אינן תואמות.');
+  const btn = $('a-go'); btn.disabled = true; btn.textContent = 'רק רגע…';
+  try {
+    const id = userId(name);
+    const { data: exist, error: e1 } = await sb.from(T.users).select('id').eq('id', id).maybeSingle();
+    fail(e1);
+    if (exist){ authErr('כבר קיים משתמש בשם הזה. נסה שם מעט שונה או היכנס.'); btn.disabled=false; btn.textContent='הרשמה לחבורה'; return; }
+    const { count, error: e2 } = await sb.from(T.users).select('id', { count:'exact', head:true });
+    fail(e2);
+    const first = !count;
+    const salt = randSalt();
+    const hash = await sha256(salt + p1);
+    const { error: e3 } = await sb.from(T.users).insert({ id, name, salt, hash, role: first ? 'admin' : 'member' });
+    fail(e3);
+    ME = { id, name, role: first ? 'admin' : 'member' };
+    saveSession();
+    toast(first ? 'ברוך הבא! נרשמת כמנהל הראשון' : 'ברוך הבא לחבורה!');
+    await loadSimanim(); renderApp();
+  } catch(e){ authErr('שגיאה: ' + e.message); btn.disabled=false; btn.textContent='הרשמה לחבורה'; }
+}
+
+async function doLogin(){
+  const name = $('a-name').value.trim();
+  const pass = $('a-pass').value;
+  if (!name || !pass) return authErr('נא למלא שם וסיסמה.');
+  const btn = $('a-go'); btn.disabled = true; btn.textContent = 'רק רגע…';
+  try {
+    const { data: u, error } = await sb.from(T.users).select('*').eq('id', userId(name)).maybeSingle();
+    fail(error);
+    if (!u){ authErr('לא נמצא משתמש בשם הזה.'); btn.disabled=false; btn.textContent='כניסה'; return; }
+    const hash = await sha256(u.salt + pass);
+    if (hash !== u.hash){ authErr('סיסמה שגויה.'); btn.disabled=false; btn.textContent='כניסה'; return; }
+    ME = { id: u.id, name: u.name, role: u.role };
+    saveSession();
+    await loadSimanim(); renderApp();
+  } catch(e){ authErr('שגיאה: ' + e.message); btn.disabled=false; btn.textContent='כניסה'; }
+}
+
+function logout(){ ME = null; clearSession(); closePlayer(); renderAuth(); }
+
+/* ═══════════════ Datos ═══════════════ */
+async function loadSimanim(){
+  const { data, error } = await sb.from(T.simanim).select('*').order('number', { ascending:true });
+  fail(error);
+  SIMANIM = data || [];
+}
+const getSiman = id => SIMANIM.find(s => s.id === id);
+
+async function fetchBySiman(table, simanId){
+  const { data, error } = await sb.from(table).select('*').eq('simanId', simanId).order('createdAt', { ascending:true });
+  fail(error);
+  return data || [];
+}
+
+/* ═══════════════ Layout principal ═══════════════ */
+function renderApp(){
+  app.innerHTML = `
+  <header>
+    <div class="hbar">
+      <div class="hmark">ה</div>
+      <div class="htitle">${esc(APP_NAME)}</div>
+      <div class="hspace"></div>
+      <div class="huser">שלום, <b>${esc(ME.name)}</b>${isAdmin()?' · <span class="badge gold">מנהל</span>':''}</div>
+      <button class="iconbtn" onclick="logout()" title="יציאה">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+    <nav class="tabs" id="nav"></nav>
+  </header>
+  <main id="main"></main>`;
+  renderNav();
+  go(CUR.view === 'siman' && !getSiman(CUR.simanId) ? 'home' : CUR.view);
+}
+
+function renderNav(){
+  const tabs = [ ['home','סימנים'], ['grades','הציונים שלי'] ];
+  if (isAdmin()) tabs.push(['admin','ניהול']);
+  $('nav').innerHTML = tabs.map(([v,l]) =>
+    `<button class="navtab ${ (CUR.view===v || (v==='home'&&CUR.view==='siman')) ? 'on':''}" onclick="go('${v}')">${l}</button>`).join('');
+}
+
+function go(view, simanId){
+  CUR.view = view;
+  if (simanId !== undefined){ CUR.simanId = simanId; CUR.saif = 1; CUR.tab = 'mare'; }
+  renderNav();
+  window.scrollTo({top:0});
+  if (view === 'home')   renderHome();
+  if (view === 'siman')  renderSiman();
+  if (view === 'grades') renderGrades();
+  if (view === 'admin')  renderAdmin();
+}
+
+/* ═══════════════ Inicio: lista de simanim ═══════════════ */
+function renderHome(){
+  const m = $('main');
+  const list = SIMANIM.length ? `<div class="siman-list">` + SIMANIM.map(s => `
+    <div class="siman-card" onclick="go('siman','${s.id}')">
+      <div class="siman-med">${gem(s.number)}</div>
+      <div class="siman-info">
+        <div class="t">סימן ${gem(s.number)}${s.title ? ' · ' + esc(s.title) : ''}</div>
+        <div class="m">${(s.saifim||[]).length} סעיפים</div>
+      </div>
+      ${isAdmin() ? `<button class="iconbtn" onclick="event.stopPropagation();openSimanEditor('${s.id}')" title="עריכת הסימן">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+      </button>` : ''}
+      <div class="siman-arrow">‹</div>
+    </div>`).join('') + `</div>`
+  : `<div class="panel"><div class="empty">
+      <div class="e-ic">📖</div>
+      <div class="e-t">עדיין אין סימנים</div>
+      <div>${isAdmin() ? 'צור את הסימן הראשון כדי להתחיל.' : 'המנהל עדיין לא פתח סימנים ללימוד.'}</div>
+    </div></div>`;
+
+  m.innerHTML = `
+    <div class="pagehead">
+      <div><h2>סימני הלימוד</h2><div class="sub">בחר סימן כדי לראות מראי מקומות, תוכן, שיעורים ומבחנים</div></div>
+      ${isAdmin() ? `<button class="btn" onclick="openSimanEditor()">＋ סימן חדש</button>` : ''}
+    </div>
+    ${list}`;
+}
+
+/* ─── Editor de siman (admin) ─── */
+function openSimanEditor(id){
+  const s = id ? getSiman(id) : null;
+  const saifim = s ? (s.saifim||[]) : [{n:1,title:''}];
+  openSheet(`${sheetHead(s ? 'עריכת סימן' : 'סימן חדש')}
+    <div style="display:flex;gap:12px">
+      <div class="field" style="width:110px"><label>מספר הסימן</label>
+        <input id="se-num" type="number" min="1" max="499" value="${s?s.number:''}" placeholder="1"></div>
+      <div class="field" style="flex:1"><label>כותרת (לא חובה)</label>
+        <input id="se-title" value="${s?esc(s.title||''):''}" placeholder="לדוגמה: דיני נטילת ידיים"></div>
+    </div>
+    <div class="field"><label>סעיפים</label><div id="se-saifim"></div>
+      <button class="btn soft sm" style="margin-top:8px" onclick="seAddSaif()">＋ הוספת סעיף</button>
+    </div>
+    <button class="btn full" onclick="saveSiman('${id||''}')">${s?'שמירת שינויים':'יצירת הסימן'}</button>
+    ${s ? `<button class="btn danger full sm" style="margin-top:10px" onclick="deleteSiman('${id}')">מחיקת הסימן כולו</button>` : ''}
+  `);
+  window._seSaifim = JSON.parse(JSON.stringify(saifim));
+  seRender();
+}
+function seRender(){
+  $('se-saifim').innerHTML = window._seSaifim.map((sf,i)=>`
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+      <div style="width:40px;height:40px;border-radius:50%;background:var(--blue-soft);color:var(--blue);flex:none;display:flex;align-items:center;justify-content:center;font-family:'Frank Ruhl Libre',serif;font-weight:700">${gem(i+1)}</div>
+      <input style="flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#FCFBF9"
+        value="${esc(sf.title||'')}" placeholder="כותרת הסעיף (לא חובה)" oninput="window._seSaifim[${i}].title=this.value">
+      ${i === window._seSaifim.length-1 && window._seSaifim.length>1 ? `<button class="iconbtn" onclick="window._seSaifim.pop();seRender()" title="הסרה">✕</button>`:''}
+    </div>`).join('');
+}
+function seAddSaif(){ window._seSaifim.push({n:window._seSaifim.length+1,title:''}); seRender(); }
+
+async function saveSiman(id){
+  const number = parseInt($('se-num').value);
+  if (!number || number < 1) return toast('נא להזין מספר סימן');
+  const row = {
+    number,
+    title: $('se-title').value.trim(),
+    saifim: window._seSaifim.map((sf,i)=>({ n:i+1, title:(sf.title||'').trim() }))
+  };
+  try {
+    if (id){ const { error } = await sb.from(T.simanim).update(row).eq('id', id); fail(error); }
+    else   { const { error } = await sb.from(T.simanim).insert(row); fail(error); }
+    closeSheet(); toast(id ? 'הסימן עודכן' : 'הסימן נוצר');
+    await loadSimanim();
+    CUR.view === 'siman' ? renderSiman() : renderHome();
+  } catch(e){ toast('שגיאה: ' + e.message); }
+}
+
+async function deleteSiman(id){
+  closeSheet();
+  if (!await confirmDlg('למחוק את הסימן על כל התוכן, השיעורים והמבחנים שבו?')) return;
+  try {
+    // borrar archivos de Storage de este siman
+    const paths = [];
+    for (const tbl of [T.materials, T.shiurim]){
+      const { data } = await sb.from(tbl).select('storagePath').eq('simanId', id);
+      (data||[]).forEach(r => { if (r.storagePath) paths.push(r.storagePath); });
+    }
+    if (paths.length){ try { await sb.storage.from(BUCKET).remove(paths); } catch(e){} }
+    for (const tbl of [T.materials, T.shiurim, T.exams, T.mare, T.subs]){
+      const { error } = await sb.from(tbl).delete().eq('simanId', id);
+      if (error && !/does not exist/.test(error.message)) fail(error);
+    }
+    const { error } = await sb.from(T.simanim).delete().eq('id', id); fail(error);
+    toast('הסימן נמחק');
+    await loadSimanim(); go('home');
+  } catch(e){ toast('שגיאה: ' + e.message); }
+}
+
+/* ═══════════════ Vista de siman ═══════════════ */
+async function renderSiman(){
+  const s = getSiman(CUR.simanId);
+  if (!s) return go('home');
+  const saifim = s.saifim || [];
+  if (CUR.saif > saifim.length) CUR.saif = 1;
+  const curSaif = saifim[CUR.saif-1] || {};
+  const tabs = [ ['mare','מראי מקומות'], ['content','תוכן'], ['shiurim','שיעורים'], ['exams','מבחנים'] ];
+
+  $('main').innerHTML = `
+    <button class="crumb" onclick="go('home')">‹ כל הסימנים</button>
+    <div class="siman-head">
+      <div class="eyebrow">סימן ${gem(s.number)}</div>
+      <h2>${esc(s.title || ('סימן ' + gem(s.number)))}</h2>
+    </div>
+    <div class="saif-row">${saifim.map(sf => `
+      <button class="saif-chip ${sf.n===CUR.saif?'on':''}" onclick="CUR.saif=${sf.n};renderSiman()" title="סעיף ${gem(sf.n)}">${gem(sf.n)}</button>`).join('')}
+    </div>
+    <div class="saif-title-line">${curSaif.title ? 'סעיף ' + gem(CUR.saif) + ' · ' + esc(curSaif.title) : 'סעיף ' + gem(CUR.saif)}</div>
+    <div class="seg">${tabs.map(([t,l]) => `<button class="${CUR.tab===t?'on':''}" onclick="CUR.tab='${t}';renderSiman()">${l}</button>`).join('')}</div>
+    <div id="tabbody"><div style="padding:40px"><div class="spin"></div></div></div>`;
+
+  if (CUR.tab === 'mare')    renderMare(s);
+  if (CUR.tab === 'content') renderContent(s);
+  if (CUR.tab === 'shiurim') renderShiurim(s);
+  if (CUR.tab === 'exams')   renderExams(s);
+}
+
+/* ─── מראי מקומות ─── */
+async function renderMare(s){
+  const docId = s.id + '_' + CUR.saif;
+  let text = '';
+  try {
+    const { data } = await sb.from(T.mare).select('text').eq('id', docId).maybeSingle();
+    if (data) text = data.text || '';
+  } catch(e){}
+  const body = $('tabbody'); if (!body) return;
+  body.innerHTML = `
+    <div class="panel">
+      ${text ? `<div class="mare-text">${esc(text)}</div>` : `
+        <div class="empty"><div class="e-ic">✍️</div>
+          <div class="e-t">אין עדיין מראי מקומות לסעיף זה</div>
+          <div>${isAdmin() ? 'לחץ על "עריכה" כדי להוסיף.' : 'הרב עדיין לא העלה מראי מקומות.'}</div>
+        </div>`}
+    </div>
+    ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="editMare('${docId}')">✏️ עריכת מראי המקומות</button></div>` : ''}`;
+  window._mareText = text;
+}
+function editMare(docId){
+  openSheet(`${sheetHead('מראי מקומות · סעיף ' + gem(CUR.saif))}
+    <div class="field"><label>מה צריך לראות לקראת הלימוד</label>
+      <textarea id="mm-text" rows="9" placeholder="לדוגמה:
+טור ובית יוסף סימן קנח
+שולחן ערוך סעיפים א–ג
+משנה ברורה ס״ק א–ז">${esc(window._mareText||'')}</textarea></div>
+    <button class="btn full" onclick="saveMare('${docId}')">שמירה</button>`);
+}
+async function saveMare(docId){
+  const text = $('mm-text').value.trim();
+  try {
+    const { error } = await sb.from(T.mare).upsert({
+      id: docId, simanId: CUR.simanId, saif: CUR.saif, text,
+      updatedAt: new Date().toISOString()
+    });
+    fail(error);
+    closeSheet(); toast('מראי המקומות נשמרו'); renderSiman();
+  } catch(e){ toast('שגיאה: ' + e.message); }
+}
+
+/* ─── Iconos ─── */
+function fileIcon(name){
+  const ext = (name||'').split('.').pop().toLowerCase();
+  if (ext === 'pdf') return ['pdf','📕'];
+  if (['jpg','jpeg','png','gif','webp'].includes(ext)) return ['file','🖼️'];
+  if (['doc','docx'].includes(ext)) return ['file','📄'];
+  return ['file','📎'];
+}
+
+/* ─── תוכן (PDFs y archivos) ─── */
+async function renderContent(s){
+  const items = (await fetchBySiman(T.materials, s.id)).filter(m => (m.saifim||[]).includes(CUR.saif));
+  const body = $('tabbody'); if (!body) return;
+  body.innerHTML = `
+    ${items.length ? `<div class="item-list">` + items.map(m => {
+      const [cls,ic] = fileIcon(m.fileName);
+      return `<div class="item">
+        <div class="ic ${cls}">${ic}</div>
+        <div class="body">
+          <div class="t">${esc(m.title)}</div>
+          <div class="m">${saifLabel(m.saifim)} · ${fmtSize(m.size)} · ${fmtDate(m.createdAt)}</div>
+        </div>
+        <a class="btn soft sm" href="${esc(m.url)}" target="_blank" rel="noopener" style="text-decoration:none">פתיחה</a>
+        ${isAdmin() ? `<button class="iconbtn" onclick="deleteItem('${T.materials}','${m.id}','${esc(m.storagePath||'')}')" title="מחיקה">🗑️</button>`:''}
+      </div>`;}).join('') + `</div>`
+    : `<div class="panel"><div class="empty"><div class="e-ic">📚</div>
+        <div class="e-t">אין עדיין תוכן לסעיף זה</div>
+        <div>${isAdmin()?'העלה PDF או כל קובץ אחר ללימוד.':'הרב עדיין לא העלה תוכן.'}</div></div></div>`}
+    ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="openUpload('${T.materials}')">＋ העלאת קובץ</button></div>` : ''}`;
+}
+
+/* ─── שיעורים ─── */
+let SHIUR_CACHE = [];
+async function renderShiurim(s){
+  const all = await fetchBySiman(T.shiurim, s.id);
+  SHIUR_CACHE = all;
+  const items = all.filter(x => (x.saifim||[]).includes(CUR.saif));
+  const body = $('tabbody'); if (!body) return;
+  body.innerHTML = `
+    ${items.length ? `<div class="item-list">` + items.map(x => `
+      <div class="item">
+        <button class="playbtn ${PL.id===x.id && PL.playing ? 'playing':''}" id="pb-${x.id}" onclick="playShiur('${x.id}')" title="ניגון">
+          ${PL.id===x.id && PL.playing
+            ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>'
+            : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'}
+        </button>
+        <div class="body">
+          <div class="t">${esc(x.title)}</div>
+          <div class="m">${fmtDate(x.createdAt)}</div>
+        </div>
+        <span class="badge ${(x.saifim||[]).length>1?'gold':''}">${saifLabel(x.saifim)}</span>
+        ${isAdmin() ? `<button class="iconbtn" onclick="deleteItem('${T.shiurim}','${x.id}','${esc(x.storagePath||'')}')" title="מחיקה">🗑️</button>`:''}
+      </div>`).join('') + `</div>`
+    : `<div class="panel"><div class="empty"><div class="e-ic">🎧</div>
+        <div class="e-t">אין עדיין שיעורים לסעיף זה</div>
+        <div>${isAdmin()?'העלה את הקלטת השיעור של הרב.':'השיעור יעלה לכאן אחרי מסירתו.'}</div></div></div>`}
+    ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="openUpload('${T.shiurim}')">＋ העלאת שיעור</button></div>` : ''}`;
+}
+
+/* ─── Borrar item ─── */
+async function deleteItem(tbl, id, storagePath){
+  const names = {}; names[T.materials]='הקובץ'; names[T.shiurim]='השיעור'; names[T.exams]='המבחן';
+  if (!await confirmDlg('למחוק את ' + (names[tbl]||'הפריט') + '?')) return;
+  try {
+    if (tbl === T.exams){
+      const { error } = await sb.from(T.subs).delete().eq('examId', id); fail(error);
+    }
+    const { error } = await sb.from(tbl).delete().eq('id', id); fail(error);
+    if (storagePath){ try { await sb.storage.from(BUCKET).remove([storagePath]); } catch(e){} }
+    toast('נמחק');
+    renderSiman();
+  } catch(e){ toast('שגיאה: ' + e.message); }
+}
+
+/* ═══════════════ Subida de archivos (admin) ═══════════════ */
+function openUpload(tbl){
+  const s = getSiman(CUR.simanId);
+  const isShiur = tbl === T.shiurim;
+  openSheet(`${sheetHead(isShiur ? 'העלאת שיעור' : 'העלאת קובץ')}
+    <div class="field"><label>כותרת</label>
+      <input id="up-title" placeholder="${isShiur?'לדוגמה: שיעור על סעיפים א–ג':'לדוגמה: דף מקורות מודפס'}"></div>
+    <div class="field"><label>${isShiur ? 'קובץ שמע (MP3 / M4A)' : 'קובץ (PDF, Word, תמונה…)'}</label>
+      <input id="up-file" type="file" accept="${isShiur?'audio/*':'*/*'}"></div>
+    <div class="field"><label>שייך לסעיפים ${isShiur?'(שיעור אחד יכול לכסות כמה סעיפים)':''}</label>
+      <div class="chips" id="up-chips">${(s.saifim||[]).map(sf =>
+        `<button class="chip ${sf.n===CUR.saif?'on':''}" data-n="${sf.n}" onclick="this.classList.toggle('on')">${gem(sf.n)}</button>`).join('')}</div>
+    </div>
+    <button class="btn full" id="up-go" onclick="doUpload('${tbl}')">העלאה</button>
+    <div class="progress" id="up-prog"><div class="bar" id="up-bar"></div></div>
+    <div class="hint" id="up-hint"></div>`);
+}
+
+function uploadWithProgress(path, file){
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', SUPABASE_URL + '/storage/v1/object/' + BUCKET + '/' + path);
+    xhr.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_ANON_KEY);
+    xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+    xhr.setRequestHeader('x-upsert', 'false');
+    xhr.upload.onprogress = e => {
+      if (!e.lengthComputable) return;
+      const pct = Math.round(e.loaded / e.total * 100);
+      $('up-bar').style.width = pct + '%';
+      $('up-hint').textContent = pct + '% · ' + fmtSize(e.loaded) + ' מתוך ' + fmtSize(e.total);
+    };
+    xhr.onload = () => xhr.status < 300 ? resolve() : reject(new Error('HTTP ' + xhr.status + ' — ' + xhr.responseText.slice(0,200)));
+    xhr.onerror = () => reject(new Error('שגיאת רשת בהעלאה'));
+    xhr.send(file);
+  });
+}
+
+async function doUpload(tbl){
+  const title = $('up-title').value.trim();
+  const file = $('up-file').files[0];
+  const saifim = [...document.querySelectorAll('#up-chips .chip.on')].map(c => parseInt(c.dataset.n));
+  if (!title)  return toast('נא להזין כותרת');
+  if (!file)   return toast('נא לבחור קובץ');
+  if (!saifim.length) return toast('נא לבחור לפחות סעיף אחד');
+  const btn = $('up-go'); btn.disabled = true; btn.textContent = 'מעלה…';
+  $('up-prog').style.display = 'block';
+  const path = tbl + '/' + Date.now() + '_' + file.name.replace(/[^\w.\-]+/g,'_');
+  try {
+    await uploadWithProgress(path, file);
+    const url = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+    const { error } = await sb.from(tbl).insert({
+      simanId: CUR.simanId, saifim, title, url,
+      fileName: file.name, size: file.size, storagePath: path, uploadedBy: ME.name
+    });
+    fail(error);
+    closeSheet(); toast('הועלה בהצלחה 🎉'); renderSiman();
+  } catch(e){
+    toast('שגיאה: ' + e.message);
+    btn.disabled = false; btn.textContent = 'העלאה';
+  }
+}
+
+/* ═══════════════ Reproductor ═══════════════ */
+const audio = $('audio');
+let PL = { id:null, playing:false };
+const SPEEDS = [1, 1.25, 1.5, 1.75, 2, 2.5, 3, 0.75];
+
+function playShiur(id){
+  const x = SHIUR_CACHE.find(s => s.id === id);
+  if (!x) return;
+  if (PL.id === id){ togglePlay(); return; }
+  PL.id = id;
+  audio.src = x.url;
+  const saved = parseFloat(localStorage.getItem('jh_pos_' + id) || '0');
+  audio.currentTime = 0;
+  audio.addEventListener('loadedmetadata', function once(){
+    if (saved > 5 && saved < audio.duration - 10) audio.currentTime = saved;
+    audio.removeEventListener('loadedmetadata', once);
+  });
+  const sm = getSiman(x.simanId);
+  $('pl-title').textContent = x.title;
+  $('pl-sub').textContent = 'סימן ' + gem(sm?.number||'') + ' · ' + saifLabel(x.saifim);
+  $('player').classList.add('show');
+  audio.play();
+  if ('mediaSession' in navigator){
+    navigator.mediaSession.metadata = new MediaMetadata({ title: x.title, artist: APP_NAME });
+  }
+}
+function togglePlay(){ if (!PL.id) return; audio.paused ? audio.play() : audio.pause(); }
+function skip(sec){ if (PL.id) audio.currentTime = Math.max(0, Math.min(audio.duration||1e9, audio.currentTime + sec)); }
+function cycleSpeed(){
+  const i = SPEEDS.indexOf(audio.playbackRate);
+  audio.playbackRate = SPEEDS[(i+1) % SPEEDS.length];
+  $('pl-speed').textContent = audio.playbackRate + 'x';
+}
+function closePlayer(){
+  audio.pause(); audio.removeAttribute('src'); audio.load();
+  PL = { id:null, playing:false };
+  $('player').classList.remove('show');
+  refreshPlayBtns();
+}
+function refreshPlayBtns(){
+  document.querySelectorAll('.playbtn').forEach(b => {
+    const id = b.id.replace('pb-','');
+    const on = PL.id === id && PL.playing;
+    b.classList.toggle('playing', on);
+    b.innerHTML = on
+      ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+  });
+}
+audio.addEventListener('play',  ()=>{ PL.playing = true;  $('pl-ic-play').style.display='none'; $('pl-ic-pause').style.display='block'; refreshPlayBtns(); });
+audio.addEventListener('pause', ()=>{ PL.playing = false; $('pl-ic-play').style.display='block'; $('pl-ic-pause').style.display='none'; refreshPlayBtns(); });
+audio.addEventListener('timeupdate', ()=>{
+  if (!PL.id || !isFinite(audio.duration)) return;
+  const pct = audio.currentTime / audio.duration * 100;
+  const seek = $('pl-seek');
+  if (!seek.matches(':active')){ seek.value = pct; }
+  seek.style.setProperty('--fill', pct + '%');
+  $('pl-cur').textContent = fmtTime(audio.currentTime);
+  $('pl-dur').textContent = fmtTime(audio.duration);
+  if (Math.floor(audio.currentTime) % 5 === 0) localStorage.setItem('jh_pos_' + PL.id, audio.currentTime);
+});
+audio.addEventListener('ended', ()=>{ localStorage.removeItem('jh_pos_' + PL.id); });
+$('pl-seek').addEventListener('input', e => {
+  if (isFinite(audio.duration)){
+    audio.currentTime = e.target.value / 100 * audio.duration;
+    e.target.style.setProperty('--fill', e.target.value + '%');
+  }
+});
+
+/* ═══════════════ Exámenes — vista del miembro ═══════════════ */
+async function renderExams(s){
+  const [exams, mySubsQ] = await Promise.all([
+    fetchBySiman(T.exams, s.id),
+    sb.from(T.subs).select('*').eq('userId', ME.id)
+  ]);
+  fail(mySubsQ.error);
+  const mySubs = mySubsQ.data || [];
+  const items = exams.filter(e => (e.saifim||[]).includes(CUR.saif));
+  const body = $('tabbody'); if (!body) return;
+
+  body.innerHTML = `
+    ${items.length ? items.map(e => {
+      const sub = mySubs.find(x => x.examId === e.id);
+      let status, action;
+      if (!sub){
+        status = `<span class="badge">טרם נענה</span>`;
+        action = `<button class="btn sm" onclick="openTakeExam('${e.id}')">התחלת המבחן</button>`;
+      } else if (sub.status === 'pending'){
+        status = `<span class="badge gold">ממתין לבדיקת הרב</span>`;
+        action = `<button class="btn ghost sm" onclick="openMySub('${sub.id}')">צפייה בתשובות שלי</button>`;
+      } else {
+        status = `<span class="badge green">ציון: ${sub.grade}</span>`;
+        action = `<button class="btn ghost sm" onclick="openMySub('${sub.id}')">צפייה בתשובות שלי</button>`;
+      }
+      return `<div class="exam-card">
+        <div class="exam-top">
+          <div class="body">
+            <div class="t">${esc(e.title)}</div>
+            <div class="m">${saifLabel(e.saifim)} · ${e.questions.length} שאלות · ${fmtDate(e.createdAt)}</div>
+          </div>
+          ${status}
+        </div>
+        <div class="exam-actions">
+          ${action}
+          ${isAdmin() ? `<button class="btn ghost sm" onclick="openExamSubs('${e.id}')">הגשות ובדיקה</button>
+                         <button class="iconbtn" onclick="deleteItem('${T.exams}','${e.id}','')" title="מחיקת המבחן">🗑️</button>` : ''}
+        </div>
+      </div>`;
+    }).join('')
+    : `<div class="panel"><div class="empty"><div class="e-ic">📝</div>
+        <div class="e-t">אין עדיין מבחנים לסעיף זה</div>
+        <div>${isAdmin()?'צור מבחן חדש לחבורה.':'המבחן יעלה לכאן כשהרב יפרסם אותו.'}</div></div></div>`}
+    ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="openExamBuilder()">＋ מבחן חדש</button></div>` : ''}`;
+}
+
+/* ─── Responder examen ─── */
+async function openTakeExam(examId){
+  const { data: e, error } = await sb.from(T.exams).select('*').eq('id', examId).maybeSingle();
+  if (error || !e) return toast('המבחן לא נמצא');
+  window._exam = e;
+  window._answers = e.questions.map(()=>null);
+  openSheet(`${sheetHead(e.title)}
+    <div class="hint" style="margin:-10px 0 18px">ענה על כל השאלות ולחץ על הגשה. ניתן להגיש פעם אחת בלבד.</div>
+    ${e.questions.map((q,qi)=>`
+      <div class="q-card">
+        <div class="qt">${qi+1}. ${esc(q.text)}</div>
+        ${q.type === 'mc'
+          ? q.options.map((op,oi)=>`
+            <label class="opt" id="opt-${qi}-${oi}" onclick="pickOpt(${qi},${oi})">
+              <input type="radio" name="q${qi}"> <span>${esc(op)}</span>
+            </label>`).join('')
+          : `<textarea rows="4" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:11px;background:#fff"
+              placeholder="כתוב את תשובתך כאן…" oninput="window._answers[${qi}]=this.value"></textarea>`}
+      </div>`).join('')}
+    <button class="btn full" onclick="submitExam()">הגשת המבחן</button>`);
+}
+function pickOpt(qi, oi){
+  window._answers[qi] = oi;
+  document.querySelectorAll(`[id^="opt-${qi}-"]`).forEach(el => el.classList.remove('sel'));
+  $(`opt-${qi}-${oi}`).classList.add('sel');
+  $(`opt-${qi}-${oi}`).querySelector('input').checked = true;
+}
+async function submitExam(){
+  const e = window._exam, ans = window._answers;
+  for (let i = 0; i < ans.length; i++){
+    if (ans[i] === null || ans[i] === '' ) return toast('חסרה תשובה לשאלה ' + (i+1));
+  }
+  const mcIdx = e.questions.map((q,i)=> q.type==='mc' ? i : -1).filter(i=>i>=0);
+  const mcOK  = mcIdx.filter(i => ans[i] === e.questions[i].correct).length;
+  const allMC = mcIdx.length === e.questions.length;
+  const row = {
+    examId: e.id, examTitle: e.title, simanId: e.simanId, saifim: e.saifim,
+    userId: ME.id, userName: ME.name,
+    answers: ans, mcScore: mcOK, mcTotal: mcIdx.length,
+    status: allMC ? 'graded' : 'pending',
+    grade: allMC ? Math.round(mcOK / mcIdx.length * 100) : null,
+    feedback: allMC ? 'נבדק אוטומטית' : ''
+  };
+  try {
+    const { error } = await sb.from(T.subs).insert(row);
+    fail(error);
+    closeSheet();
+    toast(allMC ? 'הוגש! הציון שלך: ' + row.grade : 'הוגש! ממתין לבדיקת הרב');
+    renderSiman();
+  } catch(err){ toast('שגיאה: ' + err.message); }
+}
+
+/* ─── Ver mis respuestas ─── */
+async function openMySub(subId){
+  const { data: sub } = await sb.from(T.subs).select('*').eq('id', subId).maybeSingle();
+  if (!sub) return;
+  const { data: e } = await sb.from(T.exams).select('*').eq('id', sub.examId).maybeSingle();
+  const exam = e || { questions: [] };
+  openSheet(`${sheetHead(sub.examTitle)}
+    ${sub.status==='graded'
+      ? `<div style="text-align:center;margin-bottom:20px"><div class="grade-big">${sub.grade}</div>
+         <div class="hint">${esc(sub.feedback||'')}</div></div>`
+      : `<div style="text-align:center;margin-bottom:20px"><span class="badge gold">ממתין לבדיקת הרב</span></div>`}
+    ${exam.questions.map((q,qi)=>{
+      const a = sub.answers[qi];
+      if (q.type === 'mc'){
+        return `<div class="q-card"><div class="qt">${qi+1}. ${esc(q.text)}</div>
+          ${q.options.map((op,oi)=>{
+            let cls = '';
+            if (oi === q.correct) cls = 'correct';
+            else if (oi === a) cls = 'wrong';
+            return `<div class="opt ${cls}" style="cursor:default">${oi===a?'◉':'○'} <span>${esc(op)}</span>${oi===q.correct?' ✓':''}</div>`;
+          }).join('')}</div>`;
+      }
+      return `<div class="q-card"><div class="qt">${qi+1}. ${esc(q.text)}</div>
+        <div style="background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px;white-space:pre-wrap">${esc(a)}</div></div>`;
+    }).join('')}`);
+}
+
+/* ═══════════════ Creador de exámenes (admin) ═══════════════ */
+function openExamBuilder(){
+  const s = getSiman(CUR.simanId);
+  window._qs = [];
+  openSheet(`${sheetHead('מבחן חדש')}
+    <div class="field"><label>שם המבחן</label>
+      <input id="ex-title" placeholder="לדוגמה: מבחן על סעיפים א–ג"></div>
+    <div class="field"><label>שייך לסעיפים</label>
+      <div class="chips" id="ex-chips">${(s.saifim||[]).map(sf =>
+        `<button class="chip ${sf.n===CUR.saif?'on':''}" data-n="${sf.n}" onclick="this.classList.toggle('on')">${gem(sf.n)}</button>`).join('')}</div></div>
+    <div class="field"><label>שאלות</label><div id="ex-qs"></div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn soft sm" onclick="addQ('mc')">＋ שאלה אמריקאית</button>
+        <button class="btn soft sm" onclick="addQ('open')">＋ שאלה פתוחה</button>
+      </div>
+    </div>
+    <button class="btn full" onclick="saveExam()">פרסום המבחן</button>
+    <div class="hint" style="text-align:center;margin-top:8px">מבחן שכולו שאלות אמריקאיות נבדק אוטומטית · שאלות פתוחות ממתינות לבדיקתך</div>`);
+  addQ('mc');
+}
+function addQ(type){
+  window._qs.push(type === 'mc' ? { type:'mc', text:'', options:['',''], correct:0 } : { type:'open', text:'' });
+  renderQs();
+}
+function renderQs(){
+  $('ex-qs').innerHTML = window._qs.map((q,qi)=>`
+    <div class="q-card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span class="badge ${q.type==='mc'?'':'gold'}">${q.type==='mc'?'אמריקאית':'פתוחה'}</span>
+        <div style="flex:1"></div>
+        <button class="iconbtn" onclick="window._qs.splice(${qi},1);renderQs()" title="הסרת השאלה">✕</button>
+      </div>
+      <input style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;margin-bottom:10px"
+        placeholder="נוסח השאלה" value="${esc(q.text)}" oninput="window._qs[${qi}].text=this.value">
+      ${q.type === 'mc' ? `
+        ${q.options.map((op,oi)=>`
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+            <input type="radio" name="exc-${qi}" ${q.correct===oi?'checked':''} onclick="window._qs[${qi}].correct=${oi}"
+              title="סימון כתשובה הנכונה" style="accent-color:var(--green);width:18px;height:18px;flex:none">
+            <input style="flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#fff"
+              placeholder="אפשרות ${oi+1}" value="${esc(op)}" oninput="window._qs[${qi}].options[${oi}]=this.value">
+            ${q.options.length > 2 ? `<button class="iconbtn" onclick="window._qs[${qi}].options.splice(${oi},1);if(window._qs[${qi}].correct>=window._qs[${qi}].options.length)window._qs[${qi}].correct=0;renderQs()">✕</button>`:''}
+          </div>`).join('')}
+        <button class="btn ghost sm" onclick="window._qs[${qi}].options.push('');renderQs()" ${q.options.length>=6?'disabled':''}>＋ אפשרות</button>
+        <div class="hint">סמן בעיגול הירוק את התשובה הנכונה</div>` : ''}
+    </div>`).join('');
+}
+async function saveExam(){
+  const title = $('ex-title').value.trim();
+  const saifim = [...document.querySelectorAll('#ex-chips .chip.on')].map(c => parseInt(c.dataset.n));
+  if (!title) return toast('נא להזין שם למבחן');
+  if (!saifim.length) return toast('נא לבחור סעיפים');
+  if (!window._qs.length) return toast('נא להוסיף לפחות שאלה אחת');
+  for (const [i,q] of window._qs.entries()){
+    if (!q.text.trim()) return toast('חסר נוסח לשאלה ' + (i+1));
+    if (q.type === 'mc' && q.options.some(o=>!o.trim())) return toast('יש אפשרות ריקה בשאלה ' + (i+1));
+  }
+  try {
+    const { error } = await sb.from(T.exams).insert({
+      simanId: CUR.simanId, saifim, title,
+      questions: window._qs, createdBy: ME.name
+    });
+    fail(error);
+    closeSheet(); toast('המבחן פורסם 📝'); renderSiman();
+  } catch(e){ toast('שגיאה: ' + e.message); }
+}
+
+/* ═══════════════ Calificación (admin) ═══════════════ */
+async function openExamSubs(examId){
+  const { data, error } = await sb.from(T.subs).select('*').eq('examId', examId).order('createdAt', { ascending:false });
+  fail(error);
+  const subs = data || [];
+  openSheet(`${sheetHead('הגשות')}
+    ${subs.length ? `<div class="tblwrap"><table class="tbl">
+      <tr><th>שם</th><th>מצב</th><th>ציון</th><th></th></tr>
+      ${subs.map(s=>`<tr>
+        <td><b>${esc(s.userName)}</b><div class="hint">${fmtDate(s.createdAt)}</div></td>
+        <td>${s.status==='graded'?'<span class="badge green">נבדק</span>':'<span class="badge gold">ממתין</span>'}</td>
+        <td>${s.status==='graded'?'<b>'+s.grade+'</b>':'—'}</td>
+        <td style="text-align:left"><button class="btn soft sm" onclick="openGrade('${s.id}')">${s.status==='graded'?'צפייה / עדכון':'בדיקה'}</button></td>
+      </tr>`).join('')}
+    </table></div>` : `<div class="empty"><div class="e-ic">📭</div><div class="e-t">אין עדיין הגשות</div></div>`}`);
+}
+
+async function openGrade(subId){
+  const { data: sub } = await sb.from(T.subs).select('*').eq('id', subId).maybeSingle();
+  if (!sub) return;
+  const { data: e } = await sb.from(T.exams).select('*').eq('id', sub.examId).maybeSingle();
+  const exam = e || { questions: [] };
+  openSheet(`${sheetHead('בדיקה · ' + sub.userName)}
+    <div class="hint" style="margin:-8px 0 16px">${esc(sub.examTitle)} · ${sub.mcTotal ? 'אמריקאיות: ' + sub.mcScore + '/' + sub.mcTotal + ' נכונות' : 'שאלות פתוחות בלבד'}</div>
+    ${exam.questions.map((q,qi)=>{
+      const a = sub.answers[qi];
+      if (q.type === 'mc'){
+        const ok = a === q.correct;
+        return `<div class="q-card"><div class="qt">${qi+1}. ${esc(q.text)} ${ok?'<span class="badge green">נכון</span>':'<span class="badge red">שגוי</span>'}</div>
+          <div class="hint">ענה: ${esc(q.options[a] ?? '—')} · נכון: ${esc(q.options[q.correct])}</div></div>`;
+      }
+      return `<div class="q-card"><div class="qt">${qi+1}. ${esc(q.text)} <span class="badge gold">פתוחה</span></div>
+        <div style="background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px;white-space:pre-wrap">${esc(a)}</div></div>`;
+    }).join('')}
+    <div style="display:flex;gap:12px;align-items:flex-end">
+      <div class="field" style="width:120px"><label>ציון סופי (0–100)</label>
+        <input id="gr-grade" type="number" min="0" max="100" value="${sub.grade ?? (sub.mcTotal ? Math.round(sub.mcScore/sub.mcTotal*100) : '')}"></div>
+      <div class="field" style="flex:1"><label>הערה לתלמיד (לא חובה)</label>
+        <input id="gr-fb" value="${esc(sub.feedback||'')}" placeholder="כל הכבוד! / חזור על סעיף ב"></div>
+    </div>
+    <button class="btn full" onclick="saveGrade('${sub.id}')">שמירת הציון</button>`);
+}
+async function saveGrade(subId){
+  const grade = parseInt($('gr-grade').value);
+  if (isNaN(grade) || grade < 0 || grade > 100) return toast('נא להזין ציון בין 0 ל‑100');
+  try {
+    const { error } = await sb.from(T.subs).update({
+      grade, feedback: $('gr-fb').value.trim(), status: 'graded',
+      gradedBy: ME.name, gradedAt: new Date().toISOString()
+    }).eq('id', subId);
+    fail(error);
+    closeSheet(); toast('הציון נשמר ✓');
+    if (CUR.view === 'admin') renderAdmin(); else renderSiman();
+  } catch(e){ toast('שגיאה: ' + e.message); }
+}
+
+/* ═══════════════ הציונים שלי ═══════════════ */
+async function renderGrades(){
+  const { data, error } = await sb.from(T.subs).select('*').eq('userId', ME.id).order('createdAt', { ascending:false });
+  fail(error);
+  const subs = data || [];
+  const graded = subs.filter(s=>s.status==='graded');
+  const avg = graded.length ? Math.round(graded.reduce((t,s)=>t+s.grade,0)/graded.length) : null;
+  $('main').innerHTML = `
+    <div class="pagehead"><div><h2>הציונים שלי</h2>
+      <div class="sub">${avg !== null ? 'ממוצע: ' + avg + ' · ' + graded.length + ' מבחנים שנבדקו' : 'כאן יופיעו הציונים שלך'}</div></div></div>
+    ${subs.length ? subs.map(s=>{
+      const sm = getSiman(s.simanId);
+      return `<div class="exam-card"><div class="exam-top">
+        <div class="body">
+          <div class="t">${esc(s.examTitle)}</div>
+          <div class="m">${sm ? 'סימן ' + gem(sm.number) + ' · ' : ''}${saifLabel(s.saifim)} · ${fmtDate(s.createdAt)}</div>
+          ${s.feedback && s.status==='graded' ? `<div class="m" style="margin-top:6px;color:var(--ink)">💬 ${esc(s.feedback)}</div>`:''}
+        </div>
+        ${s.status==='graded' ? `<div class="grade-big">${s.grade}</div>` : '<span class="badge gold">ממתין לבדיקה</span>'}
+      </div>
+      <div class="exam-actions"><button class="btn ghost sm" onclick="openMySub('${s.id}')">צפייה בתשובות</button></div>
+      </div>`;
+    }).join('')
+    : `<div class="panel"><div class="empty"><div class="e-ic">🎓</div>
+        <div class="e-t">עדיין לא הגשת מבחנים</div><div>גש למבחנים דרך הסעיפים בסימנים.</div></div></div>`}`;
+}
+
+/* ═══════════════ Panel de administración ═══════════════ */
+async function renderAdmin(sub='pending'){
+  const m = $('main');
+  m.innerHTML = `
+    <div class="pagehead"><div><h2>ניהול</h2><div class="sub">בדיקת מבחנים וניהול חברי החבורה</div></div></div>
+    <div class="seg" style="max-width:420px">
+      <button class="${sub==='pending'?'on':''}" onclick="renderAdmin('pending')">בדיקת מבחנים</button>
+      <button class="${sub==='users'?'on':''}" onclick="renderAdmin('users')">חברי החבורה</button>
+    </div>
+    <div id="adm-body"><div style="padding:40px"><div class="spin"></div></div></div>`;
+  if (sub === 'pending') renderAdmPending();
+  if (sub === 'users')   renderAdmUsers();
+}
+
+async function renderAdmPending(){
+  const { data, error } = await sb.from(T.subs).select('*').eq('status','pending').order('createdAt', { ascending:true });
+  fail(error);
+  const subs = data || [];
+  const body = $('adm-body'); if (!body) return;
+  body.innerHTML = subs.length ? subs.map(s=>{
+    const sm = getSiman(s.simanId);
+    return `<div class="exam-card"><div class="exam-top">
+      <div class="body">
+        <div class="t">${esc(s.userName)}</div>
+        <div class="m">${esc(s.examTitle)} · ${sm ? 'סימן ' + gem(sm.number) + ' · ':''}${saifLabel(s.saifim)} · ${fmtDate(s.createdAt)}</div>
+      </div>
+      <span class="badge gold">ממתין</span>
+    </div>
+    <div class="exam-actions"><button class="btn sm" onclick="openGrade('${s.id}')">בדיקת המבחן</button></div>
+    </div>`;
+  }).join('')
+  : `<div class="panel"><div class="empty"><div class="e-ic">✅</div>
+      <div class="e-t">אין מבחנים שממתינים לבדיקה</div><div>כל ההגשות נבדקו. כל הכבוד!</div></div></div>`;
+}
+
+async function renderAdmUsers(){
+  const { data, error } = await sb.from(T.users).select('id,name,role').order('name', { ascending:true });
+  fail(error);
+  const users = data || [];
+  const body = $('adm-body'); if (!body) return;
+  body.innerHTML = `<div class="panel"><div class="tblwrap"><table class="tbl">
+    <tr><th>שם</th><th>תפקיד</th><th style="text-align:left"></th></tr>
+    ${users.map(u=>`<tr>
+      <td><b>${esc(u.name)}</b>${u.id===ME.id?' <span class="hint">(אתה)</span>':''}</td>
+      <td>${u.role==='admin'?'<span class="badge gold">מנהל</span>':'<span class="badge gray">חבר</span>'}</td>
+      <td style="text-align:left;white-space:nowrap">
+        ${u.id!==ME.id ? `
+          <button class="btn ghost sm" onclick="toggleRole('${u.id}','${u.role}')">${u.role==='admin'?'הסרת ניהול':'מינוי למנהל'}</button>
+          <button class="btn ghost sm" onclick="resetPass('${u.id}')">איפוס סיסמה</button>
+          <button class="iconbtn" onclick="deleteUser('${u.id}')" title="מחיקת המשתמש">🗑️</button>` : ''}
+      </td>
+    </tr>`).join('')}
+  </table></div></div>`;
+}
+
+async function toggleRole(id, role){
+  try {
+    const { error } = await sb.from(T.users).update({ role: role==='admin' ? 'member' : 'admin' }).eq('id', id);
+    fail(error);
+    toast('התפקיד עודכן'); renderAdmin('users');
+  } catch(e){ toast('שגיאה: ' + e.message); }
+}
+async function resetPass(id){
+  const { data } = await sb.from(T.users).select('name').eq('id', id).maybeSingle();
+  const name = data ? data.name : '';
+  openSheet(`${sheetHead('איפוס סיסמה · ' + esc(name))}
+    <div class="field"><label>סיסמה חדשה</label><input id="rp-pass" type="text" placeholder="לפחות 4 תווים"></div>
+    <button class="btn full" onclick="doResetPass('${id}')">שמירה</button>`);
+}
+async function doResetPass(id){
+  const p = $('rp-pass').value;
+  if (p.length < 4) return toast('לפחות 4 תווים');
+  try {
+    const salt = randSalt();
+    const { error } = await sb.from(T.users).update({ salt, hash: await sha256(salt + p) }).eq('id', id);
+    fail(error);
+    closeSheet(); toast('הסיסמה אופסה');
+  } catch(e){ toast('שגיאה: ' + e.message); }
+}
+async function deleteUser(id){
+  const { data } = await sb.from(T.users).select('name').eq('id', id).maybeSingle();
+  const name = data ? data.name : '';
+  if (!await confirmDlg('למחוק את ' + name + ' מהחבורה? הציונים שלו יימחקו.')) return;
+  try {
+    const { error: e1 } = await sb.from(T.subs).delete().eq('userId', id); fail(e1);
+    const { error: e2 } = await sb.from(T.users).delete().eq('id', id); fail(e2);
+    toast('המשתמש נמחק'); renderAdmin('users');
+  } catch(e){ toast('שגיאה: ' + e.message); }
+}
+
+/* ═══════════════ Go ═══════════════ */
+boot();
+</script>
+</body>
+</html>
