@@ -4,26 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>חבורת הלכה</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231E4E8C'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='serif'>ה</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231E4E8C'/><path d='M50 30c-6-4-14-6-22-6v46c8 0 16 2 22 6 6-4 14-6 22-6V24c-8 0-16 2-22 6z' fill='none' stroke='white' stroke-width='5' stroke-linejoin='round'/><path d='M50 30v46' stroke='white' stroke-width='5'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Assistant:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#FBFBFD;
-  --card:#FFFFFF;
-  --ink:#1C1C22;
-  --muted:#71717A;
-  --line:#E8E8ED;
-  --blue:#1E4E8C;
-  --blue-d:#173E71;
-  --blue-soft:#EEF3FA;
-  --gold:#A8873B;
-  --gold-soft:#F7F1E3;
-  --green:#2E7D5B;
-  --green-soft:#E9F4EF;
-  --red:#C0453C;
-  --red-soft:#FBEDEC;
+  --paper:#FBFBFD; --card:#FFFFFF; --ink:#1C1C22; --muted:#71717A; --line:#E8E8ED;
+  --blue:#1E4E8C; --blue-d:#173E71; --blue-soft:#EEF3FA;
+  --gold:#A8873B; --gold-soft:#F7F1E3;
+  --green:#2E7D5B; --green-soft:#E9F4EF;
+  --red:#C0453C; --red-soft:#FBEDEC;
   --radius:18px;
   --shadow:0 1px 2px rgba(28,28,34,.04), 0 8px 28px rgba(28,28,34,.06);
 }
@@ -34,30 +25,24 @@ h1,h2,h3,.serif{font-family:'Frank Ruhl Libre',serif}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;font-size:inherit}
 input,textarea,select{font-family:inherit;font-size:16px;color:var(--ink)}
 ::placeholder{color:#ABABB4}
+svg{display:block}
 :focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:6px}
 
-/* ---------- Auth ---------- */
-.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
-  background:linear-gradient(180deg,#F3F3F7 0%, var(--paper) 55%)}
-.auth-card{width:100%;max-width:400px;background:var(--card);border:1px solid var(--line);
-  border-radius:26px;padding:40px 32px 32px;box-shadow:var(--shadow);text-align:center;position:relative}
-.auth-mark{width:64px;height:64px;border-radius:19px;background:var(--blue);color:#fff;
-  display:flex;align-items:center;justify-content:center;margin:0 auto 18px;
-  font-family:'Frank Ruhl Libre',serif;font-size:34px;font-weight:700;box-shadow:0 10px 24px rgba(30,78,140,.28)}
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(180deg,#F3F3F7 0%, var(--paper) 55%)}
+.auth-card{width:100%;max-width:400px;background:var(--card);border:1px solid var(--line);border-radius:26px;padding:40px 32px 32px;box-shadow:var(--shadow);text-align:center;position:relative}
+.auth-mark{width:64px;height:64px;border-radius:19px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;box-shadow:0 10px 24px rgba(30,78,140,.28)}
 .auth-card h1{font-size:30px;font-weight:900;margin-bottom:4px}
 .auth-sub{color:var(--muted);margin-bottom:26px;font-size:15px}
 .auth-lang{position:absolute;top:16px;inset-inline-end:16px}
 .field{text-align:start;margin-bottom:14px}
 .field label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px}
 .field input,.field textarea,.field select{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:13px;background:#FBFBFD}
-.field input:focus,.field textarea:focus{border-color:var(--blue);outline:none;background:#fff}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--blue);outline:none;background:#fff}
 .auth-err{display:none;background:var(--red-soft);color:var(--red);border-radius:11px;padding:10px 14px;font-size:14px;margin-bottom:14px;text-align:start}
 .auth-switch{margin-top:18px;font-size:14px;color:var(--muted)}
 .auth-switch button{color:var(--blue);font-weight:600}
 
-/* ---------- Buttons ---------- */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--blue);color:#fff;
-  font-weight:600;font-size:15px;padding:11px 22px;border-radius:999px;transition:background .15s, transform .1s}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--blue);color:#fff;font-weight:600;font-size:15px;padding:11px 22px;border-radius:999px;transition:background .15s, transform .1s}
 .btn:hover{background:var(--blue-d)}
 .btn:active{transform:scale(.98)}
 .btn.full{width:100%}
@@ -69,66 +54,66 @@ input,textarea,select{font-family:inherit;font-size:16px;color:var(--ink)}
 .btn.danger:hover{background:var(--red-soft)}
 .btn.sm{padding:7px 15px;font-size:14px}
 .btn:disabled{opacity:.5;cursor:default}
+.btn svg{width:16px;height:16px}
 .iconbtn{width:36px;height:36px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);transition:background .15s;flex:none}
 .iconbtn:hover{background:#EFEFF4;color:var(--ink)}
+.iconbtn svg{width:17px;height:17px}
 
-/* ---------- Header ---------- */
-header{position:sticky;top:0;z-index:50;background:rgba(251,251,253,.82);
-  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
-.hbar{max-width:940px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:12px}
-.hmark{width:38px;height:38px;border-radius:12px;background:var(--blue);color:#fff;flex:none;
-  display:flex;align-items:center;justify-content:center;font-family:'Frank Ruhl Libre',serif;font-size:20px;font-weight:700}
+header{position:sticky;top:0;z-index:50;background:rgba(251,251,253,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
+.hbar{max-width:940px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:10px}
+.hmark{width:38px;height:38px;border-radius:12px;background:var(--blue);color:#fff;flex:none;display:flex;align-items:center;justify-content:center}
 .htitle{font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:19px;white-space:nowrap}
 .hspace{flex:1}
 .langtoggle{display:flex;background:#EFEFF4;border-radius:999px;padding:3px;flex:none}
 .langtoggle button{padding:4px 12px;border-radius:999px;font-weight:700;font-size:12.5px;color:var(--muted);transition:all .15s}
 .langtoggle button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
-.avatarbtn{display:flex;align-items:center;gap:9px;padding:4px;padding-inline-end:13px;border-radius:999px;transition:background .15s;max-width:210px}
+.headicon{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--ink);position:relative;flex:none;transition:background .15s}
+.headicon:hover{background:#EFEFF4}
+.headicon svg{width:20px;height:20px}
+.headicon .dot{position:absolute;top:1px;inset-inline-end:1px;background:var(--red);color:#fff;font-size:10px;min-width:16px;height:16px;border-radius:99px;display:flex;align-items:center;justify-content:center;font-weight:700;padding:0 4px}
+.newsbtn{display:flex;align-items:center;gap:6px;padding:0 13px;height:38px;border-radius:999px;font-weight:700;font-size:13.5px;background:var(--gold-soft);color:var(--gold);flex:none;transition:filter .15s}
+.newsbtn:hover{filter:brightness(.96)}
+.newsbtn svg{width:16px;height:16px}
+.avatarbtn{display:flex;align-items:center;gap:9px;padding:4px;padding-inline-end:13px;border-radius:999px;transition:background .15s;max-width:200px}
 .avatarbtn:hover{background:#EFEFF4}
 .avatarbtn .nm{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .avatar{width:34px;height:34px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;overflow:hidden;flex:none}
 .avatar img{width:100%;height:100%;object-fit:cover}
-.avatar.big{width:100px;height:100px;font-size:40px;border-radius:50%}
+.avatar.big{width:100px;height:100px;font-size:40px}
 nav.tabs{max-width:940px;margin:0 auto;padding:0 20px 10px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
 nav.tabs::-webkit-scrollbar{display:none}
 .navtab{padding:8px 16px;border-radius:999px;font-weight:600;font-size:14.5px;color:var(--muted);white-space:nowrap;transition:all .15s}
 .navtab.on{background:var(--ink);color:#fff}
 .navtab:not(.on):hover{background:#EFEFF4;color:var(--ink)}
-
 main{max-width:940px;margin:0 auto;padding:26px 20px 160px}
 
-/* ---------- Home ---------- */
 .pagehead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap}
 .pagehead h2{font-size:28px;font-weight:900}
 .pagehead .sub{color:var(--muted);font-size:14.5px;margin-top:2px}
+.pagehead .acts{display:flex;gap:8px;flex-wrap:wrap}
 .siman-list{display:flex;flex-direction:column;gap:12px}
-.siman-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;
-  display:flex;align-items:center;gap:16px;cursor:pointer;transition:border-color .15s, box-shadow .15s}
+.siman-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:border-color .15s, box-shadow .15s}
 .siman-card:hover{border-color:#CBD6E5;box-shadow:var(--shadow)}
-.siman-med{width:52px;height:52px;flex:none;border-radius:15px;background:var(--blue-soft);color:var(--blue);
-  display:flex;align-items:center;justify-content:center;font-family:'Frank Ruhl Libre',serif;font-size:23px;font-weight:700}
+.siman-med{width:52px;height:52px;flex:none;border-radius:15px;background:var(--blue-soft);color:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Frank Ruhl Libre',serif;font-size:23px;font-weight:700}
 .siman-info{flex:1;min-width:0}
 .siman-info .t{font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:18.5px}
 .siman-info .m{color:var(--muted);font-size:13.5px;margin-top:2px}
-.siman-arrow{color:#C6C6CE;font-size:20px}
+.siman-arrow{color:#C6C6CE}
+.siman-arrow svg{width:18px;height:18px}
 html[dir=ltr] .siman-arrow{transform:scaleX(-1)}
 
-/* ---------- Siman view ---------- */
 .qnav{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 12px;scrollbar-width:none;align-items:center}
 .qnav::-webkit-scrollbar{display:none}
-.qchip{min-width:42px;height:38px;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:var(--card);
-  font-family:'Frank Ruhl Libre',serif;font-size:16px;font-weight:700;color:var(--muted);flex:none;transition:all .15s;display:flex;align-items:center;justify-content:center}
+.qchip{min-width:42px;height:38px;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-family:'Frank Ruhl Libre',serif;font-size:16px;font-weight:700;color:var(--muted);flex:none;transition:all .15s;display:flex;align-items:center;justify-content:center}
 .qchip:hover{border-color:var(--blue);color:var(--blue)}
 .qchip.on{background:var(--ink);border-color:var(--ink);color:#fff}
-.qback{flex:none;font-family:'Assistant';font-size:14px;font-weight:600;color:var(--muted);padding:0 10px;height:38px;display:flex;align-items:center;border-radius:999px}
+.qback{flex:none;font-size:14px;font-weight:600;color:var(--muted);padding:0 10px;height:38px;display:flex;align-items:center;gap:4px;border-radius:999px}
 .qback:hover{background:#EFEFF4;color:var(--ink)}
 .siman-head{margin-bottom:8px}
 .siman-head .eyebrow{color:var(--gold);font-weight:700;font-size:14px}
 .siman-head h2{font-size:32px;font-weight:900;line-height:1.2}
 .saif-row{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 6px}
-.saif-chip{min-width:44px;height:44px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);
-  font-family:'Frank Ruhl Libre',serif;font-size:18px;font-weight:700;color:var(--ink);
-  display:flex;align-items:center;justify-content:center;transition:all .15s}
+.saif-chip{min-width:44px;height:44px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-family:'Frank Ruhl Libre',serif;font-size:18px;font-weight:700;color:var(--ink);display:flex;align-items:center;justify-content:center;transition:all .15s}
 .saif-chip:hover{border-color:var(--blue)}
 .saif-chip.on{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 6px 14px rgba(30,78,140,.28)}
 .saif-chip.alt{font-family:'Assistant';font-size:14px;font-weight:700}
@@ -138,17 +123,18 @@ html[dir=ltr] .siman-arrow{transform:scaleX(-1)}
 .seg button{flex:1;padding:9px 12px;border-radius:11px;font-weight:600;font-size:14.5px;color:var(--muted);white-space:nowrap;transition:all .15s}
 .seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.09)}
 
-/* ---------- Panels / items ---------- */
 .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
 .mare-text{font-family:'Frank Ruhl Libre',serif;font-size:19px;line-height:2;white-space:pre-wrap}
 .item-list{display:flex;flex-direction:column;gap:10px}
-.item{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;gap:13px;flex-wrap:wrap}
-.item .ic{width:44px;height:44px;flex:none;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:20px}
-.ic.pdf{background:var(--red-soft)}
-.ic.file{background:var(--blue-soft)}
-.item .body{flex:1;min-width:180px}
+.item,.postcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.item .row{display:flex;align-items:center;gap:13px;flex-wrap:wrap}
+.item .ic{width:44px;height:44px;flex:none;border-radius:13px;display:flex;align-items:center;justify-content:center;color:var(--blue);background:var(--blue-soft)}
+.item .ic svg{width:20px;height:20px}
+.item .ic.red{background:var(--red-soft);color:var(--red)}
+.item .ic.gold{background:var(--gold-soft);color:var(--gold)}
+.item .body{flex:1;min-width:170px}
 .item .t{font-weight:600;font-size:15.5px}
-.item .m{color:var(--muted);font-size:13px;margin-top:1px}
+.item .m,.metaline{color:var(--muted);font-size:12.5px;margin-top:2px}
 .badge{display:inline-block;background:var(--blue-soft);color:var(--blue);font-size:12.5px;font-weight:700;padding:2px 10px;border-radius:999px;white-space:nowrap}
 .badge.gold{background:var(--gold-soft);color:var(--gold)}
 .badge.green{background:var(--green-soft);color:var(--green)}
@@ -160,22 +146,40 @@ html[dir=ltr] .siman-arrow{transform:scaleX(-1)}
 .playbtn.playing{background:var(--gold)}
 .playbtn svg{width:18px;height:18px}
 .empty{text-align:center;color:var(--muted);padding:44px 20px}
-.empty .e-ic{font-size:34px;margin-bottom:10px;opacity:.55}
+.empty .e-ic{margin:0 auto 12px;width:40px;height:40px;color:#C6C6CE}
+.empty .e-ic svg{width:40px;height:40px}
 .empty .e-t{font-weight:600;color:var(--ink);margin-bottom:2px;font-size:16px}
 .addrow{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap}
 .allsaif-block{margin-bottom:30px}
 .allsaif-head{display:flex;align-items:center;gap:10px;margin:0 0 12px}
-.allsaif-head .med{width:38px;height:38px;border-radius:12px;background:var(--blue-soft);color:var(--blue);flex:none;
-  display:flex;align-items:center;justify-content:center;font-family:'Frank Ruhl Libre',serif;font-size:17px;font-weight:700}
+.allsaif-head .med{width:38px;height:38px;border-radius:12px;background:var(--blue-soft);color:var(--blue);flex:none;display:flex;align-items:center;justify-content:center;font-family:'Frank Ruhl Libre',serif;font-size:17px;font-weight:700}
 .allsaif-head .t{font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:18px}
 .subhead{font-size:13px;font-weight:700;color:var(--muted);margin:14px 0 8px}
+.simansec{margin-bottom:40px}
+.simansec>.sh{display:flex;align-items:center;gap:12px;margin-bottom:16px;cursor:pointer}
+.simansec>.sh h3{font-size:22px;font-weight:900}
 
-/* ---------- Exams ---------- */
+.social{display:flex;gap:4px;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid #F1F1F4}
+.socbtn{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:13px;font-weight:600;padding:6px 10px;border-radius:999px;transition:all .12s}
+.socbtn:hover{background:#F4F4F7;color:var(--ink)}
+.socbtn.liked{color:var(--red)}
+.socbtn svg{width:16px;height:16px}
+.comment{padding:12px 0;border-bottom:1px solid #F1F1F4}
+.comment:last-child{border-bottom:none}
+.comment .ch{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.comment .cn{font-weight:700;font-size:14px}
+.comment .cd{color:var(--muted);font-size:12px}
+.comment .ct{font-size:14.5px;white-space:pre-wrap}
+.comment .rep{margin-inline-start:26px;margin-top:10px;padding:10px 12px;background:#FAFAFC;border-radius:12px}
+.compose{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.compose textarea{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:12px;background:#FBFBFD;resize:vertical}
+.compose .crow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
 .exam-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-bottom:12px}
 .exam-top{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
 .exam-top .body{flex:1;min-width:200px}
 .exam-top .t{font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:18px}
-.exam-top .m{color:var(--muted);font-size:13.5px;margin-top:2px}
+.exam-top .m{color:var(--muted);font-size:12.5px;margin-top:2px}
 .exam-actions{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .grade-big{font-family:'Frank Ruhl Libre',serif;font-size:30px;font-weight:900;color:var(--blue)}
 .q-card{border:1px solid var(--line);border-radius:15px;padding:16px;margin-bottom:14px;background:#FBFBFD}
@@ -187,7 +191,6 @@ html[dir=ltr] .siman-arrow{transform:scaleX(-1)}
 .opt.wrong{border-color:var(--red);background:var(--red-soft)}
 .opt input{accent-color:var(--blue)}
 
-/* ---------- Notas ---------- */
 .notes-toolbar{display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding:10px 12px;border:1px solid var(--line);border-bottom:none;border-radius:16px 16px 0 0;background:#FBFBFD;position:sticky;top:106px;z-index:5}
 .ntb{min-width:34px;height:34px;padding:0 8px;border-radius:9px;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;color:var(--ink);transition:background .12s}
 .ntb:hover{background:#EFEFF4}
@@ -200,23 +203,21 @@ html[dir=ltr] .siman-arrow{transform:scaleX(-1)}
 .notes-editor:empty:before{content:attr(data-ph);color:#ABABB4}
 .note-prev{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-bottom:12px;cursor:pointer;transition:border-color .15s, box-shadow .15s}
 .note-prev:hover{border-color:#CBD6E5;box-shadow:var(--shadow)}
-.note-prev .h{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.note-prev .h{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
 .note-prev .body{color:var(--muted);font-size:14px;max-height:66px;overflow:hidden}
 
-/* ---------- Perfil ---------- */
 .profile-top{display:flex;flex-direction:column;align-items:center;gap:12px;padding:30px 20px 24px;text-align:center}
 .profile-top h2{font-size:26px;font-weight:900}
 .photo-edit{position:relative;cursor:pointer}
-.photo-edit .cam{position:absolute;bottom:0;inset-inline-end:0;width:32px;height:32px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;border:3px solid var(--paper);font-size:14px}
+.photo-edit .cam{position:absolute;bottom:0;inset-inline-end:0;width:32px;height:32px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;border:3px solid var(--paper)}
+.photo-edit .cam svg{width:15px;height:15px}
 
-/* ---------- Tablas ---------- */
 .tbl{width:100%;border-collapse:collapse;font-size:14.5px}
 .tbl th{text-align:start;color:var(--muted);font-weight:600;font-size:13px;padding:8px 10px;border-bottom:1px solid var(--line)}
 .tbl td{padding:11px 10px;border-bottom:1px solid #F1F1F4;vertical-align:middle}
 .tbl tr:last-child td{border-bottom:none}
 .tblwrap{overflow-x:auto}
 
-/* ---------- Modal ---------- */
 .overlay{position:fixed;inset:0;background:rgba(22,22,28,.45);backdrop-filter:blur(3px);z-index:100;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
 .overlay.open{opacity:1;pointer-events:auto}
 .sheet{background:var(--card);width:100%;max-width:640px;max-height:88vh;overflow-y:auto;border-radius:24px 24px 0 0;padding:26px 24px 34px;transform:translateY(30px);transition:transform .22s}
@@ -229,18 +230,27 @@ html[dir=ltr] .siman-arrow{transform:scaleX(-1)}
 }
 .sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:10px}
 .sheet-head h3{font-size:21px;font-weight:900}
-.xbtn{width:34px;height:34px;border-radius:50%;background:#EFEFF4;color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:15px;flex:none}
+.xbtn{width:34px;height:34px;border-radius:50%;background:#EFEFF4;color:var(--muted);display:flex;align-items:center;justify-content:center;flex:none}
 .xbtn:hover{background:#E4E4EA;color:var(--ink)}
+.xbtn svg{width:15px;height:15px}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chips .chip{padding:8px 14px;min-width:42px;border-radius:999px;border:1px solid var(--line);background:#fff;font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:15px;transition:all .12s;text-align:center}
+.chips .chip.txt{font-family:'Assistant';font-size:14px}
 .chips .chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
 .progress{height:8px;background:#EFEFF4;border-radius:99px;overflow:hidden;margin-top:14px;display:none}
 .progress .bar{height:100%;width:0;background:var(--blue);border-radius:99px;transition:width .2s}
 .hint{font-size:13px;color:var(--muted);margin-top:6px}
 .viewer-frame{width:100%;height:72vh;border:none;border-radius:14px;background:#EFEFF4}
 .viewer-img{width:100%;max-height:72vh;object-fit:contain;border-radius:14px;background:#EFEFF4}
+.filerow{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--line);border-radius:12px;margin-top:8px;background:#fff}
+.filerow .fic{color:var(--blue);flex:none}
+.filerow .fic svg{width:18px;height:18px}
+.filerow .fn{flex:1;min-width:0;font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.filerow .fs{color:var(--muted);font-size:12px;flex:none}
 
-/* ---------- Player ---------- */
+@keyframes flashbg{0%{background:var(--gold-soft)}100%{background:var(--card)}}
+.flash{animation:flashbg 2.2s ease-out}
+
 #player{position:fixed;bottom:0;left:0;right:0;z-index:80;transform:translateY(120%);transition:transform .25s}
 #player.show{transform:translateY(0)}
 .pl-inner{max-width:940px;margin:0 auto;padding:0 12px 12px}
@@ -264,7 +274,6 @@ html[dir=ltr] input[type=range].seek{background:linear-gradient(to right, var(--
 input[type=range].seek::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--blue);box-shadow:0 1px 4px rgba(0,0,0,.2)}
 input[type=range].seek::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--blue)}
 
-/* ---------- Toast / setup / misc ---------- */
 #toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 22px;border-radius:999px;font-size:14.5px;font-weight:600;z-index:200;opacity:0;pointer-events:none;transition:all .25s;box-shadow:0 8px 24px rgba(0,0,0,.25);white-space:nowrap}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .setup{max-width:600px;margin:50px auto;padding:0 20px}
@@ -276,12 +285,14 @@ input[type=range].seek::-moz-range-thumb{width:16px;height:16px;border-radius:50
 @keyframes sp{to{transform:rotate(360deg)}}
 .loading-full{min-height:100vh;display:flex;align-items:center;justify-content:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
-@media(max-width:520px){
+@media(max-width:560px){
   .pagehead h2{font-size:24px}
   .siman-head h2{font-size:26px}
   main{padding:20px 14px 170px}
   .pl-btn{width:36px;height:36px}
   .avatarbtn .nm{display:none}
+  .newsbtn span{display:none}
+  .newsbtn{padding:0;width:38px;justify-content:center;border-radius:12px}
   .notes-toolbar{top:98px}
 }
 </style>
@@ -300,17 +311,17 @@ input[type=range].seek::-moz-range-thumb{width:16px;height:16px;border-radius:50
       <div class="pl-ctrl">
         <button class="pl-speed" id="pl-speed" onclick="cycleSpeed()">1x</button>
         <button class="pl-btn" onclick="skip(-30)" title="-30s">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2-9.4L1 10"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2-9.4L1 10"/></svg>
         </button>
         <button class="pl-btn main" id="pl-play" onclick="togglePlay()">
           <svg id="pl-ic-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
           <svg id="pl-ic-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
         </button>
         <button class="pl-btn" onclick="skip(30)" title="+30s">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.5 15a9 9 0 1 1-2-9.4L23 10"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.5 15a9 9 0 1 1-2-9.4L23 10"/></svg>
         </button>
         <button class="pl-btn" onclick="closePlayer()" style="color:var(--muted)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
     </div>
@@ -340,116 +351,171 @@ const app = $('app');
 function configOK(){ return !SUPABASE_URL.includes('PEGA') && !SUPABASE_ANON_KEY.includes('PEGA'); }
 let sb = configOK() ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-const T = { users:'usuarios', simanim:'simanim', mare:'mare',
-            materials:'materiales', shiurim:'shiurim', exams:'examenes', subs:'entregas', notes:'notas' };
+const T = { users:'usuarios', simanim:'simanim', mare:'mare', materials:'materiales', shiurim:'shiurim',
+            exams:'examenes', subs:'entregas', notes:'notas', news:'news', shared:'compartido',
+            questions:'preguntas', comments:'comentarios', likes:'likes' };
 function fail(error){ if (error) throw new Error(error.message || error); }
+
+/* ═══════════ Iconos minimalistas ═══════════ */
+const IC = {
+  book:'<path d="M12 6.5C10.4 5.3 8.2 4.7 6 4.7v12.6c2.2 0 4.4.6 6 1.8 1.6-1.2 3.8-1.8 6-1.8V4.7c-2.2 0-4.4.6-6 1.8z"/><path d="M12 6.5v12.6"/>',
+  file:'<path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5"/>',
+  filetext:'<path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5"/><path d="M9 13h6M9 17h6"/>',
+  img:'<rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-4.5-4.5L7 21"/>',
+  audio:'<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
+  exam:'<path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5"/><path d="m8.5 14 2 2 4-4.5"/>',
+  bell:'<path d="M18 9a6 6 0 1 0-12 0c0 6-2.5 7.5-2.5 7.5h17S18 15 18 9"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>',
+  mega:'<path d="M3 11v3l14 4V7z"/><path d="M17 7v11"/><path d="M21 10v5"/><path d="M7.5 15.5V19a1.5 1.5 0 0 0 3 0"/>',
+  qa:'<path d="M21 12a8 8 0 0 1-8 8H4l1.5-3.5A8 8 0 1 1 21 12z"/><path d="M9.5 9.7a2.5 2.5 0 0 1 4.9.7c0 1.6-2.4 2-2.4 3.1"/><path d="M12 17h.01"/>',
+  users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.2 3.4-5 6.5-5s5.7 1.8 6.5 5"/><circle cx="17.5" cy="9.5" r="2.6"/><path d="M16.5 14.7c2.4.3 4.3 1.8 5 4.3"/>',
+  heart:'<path d="M12 20.5s-7.5-4.6-9.4-9.3C1.2 7.7 3.6 4.5 6.9 4.5c2 0 3.7 1.1 5.1 3 1.4-1.9 3.1-3 5.1-3 3.3 0 5.7 3.2 4.3 6.7-1.9 4.7-9.4 9.3-9.4 9.3z"/>',
+  chat:'<path d="M21 12a8 8 0 0 1-8 8H4l1.5-3.5A8 8 0 1 1 21 12z"/>',
+  link:'<path d="M10 13.5a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.2 1.2"/><path d="M14 10.5a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.2-1.2"/>',
+  pencil:'<path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>',
+  trash:'<path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/>',
+  x:'<path d="M18 6L6 18M6 6l12 12"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  down:'<path d="M12 4v12"/><path d="m6 12 6 6 6-6"/><path d="M4 21h16"/>',
+  cam:'<path d="M4 8h3l2-2.5h6L17 8h3a1.5 1.5 0 0 1 1.5 1.5V19a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 19V9.5A1.5 1.5 0 0 1 4 8z"/><circle cx="12" cy="13.8" r="3.6"/>',
+  eye:'<path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/>',
+  arrow:'<path d="m15 18-6-6 6-6"/>',
+  send:'<path d="m22 2-9 9"/><path d="M22 2 15 22l-2-9-9-2z"/>',
+  check:'<path d="m4.5 12.5 5 5L20 6.5"/>'
+};
+const icon = (k, s) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"${s?` style="width:${s}px;height:${s}px"`:''}>${IC[k]||IC.file}</svg>`;
 
 /* ═══════════ Idioma ═══════════ */
 let LANG = localStorage.getItem('jh_lang') || 'he';
 const STR = {
 he:{
-  navSimanim:'סימנים', navMyContent:'התוכן שלי', hello:'שלום', adminBadge:'מנהל', memberBadge:'חבר', logout:'יציאה',
-  authSub:'לימוד הלכה יומי · סימן אחר סימן', fullName:'שם מלא', namePh:'לדוגמה: חיים עטח', password:'סיסמה', password2:'אימות סיסמה',
+  navSimanim:'סימנים', navQA:'שאלות ותשובות', navMyContent:'התוכן שלי', hello:'שלום', adminBadge:'מנהל', memberBadge:'חבר', logout:'יציאה',
+  authSub:'לימוד הלכה יומי · סימן אחר סימן', fullName:'שם מלא', namePh:'לדוגמה: שאול לניאדו', password:'סיסמה', password2:'אימות סיסמה',
   login:'כניסה', register:'הרשמה לחבורה', haveAccount:'כבר יש לך חשבון?', newHere:'חדש בחבורה?', registerLink:'הרשמה', wait:'רק רגע…',
   errName:'נא להזין שם מלא.', errPass4:'הסיסמה צריכה להכיל לפחות 4 תווים.', errPassMatch:'הסיסמאות אינן תואמות.',
   errUserExists:'כבר קיים משתמש בשם הזה. נסה שם מעט שונה או היכנס.', errUserNotFound:'לא נמצא משתמש בשם הזה.', errWrongPass:'סיסמה שגויה.',
   err:'שגיאה: ', errFill:'נא למלא שם וסיסמה.', welcomeFirst:'ברוך הבא! נרשמת כמנהל הראשון', welcome:'ברוך הבא לחבורה!',
   pageSimanim:'סימני הלימוד', pageSimanimSub:'בחר סימן כדי לראות מראי מקומות, תוכן, שיעורים ומבחנים',
-  newSiman:'＋ סימן חדש', emptySimanimT:'עדיין אין סימנים', emptySimanimA:'צור את הסימן הראשון כדי להתחיל.', emptySimanimM:'המנהל עדיין לא פתח סימנים ללימוד.',
+  newSiman:'סימן חדש', globalTodo:'הצגת הכל', globalAdd:'הוספה', emptySimanimT:'עדיין אין סימנים', emptySimanimA:'צור את הסימן הראשון כדי להתחיל.', emptySimanimM:'המנהל עדיין לא פתח סימנים ללימוד.',
   saifimWord:'סעיפים', allSimanim:'כל הסימנים', siman:'סימן', saif:'סעיף', all:'הכל',
-  tabMare:'מראי מקומות', tabContent:'תוכן', tabShiurim:'שיעורים', tabExams:'מבחנים', tabNotes:'ההערות שלי',
-  editMareBtn:'✏️ עריכת מראי המקומות', emptyMareT:'אין עדיין מראי מקומות לסעיף זה', emptyMareA:'לחץ על "עריכה" כדי להוסיף.', emptyMareM:'הרב עדיין לא העלה מראי מקומות.',
+  tabMare:'מראי מקומות', tabContent:'תוכן', tabShiurim:'שיעורים', tabExams:'מבחנים', tabShared:'תוכן משותף', tabNotes:'ההערות שלי',
+  editMareBtn:'עריכת מראי המקומות', emptyMareT:'אין עדיין מראי מקומות לסעיף זה', emptyMareA:'לחץ על "עריכה" כדי להוסיף.', emptyMareM:'הרב עדיין לא העלה מראי מקומות.',
   mareLabel:'מה צריך לראות לקראת הלימוד', marePh:'טור ובית יוסף סימן קנח\nשולחן ערוך סעיפים א–ג\nמשנה ברורה ס״ק א–ז',
   save:'שמירה', mareSaved:'מראי המקומות נשמרו',
   open:'פתיחה', viewHere:'צפייה', emptyContentT:'אין עדיין תוכן לסעיף זה', emptyContentA:'העלה PDF או כל קובץ אחר ללימוד.', emptyContentM:'הרב עדיין לא העלה תוכן.',
-  uploadFileBtn:'＋ העלאת קובץ', uploadShiurBtn:'＋ העלאת שיעור', uploadFileT:'העלאת קובץ', uploadShiurT:'העלאת שיעור',
+  uploadFileBtn:'העלאת קובץ', uploadShiurBtn:'העלאת שיעור', uploadFileT:'העלאת קובץ', uploadShiurT:'העלאת שיעור',
   titleLabel:'כותרת', titlePhFile:'לדוגמה: דף מקורות מודפס', titlePhShiur:'לדוגמה: שיעור על סעיפים א–ג',
   fileLabelShiur:'קובץ שמע (MP3 / M4A / OPUS…)', fileLabelAny:'קובץ (PDF, Word, תמונה…)',
-  belongsSaifim:'שייך לסעיפים', multiSaifHint:'(שיעור אחד יכול לכסות כמה סעיפים)',
-  upload:'העלאה', uploading:'מעלה…', uploadedOk:'הועלה בהצלחה 🎉', ofWord:'מתוך', netErr:'שגיאת רשת בהעלאה',
+  belongsSaifim:'שייך לסעיפים', multiSaifHint:'(אפשר לבחור כמה סעיפים)',
+  upload:'העלאה', uploading:'מעלה…', uploadedOk:'הועלה בהצלחה', ofWord:'מתוך', netErr:'שגיאת רשת בהעלאה',
   needTitle:'נא להזין כותרת', needFile:'נא לבחור קובץ', needSaif:'נא לבחור לפחות סעיף אחד',
   emptyShiurT:'אין עדיין שיעורים לסעיף זה', emptyShiurA:'העלה את הקלטת השיעור של הרב.', emptyShiurM:'השיעור יעלה לכאן אחרי מסירתו.',
   emptyExamT:'אין עדיין מבחנים לסעיף זה', emptyExamA:'צור מבחן חדש לחבורה.', emptyExamM:'המבחן יעלה לכאן כשהרב יפרסם אותו.',
   notTaken:'טרם נענה', startExam:'התחלת המבחן', pendingRav:'ממתין לבדיקת הרב', myAnswers:'צפייה בתשובות שלי', gradeWord:'ציון',
-  questionsWord:'שאלות', subsBtn:'הגשות ובדיקה', newExamBtn:'＋ מבחן חדש', delExamTitle:'מחיקת המבחן',
-  examNew:'מבחן חדש', examName:'שם המבחן', examNamePh:'לדוגמה: מבחן על סעיפים א–ג', addMC:'＋ שאלה אמריקאית', addOpen:'＋ שאלה פתוחה',
+  questionsWord:'שאלות', subsBtn:'הגשות ובדיקה', newExamBtn:'מבחן חדש', delExamTitle:'מחיקת המבחן',
+  examNew:'מבחן חדש', examName:'שם המבחן', examNamePh:'לדוגמה: מבחן על סעיפים א–ג', addMC:'שאלה אמריקאית', addOpen:'שאלה פתוחה',
   publish:'פרסום המבחן', autoHint:'מבחן שכולו שאלות אמריקאיות נבדק אוטומטית · שאלות פתוחות ממתינות לבדיקתך',
-  mcBadge:'אמריקאית', openBadge:'פתוחה', qPh:'נוסח השאלה', optPh:'אפשרות', markCorrect:'סמן בעיגול הירוק את התשובה הנכונה', addOpt:'＋ אפשרות',
+  mcBadge:'אמריקאית', openBadge:'פתוחה', qPh:'נוסח השאלה', optPh:'אפשרות', markCorrect:'סמן בעיגול הירוק את התשובה הנכונה', addOpt:'אפשרות',
   needExamName:'נא להזין שם למבחן', needSaifim:'נא לבחור סעיפים', needQ:'נא להוסיף לפחות שאלה אחת', missingQ:'חסר נוסח לשאלה', emptyOpt:'יש אפשרות ריקה בשאלה',
-  published:'המבחן פורסם 📝', oneAttempt:'ענה על כל השאלות ולחץ על הגשה. ניתן להגיש פעם אחת בלבד.', answerPh:'כתוב את תשובתך כאן…',
+  published:'המבחן פורסם', oneAttempt:'ענה על כל השאלות ולחץ על הגשה. ניתן להגיש פעם אחת בלבד.', answerPh:'כתוב את תשובתך כאן…',
   submitExam:'הגשת המבחן', missingAns:'חסרה תשובה לשאלה', submittedGrade:'הוגש! הציון שלך: ', submittedPending:'הוגש! ממתין לבדיקת הרב',
   examNotFound:'המבחן לא נמצא', autoChecked:'נבדק אוטומטית',
   subsTitle:'הגשות', nameCol:'שם', statusCol:'מצב', gradeCol:'ציון', checked:'נבדק', pendingBadge:'ממתין', check:'בדיקה', viewUpdate:'צפייה / עדכון',
   noSubsT:'אין עדיין הגשות', gradingTitle:'בדיקה', mcOf:'אמריקאיות:', correctOf:'נכונות', openOnly:'שאלות פתוחות בלבד',
   answered:'ענה:', correctIs:'נכון:', correctBadge:'נכון', wrongBadge:'שגוי',
-  finalGrade:'ציון סופי (0–100)', fbLabel:'הערה לתלמיד (לא חובה)', fbPh:'כל הכבוד! / חזור על סעיף ב', saveGrade:'שמירת הציון', gradeSaved:'הציון נשמר ✓', gradeRange:'נא להזין ציון בין 0 ל‑100',
+  finalGrade:'ציון סופי (0–100)', fbLabel:'הערה לתלמיד (לא חובה)', fbPh:'כל הכבוד! / חזור על סעיף ב', saveGrade:'שמירת הציון', gradeSaved:'הציון נשמר', gradeRange:'נא להזין ציון בין 0 ל‑100',
   myContentT:'התוכן שלי', myContentSub:'כל ההערות שלך, מסודרות לפי סימן וסעיף', downloadPdf:'הורדת PDF', emptyNotesT:'עדיין אין לך הערות', emptyNotesD:'פתח סעיף, עבור ל"ההערות שלי" והתחל לכתוב.',
-  notesPh:'כתוב כאן את ההערות שלך…', saveNotes:'שמירת ההערות', notesSaved:'ההערות נשמרו ✓', notesTitlePdf:'ההערות שלי',
+  notesPh:'כתוב כאן את ההערות שלך…', saveNotes:'שמירת ההערות', notesSaved:'ההערות נשמרו', notesTitlePdf:'ההערות שלי',
   boldT:'מודגש', underT:'קו תחתון', italT:'נטוי', highT:'מרקר', clearT:'ניקוי עיצוב',
-  profileT:'הפרופיל שלי', changePhoto:'החלפת תמונה', photoUpdated:'התמונה עודכנה', changePass:'שינוי סיסמה', newPassLabel:'סיסמה חדשה', passChanged:'הסיסמה שונתה ✓',
+  profileT:'הפרופיל שלי', changePhoto:'החלפת תמונה', photoUpdated:'התמונה עודכנה', changePass:'שינוי סיסמה', newPassLabel:'סיסמה חדשה', passChanged:'הסיסמה שונתה',
   adminZone:'ניהול החבורה', checkExams:'בדיקת מבחנים', members:'חברי החבורה', roleCol:'תפקיד', youWord:'(אתה)',
   makeAdmin:'מינוי למנהל', removeAdmin:'הסרת ניהול', resetPassBtn:'איפוס סיסמה', min4:'לפחות 4 תווים', passReset:'הסיסמה אופסה',
   delUserT:'מחיקת המשתמש', delUserConfirm:' — למחוק מהחבורה? הציונים שלו יימחקו.', userDeleted:'המשתמש נמחק', roleUpdated:'התפקיד עודכן',
   noPendingT:'אין מבחנים שממתינים לבדיקה', noPendingD:'כל ההגשות נבדקו. כל הכבוד!',
   confirmT:'אישור', yesDelete:'כן, למחוק', cancel:'ביטול', deleted:'נמחק',
-  delFileQ:'למחוק את הקובץ?', delShiurQ:'למחוק את השיעור?', delExamQ:'למחוק את המבחן?', delSimanQ:'למחוק את הסימן על כל התוכן, השיעורים והמבחנים שבו?',
+  delFileQ:'למחוק את הקובץ?', delShiurQ:'למחוק את השיעור?', delExamQ:'למחוק את המבחן?', delSimanQ:'למחוק את הסימן על כל התוכן, השיעורים והמבחנים שבו?', delPostQ:'למחוק את הפרסום?', delNewsQ:'למחוק את ההודעה?', delQQ:'למחוק את השאלה?',
   simanNew:'סימן חדש', simanEdit:'עריכת סימן', simanNumL:'מספר הסימן', simanNumPh:'340 או שמ', saifCountL:'כמה סעיפים יש בסימן?', saifCountPh:'12 או יב',
   titleOpt:'כותרת (לא חובה)', simanTitlePh:'לדוגמה: דיני נטילת ידיים', createSiman:'יצירת הסימן', saveChanges:'שמירת שינויים', delSimanBtn:'מחיקת הסימן כולו',
-  addSaif:'＋ הוספת סעיף', saifTitlePh:'כותרת הסעיף (לא חובה)', invalidNum:'מספר סימן לא תקין (נסה 340 או שמ)', invalidCount:'מספר סעיפים לא תקין (נסה 12 או יב)',
+  addSaif:'הוספת סעיף', saifTitlePh:'כותרת הסעיף (לא חובה)', invalidNum:'מספר סימן לא תקין (נסה 340 או שמ)', invalidCount:'מספר סעיפים לא תקין (נסה 12 או יב)',
   simanCreated:'הסימן נוצר', simanUpdated:'הסימן עודכן', simanDeleted:'הסימן נמחק', willCreate:'ייווצרו',
-  setupT:'⚙️ חסרה הגדרת Supabase', notesFor:'הערות על'
+  setupT:'⚙️ חסרה הגדרת Supabase',
+  byWord:'העלה', updatedWord:'עודכן ע"י',
+  notifT:'התראות', notifEmpty:'אין התראות חדשות', markSeen:'הכל נקרא',
+  newsT:'News', newsNew:'הודעה חדשה', newsEmpty:'אין עדיין הודעות', newsEmptyD:'כשהמנהלים יפרסמו חדשות והודעות – הן יופיעו כאן.', newsTitlePh:'כותרת ההודעה', newsBodyPh:'תוכן ההודעה…', newsPublished:'ההודעה פורסמה',
+  sharedNew:'שיתוף תוכן', sharedTitlePh:'כותרת', sharedBodyPh:'כתוב משהו… (לא חובה אם מצרפים קובץ)', sharedPublished:'פורסם לחבורה',
+  emptySharedT:'אין עדיין תוכן משותף בסעיף זה', emptySharedD:'כל אחד יכול לשתף כאן חומרים, סיכומים וקבצים.',
+  filesLabel:'קבצים (אפשר כמה)', bodyLabel:'טקסט', needSomething:'נא לכתוב משהו או לצרף קובץ',
+  qaT:'שאלות ותשובות', qaNew:'שאלה חדשה', qaPh:'כתוב את שאלתך לרב…', qaEmpty:'אין עדיין שאלות', qaEmptyD:'כל אחד יכול לשאול – ורק המנהלים עונים.', qaPublished:'השאלה פורסמה', qaOnlyAdmins:'רק מנהלים עונים על שאלות', answerBtn:'תשובה',
+  commentsT:'תגובות', commentPh:'כתוב תגובה…', send:'שליחה', reply:'תגובה', visPrivate:'רק אני רואה', visAdmins:'שיתוף עם המנהלים', commentSent:'נשלח', noComments:'אין עדיין תגובות',
+  privateBadge:'פרטי', sharedAdminsBadge:'משותף עם המנהלים',
+  linkCopied:'הקישור הועתק', copyLink:'העתקת קישור', copyUploadLink:'העתקת קישור העלאה מהיר',
+  addTypeL:'מה מעלים?', chooseSimanL:'לאיזה סימן?', chooseSaifL:'לאיזה סעיף?', continueW:'המשך',
+  typeMare:'מראי מקומות', typeFile:'קובץ / מקור', typeShiur:'שיעור', typeExam:'מבחן', typeShared:'תוכן משותף', typeNews:'הודעת News',
+  newContent:'תוכן חדש', inWord:'בסימן'
 },
 es:{
-  navSimanim:'Simanim', navMyContent:'Mi contenido', hello:'Hola', adminBadge:'Admin', memberBadge:'Miembro', logout:'Salir',
-  authSub:'Estudio diario de halajá · siman por siman', fullName:'Nombre completo', namePh:'Ejemplo: Jaime Atach', password:'Contraseña', password2:'Confirmar contraseña',
+  navSimanim:'Simanim', navQA:'Preguntas y Respuestas', navMyContent:'Mi contenido', hello:'Hola', adminBadge:'Admin', memberBadge:'Miembro', logout:'Salir',
+  authSub:'Estudio diario de halajá · siman por siman', fullName:'Nombre completo', namePh:'Ejemplo: Saul Laniado', password:'Contraseña', password2:'Confirmar contraseña',
   login:'Entrar', register:'Registrarme', haveAccount:'¿Ya tienes cuenta?', newHere:'¿Nuevo en la jabura?', registerLink:'Regístrate', wait:'Un momento…',
   errName:'Escribe tu nombre completo.', errPass4:'La contraseña necesita al menos 4 caracteres.', errPassMatch:'Las contraseñas no coinciden.',
   errUserExists:'Ya existe un usuario con ese nombre. Usa uno ligeramente distinto o inicia sesión.', errUserNotFound:'No existe un usuario con ese nombre.', errWrongPass:'Contraseña incorrecta.',
   err:'Error: ', errFill:'Escribe tu nombre y contraseña.', welcomeFirst:'¡Bienvenido! Quedaste como el primer administrador', welcome:'¡Bienvenido a la jabura!',
   pageSimanim:'Simanim de estudio', pageSimanimSub:'Elige un siman para ver mare mekomot, contenido, shiurim y exámenes',
-  newSiman:'＋ Nuevo siman', emptySimanimT:'Aún no hay simanim', emptySimanimA:'Crea el primer siman para comenzar.', emptySimanimM:'El administrador aún no abre simanim de estudio.',
+  newSiman:'Nuevo siman', globalTodo:'Ver todo', globalAdd:'Agregar', emptySimanimT:'Aún no hay simanim', emptySimanimA:'Crea el primer siman para comenzar.', emptySimanimM:'El administrador aún no abre simanim de estudio.',
   saifimWord:'saifim', allSimanim:'Todos los simanim', siman:'Simán', saif:'Saif', all:'Todo',
-  tabMare:'Mare Mekomot', tabContent:'Contenido', tabShiurim:'Shiurim', tabExams:'Exámenes', tabNotes:'Mis notas',
-  editMareBtn:'✏️ Editar mare mekomot', emptyMareT:'Aún no hay mare mekomot para este saif', emptyMareA:'Toca "Editar" para agregarlos.', emptyMareM:'El Rab aún no sube los mare mekomot.',
+  tabMare:'Mare Mekomot', tabContent:'Contenido', tabShiurim:'Shiurim', tabExams:'Exámenes', tabShared:'Contenido compartido', tabNotes:'Mis notas',
+  editMareBtn:'Editar mare mekomot', emptyMareT:'Aún no hay mare mekomot para este saif', emptyMareA:'Toca "Editar" para agregarlos.', emptyMareM:'El Rab aún no sube los mare mekomot.',
   mareLabel:'Qué hay que ver para el estudio', marePh:'Tur y Beit Yosef siman 158\nShulján Aruj saifim 1–3\nMishná Berurá s"k 1–7',
   save:'Guardar', mareSaved:'Mare mekomot guardados',
   open:'Abrir', viewHere:'Ver aquí', emptyContentT:'Aún no hay contenido para este saif', emptyContentA:'Sube un PDF o cualquier archivo de estudio.', emptyContentM:'El Rab aún no sube contenido.',
-  uploadFileBtn:'＋ Subir archivo', uploadShiurBtn:'＋ Subir shiur', uploadFileT:'Subir archivo', uploadShiurT:'Subir shiur',
+  uploadFileBtn:'Subir archivo', uploadShiurBtn:'Subir shiur', uploadFileT:'Subir archivo', uploadShiurT:'Subir shiur',
   titleLabel:'Título', titlePhFile:'Ejemplo: Hoja de fuentes', titlePhShiur:'Ejemplo: Shiur de saifim 1–3',
   fileLabelShiur:'Archivo de audio (MP3 / M4A / OPUS…)', fileLabelAny:'Archivo (PDF, Word, imagen…)',
-  belongsSaifim:'Pertenece a los saifim', multiSaifHint:'(un shiur puede abarcar varios saifim)',
-  upload:'Subir', uploading:'Subiendo…', uploadedOk:'Subido con éxito 🎉', ofWord:'de', netErr:'Error de red al subir',
+  belongsSaifim:'Pertenece a los saifim', multiSaifHint:'(puedes elegir varios saifim)',
+  upload:'Subir', uploading:'Subiendo…', uploadedOk:'Subido con éxito', ofWord:'de', netErr:'Error de red al subir',
   needTitle:'Escribe un título', needFile:'Elige un archivo', needSaif:'Elige al menos un saif',
   emptyShiurT:'Aún no hay shiurim para este saif', emptyShiurA:'Sube la grabación del shiur del Rab.', emptyShiurM:'El shiur aparecerá aquí después de darse.',
   emptyExamT:'Aún no hay exámenes para este saif', emptyExamA:'Crea un examen para la jabura.', emptyExamM:'El examen aparecerá cuando el Rab lo publique.',
   notTaken:'Sin responder', startExam:'Comenzar examen', pendingRav:'Esperando revisión del Rab', myAnswers:'Ver mis respuestas', gradeWord:'Calificación',
-  questionsWord:'preguntas', subsBtn:'Entregas y revisión', newExamBtn:'＋ Nuevo examen', delExamTitle:'Eliminar examen',
-  examNew:'Nuevo examen', examName:'Nombre del examen', examNamePh:'Ejemplo: Examen de saifim 1–3', addMC:'＋ Opción múltiple', addOpen:'＋ Pregunta abierta',
+  questionsWord:'preguntas', subsBtn:'Entregas y revisión', newExamBtn:'Nuevo examen', delExamTitle:'Eliminar examen',
+  examNew:'Nuevo examen', examName:'Nombre del examen', examNamePh:'Ejemplo: Examen de saifim 1–3', addMC:'Opción múltiple', addOpen:'Pregunta abierta',
   publish:'Publicar examen', autoHint:'Un examen 100% de opción múltiple se califica solo · las preguntas abiertas esperan tu revisión',
-  mcBadge:'Opción múltiple', openBadge:'Abierta', qPh:'Texto de la pregunta', optPh:'Opción', markCorrect:'Marca con el círculo verde la respuesta correcta', addOpt:'＋ Opción',
+  mcBadge:'Opción múltiple', openBadge:'Abierta', qPh:'Texto de la pregunta', optPh:'Opción', markCorrect:'Marca con el círculo verde la respuesta correcta', addOpt:'Opción',
   needExamName:'Escribe el nombre del examen', needSaifim:'Elige los saifim', needQ:'Agrega al menos una pregunta', missingQ:'Falta el texto de la pregunta', emptyOpt:'Hay una opción vacía en la pregunta',
-  published:'Examen publicado 📝', oneAttempt:'Responde todas las preguntas y envía. Solo se puede entregar una vez.', answerPh:'Escribe tu respuesta aquí…',
+  published:'Examen publicado', oneAttempt:'Responde todas las preguntas y envía. Solo se puede entregar una vez.', answerPh:'Escribe tu respuesta aquí…',
   submitExam:'Entregar examen', missingAns:'Falta responder la pregunta', submittedGrade:'¡Entregado! Tu calificación: ', submittedPending:'¡Entregado! Esperando revisión del Rab',
   examNotFound:'No se encontró el examen', autoChecked:'Calificado automáticamente',
   subsTitle:'Entregas', nameCol:'Nombre', statusCol:'Estado', gradeCol:'Calif.', checked:'Revisado', pendingBadge:'Pendiente', check:'Revisar', viewUpdate:'Ver / actualizar',
   noSubsT:'Aún no hay entregas', gradingTitle:'Revisión', mcOf:'Opción múltiple:', correctOf:'correctas', openOnly:'Solo preguntas abiertas',
   answered:'Respondió:', correctIs:'Correcta:', correctBadge:'Correcta', wrongBadge:'Incorrecta',
-  finalGrade:'Calificación final (0–100)', fbLabel:'Comentario para el alumno (opcional)', fbPh:'¡Muy bien! / Repasa el saif 2', saveGrade:'Guardar calificación', gradeSaved:'Calificación guardada ✓', gradeRange:'Escribe una calificación entre 0 y 100',
+  finalGrade:'Calificación final (0–100)', fbLabel:'Comentario para el alumno (opcional)', fbPh:'¡Muy bien! / Repasa el saif 2', saveGrade:'Guardar calificación', gradeSaved:'Calificación guardada', gradeRange:'Escribe una calificación entre 0 y 100',
   myContentT:'Mi contenido', myContentSub:'Todas tus notas, ordenadas por siman y saif', downloadPdf:'Descargar PDF', emptyNotesT:'Aún no tienes notas', emptyNotesD:'Abre un saif, entra a "Mis notas" y empieza a escribir.',
-  notesPh:'Escribe aquí tus notas…', saveNotes:'Guardar notas', notesSaved:'Notas guardadas ✓', notesTitlePdf:'Mis notas',
+  notesPh:'Escribe aquí tus notas…', saveNotes:'Guardar notas', notesSaved:'Notas guardadas', notesTitlePdf:'Mis notas',
   boldT:'Negritas', underT:'Subrayar', italT:'Cursiva', highT:'Marcador', clearT:'Limpiar formato',
-  profileT:'Mi perfil', changePhoto:'Cambiar foto', photoUpdated:'Foto actualizada', changePass:'Cambiar contraseña', newPassLabel:'Nueva contraseña', passChanged:'Contraseña cambiada ✓',
+  profileT:'Mi perfil', changePhoto:'Cambiar foto', photoUpdated:'Foto actualizada', changePass:'Cambiar contraseña', newPassLabel:'Nueva contraseña', passChanged:'Contraseña cambiada',
   adminZone:'Administración de la jabura', checkExams:'Revisar exámenes', members:'Miembros', roleCol:'Rol', youWord:'(tú)',
   makeAdmin:'Hacer admin', removeAdmin:'Quitar admin', resetPassBtn:'Restablecer contraseña', min4:'Mínimo 4 caracteres', passReset:'Contraseña restablecida',
   delUserT:'Eliminar usuario', delUserConfirm:' — ¿eliminarlo de la jabura? Sus calificaciones se borran.', userDeleted:'Usuario eliminado', roleUpdated:'Rol actualizado',
   noPendingT:'No hay exámenes pendientes de revisar', noPendingD:'Todas las entregas están revisadas. ¡Kol hakavod!',
   confirmT:'Confirmar', yesDelete:'Sí, eliminar', cancel:'Cancelar', deleted:'Eliminado',
-  delFileQ:'¿Eliminar el archivo?', delShiurQ:'¿Eliminar el shiur?', delExamQ:'¿Eliminar el examen?', delSimanQ:'¿Eliminar el siman con todo su contenido, shiurim y exámenes?',
+  delFileQ:'¿Eliminar el archivo?', delShiurQ:'¿Eliminar el shiur?', delExamQ:'¿Eliminar el examen?', delSimanQ:'¿Eliminar el siman con todo su contenido, shiurim y exámenes?', delPostQ:'¿Eliminar la publicación?', delNewsQ:'¿Eliminar la noticia?', delQQ:'¿Eliminar la pregunta?',
   simanNew:'Nuevo siman', simanEdit:'Editar siman', simanNumL:'Número del siman', simanNumPh:'340 o שמ', saifCountL:'¿Cuántos saifim tiene el siman?', saifCountPh:'12 o יב',
   titleOpt:'Título (opcional)', simanTitlePh:'Ejemplo: Dinim de netilat yadaim', createSiman:'Crear siman', saveChanges:'Guardar cambios', delSimanBtn:'Eliminar todo el siman',
-  addSaif:'＋ Agregar saif', saifTitlePh:'Título del saif (opcional)', invalidNum:'Número de siman no válido (prueba 340 o שמ)', invalidCount:'Cantidad de saifim no válida (prueba 12 o יב)',
+  addSaif:'Agregar saif', saifTitlePh:'Título del saif (opcional)', invalidNum:'Número de siman no válido (prueba 340 o שמ)', invalidCount:'Cantidad de saifim no válida (prueba 12 o יב)',
   simanCreated:'Siman creado', simanUpdated:'Siman actualizado', simanDeleted:'Siman eliminado', willCreate:'Se crearán',
-  setupT:'⚙️ Falta la configuración de Supabase', notesFor:'Notas de'
+  setupT:'⚙️ Falta la configuración de Supabase',
+  byWord:'Subió', updatedWord:'Actualizó',
+  notifT:'Notificaciones', notifEmpty:'No hay notificaciones nuevas', markSeen:'Todo leído',
+  newsT:'News', newsNew:'Nueva noticia', newsEmpty:'Aún no hay noticias', newsEmptyD:'Cuando los admins publiquen novedades y anuncios, aparecerán aquí.', newsTitlePh:'Título de la noticia', newsBodyPh:'Contenido de la noticia…', newsPublished:'Noticia publicada',
+  sharedNew:'Compartir contenido', sharedTitlePh:'Título', sharedBodyPh:'Escribe algo… (opcional si adjuntas archivo)', sharedPublished:'Publicado a la jabura',
+  emptySharedT:'Aún no hay contenido compartido en este saif', emptySharedD:'Cualquiera puede compartir aquí materiales, resúmenes y archivos.',
+  filesLabel:'Archivos (puedes varios)', bodyLabel:'Texto', needSomething:'Escribe algo o adjunta un archivo',
+  qaT:'Preguntas y Respuestas', qaNew:'Nueva pregunta', qaPh:'Escribe tu pregunta al Rab…', qaEmpty:'Aún no hay preguntas', qaEmptyD:'Cualquiera puede preguntar — solo los admins responden.', qaPublished:'Pregunta publicada', qaOnlyAdmins:'Solo los admins responden preguntas', answerBtn:'Responder',
+  commentsT:'Comentarios', commentPh:'Escribe un comentario…', send:'Enviar', reply:'Responder', visPrivate:'Solo yo lo veo', visAdmins:'Compartir con los admins', commentSent:'Enviado', noComments:'Aún no hay comentarios',
+  privateBadge:'Privado', sharedAdminsBadge:'Compartido con admins',
+  linkCopied:'Liga copiada', copyLink:'Copiar liga', copyUploadLink:'Copiar liga rápida para subir',
+  addTypeL:'¿Qué vas a subir?', chooseSimanL:'¿A qué siman?', chooseSaifL:'¿A qué saif?', continueW:'Continuar',
+  typeMare:'Mare Mekomot', typeFile:'Archivo / fuente', typeShiur:'Shiur', typeExam:'Examen', typeShared:'Contenido compartido', typeNews:'Noticia de News',
+  newContent:'Contenido nuevo', inWord:'en Simán'
 }};
 const t = k => (STR[LANG] && STR[LANG][k]) || STR.he[k] || k;
 function applyDir(){
@@ -472,7 +538,6 @@ applyDir();
 
 /* ═══════════ Helpers ═══════════ */
 const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-
 function gem(n){
   n = parseInt(n);
   if (!n || n < 1 || n > 999) return String(n);
@@ -484,7 +549,7 @@ function gem(n){
   if (n === 16) return s + 'טז';
   return (s + tens[Math.floor(n/10)] + ones[n%10]) || String(n);
 }
-function parseHebNum(str){ // acepta "340" o "שמ" → 340
+function parseHebNum(str){
   str = String(str||'').trim().replace(/["'׳״\s.]/g,'');
   if (!str) return NaN;
   if (/^\d+$/.test(str)) return parseInt(str);
@@ -504,6 +569,11 @@ function saifLabel(saifim){
 }
 function fmtSize(b){ if(!b) return ''; if(b<1024*1024) return Math.round(b/1024)+' KB'; return (b/1048576).toFixed(1)+' MB'; }
 function fmtDate(ts){ try{ const d=new Date(ts); if(isNaN(d)) return ''; return d.toLocaleDateString(LANG==='he'?'he-IL':'es-MX',{day:'numeric',month:'short',year:'numeric'});}catch(e){return ''} }
+function fmtDateFull(ts){ try{ const d=new Date(ts); if(isNaN(d)) return ''; return d.toLocaleDateString(LANG==='he'?'he-IL':'es-MX',{weekday:'long',day:'numeric',month:'short',year:'numeric'});}catch(e){return ''} }
+function byLine(name, ts, word){
+  if (!name && !ts) return '';
+  return `${t(word||'byWord')} <b>${esc(name||'—')}</b> · ${fmtDateFull(ts)}`;
+}
 function fmtTime(sec){ if(!isFinite(sec)) return '0:00'; sec=Math.max(0,Math.floor(sec)); const m=Math.floor(sec/60), s=sec%60; return m+':'+String(s).padStart(2,'0'); }
 async function sha256(text){
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
@@ -525,7 +595,7 @@ function closeSheet(){ $('overlay').classList.remove('open'); }
 $('overlay').addEventListener('click', e => { if (e.target === $('overlay')) closeSheet(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 function sheetHead(title){
-  return `<div class="sheet-head"><h3>${esc(title)}</h3><button class="xbtn" onclick="closeSheet()">✕</button></div>`;
+  return `<div class="sheet-head"><h3>${esc(title)}</h3><button class="xbtn" onclick="closeSheet()">${icon('x')}</button></div>`;
 }
 async function confirmDlg(msg){
   return new Promise(res => {
@@ -544,14 +614,259 @@ function avatarHTML(user, cls){
   return `<div class="avatar ${cls||''}">${user.photo ? `<img src="${esc(user.photo)}" alt="">` : esc(letter)}</div>`;
 }
 
-/* ═══════════ Estado ═══════════ */
+/* ═══════════ Estado + Router ═══════════ */
 let ME = null;
 let SIMANIM = [];
-let CUR = { view:'home', simanId:null, saif:1, tab:'mare' };  // saif 0 = ver todo
+let CUR = { view:'home', simanId:null, saif:1, tab:'mare' };
+let PENDING_FOCUS = null;
 const isAdmin = () => ME && ME.role === 'admin';
 function saveSession(){ localStorage.setItem('jh_session', JSON.stringify({id:ME.id})); }
 function clearSession(){ localStorage.removeItem('jh_session'); }
+const getSiman = id => SIMANIM.find(s => s.id === id);
 
+function nav(path){
+  if ('#' + path === location.hash) route();
+  else location.hash = path;
+}
+window.addEventListener('hashchange', () => { if (ME) route(); });
+function copyLink(path){
+  const url = location.origin + location.pathname + '#' + path;
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(()=>toast(t('linkCopied'))).catch(()=>prompt('URL:', url));
+  } else prompt('URL:', url);
+}
+function route(){
+  const h = decodeURIComponent(location.hash.replace(/^#/, '')) || '/';
+  const p = h.split('/').filter(Boolean);
+  PENDING_FOCUS = null;
+  if (p[0] === 'siman' && p[1]){
+    CUR.simanId = p[1];
+    CUR.saif = p[2] !== undefined ? parseInt(p[2]) : 1;
+    if (isNaN(CUR.saif)) CUR.saif = 1;
+    CUR.tab = p[3] || (CUR.saif === 0 ? 'mare' : 'mare');
+    show('siman'); return;
+  }
+  if (p[0] === 'mare' && p[1]){ CUR.simanId=p[1]; CUR.saif=parseInt(p[2]||'1')||1; CUR.tab='mare'; show('siman'); return; }
+  if (p[0] === 'todo'){ show('todoall'); return; }
+  if (p[0] === 'micontenido'){ show('mycontent'); return; }
+  if (p[0] === 'perfil'){ show('profile'); return; }
+  if (p[0] === 'news'){ PENDING_FOCUS = p[1] ? 'it-' + p[1] : null; show('news'); return; }
+  if (p[0] === 'qa'){ PENDING_FOCUS = p[1] ? 'it-' + p[1] : null; show('qa'); return; }
+  if (p[0] === 'item' && p[1] && p[2]){ resolveItem(p[1], p[2]); return; }
+  if (p[0] === 'add'){ openAddFromLink(p[1], p[2], p[3]); return; }
+  show('home');
+}
+function show(view){
+  CUR.view = view;
+  renderNav();
+  window.scrollTo({ top: 0 });
+  if (view === 'home')      renderHome();
+  if (view === 'siman')     renderSiman();
+  if (view === 'todoall')   renderTodoAll();
+  if (view === 'mycontent') renderMyContent();
+  if (view === 'profile')   renderProfile();
+  if (view === 'news')      renderNews();
+  if (view === 'qa')        renderQA();
+}
+const ITEM_TABLES = { m: [T.materials,'content'], s: [T.shiurim,'shiurim'], e: [T.exams,'exams'], c: [T.shared,'shared'] };
+async function resolveItem(kind, id){
+  const def = ITEM_TABLES[kind];
+  if (!def) return show('home');
+  try {
+    const { data } = await sb.from(def[0]).select('*').eq('id', id).maybeSingle();
+    if (!data){ toast(t('err') + '404'); return show('home'); }
+    CUR.simanId = data.simanId;
+    CUR.saif = (data.saifim && data.saifim[0]) || 1;
+    CUR.tab = def[1];
+    PENDING_FOCUS = 'it-' + id;
+    show('siman');
+  } catch(e){ show('home'); }
+}
+function focusPending(){
+  if (!PENDING_FOCUS) return;
+  const id = PENDING_FOCUS; PENDING_FOCUS = null;
+  setTimeout(() => {
+    const el = document.getElementById(id);
+    if (el){ el.scrollIntoView({ block:'center', behavior:'smooth' }); el.classList.add('flash'); }
+  }, 150);
+}
+const linkOf = {
+  material: m => '/item/m/' + m.id,
+  shiur:    x => '/item/s/' + x.id,
+  exam:     e => '/item/e/' + e.id,
+  shared:   c => '/item/c/' + c.id,
+  news:     n => '/news/' + n.id,
+  question: q => '/qa/' + q.id,
+  mare:     (simanId, saif) => '/mare/' + simanId + '/' + saif,
+  saif:     (simanId, saif, tab) => '/siman/' + simanId + '/' + saif + (tab ? '/' + tab : '')
+};
+
+/* ═══════════ Likes + Comentarios ═══════════ */
+function socialBar(type, id, deepLink, extra){
+  return `<div class="social" data-soc="${type}|${id}">
+    <button class="socbtn like" onclick="likeToggle(this,'${type}','${id}')">${icon('heart')}<span class="lc">·</span></button>
+    <button class="socbtn" onclick="openComments('${type}','${id}')">${icon('chat')}<span class="cc">·</span></button>
+    <button class="socbtn" onclick="copyLink('${deepLink}')">${icon('link')}<span>${t('copyLink')}</span></button>
+    ${extra || ''}
+  </div>`;
+}
+async function loadSocial(){
+  const nodes = [...document.querySelectorAll('[data-soc]')];
+  if (!nodes.length) return;
+  const ids = [...new Set(nodes.map(n => n.dataset.soc.split('|')[1]))];
+  try {
+    const [{ data: likes }, { data: coms }] = await Promise.all([
+      sb.from(T.likes).select('targetId,userId').in('targetId', ids),
+      sb.from(T.comments).select('id,targetId,userId,visibility').in('targetId', ids)
+    ]);
+    nodes.forEach(n => {
+      const [, id] = n.dataset.soc.split('|');
+      const L = (likes||[]).filter(l => l.targetId === id);
+      const C = (coms||[]).filter(c => c.targetId === id && canSeeComment(c));
+      const likeBtn = n.querySelector('.like');
+      const mine = L.some(l => l.userId === ME.id);
+      likeBtn.classList.toggle('liked', mine);
+      likeBtn.dataset.liked = mine ? '1' : '';
+      likeBtn.querySelector('svg').style.fill = mine ? 'currentColor' : 'none';
+      n.querySelector('.lc').textContent = L.length || '';
+      n.querySelector('.cc').textContent = C.length || '';
+    });
+  } catch(e){}
+}
+function canSeeComment(c){
+  if (c.visibility === 'public') return true;
+  if (c.userId === ME.id) return true;
+  if (c.visibility === 'admins' && isAdmin()) return true;
+  return false;
+}
+async function likeToggle(btn, type, id){
+  const liked = btn.dataset.liked === '1';
+  const rowId = type + '|' + id + '|' + ME.id;
+  btn.dataset.liked = liked ? '' : '1';
+  btn.classList.toggle('liked', !liked);
+  btn.querySelector('svg').style.fill = liked ? 'none' : 'currentColor';
+  const lc = btn.querySelector('.lc');
+  const cur = parseInt(lc.textContent) || 0;
+  lc.textContent = (liked ? cur - 1 : cur + 1) || '';
+  try {
+    if (liked) await sb.from(T.likes).delete().eq('id', rowId);
+    else await sb.from(T.likes).insert({ id: rowId, targetType: type, targetId: id, userId: ME.id });
+  } catch(e){}
+}
+/* modes: 'public' (compartido/news) · 'content' (privado/admins) · 'qa' (root solo admin) */
+const COMMENT_MODE = { material:'content', shiur:'content', exam:'content', mare:'content', shared:'public', news:'public', question:'qa' };
+async function openComments(type, id, ownerId){
+  const mode = COMMENT_MODE[type] || 'content';
+  let rows = [];
+  try {
+    const { data } = await sb.from(T.comments).select('*').eq('targetType', type).eq('targetId', id).order('createdAt', { ascending: true });
+    rows = data || [];
+  } catch(e){}
+  const roots = rows.filter(c => !c.parentId && canSeeComment(c));
+  const kidsOf = pid => rows.filter(c => c.parentId === pid);
+  const likeMini = c => `<button class="socbtn" style="padding:3px 8px" onclick="likeToggle(this,'comentario','${c.id}')" data-soc="comentario|${c.id}">${icon('heart')}<span class="lc">·</span></button>`;
+  function canReply(root){
+    if (mode === 'public') return true;
+    if (mode === 'qa') return isAdmin() || (ownerId && ME.id === ownerId) || ME.id === root.userId;
+    if (root.visibility === 'admins') return isAdmin() || ME.id === root.userId;
+    return ME.id === root.userId;
+  }
+  const rootsHTML = roots.length ? roots.map(c => `
+    <div class="comment">
+      <div class="ch"><span class="cn">${esc(c.userName)}</span><span class="cd">${fmtDate(c.createdAt)}</span>
+        ${c.visibility==='private' ? `<span class="badge gray">${t('privateBadge')}</span>` : ''}
+        ${c.visibility==='admins' ? `<span class="badge gold">${t('sharedAdminsBadge')}</span>` : ''}
+        <div style="flex:1"></div>
+        ${(c.userId===ME.id || isAdmin()) ? `<button class="iconbtn" style="width:28px;height:28px" onclick="delComment('${c.id}','${type}','${id}','${ownerId||''}')">${icon('trash',14)}</button>` : ''}
+      </div>
+      <div class="ct">${esc(c.text)}</div>
+      <div style="display:flex;gap:4px;margin-top:6px;align-items:center">
+        ${likeMini(c)}
+        ${canReply(c) ? `<button class="socbtn" style="padding:3px 8px" onclick="replyBox('${c.id}')">${icon('chat')}<span>${t('reply')}</span></button>` : ''}
+      </div>
+      <div id="rb-${c.id}"></div>
+      ${kidsOf(c.id).map(r => `
+        <div class="rep">
+          <div class="ch"><span class="cn">${esc(r.userName)}</span><span class="cd">${fmtDate(r.createdAt)}</span>
+            <div style="flex:1"></div>
+            ${(r.userId===ME.id || isAdmin()) ? `<button class="iconbtn" style="width:26px;height:26px" onclick="delComment('${r.id}','${type}','${id}','${ownerId||''}')">${icon('trash',13)}</button>` : ''}
+          </div>
+          <div class="ct">${esc(r.text)}</div>
+          <div style="margin-top:5px">${likeMini(r)}</div>
+        </div>`).join('')}
+    </div>`).join('') : `<div class="empty" style="padding:24px"><div class="e-t">${t('noComments')}</div></div>`;
+
+  const canRoot = mode !== 'qa' || isAdmin();
+  const compose = canRoot ? `
+    <div class="compose">
+      <textarea id="cm-text" rows="3" placeholder="${mode==='qa' ? t('answerBtn')+'…' : t('commentPh')}"></textarea>
+      <div class="crow">
+        ${mode==='content' ? `<select id="cm-vis" style="padding:9px 12px;border:1px solid var(--line);border-radius:11px;background:#fff">
+          <option value="private">${t('visPrivate')}</option>
+          <option value="admins">${t('visAdmins')}</option>
+        </select>` : ''}
+        <div style="flex:1"></div>
+        <button class="btn sm" onclick="sendComment('${type}','${id}',null,'${ownerId||''}')">${icon('send')} ${t('send')}</button>
+      </div>
+    </div>` : `<div class="hint" style="text-align:center;margin-top:14px">${t('qaOnlyAdmins')}</div>`;
+
+  window._cmMode = mode;
+  openSheet(`${sheetHead(t('commentsT'))}<div>${rootsHTML}</div>${compose}`);
+  loadSocial();
+}
+function replyBox(parentId){
+  const box = $('rb-' + parentId);
+  if (!box || box.innerHTML) { if(box) box.innerHTML=''; return; }
+  box.innerHTML = `<div class="compose" style="margin-top:8px">
+    <textarea id="cm-r-${parentId}" rows="2" placeholder="${t('commentPh')}"></textarea>
+    <div class="crow"><div style="flex:1"></div>
+      <button class="btn sm" onclick="sendReply('${parentId}')">${t('send')}</button></div>
+  </div>`;
+  window._replyParent = parentId;
+}
+async function sendComment(type, id, parentId, ownerId){
+  const ta = $('cm-text');
+  const text = (ta && ta.value || '').trim();
+  if (!text) return;
+  const visSel = $('cm-vis');
+  const mode = window._cmMode;
+  const visibility = mode === 'content' ? (visSel ? visSel.value : 'private') : 'public';
+  try {
+    const { error } = await sb.from(T.comments).insert({
+      targetType: type, targetId: id, parentId: null,
+      text, visibility, userId: ME.id, userName: ME.name
+    });
+    fail(error);
+    toast(t('commentSent'));
+    openComments(type, id, ownerId || undefined);
+    loadSocial();
+  } catch(e){ toast(t('err') + e.message); }
+}
+async function sendReply(parentId){
+  const ta = $('cm-r-' + parentId);
+  const text = (ta && ta.value || '').trim();
+  if (!text) return;
+  try {
+    const { data: parent } = await sb.from(T.comments).select('*').eq('id', parentId).maybeSingle();
+    if (!parent) return;
+    const { error } = await sb.from(T.comments).insert({
+      targetType: parent.targetType, targetId: parent.targetId, parentId,
+      text, visibility: parent.visibility, userId: ME.id, userName: ME.name
+    });
+    fail(error);
+    toast(t('commentSent'));
+    openComments(parent.targetType, parent.targetId, window._qaOwner || undefined);
+  } catch(e){ toast(t('err') + e.message); }
+}
+async function delComment(cid, type, id, ownerId){
+  try {
+    await sb.from(T.comments).delete().eq('parentId', cid);
+    await sb.from(T.comments).delete().eq('id', cid);
+    openComments(type, id, ownerId || undefined);
+  } catch(e){ toast(t('err') + e.message); }
+}
+
+/* ═══════════ Boot + Auth ═══════════ */
 async function boot(){
   if (!configOK()){ renderSetup(); return; }
   const saved = localStorage.getItem('jh_session');
@@ -572,15 +887,13 @@ function renderSetup(err){
     <p>index.html → <code>SUPABASE_URL</code> / <code>SUPABASE_ANON_KEY</code></p>
   </div></div>`;
 }
-
-/* ═══════════ Auth ═══════════ */
 function renderAuth(mode='login'){
   window._authMode = mode;
   const isReg = mode === 'register';
   app.innerHTML = `
   <div class="auth-wrap"><div class="auth-card">
     <div class="auth-lang">${langToggleHTML()}</div>
-    <div class="auth-mark">ה</div>
+    <div class="auth-mark">${icon('book',34)}</div>
     <h1>${esc(APP_NAME)}</h1>
     <div class="auth-sub">${t('authSub')}</div>
     <div class="auth-err" id="a-err"></div>
@@ -595,15 +908,13 @@ function renderAuth(mode='login'){
       ? `${t('haveAccount')} <button onclick="renderAuth('login')">${t('login')}</button>`
       : `${t('newHere')} <button onclick="renderAuth('register')">${t('registerLink')}</button>`}</div>
   </div></div>`;
-  const go = $('a-go');
   const submit = () => isReg ? doRegister() : doLogin();
-  go.onclick = submit;
+  $('a-go').onclick = submit;
   app.querySelectorAll('input').forEach(i => i.addEventListener('keydown', e => { if (e.key==='Enter') submit(); }));
   $('a-name').focus();
 }
 function authErr(msg){ const e=$('a-err'); e.textContent=msg; e.style.display='block'; }
 const userId = name => name.trim().replace(/\s+/g,' ').toLowerCase();
-
 async function doRegister(){
   const name = $('a-name').value.trim().replace(/\s+/g,' ');
   const p1 = $('a-pass').value, p2 = $('a-pass2').value;
@@ -645,15 +956,13 @@ async function doLogin(){
     await loadSimanim(); renderApp();
   } catch(e){ authErr(t('err') + e.message); btn.disabled=false; btn.textContent=t('login'); }
 }
-function logout(){ ME = null; clearSession(); closePlayer(); renderAuth(); }
+function logout(){ ME = null; clearSession(); closePlayer(); location.hash=''; renderAuth(); }
 
-/* ═══════════ Datos ═══════════ */
 async function loadSimanim(){
   const { data, error } = await sb.from(T.simanim).select('*').order('number', { ascending:true });
   fail(error);
   SIMANIM = data || [];
 }
-const getSiman = id => SIMANIM.find(s => s.id === id);
 async function fetchBySiman(table, simanId){
   const { data, error } = await sb.from(table).select('*').eq('simanId', simanId).order('createdAt', { ascending:true });
   fail(error);
@@ -665,11 +974,13 @@ function renderApp(){
   app.innerHTML = `
   <header>
     <div class="hbar">
-      <div class="hmark">ה</div>
+      <div class="hmark">${icon('book',22)}</div>
       <div class="htitle">${esc(APP_NAME)}</div>
       <div class="hspace"></div>
       ${langToggleHTML()}
-      <button class="avatarbtn" onclick="go('profile')" title="${t('profileT')}">
+      <button class="headicon" id="bell" onclick="openNotif()" title="${t('notifT')}">${icon('bell')}<span class="dot" id="bell-dot" style="display:none"></span></button>
+      <button class="newsbtn" onclick="nav('/news')" title="News">${icon('mega')}<span>News</span></button>
+      <button class="avatarbtn" onclick="nav('/perfil')" title="${t('profileT')}">
         ${avatarHTML(ME)}
         <span class="nm">${esc(ME.name)}</span>
       </button>
@@ -678,48 +989,119 @@ function renderApp(){
   </header>
   <main id="main"></main>`;
   renderNav();
-  go(CUR.view === 'siman' && !getSiman(CUR.simanId) ? 'home' : CUR.view);
+  route();
+  notifBadge();
 }
 function renderNav(){
-  const tabs = [ ['home', t('navSimanim')], ['mycontent', t('navMyContent')] ];
-  $('nav').innerHTML = tabs.map(([v,l]) =>
-    `<button class="navtab ${ (CUR.view===v || (v==='home'&&CUR.view==='siman')) ? 'on':''}" onclick="go('${v}')">${l}</button>`).join('');
+  const el = $('nav'); if (!el) return;
+  const tabs = [ ['home','/', t('navSimanim')], ['qa','/qa', t('navQA')], ['mycontent','/micontenido', t('navMyContent')] ];
+  el.innerHTML = tabs.map(([v,path,l]) =>
+    `<button class="navtab ${ (CUR.view===v || (v==='home' && ['siman','todoall'].includes(CUR.view))) ? 'on':''}" onclick="nav('${path}')">${l}</button>`).join('');
 }
-function go(view, simanId){
-  CUR.view = view;
-  if (simanId !== undefined){ CUR.simanId = simanId; CUR.saif = 1; CUR.tab = 'mare'; }
-  renderNav();
-  window.scrollTo({top:0});
-  if (view === 'home')      renderHome();
-  if (view === 'siman')     renderSiman();
-  if (view === 'mycontent') renderMyContent();
-  if (view === 'profile')   renderProfile();
+
+/* ═══════════ Notificaciones ═══════════ */
+const NOTIF_SRC = [
+  [T.materials, 'material', 'file'],
+  [T.shiurim,   'shiur',    'audio'],
+  [T.exams,     'exam',     'exam'],
+  [T.news,      'news',     'mega'],
+  [T.shared,    'shared',   'users'],
+  [T.questions, 'question', 'qa']
+];
+async function fetchRecent(){
+  const results = await Promise.all(NOTIF_SRC.map(([tbl]) =>
+    sb.from(tbl).select('*').order('createdAt', { ascending:false }).limit(12).then(r => r.data || [])
+  ));
+  const merged = [];
+  results.forEach((rows, i) => rows.forEach(r => merged.push({ ...r, _kind: NOTIF_SRC[i][1], _icon: NOTIF_SRC[i][2] })));
+  merged.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  return merged.slice(0, 30);
+}
+function notifTitle(n){
+  if (n._kind === 'question') return (n.text || '').slice(0, 70);
+  return n.title || t('newContent');
+}
+function notifMeta(n){
+  const sm = n.simanId ? getSiman(n.simanId) : null;
+  const parts = [];
+  parts.push(t('tab' + { material:'Content', shiur:'Shiurim', exam:'Exams', shared:'Shared' }[n._kind]) || '');
+  if (n._kind === 'news') parts[0] = 'News';
+  if (n._kind === 'question') parts[0] = t('qaT');
+  if (sm) parts.push(t('siman') + ' ' + gem(sm.number) + (n.saifim && n.saifim.length ? ' · ' + saifLabel(n.saifim) : ''));
+  const by = n.uploadedBy || n.createdBy || n.userName;
+  if (by) parts.push(by);
+  parts.push(fmtDate(n.createdAt));
+  return parts.filter(Boolean).join(' · ');
+}
+function notifLink(n){
+  if (n._kind === 'material') return linkOf.material(n);
+  if (n._kind === 'shiur')    return linkOf.shiur(n);
+  if (n._kind === 'exam')     return linkOf.exam(n);
+  if (n._kind === 'shared')   return linkOf.shared(n);
+  if (n._kind === 'news')     return linkOf.news(n);
+  if (n._kind === 'question') return linkOf.question(n);
+  return '/';
+}
+async function notifBadge(){
+  try {
+    const seen = localStorage.getItem('jh_seen') || '2000-01-01';
+    const counts = await Promise.all(NOTIF_SRC.map(([tbl]) =>
+      sb.from(tbl).select('id', { count:'exact', head:true }).gt('createdAt', seen).then(r => r.count || 0)
+    ));
+    const totalMine = counts.reduce((a,b)=>a+b, 0);
+    const dot = $('bell-dot');
+    if (dot){ dot.style.display = totalMine ? 'flex' : 'none'; dot.textContent = totalMine > 9 ? '9+' : totalMine; }
+  } catch(e){}
+}
+async function openNotif(){
+  openSheet(`${sheetHead(t('notifT'))}<div style="padding:30px"><div class="spin"></div></div>`);
+  const items = await fetchRecent();
+  const seen = new Date(localStorage.getItem('jh_seen') || '2000-01-01');
+  localStorage.setItem('jh_seen', new Date().toISOString());
+  const dot = $('bell-dot'); if (dot) dot.style.display = 'none';
+  openSheet(`${sheetHead(t('notifT'))}
+    ${items.length ? `<div class="item-list">` + items.map(n => `
+      <div class="item" style="cursor:pointer" onclick="closeSheet();nav('${notifLink(n)}')">
+        <div class="row">
+          <div class="ic ${new Date(n.createdAt) > seen ? 'gold' : ''}">${icon(n._icon)}</div>
+          <div class="body">
+            <div class="t">${esc(notifTitle(n))}</div>
+            <div class="m">${esc(notifMeta(n))}</div>
+          </div>
+          ${new Date(n.createdAt) > seen ? `<span class="badge gold">${t('newContent')}</span>` : ''}
+        </div>
+      </div>`).join('') + `</div>`
+    : `<div class="empty"><div class="e-ic">${icon('bell',40)}</div><div class="e-t">${t('notifEmpty')}</div></div>`}`);
 }
 
 /* ═══════════ Inicio ═══════════ */
 function renderHome(){
-  const m = $('main');
-  const list = SIMANIM.length ? `<div class="siman-list">` + SIMANIM.map(s => `
-    <div class="siman-card" onclick="go('siman','${s.id}')">
+  const m = $('main'); if (!m) return;
+  const list = SIMANIM.length ? `<div class="siman-list">` + SIMANIM.map(s => {
+    const n = (s.saifim||[]).length;
+    return `
+    <div class="siman-card" onclick="nav('${linkOf.saif(s.id,1)}')">
       <div class="siman-med">${gem(s.number)}</div>
       <div class="siman-info">
         <div class="t">${t('siman')} ${gem(s.number)}${s.title ? ' · ' + esc(s.title) : ''}</div>
-        <div class="m">${(s.saifim||[]).length} ${t('saifimWord')}</div>
+        <div class="m">${n} ${t('saifimWord')} · <span class="serif">${gem(1)}–${gem(n)}</span></div>
       </div>
-      ${isAdmin() ? `<button class="iconbtn" onclick="event.stopPropagation();openSimanEditor('${s.id}')" title="${t('simanEdit')}">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-      </button>` : ''}
-      <div class="siman-arrow">‹</div>
-    </div>`).join('') + `</div>`
+      ${isAdmin() ? `<button class="iconbtn" onclick="event.stopPropagation();openSimanEditor('${s.id}')" title="${t('simanEdit')}">${icon('pencil')}</button>` : ''}
+      <div class="siman-arrow">${icon('arrow')}</div>
+    </div>`;}).join('') + `</div>`
   : `<div class="panel"><div class="empty">
-      <div class="e-ic">📖</div>
+      <div class="e-ic">${icon('book',40)}</div>
       <div class="e-t">${t('emptySimanimT')}</div>
       <div>${isAdmin() ? t('emptySimanimA') : t('emptySimanimM')}</div>
     </div></div>`;
   m.innerHTML = `
     <div class="pagehead">
       <div><h2>${t('pageSimanim')}</h2><div class="sub">${t('pageSimanimSub')}</div></div>
-      ${isAdmin() ? `<button class="btn" onclick="openSimanEditor()">${t('newSiman')}</button>` : ''}
+      <div class="acts">
+        <button class="btn ghost" onclick="nav('/todo')">${icon('eye')} ${t('globalTodo')}</button>
+        <button class="btn soft" onclick="openGlobalAdd()">${icon('plus')} ${t('globalAdd')}</button>
+        ${isAdmin() ? `<button class="btn" onclick="openSimanEditor()">${icon('plus')} ${t('newSiman')}</button>` : ''}
+      </div>
     </div>
     ${list}`;
 }
@@ -728,7 +1110,6 @@ function renderHome(){
 function openSimanEditor(id){
   const s = id ? getSiman(id) : null;
   if (!s){
-    // Creación rápida: número (340 o שמ) + cantidad de saifim (12 o יב)
     openSheet(`${sheetHead(t('simanNew'))}
       <div style="display:flex;gap:12px;flex-wrap:wrap">
         <div class="field" style="flex:1;min-width:140px"><label>${t('simanNumL')}</label>
@@ -740,10 +1121,9 @@ function openSimanEditor(id){
         <input id="se-title" placeholder="${t('simanTitlePh')}"></div>
       <div class="hint" id="se-preview" style="margin:-4px 0 16px;font-size:14.5px"></div>
       <button class="btn full" onclick="createSimanQuick()">${t('createSiman')}</button>`);
-    setTimeout(()=>$('se-num').focus(), 100);
+    setTimeout(()=>{ const e=$('se-num'); if(e) e.focus(); }, 100);
     return;
   }
-  // Edición: títulos de saifim, agregar/quitar
   const saifim = s.saifim || [];
   openSheet(`${sheetHead(t('simanEdit'))}
     <div style="display:flex;gap:12px">
@@ -753,7 +1133,7 @@ function openSimanEditor(id){
         <input id="se-title" value="${esc(s.title||'')}" placeholder="${t('simanTitlePh')}"></div>
     </div>
     <div class="field"><label>${t('saifimWord')}</label><div id="se-saifim"></div>
-      <button class="btn soft sm" style="margin-top:8px" onclick="seAddSaif()">${t('addSaif')}</button>
+      <button class="btn soft sm" style="margin-top:8px" onclick="seAddSaif()">${icon('plus')} ${t('addSaif')}</button>
     </div>
     <button class="btn full" onclick="saveSimanEdit('${id}')">${t('saveChanges')}</button>
     <button class="btn danger full sm" style="margin-top:10px" onclick="deleteSiman('${id}')">${t('delSimanBtn')}</button>`);
@@ -779,7 +1159,7 @@ async function createSimanQuick(){
     fail(error);
     closeSheet(); toast(t('simanCreated'));
     await loadSimanim();
-    go('siman', data.id);
+    nav(linkOf.saif(data.id, 1));
   } catch(e){ toast(t('err') + e.message); }
 }
 function seRender(){
@@ -788,7 +1168,7 @@ function seRender(){
       <div style="width:40px;height:40px;border-radius:50%;background:var(--blue-soft);color:var(--blue);flex:none;display:flex;align-items:center;justify-content:center;font-family:'Frank Ruhl Libre',serif;font-weight:700">${gem(i+1)}</div>
       <input style="flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#FBFBFD"
         value="${esc(sf.title||'')}" placeholder="${t('saifTitlePh')}" oninput="window._seSaifim[${i}].title=this.value">
-      ${i === window._seSaifim.length-1 && window._seSaifim.length>1 ? `<button class="iconbtn" onclick="window._seSaifim.pop();seRender()">✕</button>`:''}
+      ${i === window._seSaifim.length-1 && window._seSaifim.length>1 ? `<button class="iconbtn" onclick="window._seSaifim.pop();seRender()">${icon('x')}</button>`:''}
     </div>`).join('');
 }
 function seAddSaif(){ window._seSaifim.push({n:window._seSaifim.length+1,title:''}); seRender(); }
@@ -803,7 +1183,7 @@ async function saveSimanEdit(id){
     fail(error);
     closeSheet(); toast(t('simanUpdated'));
     await loadSimanim();
-    CUR.view === 'siman' ? renderSiman() : renderHome();
+    route();
   } catch(e){ toast(t('err') + e.message); }
 }
 async function deleteSiman(id){
@@ -816,28 +1196,29 @@ async function deleteSiman(id){
       (data||[]).forEach(r => { if (r.storagePath) paths.push(r.storagePath); });
     }
     if (paths.length){ try { await sb.storage.from(BUCKET).remove(paths); } catch(e){} }
-    for (const tbl of [T.materials, T.shiurim, T.exams, T.mare, T.subs, T.notes]){
+    for (const tbl of [T.materials, T.shiurim, T.exams, T.mare, T.subs, T.notes, T.shared]){
       await sb.from(tbl).delete().eq('simanId', id);
     }
     const { error } = await sb.from(T.simanim).delete().eq('id', id); fail(error);
     toast(t('simanDeleted'));
-    await loadSimanim(); go('home');
+    await loadSimanim(); nav('/');
   } catch(e){ toast(t('err') + e.message); }
 }
 
 /* ═══════════ Vista de siman ═══════════ */
 async function renderSiman(){
   const s = getSiman(CUR.simanId);
-  if (!s) return go('home');
+  if (!s) return nav('/');
   const saifim = s.saifim || [];
-  if (CUR.saif !== 0 && CUR.saif > saifim.length) CUR.saif = 1;
+  if (CUR.saif !== 0 && (CUR.saif > saifim.length || CUR.saif < 0)) CUR.saif = 1;
   const curSaif = saifim[CUR.saif-1] || {};
-  const tabs = [ ['mare',t('tabMare')], ['content',t('tabContent')], ['shiurim',t('tabShiurim')], ['exams',t('tabExams')], ['notes',t('tabNotes')] ];
-
-  $('main').innerHTML = `
+  const tabs = [ ['mare',t('tabMare')], ['content',t('tabContent')], ['shiurim',t('tabShiurim')], ['exams',t('tabExams')], ['shared',t('tabShared')], ['notes',t('tabNotes')] ];
+  if (!tabs.some(([k])=>k===CUR.tab)) CUR.tab = 'mare';
+  const m = $('main'); if (!m) return;
+  m.innerHTML = `
     <div class="qnav">
-      <button class="qback" onclick="go('home')">‹ ${t('allSimanim')}</button>
-      ${SIMANIM.map(x => `<button class="qchip ${x.id===s.id?'on':''}" onclick="go('siman','${x.id}')" title="${t('siman')} ${gem(x.number)}">${gem(x.number)}</button>`).join('')}
+      <button class="qback" onclick="nav('/')">${icon('arrow',15)} ${t('allSimanim')}</button>
+      ${SIMANIM.map(x => `<button class="qchip ${x.id===s.id?'on':''}" onclick="nav('${linkOf.saif(x.id,1)}')" title="${t('siman')} ${gem(x.number)}">${gem(x.number)}</button>`).join('')}
     </div>
     <div class="siman-head">
       <div class="eyebrow">${t('siman')} ${gem(s.number)}</div>
@@ -845,12 +1226,12 @@ async function renderSiman(){
     </div>
     <div class="saif-row">
       ${saifim.map(sf => `
-        <button class="saif-chip ${CUR.saif===sf.n?'on':''}" onclick="CUR.saif=${sf.n};renderSiman()" title="${t('saif')} ${gem(sf.n)}">${gem(sf.n)}</button>`).join('')}
-      <button class="saif-chip alt ${CUR.saif===0?'on':''}" onclick="CUR.saif=0;renderSiman()">${t('all')}</button>
+        <button class="saif-chip ${CUR.saif===sf.n?'on':''}" onclick="nav('${linkOf.saif(s.id,sf.n)}/${CUR.tab}')" title="${t('saif')} ${gem(sf.n)}">${gem(sf.n)}</button>`).join('')}
+      <button class="saif-chip alt ${CUR.saif===0?'on':''}" onclick="nav('${linkOf.saif(s.id,0)}')">${t('all')}</button>
     </div>
     ${CUR.saif !== 0 ? `
       <div class="saif-title-line">${curSaif.title ? t('saif') + ' ' + gem(CUR.saif) + ' · ' + esc(curSaif.title) : t('saif') + ' ' + gem(CUR.saif)}</div>
-      <div class="seg">${tabs.map(([tb,l]) => `<button class="${CUR.tab===tb?'on':''}" onclick="CUR.tab='${tb}';renderSiman()">${l}</button>`).join('')}</div>`
+      <div class="seg">${tabs.map(([tb,l]) => `<button class="${CUR.tab===tb?'on':''}" onclick="nav('${linkOf.saif(s.id,CUR.saif)}/${tb}')">${l}</button>`).join('')}</div>`
     : `<div class="saif-title-line"></div>`}
     <div id="tabbody"><div style="padding:40px"><div class="spin"></div></div></div>`;
 
@@ -859,47 +1240,77 @@ async function renderSiman(){
   if (CUR.tab === 'content') renderContent(s);
   if (CUR.tab === 'shiurim') renderShiurim(s);
   if (CUR.tab === 'exams')   renderExams(s);
+  if (CUR.tab === 'shared')  renderShared(s);
   if (CUR.tab === 'notes')   renderNotes(s);
 }
 
-/* ─── helpers de items reutilizables ─── */
-function fileIcon(name){
+/* ─── helpers de items ─── */
+function fileIconKey(name){
   const ext = (name||'').split('.').pop().toLowerCase();
-  if (ext === 'pdf') return ['pdf','📕'];
-  if (['jpg','jpeg','png','gif','webp','heic'].includes(ext)) return ['file','🖼️'];
-  if (['doc','docx'].includes(ext)) return ['file','📄'];
-  return ['file','📎'];
+  if (ext === 'pdf') return ['red','filetext'];
+  if (['jpg','jpeg','png','gif','webp','heic'].includes(ext)) return ['','img'];
+  if (['mp3','m4a','aac','wav','ogg','opus','amr','caf','wma','aif','aiff'].includes(ext)) return ['gold','audio'];
+  return ['','file'];
 }
 function isViewable(name){
   const ext = (name||'').split('.').pop().toLowerCase();
   return ['pdf','jpg','jpeg','png','gif','webp'].includes(ext);
 }
-function materialHTML(m){
-  const [cls,ic] = fileIcon(m.fileName);
-  return `<div class="item">
-    <div class="ic ${cls}">${ic}</div>
-    <div class="body">
-      <div class="t">${esc(m.title)}</div>
-      <div class="m">${saifLabel(m.saifim)} · ${fmtSize(m.size)} · ${fmtDate(m.createdAt)}</div>
+const VFILES = {};
+function regFile(f){ const k = 'f' + Math.random().toString(36).slice(2,9); VFILES[k] = f; return k; }
+function openViewerK(k){
+  const f = VFILES[k]; if (!f) return;
+  const ext = (f.fileName||'').split('.').pop().toLowerCase();
+  const inner = ['jpg','jpeg','png','gif','webp'].includes(ext)
+    ? `<img class="viewer-img" src="${esc(f.url)}" alt="">`
+    : `<iframe class="viewer-frame" src="${esc(f.url)}"></iframe>`;
+  openSheet(`${sheetHead(f.title || f.fileName)}${inner}
+    <div style="margin-top:14px;text-align:center"><a class="btn ghost sm" href="${esc(f.url)}" target="_blank" rel="noopener" style="text-decoration:none">${t('open')} ↗</a></div>`, true);
+}
+function fileRowHTML(f){
+  const [cls, ik] = fileIconKey(f.fileName);
+  const k = regFile(f);
+  return `<div class="filerow">
+    <div class="fic">${icon(ik)}</div>
+    <div class="fn">${esc(f.title || f.fileName)}</div>
+    <div class="fs">${fmtSize(f.size)}</div>
+    ${isViewable(f.fileName) ? `<button class="btn soft sm" onclick="openViewerK('${k}')">${t('viewHere')}</button>` : ''}
+    <a class="btn ghost sm" href="${esc(f.url)}" target="_blank" rel="noopener" style="text-decoration:none">${t('open')}</a>
+  </div>`;
+}
+function materialHTML(mrow){
+  const [cls, ik] = fileIconKey(mrow.fileName);
+  const k = regFile(mrow);
+  return `<div class="item" id="it-${mrow.id}">
+    <div class="row">
+      <div class="ic ${cls}">${icon(ik)}</div>
+      <div class="body">
+        <div class="t">${esc(mrow.title)}</div>
+        <div class="m">${saifLabel(mrow.saifim)} · ${fmtSize(mrow.size)} · ${byLine(mrow.uploadedBy, mrow.createdAt)}</div>
+      </div>
+      ${isViewable(mrow.fileName) ? `<button class="btn soft sm" onclick="openViewerK('${k}')">${t('viewHere')}</button>` : ''}
+      <a class="btn ghost sm" href="${esc(mrow.url)}" target="_blank" rel="noopener" style="text-decoration:none">${t('open')}</a>
+      ${isAdmin() ? `<button class="iconbtn" onclick="deleteItem('${T.materials}','${mrow.id}','${esc(mrow.storagePath||'')}')">${icon('trash')}</button>`:''}
     </div>
-    ${isViewable(m.fileName) ? `<button class="btn soft sm" onclick="openViewer('${m.id}')">${t('viewHere')}</button>` : ''}
-    <a class="btn ghost sm" href="${esc(m.url)}" target="_blank" rel="noopener" style="text-decoration:none">${t('open')}</a>
-    ${isAdmin() ? `<button class="iconbtn" onclick="deleteItem('${T.materials}','${m.id}','${esc(m.storagePath||'')}')">🗑️</button>`:''}
+    ${socialBar('material', mrow.id, linkOf.material(mrow))}
   </div>`;
 }
 function shiurHTML(x){
   const on = PL.id===x.id && PL.playing;
-  return `<div class="item">
-    <button class="playbtn ${on?'playing':''}" id="pb-${x.id}" onclick="playShiur('${x.id}')">
-      ${on ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>'
-           : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'}
-    </button>
-    <div class="body">
-      <div class="t">${esc(x.title)}</div>
-      <div class="m">${fmtDate(x.createdAt)}</div>
+  return `<div class="item" id="it-${x.id}">
+    <div class="row">
+      <button class="playbtn ${on?'playing':''}" id="pb-${x.id}" onclick="playShiur('${x.id}')">
+        ${on ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>'
+             : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'}
+      </button>
+      <div class="body">
+        <div class="t">${esc(x.title)}</div>
+        <div class="m">${byLine(x.uploadedBy, x.createdAt)}</div>
+      </div>
+      <span class="badge ${(x.saifim||[]).length>1?'gold':''}">${saifLabel(x.saifim)}</span>
+      ${isAdmin() ? `<button class="iconbtn" onclick="deleteItem('${T.shiurim}','${x.id}','${esc(x.storagePath||'')}')">${icon('trash')}</button>`:''}
     </div>
-    <span class="badge ${(x.saifim||[]).length>1?'gold':''}">${saifLabel(x.saifim)}</span>
-    ${isAdmin() ? `<button class="iconbtn" onclick="deleteItem('${T.shiurim}','${x.id}','${esc(x.storagePath||'')}')">🗑️</button>`:''}
+    ${socialBar('shiur', x.id, linkOf.shiur(x))}
   </div>`;
 }
 function examHTML(e, sub){
@@ -914,11 +1325,11 @@ function examHTML(e, sub){
     status = `<div class="grade-big">${sub.grade}</div>`;
     action = `<button class="btn ghost sm" onclick="openMySub('${sub.id}')">${t('myAnswers')}</button>`;
   }
-  return `<div class="exam-card">
+  return `<div class="exam-card" id="it-${e.id}">
     <div class="exam-top">
       <div class="body">
         <div class="t">${esc(e.title)}</div>
-        <div class="m">${saifLabel(e.saifim)} · ${e.questions.length} ${t('questionsWord')} · ${fmtDate(e.createdAt)}</div>
+        <div class="m">${saifLabel(e.saifim)} · ${e.questions.length} ${t('questionsWord')} · ${byLine(e.createdBy, e.createdAt)}</div>
         ${sub && sub.status==='graded' && sub.feedback ? `<div class="m" style="margin-top:6px;color:var(--ink)">💬 ${esc(sub.feedback)}</div>`:''}
       </div>
       ${status}
@@ -926,62 +1337,115 @@ function examHTML(e, sub){
     <div class="exam-actions">
       ${action}
       ${isAdmin() ? `<button class="btn ghost sm" onclick="openExamSubs('${e.id}')">${t('subsBtn')}</button>
-                     <button class="iconbtn" onclick="deleteItem('${T.exams}','${e.id}','')" title="${t('delExamTitle')}">🗑️</button>` : ''}
+                     <button class="iconbtn" onclick="deleteItem('${T.exams}','${e.id}','')" title="${t('delExamTitle')}">${icon('trash')}</button>` : ''}
     </div>
+    ${socialBar('exam', e.id, linkOf.exam(e))}
+  </div>`;
+}
+function sharedHTML(c){
+  return `<div class="exam-card" id="it-${c.id}">
+    <div class="exam-top">
+      <div class="body">
+        <div class="t">${esc(c.title || '')}</div>
+        <div class="m">${saifLabel(c.saifim)} · ${byLine(c.userName, c.createdAt)}</div>
+      </div>
+      ${(c.userId===ME.id || isAdmin()) ? `<button class="iconbtn" onclick="deleteShared('${c.id}')">${icon('trash')}</button>` : ''}
+    </div>
+    ${c.body ? `<div style="margin-top:10px;white-space:pre-wrap;font-size:15px">${esc(c.body)}</div>` : ''}
+    ${(c.files||[]).map(fileRowHTML).join('')}
+    ${socialBar('shared', c.id, linkOf.shared(c))}
   </div>`;
 }
 
-/* ─── Ver todo el siman por saif ─── */
-async function renderAllSaifim(s){
-  const [mareRows, mats, shiurs, exams, mySubsQ] = await Promise.all([
-    sb.from(T.mare).select('*').eq('simanId', s.id).then(r=>r.data||[]),
-    fetchBySiman(T.materials, s.id),
-    fetchBySiman(T.shiurim, s.id),
-    fetchBySiman(T.exams, s.id),
-    sb.from(T.subs).select('*').eq('userId', ME.id)
-  ]);
-  SHIUR_CACHE = shiurs;
-  window._MATS = mats;
-  const mySubs = mySubsQ.data || [];
-  const body = $('tabbody'); if (!body) return;
-  body.innerHTML = (s.saifim||[]).map(sf => {
-    const mare = mareRows.find(r => r.saif === sf.n);
-    const mm = mats.filter(m => (m.saifim||[]).includes(sf.n));
-    const sh = shiurs.filter(x => (x.saifim||[]).includes(sf.n));
-    const ex = exams.filter(e => (e.saifim||[]).includes(sf.n));
-    if (!mare?.text && !mm.length && !sh.length && !ex.length) return '';
+/* ─── Ver todo (bloques por saif) ─── */
+function saifBlocksHTML(s, data){
+  const { mareRows, mats, shiurs, exams, shareds, mySubs } = data;
+  return (s.saifim||[]).map(sf => {
+    const mare = mareRows.find(r => r.simanId === s.id && r.saif === sf.n);
+    const mm = mats.filter(x => x.simanId === s.id && (x.saifim||[]).includes(sf.n));
+    const sh = shiurs.filter(x => x.simanId === s.id && (x.saifim||[]).includes(sf.n));
+    const ex = exams.filter(x => x.simanId === s.id && (x.saifim||[]).includes(sf.n));
+    const cp = shareds.filter(x => x.simanId === s.id && (x.saifim||[]).includes(sf.n));
+    if (!mare?.text && !mm.length && !sh.length && !ex.length && !cp.length) return '';
     return `<div class="allsaif-block">
       <div class="allsaif-head">
         <div class="med">${gem(sf.n)}</div>
         <div class="t">${t('saif')} ${gem(sf.n)}${sf.title ? ' · ' + esc(sf.title) : ''}</div>
       </div>
-      ${mare?.text ? `<div class="panel" style="margin-bottom:10px"><div class="subhead" style="margin-top:0">${t('tabMare')}</div><div class="mare-text" style="font-size:17px">${esc(mare.text)}</div></div>` : ''}
+      ${mare?.text ? `<div class="panel" style="margin-bottom:10px"><div class="subhead" style="margin-top:0">${t('tabMare')}</div><div class="mare-text" style="font-size:17px">${esc(mare.text)}</div>
+        <div class="metaline" style="margin-top:8px">${byLine(mare.updatedBy, mare.updatedAt, 'updatedWord')}</div></div>` : ''}
       ${mm.length ? `<div class="subhead">${t('tabContent')}</div><div class="item-list">${mm.map(materialHTML).join('')}</div>` : ''}
       ${sh.length ? `<div class="subhead">${t('tabShiurim')}</div><div class="item-list">${sh.map(shiurHTML).join('')}</div>` : ''}
       ${ex.length ? `<div class="subhead">${t('tabExams')}</div>${ex.map(e => examHTML(e, mySubs.find(x=>x.examId===e.id))).join('')}` : ''}
+      ${cp.length ? `<div class="subhead">${t('tabShared')}</div>${cp.map(sharedHTML).join('')}` : ''}
     </div>`;
-  }).join('') || `<div class="panel"><div class="empty"><div class="e-ic">📖</div><div class="e-t">${t('emptyContentT')}</div></div></div>`;
+  }).join('');
+}
+async function fetchSimanData(simanId){
+  const [mareQ, mats, shiurs, exams, shareds, mySubsQ] = await Promise.all([
+    simanId ? sb.from(T.mare).select('*').eq('simanId', simanId) : sb.from(T.mare).select('*'),
+    simanId ? fetchBySiman(T.materials, simanId) : sb.from(T.materials).select('*').order('createdAt').then(r=>r.data||[]),
+    simanId ? fetchBySiman(T.shiurim, simanId)   : sb.from(T.shiurim).select('*').order('createdAt').then(r=>r.data||[]),
+    simanId ? fetchBySiman(T.exams, simanId)     : sb.from(T.exams).select('*').order('createdAt').then(r=>r.data||[]),
+    simanId ? fetchBySiman(T.shared, simanId)    : sb.from(T.shared).select('*').order('createdAt').then(r=>r.data||[]),
+    sb.from(T.subs).select('*').eq('userId', ME.id)
+  ]);
+  return { mareRows: mareQ.data || [], mats, shiurs, exams, shareds, mySubs: mySubsQ.data || [] };
+}
+async function renderAllSaifim(s){
+  const data = await fetchSimanData(s.id);
+  SHIUR_CACHE = data.shiurs;
+  const body = $('tabbody'); if (!body) return;
+  body.innerHTML = saifBlocksHTML(s, data) ||
+    `<div class="panel"><div class="empty"><div class="e-ic">${icon('book',40)}</div><div class="e-t">${t('emptyContentT')}</div></div></div>`;
+  loadSocial(); focusPending();
+}
+async function renderTodoAll(){
+  const m = $('main'); if (!m) return;
+  m.innerHTML = `<div class="pagehead">
+      <div><h2>${t('globalTodo')}</h2><div class="sub">${t('allSimanim')}</div></div>
+      <div class="acts"><button class="btn soft" onclick="openGlobalAdd()">${icon('plus')} ${t('globalAdd')}</button></div>
+    </div><div id="todo-body"><div style="padding:40px"><div class="spin"></div></div></div>`;
+  const data = await fetchSimanData(null);
+  SHIUR_CACHE = data.shiurs;
+  const body = $('todo-body'); if (!body) return;
+  body.innerHTML = SIMANIM.map(s => {
+    const blocks = saifBlocksHTML(s, data);
+    if (!blocks) return '';
+    return `<div class="simansec">
+      <div class="sh" onclick="nav('${linkOf.saif(s.id,1)}')">
+        <div class="siman-med" style="width:44px;height:44px;font-size:19px">${gem(s.number)}</div>
+        <h3>${t('siman')} ${gem(s.number)}${s.title ? ' · ' + esc(s.title) : ''}</h3>
+      </div>
+      ${blocks}
+    </div>`;
+  }).join('') || `<div class="panel"><div class="empty"><div class="e-ic">${icon('book',40)}</div><div class="e-t">${t('emptySimanimT')}</div></div></div>`;
+  loadSocial(); focusPending();
 }
 
 /* ─── מראי מקומות ─── */
 async function renderMare(s){
   const docId = s.id + '_' + CUR.saif;
-  let text = '';
+  let row = null;
   try {
-    const { data } = await sb.from(T.mare).select('text').eq('id', docId).maybeSingle();
-    if (data) text = data.text || '';
+    const { data } = await sb.from(T.mare).select('*').eq('id', docId).maybeSingle();
+    row = data;
   } catch(e){}
+  const text = row ? (row.text || '') : '';
   const body = $('tabbody'); if (!body) return;
   body.innerHTML = `
     <div class="panel">
-      ${text ? `<div class="mare-text">${esc(text)}</div>` : `
-        <div class="empty"><div class="e-ic">✍️</div>
+      ${text ? `<div class="mare-text">${esc(text)}</div>
+        <div class="metaline" style="margin-top:10px">${byLine(row.updatedBy, row.updatedAt, 'updatedWord')}</div>` : `
+        <div class="empty"><div class="e-ic">${icon('pencil',40)}</div>
           <div class="e-t">${t('emptyMareT')}</div>
           <div>${isAdmin() ? t('emptyMareA') : t('emptyMareM')}</div>
         </div>`}
+      ${text ? socialBar('mare', docId, linkOf.mare(s.id, CUR.saif)) : ''}
     </div>
-    ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="editMare('${docId}')">${t('editMareBtn')}</button></div>` : ''}`;
+    ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="editMare('${docId}')">${icon('pencil')} ${t('editMareBtn')}</button></div>` : ''}`;
   window._mareText = text;
+  loadSocial();
 }
 function editMare(docId){
   openSheet(`${sheetHead(t('tabMare') + ' · ' + t('saif') + ' ' + gem(CUR.saif))}
@@ -993,7 +1457,7 @@ async function saveMare(docId){
   try {
     const { error } = await sb.from(T.mare).upsert({
       id: docId, simanId: CUR.simanId, saif: CUR.saif,
-      text: $('mm-text').value.trim(), updatedAt: new Date().toISOString()
+      text: $('mm-text').value.trim(), updatedAt: new Date().toISOString(), updatedBy: ME.name
     });
     fail(error);
     closeSheet(); toast(t('mareSaved')); renderSiman();
@@ -1003,26 +1467,15 @@ async function saveMare(docId){
 /* ─── תוכן ─── */
 async function renderContent(s){
   const all = await fetchBySiman(T.materials, s.id);
-  window._MATS = all;
-  const items = all.filter(m => (m.saifim||[]).includes(CUR.saif));
+  const items = all.filter(x => (x.saifim||[]).includes(CUR.saif));
   const body = $('tabbody'); if (!body) return;
   body.innerHTML = `
     ${items.length ? `<div class="item-list">` + items.map(materialHTML).join('') + `</div>`
-    : `<div class="panel"><div class="empty"><div class="e-ic">📚</div>
+    : `<div class="panel"><div class="empty"><div class="e-ic">${icon('filetext',40)}</div>
         <div class="e-t">${t('emptyContentT')}</div>
         <div>${isAdmin()?t('emptyContentA'):t('emptyContentM')}</div></div></div>`}
-    ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="openUpload('${T.materials}')">${t('uploadFileBtn')}</button></div>` : ''}`;
-}
-function openViewer(id){
-  const m = (window._MATS||[]).find(x => x.id === id) ||
-            (window._ALLMATS||[]).find(x => x.id === id);
-  if (!m) return;
-  const ext = (m.fileName||'').split('.').pop().toLowerCase();
-  const inner = ['jpg','jpeg','png','gif','webp'].includes(ext)
-    ? `<img class="viewer-img" src="${esc(m.url)}" alt="">`
-    : `<iframe class="viewer-frame" src="${esc(m.url)}"></iframe>`;
-  openSheet(`${sheetHead(m.title)}${inner}
-    <div style="margin-top:14px;text-align:center"><a class="btn ghost sm" href="${esc(m.url)}" target="_blank" rel="noopener" style="text-decoration:none">${t('open')} ↗</a></div>`, true);
+    ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="openUpload('${T.materials}')">${icon('plus')} ${t('uploadFileBtn')}</button></div>` : ''}`;
+  loadSocial(); focusPending();
 }
 
 /* ─── שיעורים ─── */
@@ -1034,13 +1487,79 @@ async function renderShiurim(s){
   const body = $('tabbody'); if (!body) return;
   body.innerHTML = `
     ${items.length ? `<div class="item-list">` + items.map(shiurHTML).join('') + `</div>`
-    : `<div class="panel"><div class="empty"><div class="e-ic">🎧</div>
+    : `<div class="panel"><div class="empty"><div class="e-ic">${icon('audio',40)}</div>
         <div class="e-t">${t('emptyShiurT')}</div>
         <div>${isAdmin()?t('emptyShiurA'):t('emptyShiurM')}</div></div></div>`}
-    ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="openUpload('${T.shiurim}')">${t('uploadShiurBtn')}</button></div>` : ''}`;
+    ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="openUpload('${T.shiurim}')">${icon('plus')} ${t('uploadShiurBtn')}</button></div>` : ''}`;
+  loadSocial(); focusPending();
 }
 
-/* ─── Borrar item ─── */
+/* ─── Contenido compartido ─── */
+async function renderShared(s){
+  const all = await fetchBySiman(T.shared, s.id);
+  const items = all.filter(x => (x.saifim||[]).includes(CUR.saif)).reverse();
+  const body = $('tabbody'); if (!body) return;
+  body.innerHTML = `
+    <div class="addrow" style="margin:0 0 14px"><button class="btn soft sm" onclick="openSharedComposer()">${icon('plus')} ${t('sharedNew')}</button></div>
+    ${items.length ? items.map(sharedHTML).join('')
+    : `<div class="panel"><div class="empty"><div class="e-ic">${icon('users',40)}</div>
+        <div class="e-t">${t('emptySharedT')}</div><div>${t('emptySharedD')}</div></div></div>`}`;
+  loadSocial(); focusPending();
+}
+function openSharedComposer(){
+  const s = getSiman(CUR.simanId);
+  const preSaif = CUR.saif || 1;
+  openSheet(`${sheetHead(t('sharedNew'))}
+    <div class="field"><label>${t('titleLabel')}</label>
+      <input id="sh-title" placeholder="${t('sharedTitlePh')}"></div>
+    <div class="field"><label>${t('bodyLabel')}</label>
+      <textarea id="sh-body" rows="4" placeholder="${t('sharedBodyPh')}"></textarea></div>
+    <div class="field"><label>${t('filesLabel')}</label>
+      <input id="sh-files" type="file" multiple></div>
+    <div class="field"><label>${t('belongsSaifim')} ${t('multiSaifHint')}</label>
+      <div class="chips" id="sh-chips">${(s.saifim||[]).map(sf =>
+        `<button class="chip ${sf.n===preSaif?'on':''}" data-n="${sf.n}" onclick="this.classList.toggle('on')">${gem(sf.n)}</button>`).join('')}</div>
+    </div>
+    <button class="btn full" id="sh-go" onclick="publishShared()">${t('upload')}</button>
+    <div class="progress" id="up-prog"><div class="bar" id="up-bar"></div></div>
+    <div class="hint" id="up-hint"></div>`);
+}
+async function publishShared(){
+  const title = $('sh-title').value.trim();
+  const bodyTxt = $('sh-body').value.trim();
+  const files = [...$('sh-files').files];
+  const saifim = [...document.querySelectorAll('#sh-chips .chip.on')].map(c => parseInt(c.dataset.n));
+  if (!title) return toast(t('needTitle'));
+  if (!bodyTxt && !files.length) return toast(t('needSomething'));
+  if (!saifim.length) return toast(t('needSaif'));
+  const btn = $('sh-go'); btn.disabled = true; btn.textContent = t('uploading');
+  $('up-prog').style.display = 'block';
+  try {
+    const uploaded = await uploadMany('compartido', files);
+    const { error } = await sb.from(T.shared).insert({
+      simanId: CUR.simanId, saifim, title, body: bodyTxt, files: uploaded,
+      userId: ME.id, userName: ME.name
+    });
+    fail(error);
+    closeSheet(); toast(t('sharedPublished')); renderSiman(); notifBadge();
+  } catch(e){
+    toast(t('err') + e.message);
+    btn.disabled = false; btn.textContent = t('upload');
+  }
+}
+async function deleteShared(id){
+  if (!await confirmDlg(t('delPostQ'))) return;
+  try {
+    const { data } = await sb.from(T.shared).select('files').eq('id', id).maybeSingle();
+    const paths = ((data && data.files) || []).map(f => f.storagePath).filter(Boolean);
+    if (paths.length){ try { await sb.storage.from(BUCKET).remove(paths); } catch(e){} }
+    const { error } = await sb.from(T.shared).delete().eq('id', id); fail(error);
+    toast(t('deleted'));
+    route();
+  } catch(e){ toast(t('err') + e.message); }
+}
+
+/* ─── Borrar item genérico ─── */
 async function deleteItem(tbl, id, storagePath){
   const q = tbl===T.materials ? t('delFileQ') : tbl===T.shiurim ? t('delShiurQ') : t('delExamQ');
   if (!await confirmDlg(q)) return;
@@ -1049,29 +1568,12 @@ async function deleteItem(tbl, id, storagePath){
     const { error } = await sb.from(tbl).delete().eq('id', id); fail(error);
     if (storagePath){ try { await sb.storage.from(BUCKET).remove([storagePath]); } catch(e){} }
     toast(t('deleted'));
-    renderSiman();
+    route();
   } catch(e){ toast(t('err') + e.message); }
 }
 
 /* ═══════════ Subida de archivos ═══════════ */
-function openUpload(tbl){
-  const s = getSiman(CUR.simanId);
-  const isShiur = tbl === T.shiurim;
-  const preSaif = CUR.saif || 1;
-  openSheet(`${sheetHead(isShiur ? t('uploadShiurT') : t('uploadFileT'))}
-    <div class="field"><label>${t('titleLabel')}</label>
-      <input id="up-title" placeholder="${isShiur?t('titlePhShiur'):t('titlePhFile')}"></div>
-    <div class="field"><label>${isShiur ? t('fileLabelShiur') : t('fileLabelAny')}</label>
-      <input id="up-file" type="file" ${isShiur?'accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.opus,.amr,.aif,.aiff,.caf,.wma"':''}></div>
-    <div class="field"><label>${t('belongsSaifim')} ${isShiur?t('multiSaifHint'):''}</label>
-      <div class="chips" id="up-chips">${(s.saifim||[]).map(sf =>
-        `<button class="chip ${sf.n===preSaif?'on':''}" data-n="${sf.n}" onclick="this.classList.toggle('on')">${gem(sf.n)}</button>`).join('')}</div>
-    </div>
-    <button class="btn full" id="up-go" onclick="doUpload('${tbl}')">${t('upload')}</button>
-    <div class="progress" id="up-prog"><div class="bar" id="up-bar"></div></div>
-    <div class="hint" id="up-hint"></div>`);
-}
-function uploadWithProgress(path, file){
+function uploadWithProgress(path, file, label){
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', SUPABASE_URL + '/storage/v1/object/' + BUCKET + '/' + path);
@@ -1081,13 +1583,42 @@ function uploadWithProgress(path, file){
     xhr.upload.onprogress = e => {
       if (!e.lengthComputable) return;
       const pct = Math.round(e.loaded / e.total * 100);
-      $('up-bar').style.width = pct + '%';
-      $('up-hint').textContent = pct + '% · ' + fmtSize(e.loaded) + ' ' + t('ofWord') + ' ' + fmtSize(e.total);
+      const bar = $('up-bar'), hint = $('up-hint');
+      if (bar) bar.style.width = pct + '%';
+      if (hint) hint.textContent = (label||'') + pct + '% · ' + fmtSize(e.loaded) + ' ' + t('ofWord') + ' ' + fmtSize(e.total);
     };
     xhr.onload = () => xhr.status < 300 ? resolve() : reject(new Error('HTTP ' + xhr.status + ' — ' + xhr.responseText.slice(0,200)));
     xhr.onerror = () => reject(new Error(t('netErr')));
     xhr.send(file);
   });
+}
+async function uploadMany(folder, files){
+  const out = [];
+  for (let i = 0; i < files.length; i++){
+    const f = files[i];
+    const path = folder + '/' + Date.now() + '_' + i + '_' + (f.name || 'archivo').replace(/[^\w.\-]+/g,'_');
+    await uploadWithProgress(path, f, files.length > 1 ? `(${i+1}/${files.length}) ` : '');
+    out.push({ fileName: f.name, size: f.size, storagePath: path,
+      url: sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl });
+  }
+  return out;
+}
+function openUpload(tbl){
+  const s = getSiman(CUR.simanId);
+  const isShiur = tbl === T.shiurim;
+  const preSaif = CUR.saif || 1;
+  openSheet(`${sheetHead(isShiur ? t('uploadShiurT') : t('uploadFileT'))}
+    <div class="field"><label>${t('titleLabel')}</label>
+      <input id="up-title" placeholder="${isShiur?t('titlePhShiur'):t('titlePhFile')}"></div>
+    <div class="field"><label>${isShiur ? t('fileLabelShiur') : t('fileLabelAny')}</label>
+      <input id="up-file" type="file" ${isShiur?'accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.opus,.amr,.aif,.aiff,.caf,.wma"':''}></div>
+    <div class="field"><label>${t('belongsSaifim')} ${t('multiSaifHint')}</label>
+      <div class="chips" id="up-chips">${(s.saifim||[]).map(sf =>
+        `<button class="chip ${sf.n===preSaif?'on':''}" data-n="${sf.n}" onclick="this.classList.toggle('on')">${gem(sf.n)}</button>`).join('')}</div>
+    </div>
+    <button class="btn full" id="up-go" onclick="doUpload('${tbl}')">${t('upload')}</button>
+    <div class="progress" id="up-prog"><div class="bar" id="up-bar"></div></div>
+    <div class="hint" id="up-hint"></div>`);
 }
 async function doUpload(tbl){
   const title = $('up-title').value.trim();
@@ -1107,7 +1638,7 @@ async function doUpload(tbl){
       fileName: file.name, size: file.size, storagePath: path, uploadedBy: ME.name
     });
     fail(error);
-    closeSheet(); toast(t('uploadedOk')); renderSiman();
+    closeSheet(); toast(t('uploadedOk')); route(); notifBadge();
   } catch(e){
     toast(t('err') + e.message);
     btn.disabled = false; btn.textContent = t('upload');
@@ -1194,10 +1725,11 @@ async function renderExams(s){
   const body = $('tabbody'); if (!body) return;
   body.innerHTML = `
     ${items.length ? items.map(e => examHTML(e, mySubs.find(x => x.examId === e.id))).join('')
-    : `<div class="panel"><div class="empty"><div class="e-ic">📝</div>
+    : `<div class="panel"><div class="empty"><div class="e-ic">${icon('exam',40)}</div>
         <div class="e-t">${t('emptyExamT')}</div>
         <div>${isAdmin()?t('emptyExamA'):t('emptyExamM')}</div></div></div>`}
-    ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="openExamBuilder()">${t('newExamBtn')}</button></div>` : ''}`;
+    ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="openExamBuilder()">${icon('plus')} ${t('newExamBtn')}</button></div>` : ''}`;
+  loadSocial(); focusPending();
 }
 async function openTakeExam(examId){
   const { data: e, error } = await sb.from(T.exams).select('*').eq('id', examId).maybeSingle();
@@ -1246,7 +1778,7 @@ async function submitExam(){
     fail(error);
     closeSheet();
     toast(allMC ? t('submittedGrade') + row.grade : t('submittedPending'));
-    renderSiman();
+    route();
   } catch(err){ toast(t('err') + err.message); }
 }
 async function openMySub(subId){
@@ -1286,8 +1818,8 @@ function openExamBuilder(){
         `<button class="chip ${sf.n===preSaif?'on':''}" data-n="${sf.n}" onclick="this.classList.toggle('on')">${gem(sf.n)}</button>`).join('')}</div></div>
     <div class="field"><label>${t('questionsWord')}</label><div id="ex-qs"></div>
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-        <button class="btn soft sm" onclick="addQ('mc')">${t('addMC')}</button>
-        <button class="btn soft sm" onclick="addQ('open')">${t('addOpen')}</button>
+        <button class="btn soft sm" onclick="addQ('mc')">${icon('plus')} ${t('addMC')}</button>
+        <button class="btn soft sm" onclick="addQ('open')">${icon('plus')} ${t('addOpen')}</button>
       </div>
     </div>
     <button class="btn full" onclick="saveExam()">${t('publish')}</button>
@@ -1304,7 +1836,7 @@ function renderQs(){
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
         <span class="badge ${q.type==='mc'?'':'gold'}">${q.type==='mc'?t('mcBadge'):t('openBadge')}</span>
         <div style="flex:1"></div>
-        <button class="iconbtn" onclick="window._qs.splice(${qi},1);renderQs()">✕</button>
+        <button class="iconbtn" onclick="window._qs.splice(${qi},1);renderQs()">${icon('x')}</button>
       </div>
       <input style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;margin-bottom:10px"
         placeholder="${t('qPh')}" value="${esc(q.text)}" oninput="window._qs[${qi}].text=this.value">
@@ -1315,9 +1847,9 @@ function renderQs(){
               style="accent-color:var(--green);width:18px;height:18px;flex:none">
             <input style="flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#fff"
               placeholder="${t('optPh')} ${oi+1}" value="${esc(op)}" oninput="window._qs[${qi}].options[${oi}]=this.value">
-            ${q.options.length > 2 ? `<button class="iconbtn" onclick="window._qs[${qi}].options.splice(${oi},1);if(window._qs[${qi}].correct>=window._qs[${qi}].options.length)window._qs[${qi}].correct=0;renderQs()">✕</button>`:''}
+            ${q.options.length > 2 ? `<button class="iconbtn" onclick="window._qs[${qi}].options.splice(${oi},1);if(window._qs[${qi}].correct>=window._qs[${qi}].options.length)window._qs[${qi}].correct=0;renderQs()">${icon('x')}</button>`:''}
           </div>`).join('')}
-        <button class="btn ghost sm" onclick="window._qs[${qi}].options.push('');renderQs()" ${q.options.length>=6?'disabled':''}>${t('addOpt')}</button>
+        <button class="btn ghost sm" onclick="window._qs[${qi}].options.push('');renderQs()" ${q.options.length>=6?'disabled':''}>${icon('plus')} ${t('addOpt')}</button>
         <div class="hint">${t('markCorrect')}</div>` : ''}
     </div>`).join('');
 }
@@ -1336,7 +1868,7 @@ async function saveExam(){
       simanId: CUR.simanId, saifim, title, questions: window._qs, createdBy: ME.name
     });
     fail(error);
-    closeSheet(); toast(t('published')); renderSiman();
+    closeSheet(); toast(t('published')); route(); notifBadge();
   } catch(e){ toast(t('err') + e.message); }
 }
 async function openExamSubs(examId){
@@ -1352,7 +1884,7 @@ async function openExamSubs(examId){
         <td>${s.status==='graded'?'<b>'+s.grade+'</b>':'—'}</td>
         <td style="text-align:end"><button class="btn soft sm" onclick="openGrade('${s.id}')">${s.status==='graded'?t('viewUpdate'):t('check')}</button></td>
       </tr>`).join('')}
-    </table></div>` : `<div class="empty"><div class="e-ic">📭</div><div class="e-t">${t('noSubsT')}</div></div>`}`);
+    </table></div>` : `<div class="empty"><div class="e-ic">${icon('exam',40)}</div><div class="e-t">${t('noSubsT')}</div></div>`}`);
 }
 async function openGrade(subId){
   const { data: sub } = await sb.from(T.subs).select('*').eq('id', subId).maybeSingle();
@@ -1389,11 +1921,214 @@ async function saveGrade(subId){
     }).eq('id', subId);
     fail(error);
     closeSheet(); toast(t('gradeSaved'));
-    if (CUR.view === 'profile') renderProfile('pending'); else renderSiman();
+    if (CUR.view === 'profile') renderProfile('pending'); else route();
   } catch(e){ toast(t('err') + e.message); }
 }
 
-/* ═══════════ Mis notas (editor por saif) ═══════════ */
+/* ═══════════ News ═══════════ */
+async function renderNews(){
+  const m = $('main'); if (!m) return;
+  m.innerHTML = `<div class="pagehead">
+      <div><h2>News</h2></div>
+      ${isAdmin() ? `<div class="acts"><button class="btn" onclick="openNewsComposer()">${icon('plus')} ${t('newsNew')}</button></div>` : ''}
+    </div><div id="news-body"><div style="padding:40px"><div class="spin"></div></div></div>`;
+  const { data } = await sb.from(T.news).select('*').order('createdAt', { ascending:false });
+  const items = data || [];
+  const body = $('news-body'); if (!body) return;
+  body.innerHTML = items.length ? items.map(n => `
+    <div class="exam-card" id="it-${n.id}">
+      <div class="exam-top">
+        <div class="body">
+          <div class="t">${esc(n.title)}</div>
+          <div class="m">${byLine(n.createdBy, n.createdAt)}</div>
+        </div>
+        <span class="badge gold">News</span>
+        ${isAdmin() ? `<button class="iconbtn" onclick="deleteNews('${n.id}')">${icon('trash')}</button>` : ''}
+      </div>
+      ${n.body ? `<div style="margin-top:10px;white-space:pre-wrap;font-size:15px">${esc(n.body)}</div>` : ''}
+      ${(n.files||[]).map(fileRowHTML).join('')}
+      ${socialBar('news', n.id, linkOf.news(n))}
+    </div>`).join('')
+  : `<div class="panel"><div class="empty"><div class="e-ic">${icon('mega',40)}</div>
+      <div class="e-t">${t('newsEmpty')}</div><div>${t('newsEmptyD')}</div></div></div>`;
+  loadSocial(); focusPending();
+}
+function openNewsComposer(){
+  openSheet(`${sheetHead(t('newsNew'))}
+    <div class="field"><label>${t('titleLabel')}</label>
+      <input id="nw-title" placeholder="${t('newsTitlePh')}"></div>
+    <div class="field"><label>${t('bodyLabel')}</label>
+      <textarea id="nw-body" rows="5" placeholder="${t('newsBodyPh')}"></textarea></div>
+    <div class="field"><label>${t('filesLabel')}</label>
+      <input id="nw-files" type="file" multiple></div>
+    <button class="btn full" id="nw-go" onclick="publishNews()">${t('publish')}</button>
+    <div class="progress" id="up-prog"><div class="bar" id="up-bar"></div></div>
+    <div class="hint" id="up-hint"></div>`);
+}
+async function publishNews(){
+  const title = $('nw-title').value.trim();
+  const bodyTxt = $('nw-body').value.trim();
+  const files = [...$('nw-files').files];
+  if (!title) return toast(t('needTitle'));
+  if (!bodyTxt && !files.length) return toast(t('needSomething'));
+  const btn = $('nw-go'); btn.disabled = true; btn.textContent = t('uploading');
+  $('up-prog').style.display = 'block';
+  try {
+    const uploaded = await uploadMany('news', files);
+    const { error } = await sb.from(T.news).insert({ title, body: bodyTxt, files: uploaded, createdBy: ME.name });
+    fail(error);
+    closeSheet(); toast(t('newsPublished')); renderNews(); notifBadge();
+  } catch(e){
+    toast(t('err') + e.message);
+    btn.disabled = false; btn.textContent = t('publish');
+  }
+}
+async function deleteNews(id){
+  if (!await confirmDlg(t('delNewsQ'))) return;
+  try {
+    const { data } = await sb.from(T.news).select('files').eq('id', id).maybeSingle();
+    const paths = ((data && data.files) || []).map(f => f.storagePath).filter(Boolean);
+    if (paths.length){ try { await sb.storage.from(BUCKET).remove(paths); } catch(e){} }
+    const { error } = await sb.from(T.news).delete().eq('id', id); fail(error);
+    toast(t('deleted')); renderNews();
+  } catch(e){ toast(t('err') + e.message); }
+}
+
+/* ═══════════ Preguntas y Respuestas ═══════════ */
+async function renderQA(){
+  const m = $('main'); if (!m) return;
+  m.innerHTML = `<div class="pagehead">
+      <div><h2>${t('qaT')}</h2><div class="sub">${t('qaEmptyD')}</div></div>
+      <div class="acts"><button class="btn" onclick="openQAComposer()">${icon('plus')} ${t('qaNew')}</button></div>
+    </div><div id="qa-body"><div style="padding:40px"><div class="spin"></div></div></div>`;
+  const { data } = await sb.from(T.questions).select('*').order('createdAt', { ascending:false });
+  const items = data || [];
+  const body = $('qa-body'); if (!body) return;
+  body.innerHTML = items.length ? items.map(q => `
+    <div class="exam-card" id="it-${q.id}">
+      <div class="exam-top">
+        <div class="body">
+          <div style="white-space:pre-wrap;font-size:15.5px;font-weight:600">${esc(q.text)}</div>
+          <div class="m" style="margin-top:6px">${byLine(q.userName, q.createdAt)}</div>
+        </div>
+        ${(q.userId===ME.id || isAdmin()) ? `<button class="iconbtn" onclick="deleteQuestion('${q.id}')">${icon('trash')}</button>` : ''}
+      </div>
+      <div class="social" data-soc="question|${q.id}">
+        <button class="socbtn like" onclick="likeToggle(this,'question','${q.id}')">${icon('heart')}<span class="lc">·</span></button>
+        <button class="socbtn" onclick="window._qaOwner='${q.userId}';openComments('question','${q.id}','${q.userId}')">${icon('chat')}<span class="cc">·</span></button>
+        <button class="socbtn" onclick="copyLink('${linkOf.question(q)}')">${icon('link')}<span>${t('copyLink')}</span></button>
+        ${isAdmin() ? `<button class="socbtn" style="color:var(--blue)" onclick="window._qaOwner='${q.userId}';openComments('question','${q.id}','${q.userId}')">${icon('send')}<span>${t('answerBtn')}</span></button>` : ''}
+      </div>
+    </div>`).join('')
+  : `<div class="panel"><div class="empty"><div class="e-ic">${icon('qa',40)}</div>
+      <div class="e-t">${t('qaEmpty')}</div><div>${t('qaEmptyD')}</div></div></div>`;
+  loadSocial(); focusPending();
+}
+function openQAComposer(){
+  openSheet(`${sheetHead(t('qaNew'))}
+    <div class="field"><textarea id="qa-text" rows="5" placeholder="${t('qaPh')}"></textarea></div>
+    <div class="hint" style="margin:-8px 0 14px">${t('qaOnlyAdmins')}</div>
+    <button class="btn full" onclick="publishQuestion()">${t('publish')}</button>`);
+  setTimeout(()=>{ const e=$('qa-text'); if(e) e.focus(); }, 100);
+}
+async function publishQuestion(){
+  const text = $('qa-text').value.trim();
+  if (!text) return toast(t('needSomething'));
+  try {
+    const { error } = await sb.from(T.questions).insert({ text, userId: ME.id, userName: ME.name });
+    fail(error);
+    closeSheet(); toast(t('qaPublished')); renderQA(); notifBadge();
+  } catch(e){ toast(t('err') + e.message); }
+}
+async function deleteQuestion(id){
+  if (!await confirmDlg(t('delQQ'))) return;
+  try {
+    await sb.from(T.comments).delete().eq('targetType','question').eq('targetId', id);
+    const { error } = await sb.from(T.questions).delete().eq('id', id); fail(error);
+    toast(t('deleted')); renderQA();
+  } catch(e){ toast(t('err') + e.message); }
+}
+
+/* ═══════════ Agregar global + liga rápida ═══════════ */
+const ADD_TYPES = [
+  ['mare',   'typeMare',   'book'],
+  ['file',   'typeFile',   'filetext'],
+  ['shiur',  'typeShiur',  'audio'],
+  ['exam',   'typeExam',   'exam'],
+  ['shared', 'typeShared', 'users']
+];
+function openGlobalAdd(pre){
+  pre = pre || {};
+  if (!SIMANIM.length && (!pre.type || pre.type !== 'news')) { if (isAdmin()) openSimanEditor(); return; }
+  const types = [...ADD_TYPES];
+  if (isAdmin()) types.push(['news','typeNews','mega']);
+  window._ga = { type: pre.type || 'file', simanId: pre.simanId || (SIMANIM[0] && SIMANIM[0].id), saif: pre.saif || 1 };
+  openSheet(`${sheetHead(t('globalAdd'))}
+    <div class="field"><label>${t('addTypeL')}</label>
+      <div class="chips" id="ga-types">${types.map(([k, lbl, ik]) =>
+        `<button class="chip txt ${window._ga.type===k?'on':''}" data-t="${k}" onclick="gaType('${k}')" style="display:inline-flex;align-items:center;gap:6px">${icon(ik,15)} ${t(lbl)}</button>`).join('')}</div>
+    </div>
+    <div id="ga-siman-wrap">
+      <div class="field"><label>${t('chooseSimanL')}</label>
+        <select id="ga-siman" onchange="gaSiman(this.value)">
+          ${SIMANIM.map(s => `<option value="${s.id}" ${s.id===window._ga.simanId?'selected':''}>${t('siman')} ${gem(s.number)}${s.title? ' · '+esc(s.title):''}</option>`).join('')}
+        </select></div>
+      <div class="field" id="ga-saif-wrap"><label>${t('chooseSaifL')}</label>
+        <div class="chips" id="ga-saifs"></div></div>
+    </div>
+    <button class="btn full" onclick="gaGo()">${t('continueW')}</button>
+    ${isAdmin() ? `<button class="btn ghost full sm" style="margin-top:10px" onclick="gaCopyLink()">${icon('link')} ${t('copyUploadLink')}</button>` : ''}`);
+  gaRenderSaifs();
+}
+function gaType(k){
+  window._ga.type = k;
+  document.querySelectorAll('#ga-types .chip').forEach(c => c.classList.toggle('on', c.dataset.t === k));
+  const wrap = $('ga-siman-wrap');
+  if (wrap) wrap.style.display = k === 'news' ? 'none' : 'block';
+}
+function gaSiman(id){ window._ga.simanId = id; window._ga.saif = 1; gaRenderSaifs(); }
+function gaRenderSaifs(){
+  const el = $('ga-saifs'); if (!el) return;
+  const s = getSiman(window._ga.simanId);
+  el.innerHTML = ((s && s.saifim) || []).map(sf =>
+    `<button class="chip ${sf.n===window._ga.saif?'on':''}" onclick="window._ga.saif=${sf.n};gaRenderSaifs()">${gem(sf.n)}</button>`).join('');
+}
+function gaCopyLink(){
+  const g = window._ga;
+  copyLink(g.type === 'news' ? '/add/news' : '/add/' + g.type + '/' + g.simanId + '/' + g.saif);
+}
+function gaGo(){
+  const g = window._ga;
+  closeSheet();
+  if (g.type === 'news'){ nav('/news'); setTimeout(openNewsComposer, 250); return; }
+  CUR.simanId = g.simanId; CUR.saif = g.saif;
+  const tab = { mare:'mare', file:'content', shiur:'shiurim', exam:'exams', shared:'shared' }[g.type] || 'content';
+  nav(linkOf.saif(g.simanId, g.saif) + '/' + tab);
+  setTimeout(() => {
+    if (g.type === 'mare')   editMare(g.simanId + '_' + g.saif);
+    if (g.type === 'file')   openUpload(T.materials);
+    if (g.type === 'shiur')  openUpload(T.shiurim);
+    if (g.type === 'exam')   openExamBuilder();
+    if (g.type === 'shared') openSharedComposer();
+  }, 300);
+}
+function openAddFromLink(type, simanId, saif){
+  if (type === 'news'){ show('news'); setTimeout(()=>{ if(isAdmin()) openNewsComposer(); }, 300); return; }
+  if (!simanId || !getSiman(simanId)){ show('home'); if (SIMANIM.length) openGlobalAdd({ type }); return; }
+  CUR.simanId = simanId; CUR.saif = parseInt(saif)||1;
+  const tab = { mare:'mare', file:'content', shiur:'shiurim', exam:'exams', shared:'shared' }[type] || 'content';
+  CUR.tab = tab;
+  show('siman');
+  setTimeout(() => {
+    if (type === 'mare')   editMare(simanId + '_' + CUR.saif);
+    if (type === 'file')   openUpload(T.materials);
+    if (type === 'shiur')  openUpload(T.shiurim);
+    if (type === 'exam')   openExamBuilder();
+    if (type === 'shared') openSharedComposer();
+  }, 350);
+}
+
+/* ═══════════ Mis notas ═══════════ */
 const noteId = (simanId, saif) => ME.id + '|' + simanId + '|' + saif;
 async function renderNotes(s){
   let html = '';
@@ -1402,7 +2137,7 @@ async function renderNotes(s){
     if (data) html = data.html || '';
   } catch(e){}
   const body = $('tabbody'); if (!body) return;
-  const dot = (c, title) => `<button class="colordot" style="background:${c}" title="${title}" onmousedown="event.preventDefault()" onclick="nCmd('foreColor','${c}')"></button>`;
+  const dot = (c) => `<button class="colordot" style="background:${c}" onmousedown="event.preventDefault()" onclick="nCmd('foreColor','${c}')"></button>`;
   body.innerHTML = `
     <div class="notes-toolbar">
       <button class="ntb" title="${t('boldT')}" onmousedown="event.preventDefault()" onclick="nCmd('bold')"><b>B</b></button>
@@ -1412,7 +2147,7 @@ async function renderNotes(s){
       <button class="colordot" style="background:linear-gradient(135deg,#FFE58A 50%,#fff 50%)" title="${t('highT')}" onmousedown="event.preventDefault()" onclick="nCmd('hiliteColor','#FFE58A')"></button>
       <button class="colordot" style="background:linear-gradient(135deg,#BDE3C8 50%,#fff 50%)" title="${t('highT')}" onmousedown="event.preventDefault()" onclick="nCmd('hiliteColor','#BDE3C8')"></button>
       <div class="ntsep"></div>
-      ${dot('#1C1C22','—')}${dot('#1E4E8C','—')}${dot('#C0453C','—')}${dot('#2E7D5B','—')}${dot('#A8873B','—')}
+      ${dot('#1C1C22')}${dot('#1E4E8C')}${dot('#C0453C')}${dot('#2E7D5B')}${dot('#A8873B')}
       <div class="ntsep"></div>
       <button class="ntb" title="${t('clearT')}" style="font-size:13px" onmousedown="event.preventDefault()" onclick="nCmd('removeFormat')">✕A</button>
       <div style="flex:1"></div>
@@ -1442,27 +2177,23 @@ async function renderMyContent(){
   fail(error);
   const notes = (data||[]).filter(n => (n.html||'').replace(/<[^>]*>/g,'').trim());
   window._MYNOTES = notes;
-  $('main').innerHTML = `
+  const m = $('main'); if (!m) return;
+  m.innerHTML = `
     <div class="pagehead">
       <div><h2>${t('myContentT')}</h2><div class="sub">${t('myContentSub')}</div></div>
-      ${notes.length ? `<button class="btn" onclick="notesPdf()">⤓ ${t('downloadPdf')}</button>` : ''}
+      ${notes.length ? `<div class="acts"><button class="btn" onclick="notesPdf()">${icon('down')} ${t('downloadPdf')}</button></div>` : ''}
     </div>
     ${notes.length ? notes.map(n => {
       const sm = getSiman(n.simanId);
       const label = (sm ? t('siman') + ' ' + gem(sm.number) + (sm.title? ' · '+esc(sm.title):'') : '') + ' · ' + t('saif') + ' ' + gem(n.saif);
       const preview = esc((n.html||'').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,180));
-      return `<div class="note-prev" onclick="openNoteFromList('${n.simanId}',${n.saif})">
+      return `<div class="note-prev" onclick="nav('${linkOf.saif(n.simanId, n.saif)}/notes')">
         <div class="h"><span class="badge">${label}</span><span class="hint" style="margin:0">${fmtDate(n.updatedAt)}</span></div>
         <div class="body">${preview}</div>
       </div>`;
     }).join('')
-    : `<div class="panel"><div class="empty"><div class="e-ic">📒</div>
+    : `<div class="panel"><div class="empty"><div class="e-ic">${icon('pencil',40)}</div>
         <div class="e-t">${t('emptyNotesT')}</div><div>${t('emptyNotesD')}</div></div></div>`}`;
-}
-function openNoteFromList(simanId, saif){
-  if (!getSiman(simanId)) return;
-  CUR.simanId = simanId; CUR.saif = saif; CUR.tab = 'notes'; CUR.view = 'siman';
-  renderNav(); renderSiman(); window.scrollTo({top:0});
 }
 function notesPdf(){
   const notes = window._MYNOTES || [];
@@ -1470,37 +2201,35 @@ function notesPdf(){
   const blocks = notes.map(n => {
     const sm = getSiman(n.simanId);
     const label = (sm ? t('siman') + ' ' + gem(sm.number) + (sm.title? ' · '+esc(sm.title):'') : '') + ' · ' + t('saif') + ' ' + gem(n.saif);
-    return `<div class="nb"><h2>${label}</h2><div class="nc">${n.html}</div></div>`;
+    return '<div class="nb"><h2>' + label + '</h2><div class="nc">' + n.html + '</div></div>';
   }).join('');
   const w = window.open('', '_blank');
-  w.document.write(`<!DOCTYPE html><html lang="${LANG}" dir="${dir}"><head><meta charset="utf-8">
-    <title>${esc(APP_NAME)} · ${t('notesTitlePdf')}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@700;900&family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-      body{font-family:'Assistant',sans-serif;color:#1C1C22;max-width:760px;margin:40px auto;padding:0 24px;line-height:1.8}
-      h1{font-family:'Frank Ruhl Libre',serif;font-size:28px;margin-bottom:4px}
-      .sub{color:#71717A;margin-bottom:34px;font-size:14px}
-      .nb{margin-bottom:34px;page-break-inside:avoid}
-      h2{font-family:'Frank Ruhl Libre',serif;font-size:18px;color:#1E4E8C;border-bottom:2px solid #EEF3FA;padding-bottom:6px;margin-bottom:12px}
-      @media print{ body{margin:10mm auto} }
-    </style></head><body>
-    <h1>${esc(APP_NAME)} · ${t('notesTitlePdf')}</h1>
-    <div class="sub">${esc(ME.name)} · ${fmtDate(new Date())}</div>
-    ${blocks}
-    </body></html>`);
+  w.document.write('<!DOCTYPE html><html lang="' + LANG + '" dir="' + dir + '"><head><meta charset="utf-8">'
+    + '<title>' + esc(APP_NAME) + ' · ' + t('notesTitlePdf') + '</title>'
+    + '<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@700;900&family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">'
+    + '<style>body{font-family:Assistant,sans-serif;color:#1C1C22;max-width:760px;margin:40px auto;padding:0 24px;line-height:1.8}'
+    + 'h1{font-family:"Frank Ruhl Libre",serif;font-size:28px;margin-bottom:4px}'
+    + '.sub{color:#71717A;margin-bottom:34px;font-size:14px}'
+    + '.nb{margin-bottom:34px;page-break-inside:avoid}'
+    + 'h2{font-family:"Frank Ruhl Libre",serif;font-size:18px;color:#1E4E8C;border-bottom:2px solid #EEF3FA;padding-bottom:6px;margin-bottom:12px}'
+    + '@media print{body{margin:10mm auto}}</style></head><body>'
+    + '<h1>' + esc(APP_NAME) + ' · ' + t('notesTitlePdf') + '</h1>'
+    + '<div class="sub">' + esc(ME.name) + ' · ' + fmtDate(new Date()) + '</div>'
+    + blocks + '</body></html>');
   w.document.close();
   setTimeout(()=>{ try{ w.focus(); w.print(); }catch(e){} }, 700);
 }
 
-/* ═══════════ Perfil ═══════════ */
+/* ═══════════ Perfil + Admin ═══════════ */
 async function renderProfile(adminTab){
   CUR.view = 'profile'; renderNav();
-  $('main').innerHTML = `
+  const m = $('main'); if (!m) return;
+  m.innerHTML = `
     <div class="panel" style="padding:0;overflow:hidden">
       <div class="profile-top">
         <div class="photo-edit" onclick="$('photo-input').click()" title="${t('changePhoto')}">
           ${avatarHTML(ME,'big')}
-          <div class="cam">📷</div>
+          <div class="cam">${icon('cam')}</div>
         </div>
         <div>
           <h2>${esc(ME.name)}</h2>
@@ -1536,7 +2265,7 @@ $('photo-input').addEventListener('change', async e => {
     fail(e2);
     ME.photo = url;
     toast(t('photoUpdated'));
-    renderApp(); go('profile');
+    renderApp();
   } catch(err){ toast(t('err') + err.message); }
   e.target.value = '';
 });
@@ -1557,8 +2286,6 @@ async function doChangePass(){
     closeSheet(); toast(t('passChanged'));
   } catch(e){ toast(t('err') + e.message); }
 }
-
-/* ═══════════ Admin: pendientes y usuarios ═══════════ */
 async function renderAdmPending(){
   const { data, error } = await sb.from(T.subs).select('*').eq('status','pending').order('createdAt', { ascending:true });
   fail(error);
@@ -1576,7 +2303,7 @@ async function renderAdmPending(){
     <div class="exam-actions"><button class="btn sm" onclick="openGrade('${s.id}')">${t('check')}</button></div>
     </div>`;
   }).join('')
-  : `<div class="panel"><div class="empty"><div class="e-ic">✅</div>
+  : `<div class="panel"><div class="empty"><div class="e-ic">${icon('check',40)}</div>
       <div class="e-t">${t('noPendingT')}</div><div>${t('noPendingD')}</div></div></div>`;
 }
 async function renderAdmUsers(){
@@ -1593,7 +2320,7 @@ async function renderAdmUsers(){
         ${u.id!==ME.id ? `
           <button class="btn ghost sm" onclick="toggleRole('${u.id}','${u.role}')">${u.role==='admin'?t('removeAdmin'):t('makeAdmin')}</button>
           <button class="btn ghost sm" onclick="resetPass('${u.id}')">${t('resetPassBtn')}</button>
-          <button class="iconbtn" onclick="deleteUser('${u.id}')" title="${t('delUserT')}">🗑️</button>` : ''}
+          <button class="iconbtn" onclick="deleteUser('${u.id}')" title="${t('delUserT')}">${icon('trash')}</button>` : ''}
       </td>
     </tr>`).join('')}
   </table></div></div>`;
@@ -1634,7 +2361,7 @@ async function deleteUser(id){
   } catch(e){ toast(t('err') + e.message); }
 }
 
-/* ═══════════ Go ═══════════ */
+/* ═══════════ Arranque ═══════════ */
 boot();
 </script>
 </body>
