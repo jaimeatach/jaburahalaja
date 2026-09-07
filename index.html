@@ -222,6 +222,9 @@ html[dir=ltr] .siman-arrow{transform:scaleX(-1)}
 .overlay.open{opacity:1;pointer-events:auto}
 .sheet{background:var(--card);width:100%;max-width:640px;max-height:88vh;overflow-y:auto;border-radius:24px 24px 0 0;padding:26px 24px 34px;transform:translateY(30px);transition:transform .22s}
 .sheet.wide{max-width:940px}
+.sheet.full{max-width:97vw;width:97vw;height:96vh;max-height:96vh}
+.sheet.full .viewer-frame{height:calc(96vh - 190px)}
+.sheet.full .viewer-img{max-height:calc(96vh - 190px)}
 .overlay.open .sheet{transform:translateY(0)}
 @media(min-width:700px){
   .overlay{align-items:center;padding:24px}
@@ -450,7 +453,8 @@ he:{
   linkCopied:'הקישור הועתק', copyLink:'העתקת קישור', copyUploadLink:'העתקת קישור העלאה מהיר',
   addTypeL:'מה מעלים?', chooseSimanL:'לאיזה סימן?', chooseSaifL:'לאיזה סעיף?', continueW:'המשך',
   typeMare:'מראי מקומות', typeFile:'קובץ / מקור', typeShiur:'שיעור', typeExam:'מבחן', typeShared:'תוכן משותף', typeNews:'הודעת News',
-  newContent:'תוכן חדש', inWord:'בסימן'
+  newContent:'תוכן חדש', inWord:'בסימן',
+  publishQ:'פרסום השאלה', publishGen:'פרסום', expand:'הגדלה', shrink:'הקטנה', myNotesBtn:'ההערות שלי', sortRecent:'לפי תאריך', sortSiman:'לפי סימן וסעיף', qaSimanOpt:'סימן (לא חובה)', qaSaifOpt:'סעיף (לא חובה)', answeredYou:'ענו על השאלה שלך'
 },
 es:{
   navSimanim:'Simanim', navQA:'Preguntas y Respuestas', navMyContent:'Mi contenido', hello:'Hola', adminBadge:'Admin', memberBadge:'Miembro', logout:'Salir',
@@ -515,7 +519,8 @@ es:{
   linkCopied:'Liga copiada', copyLink:'Copiar liga', copyUploadLink:'Copiar liga rápida para subir',
   addTypeL:'¿Qué vas a subir?', chooseSimanL:'¿A qué siman?', chooseSaifL:'¿A qué saif?', continueW:'Continuar',
   typeMare:'Mare Mekomot', typeFile:'Archivo / fuente', typeShiur:'Shiur', typeExam:'Examen', typeShared:'Contenido compartido', typeNews:'Noticia de News',
-  newContent:'Contenido nuevo', inWord:'en Simán'
+  newContent:'Contenido nuevo', inWord:'en Simán',
+  publishQ:'Publicar pregunta', publishGen:'Publicar', expand:'Ampliar', shrink:'Reducir', myNotesBtn:'Mis apuntes', sortRecent:'Recientes', sortSiman:'Por siman y saif', qaSimanOpt:'Siman (opcional)', qaSaifOpt:'Saif (opcional)', answeredYou:'Respondieron tu pregunta'
 }};
 const t = k => (STR[LANG] && STR[LANG][k]) || STR.he[k] || k;
 function applyDir(){
@@ -562,10 +567,11 @@ function saifLabel(saifim){
   if (!saifim || !saifim.length) return '';
   const s = [...saifim].sort((a,b)=>a-b);
   const w = { he:['סעיף ','סעיפים '], es:['Saif ','Saifim '] }[LANG] || ['סעיף ','סעיפים '];
-  if (s.length === 1) return w[0] + gem(s[0]);
+  const g = n => '<bdi>' + gem(n) + '</bdi>';
+  if (s.length === 1) return w[0] + g(s[0]);
   const contiguous = s.every((v,i)=> i===0 || v === s[i-1]+1);
-  if (contiguous) return w[1] + gem(s[0]) + '–' + gem(s[s.length-1]);
-  return w[1] + s.map(gem).join(', ');
+  if (contiguous) return w[1] + g(s[0]) + '–' + g(s[s.length-1]);
+  return w[1] + s.map(g).join(', ');
 }
 function fmtSize(b){ if(!b) return ''; if(b<1024*1024) return Math.round(b/1024)+' KB'; return (b/1048576).toFixed(1)+' MB'; }
 function fmtDate(ts){ try{ const d=new Date(ts); if(isNaN(d)) return ''; return d.toLocaleDateString(LANG==='he'?'he-IL':'es-MX',{day:'numeric',month:'short',year:'numeric'});}catch(e){return ''} }
@@ -587,6 +593,7 @@ function toast(msg){
 }
 function openSheet(html, wide){
   const sh = $('sheet');
+  sh.classList.remove('full');
   sh.classList.toggle('wide', !!wide);
   sh.innerHTML = html;
   $('overlay').classList.add('open');
@@ -679,16 +686,27 @@ async function resolveItem(kind, id){
     CUR.saif = (data.saifim && data.saifim[0]) || 1;
     CUR.tab = def[1];
     PENDING_FOCUS = 'it-' + id;
+    window._pendingOpen = { kind, id };
     show('siman');
   } catch(e){ show('home'); }
 }
 function focusPending(){
-  if (!PENDING_FOCUS) return;
-  const id = PENDING_FOCUS; PENDING_FOCUS = null;
-  setTimeout(() => {
-    const el = document.getElementById(id);
-    if (el){ el.scrollIntoView({ block:'center', behavior:'smooth' }); el.classList.add('flash'); }
-  }, 150);
+  if (PENDING_FOCUS){
+    const id = PENDING_FOCUS; PENDING_FOCUS = null;
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el){ el.scrollIntoView({ block:'center', behavior:'smooth' }); el.classList.add('flash'); }
+    }, 150);
+  }
+  const po = window._pendingOpen;
+  if (po){
+    window._pendingOpen = null;
+    if (po.kind === 's') setTimeout(() => playShiur(po.id), 350);
+    if (po.kind === 'm'){
+      const k = Object.keys(VFILES).find(k => VFILES[k].id === po.id);
+      if (k && isViewable(VFILES[k].fileName)) setTimeout(() => openViewerK(k), 350);
+    }
+  }
 }
 const linkOf = {
   material: m => '/item/m/' + m.id,
@@ -702,11 +720,14 @@ const linkOf = {
 };
 
 /* ═══════════ Likes + Comentarios ═══════════ */
-function socialBar(type, id, deepLink, extra){
+const NOTE_TITLE = {};
+function socialBar(type, id, deepLink, extra, title){
+  if (title) NOTE_TITLE[type + '|' + id] = title;
   return `<div class="social" data-soc="${type}|${id}">
     <button class="socbtn like" onclick="likeToggle(this,'${type}','${id}')">${icon('heart')}<span class="lc">·</span></button>
     <button class="socbtn" onclick="openComments('${type}','${id}')">${icon('chat')}<span class="cc">·</span></button>
-    <button class="socbtn" onclick="copyLink('${deepLink}')">${icon('link')}<span>${t('copyLink')}</span></button>
+    <button class="socbtn" title="${t('myNotesBtn')}" onclick="openItemNotes('${type}','${id}')">${icon('pencil')}</button>
+    <button class="socbtn" title="${t('copyLink')}" onclick="copyLink('${deepLink}')">${icon('link')}</button>
     ${extra || ''}
   </div>`;
 }
@@ -1000,36 +1021,53 @@ function renderNav(){
 }
 
 /* ═══════════ Notificaciones ═══════════ */
-const NOTIF_SRC = [
-  [T.materials, 'material', 'file'],
-  [T.shiurim,   'shiur',    'audio'],
-  [T.exams,     'exam',     'exam'],
-  [T.news,      'news',     'mega'],
-  [T.shared,    'shared',   'users'],
-  [T.questions, 'question', 'qa']
-];
+let ADMINS = null;
+async function getAdmins(){
+  if (ADMINS) return ADMINS;
+  const { data } = await sb.from(T.users).select('id,name').eq('role','admin');
+  ADMINS = { ids: new Set((data||[]).map(u=>u.id)), names: new Set((data||[]).map(u=>u.name)) };
+  return ADMINS;
+}
 async function fetchRecent(){
-  const results = await Promise.all(NOTIF_SRC.map(([tbl]) =>
-    sb.from(tbl).select('*').order('createdAt', { ascending:false }).limit(12).then(r => r.data || [])
-  ));
+  const adm = await getAdmins();
+  const q = tbl => sb.from(tbl).select('*').order('createdAt', { ascending:false }).limit(12).then(r => r.data || []);
+  const [mats, shs, exs, nws, cps, qsAll, myQs, ans] = await Promise.all([
+    q(T.materials), q(T.shiurim), q(T.exams), q(T.news), q(T.shared),
+    isAdmin() ? q(T.questions) : Promise.resolve([]),
+    sb.from(T.questions).select('id,text').eq('userId', ME.id).then(r => r.data || []),
+    sb.from(T.comments).select('*').eq('targetType','question').order('createdAt', { ascending:false }).limit(20).then(r => r.data || [])
+  ]);
+  const myQ = new Map(myQs.map(x => [x.id, x]));
   const merged = [];
-  results.forEach((rows, i) => rows.forEach(r => merged.push({ ...r, _kind: NOTIF_SRC[i][1], _icon: NOTIF_SRC[i][2] })));
+  mats.filter(x => adm.names.has(x.uploadedBy)).forEach(x => merged.push({ ...x, _kind:'material', _icon:'file' }));
+  shs.filter(x => adm.names.has(x.uploadedBy)).forEach(x => merged.push({ ...x, _kind:'shiur', _icon:'audio' }));
+  exs.filter(x => adm.names.has(x.createdBy)).forEach(x => merged.push({ ...x, _kind:'exam', _icon:'exam' }));
+  nws.forEach(x => merged.push({ ...x, _kind:'news', _icon:'mega' }));
+  cps.filter(x => adm.ids.has(x.userId)).forEach(x => merged.push({ ...x, _kind:'shared', _icon:'users' }));
+  qsAll.filter(x => x.userId !== ME.id).forEach(x => merged.push({ ...x, _kind:'question', _icon:'qa' }));
+  ans.filter(c => myQ.has(c.targetId) && c.userId !== ME.id && !c.parentId)
+     .forEach(c => merged.push({ ...c, _kind:'answer', _icon:'send', _qtext: (myQ.get(c.targetId)||{}).text }));
   merged.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
   return merged.slice(0, 30);
 }
 function notifTitle(n){
+  if (n._kind === 'answer') return t('answeredYou');
   if (n._kind === 'question') return (n.text || '').slice(0, 70);
   return n.title || t('newContent');
 }
 function notifMeta(n){
   const sm = n.simanId ? getSiman(n.simanId) : null;
   const parts = [];
-  parts.push(t('tab' + { material:'Content', shiur:'Shiurim', exam:'Exams', shared:'Shared' }[n._kind]) || '');
-  if (n._kind === 'news') parts[0] = 'News';
-  if (n._kind === 'question') parts[0] = t('qaT');
-  if (sm) parts.push(t('siman') + ' ' + gem(sm.number) + (n.saifim && n.saifim.length ? ' · ' + saifLabel(n.saifim) : ''));
+  if (n._kind === 'material') parts.push(t('tabContent'));
+  if (n._kind === 'shiur')    parts.push(t('tabShiurim'));
+  if (n._kind === 'exam')     parts.push(t('tabExams'));
+  if (n._kind === 'shared')   parts.push(t('tabShared'));
+  if (n._kind === 'news')     parts.push('News');
+  if (n._kind === 'question') parts.push(t('qaT'));
+  if (n._kind === 'answer')   parts.push('«' + esc((n._qtext || '').slice(0, 45)) + '…»');
+  if (sm) parts.push(t('siman') + ' <bdi>' + gem(sm.number) + '</bdi>' + (n.saifim && n.saifim.length ? ' · ' + saifLabel(n.saifim) : (n.saif ? ' · ' + t('saif') + ' <bdi>' + gem(n.saif) + '</bdi>' : '')));
   const by = n.uploadedBy || n.createdBy || n.userName;
-  if (by) parts.push(by);
+  if (by) parts.push(esc(by));
   parts.push(fmtDate(n.createdAt));
   return parts.filter(Boolean).join(' · ');
 }
@@ -1040,17 +1078,16 @@ function notifLink(n){
   if (n._kind === 'shared')   return linkOf.shared(n);
   if (n._kind === 'news')     return linkOf.news(n);
   if (n._kind === 'question') return linkOf.question(n);
+  if (n._kind === 'answer')   return '/qa/' + n.targetId;
   return '/';
 }
 async function notifBadge(){
   try {
-    const seen = localStorage.getItem('jh_seen') || '2000-01-01';
-    const counts = await Promise.all(NOTIF_SRC.map(([tbl]) =>
-      sb.from(tbl).select('id', { count:'exact', head:true }).gt('createdAt', seen).then(r => r.count || 0)
-    ));
-    const totalMine = counts.reduce((a,b)=>a+b, 0);
+    const seen = new Date(localStorage.getItem('jh_seen') || '2000-01-01');
+    const items = await fetchRecent();
+    const cnt = items.filter(n => new Date(n.createdAt) > seen).length;
     const dot = $('bell-dot');
-    if (dot){ dot.style.display = totalMine ? 'flex' : 'none'; dot.textContent = totalMine > 9 ? '9+' : totalMine; }
+    if (dot){ dot.style.display = cnt ? 'flex' : 'none'; dot.textContent = cnt > 9 ? '9+' : cnt; }
   } catch(e){}
 }
 async function openNotif(){
@@ -1066,7 +1103,7 @@ async function openNotif(){
           <div class="ic ${new Date(n.createdAt) > seen ? 'gold' : ''}">${icon(n._icon)}</div>
           <div class="body">
             <div class="t">${esc(notifTitle(n))}</div>
-            <div class="m">${esc(notifMeta(n))}</div>
+            <div class="m">${notifMeta(n)}</div>
           </div>
           ${new Date(n.createdAt) > seen ? `<span class="badge gold">${t('newContent')}</span>` : ''}
         </div>
@@ -1084,7 +1121,7 @@ function renderHome(){
       <div class="siman-med">${gem(s.number)}</div>
       <div class="siman-info">
         <div class="t">${t('siman')} ${gem(s.number)}${s.title ? ' · ' + esc(s.title) : ''}</div>
-        <div class="m">${n} ${t('saifimWord')} · <span class="serif">${gem(1)}–${gem(n)}</span></div>
+        <div class="m">${n} ${t('saifimWord')} · <bdi class="serif">${gem(1)}–${gem(n)}</bdi></div>
       </div>
       ${isAdmin() ? `<button class="iconbtn" onclick="event.stopPropagation();openSimanEditor('${s.id}')" title="${t('simanEdit')}">${icon('pencil')}</button>` : ''}
       <div class="siman-arrow">${icon('arrow')}</div>
@@ -1258,15 +1295,22 @@ function isViewable(name){
 }
 const VFILES = {};
 function regFile(f){ const k = 'f' + Math.random().toString(36).slice(2,9); VFILES[k] = f; return k; }
-function openViewerK(k){
+function openViewerK(k, big){
   const f = VFILES[k]; if (!f) return;
   const ext = (f.fileName||'').split('.').pop().toLowerCase();
   const inner = ['jpg','jpeg','png','gif','webp'].includes(ext)
     ? `<img class="viewer-img" src="${esc(f.url)}" alt="">`
     : `<iframe class="viewer-frame" src="${esc(f.url)}"></iframe>`;
-  openSheet(`${sheetHead(f.title || f.fileName)}${inner}
+  openSheet(`<div class="sheet-head"><h3>${esc(f.title || f.fileName)}</h3>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="xbtn" style="width:auto;padding:0 14px;font-size:13px;font-weight:700" onclick="openViewerK('${k}', ${big ? 'false' : 'true'})">${big ? t('shrink') : t('expand')}</button>
+        <button class="xbtn" onclick="closeSheet()">${icon('x')}</button>
+      </div></div>
+    ${inner}
     <div style="margin-top:14px;text-align:center"><a class="btn ghost sm" href="${esc(f.url)}" target="_blank" rel="noopener" style="text-decoration:none">${t('open')} ↗</a></div>`, true);
+  if (big) $('sheet').classList.add('full');
 }
+function openViewerRow(row){ openViewerK(regFile(row)); }
 function fileRowHTML(f){
   const [cls, ik] = fileIconKey(f.fileName);
   const k = regFile(f);
@@ -1292,7 +1336,7 @@ function materialHTML(mrow){
       <a class="btn ghost sm" href="${esc(mrow.url)}" target="_blank" rel="noopener" style="text-decoration:none">${t('open')}</a>
       ${isAdmin() ? `<button class="iconbtn" onclick="deleteItem('${T.materials}','${mrow.id}','${esc(mrow.storagePath||'')}')">${icon('trash')}</button>`:''}
     </div>
-    ${socialBar('material', mrow.id, linkOf.material(mrow))}
+    ${socialBar('material', mrow.id, linkOf.material(mrow), '', mrow.title)}
   </div>`;
 }
 function shiurHTML(x){
@@ -1310,7 +1354,7 @@ function shiurHTML(x){
       <span class="badge ${(x.saifim||[]).length>1?'gold':''}">${saifLabel(x.saifim)}</span>
       ${isAdmin() ? `<button class="iconbtn" onclick="deleteItem('${T.shiurim}','${x.id}','${esc(x.storagePath||'')}')">${icon('trash')}</button>`:''}
     </div>
-    ${socialBar('shiur', x.id, linkOf.shiur(x))}
+    ${socialBar('shiur', x.id, linkOf.shiur(x), '', x.title)}
   </div>`;
 }
 function examHTML(e, sub){
@@ -1339,7 +1383,7 @@ function examHTML(e, sub){
       ${isAdmin() ? `<button class="btn ghost sm" onclick="openExamSubs('${e.id}')">${t('subsBtn')}</button>
                      <button class="iconbtn" onclick="deleteItem('${T.exams}','${e.id}','')" title="${t('delExamTitle')}">${icon('trash')}</button>` : ''}
     </div>
-    ${socialBar('exam', e.id, linkOf.exam(e))}
+    ${socialBar('exam', e.id, linkOf.exam(e), '', e.title)}
   </div>`;
 }
 function sharedHTML(c){
@@ -1353,7 +1397,7 @@ function sharedHTML(c){
     </div>
     ${c.body ? `<div style="margin-top:10px;white-space:pre-wrap;font-size:15px">${esc(c.body)}</div>` : ''}
     ${(c.files||[]).map(fileRowHTML).join('')}
-    ${socialBar('shared', c.id, linkOf.shared(c))}
+    ${socialBar('shared', c.id, linkOf.shared(c), '', c.title || '')}
   </div>`;
 }
 
@@ -1441,7 +1485,7 @@ async function renderMare(s){
           <div class="e-t">${t('emptyMareT')}</div>
           <div>${isAdmin() ? t('emptyMareA') : t('emptyMareM')}</div>
         </div>`}
-      ${text ? socialBar('mare', docId, linkOf.mare(s.id, CUR.saif)) : ''}
+      ${text ? socialBar('mare', docId, linkOf.mare(s.id, CUR.saif), '', t('tabMare') + ' · ' + t('saif') + ' ' + gem(CUR.saif)) : ''}
     </div>
     ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="editMare('${docId}')">${icon('pencil')} ${t('editMareBtn')}</button></div>` : ''}`;
   window._mareText = text;
@@ -1663,7 +1707,7 @@ function playShiur(id){
   });
   const sm = getSiman(x.simanId);
   $('pl-title').textContent = x.title;
-  $('pl-sub').textContent = t('siman') + ' ' + gem(sm?.number||'') + ' · ' + saifLabel(x.saifim);
+  $('pl-sub').innerHTML = t('siman') + ' <bdi>' + gem(sm?.number||'') + '</bdi> · ' + saifLabel(x.saifim);
   $('player').classList.add('show');
   audio.play();
   if ('mediaSession' in navigator){
@@ -1947,7 +1991,7 @@ async function renderNews(){
       </div>
       ${n.body ? `<div style="margin-top:10px;white-space:pre-wrap;font-size:15px">${esc(n.body)}</div>` : ''}
       ${(n.files||[]).map(fileRowHTML).join('')}
-      ${socialBar('news', n.id, linkOf.news(n))}
+      ${socialBar('news', n.id, linkOf.news(n), '', n.title)}
     </div>`).join('')
   : `<div class="panel"><div class="empty"><div class="e-ic">${icon('mega',40)}</div>
       <div class="e-t">${t('newsEmpty')}</div><div>${t('newsEmptyD')}</div></div></div>`;
@@ -1961,7 +2005,7 @@ function openNewsComposer(){
       <textarea id="nw-body" rows="5" placeholder="${t('newsBodyPh')}"></textarea></div>
     <div class="field"><label>${t('filesLabel')}</label>
       <input id="nw-files" type="file" multiple></div>
-    <button class="btn full" id="nw-go" onclick="publishNews()">${t('publish')}</button>
+    <button class="btn full" id="nw-go" onclick="publishNews()">${t('publishGen')}</button>
     <div class="progress" id="up-prog"><div class="bar" id="up-bar"></div></div>
     <div class="hint" id="up-hint"></div>`);
 }
@@ -1980,7 +2024,7 @@ async function publishNews(){
     closeSheet(); toast(t('newsPublished')); renderNews(); notifBadge();
   } catch(e){
     toast(t('err') + e.message);
-    btn.disabled = false; btn.textContent = t('publish');
+    btn.disabled = false; btn.textContent = t('publishGen');
   }
 }
 async function deleteNews(id){
@@ -1995,31 +2039,50 @@ async function deleteNews(id){
 }
 
 /* ═══════════ Preguntas y Respuestas ═══════════ */
+let QA_SORT = localStorage.getItem('jh_qasort') || 'recent';
+function setQASort(s){ QA_SORT = s; localStorage.setItem('jh_qasort', s); renderQA(); }
 async function renderQA(){
   const m = $('main'); if (!m) return;
   m.innerHTML = `<div class="pagehead">
       <div><h2>${t('qaT')}</h2><div class="sub">${t('qaEmptyD')}</div></div>
       <div class="acts"><button class="btn" onclick="openQAComposer()">${icon('plus')} ${t('qaNew')}</button></div>
-    </div><div id="qa-body"><div style="padding:40px"><div class="spin"></div></div></div>`;
+    </div>
+    <div class="seg" style="max-width:340px">
+      <button class="${QA_SORT==='recent'?'on':''}" onclick="setQASort('recent')">${t('sortRecent')}</button>
+      <button class="${QA_SORT==='siman'?'on':''}" onclick="setQASort('siman')">${t('sortSiman')}</button>
+    </div>
+    <div id="qa-body"><div style="padding:40px"><div class="spin"></div></div></div>`;
   const { data } = await sb.from(T.questions).select('*').order('createdAt', { ascending:false });
-  const items = data || [];
+  let items = data || [];
+  if (QA_SORT === 'siman'){
+    const key = q => { const s = q.simanId ? getSiman(q.simanId) : null; return s ? s.number * 1000 + (q.saif || 0) : 9e9; };
+    items = [...items].sort((a,b) => key(a) - key(b) || new Date(b.createdAt) - new Date(a.createdAt));
+  }
   const body = $('qa-body'); if (!body) return;
-  body.innerHTML = items.length ? items.map(q => `
+  body.innerHTML = items.length ? items.map(q => {
+    const sm = q.simanId ? getSiman(q.simanId) : null;
+    NOTE_TITLE['question|' + q.id] = (q.text || '').slice(0, 60);
+    return `
     <div class="exam-card" id="it-${q.id}">
       <div class="exam-top">
         <div class="body">
           <div style="white-space:pre-wrap;font-size:15.5px;font-weight:600">${esc(q.text)}</div>
-          <div class="m" style="margin-top:6px">${byLine(q.userName, q.createdAt)}</div>
+          <div class="m" style="margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            ${sm ? `<button class="badge" style="cursor:pointer" onclick="nav('${linkOf.saif(q.simanId, q.saif || 1)}')">${t('siman')} <bdi>${gem(sm.number)}</bdi>${q.saif ? ' · ' + t('saif') + ' <bdi>' + gem(q.saif) + '</bdi>' : ''}</button>` : ''}
+            <span>${byLine(q.userName, q.createdAt)}</span>
+          </div>
         </div>
         ${(q.userId===ME.id || isAdmin()) ? `<button class="iconbtn" onclick="deleteQuestion('${q.id}')">${icon('trash')}</button>` : ''}
       </div>
       <div class="social" data-soc="question|${q.id}">
         <button class="socbtn like" onclick="likeToggle(this,'question','${q.id}')">${icon('heart')}<span class="lc">·</span></button>
         <button class="socbtn" onclick="window._qaOwner='${q.userId}';openComments('question','${q.id}','${q.userId}')">${icon('chat')}<span class="cc">·</span></button>
-        <button class="socbtn" onclick="copyLink('${linkOf.question(q)}')">${icon('link')}<span>${t('copyLink')}</span></button>
+        <button class="socbtn" title="${t('myNotesBtn')}" onclick="openItemNotes('question','${q.id}')">${icon('pencil')}</button>
+        <button class="socbtn" title="${t('copyLink')}" onclick="copyLink('${linkOf.question(q)}')">${icon('link')}</button>
         ${isAdmin() ? `<button class="socbtn" style="color:var(--blue)" onclick="window._qaOwner='${q.userId}';openComments('question','${q.id}','${q.userId}')">${icon('send')}<span>${t('answerBtn')}</span></button>` : ''}
       </div>
-    </div>`).join('')
+    </div>`;
+  }).join('')
   : `<div class="panel"><div class="empty"><div class="e-ic">${icon('qa',40)}</div>
       <div class="e-t">${t('qaEmpty')}</div><div>${t('qaEmptyD')}</div></div></div>`;
   loadSocial(); focusPending();
@@ -2027,15 +2090,31 @@ async function renderQA(){
 function openQAComposer(){
   openSheet(`${sheetHead(t('qaNew'))}
     <div class="field"><textarea id="qa-text" rows="5" placeholder="${t('qaPh')}"></textarea></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div class="field" style="flex:1;min-width:150px"><label>${t('qaSimanOpt')}</label>
+        <select id="qa-siman" onchange="qaSaifOpts()">
+          <option value="">—</option>
+          ${SIMANIM.map(s => `<option value="${s.id}">${t('siman')} ${gem(s.number)}${s.title ? ' · ' + esc(s.title) : ''}</option>`).join('')}
+        </select></div>
+      <div class="field" style="flex:1;min-width:130px"><label>${t('qaSaifOpt')}</label>
+        <select id="qa-saif"><option value="">—</option></select></div>
+    </div>
     <div class="hint" style="margin:-8px 0 14px">${t('qaOnlyAdmins')}</div>
-    <button class="btn full" onclick="publishQuestion()">${t('publish')}</button>`);
+    <button class="btn full" onclick="publishQuestion()">${t('publishQ')}</button>`);
   setTimeout(()=>{ const e=$('qa-text'); if(e) e.focus(); }, 100);
+}
+function qaSaifOpts(){
+  const s = getSiman($('qa-siman').value);
+  $('qa-saif').innerHTML = '<option value="">—</option>' +
+    (((s || {}).saifim) || []).map(sf => `<option value="${sf.n}">${t('saif')} ${gem(sf.n)}</option>`).join('');
 }
 async function publishQuestion(){
   const text = $('qa-text').value.trim();
   if (!text) return toast(t('needSomething'));
+  const simanId = $('qa-siman').value || null;
+  const saif = parseInt($('qa-saif').value) || null;
   try {
-    const { error } = await sb.from(T.questions).insert({ text, userId: ME.id, userName: ME.name });
+    const { error } = await sb.from(T.questions).insert({ text, simanId, saif, userId: ME.id, userName: ME.name });
     fail(error);
     closeSheet(); toast(t('qaPublished')); renderQA(); notifBadge();
   } catch(e){ toast(t('err') + e.message); }
@@ -2128,18 +2207,11 @@ function openAddFromLink(type, simanId, saif){
   }, 350);
 }
 
-/* ═══════════ Mis notas ═══════════ */
+/* ═══════════ Mis notas + apuntes por contenido ═══════════ */
 const noteId = (simanId, saif) => ME.id + '|' + simanId + '|' + saif;
-async function renderNotes(s){
-  let html = '';
-  try {
-    const { data } = await sb.from(T.notes).select('html').eq('id', noteId(s.id, CUR.saif)).maybeSingle();
-    if (data) html = data.html || '';
-  } catch(e){}
-  const body = $('tabbody'); if (!body) return;
-  const dot = (c) => `<button class="colordot" style="background:${c}" onmousedown="event.preventDefault()" onclick="nCmd('foreColor','${c}')"></button>`;
-  body.innerHTML = `
-    <div class="notes-toolbar">
+function ntToolbar(saveCall, sticky){
+  const dot = c => `<button class="colordot" style="background:${c}" onmousedown="event.preventDefault()" onclick="nCmd('foreColor','${c}')"></button>`;
+  return `<div class="notes-toolbar" ${sticky ? '' : 'style="position:static"'}>
       <button class="ntb" title="${t('boldT')}" onmousedown="event.preventDefault()" onclick="nCmd('bold')"><b>B</b></button>
       <button class="ntb" title="${t('underT')}" onmousedown="event.preventDefault()" onclick="nCmd('underline')"><u>U</u></button>
       <button class="ntb" title="${t('italT')}" onmousedown="event.preventDefault()" onclick="nCmd('italic')"><i>I</i></button>
@@ -2151,8 +2223,18 @@ async function renderNotes(s){
       <div class="ntsep"></div>
       <button class="ntb" title="${t('clearT')}" style="font-size:13px" onmousedown="event.preventDefault()" onclick="nCmd('removeFormat')">✕A</button>
       <div style="flex:1"></div>
-      <button class="btn sm" onclick="saveNotes('${s.id}')">${t('saveNotes')}</button>
-    </div>
+      <button class="btn sm" onclick="${saveCall}">${t('saveNotes')}</button>
+    </div>`;
+}
+async function renderNotes(s){
+  let html = '';
+  try {
+    const { data } = await sb.from(T.notes).select('html').eq('id', noteId(s.id, CUR.saif)).maybeSingle();
+    if (data) html = data.html || '';
+  } catch(e){}
+  const body = $('tabbody'); if (!body) return;
+  body.innerHTML = `
+    ${ntToolbar(`saveNotes('${s.id}')`, true)}
     <div class="notes-editor" id="note-ed" contenteditable="true" data-ph="${t('notesPh')}">${html}</div>`;
 }
 function nCmd(cmd, val){
@@ -2170,8 +2252,48 @@ async function saveNotes(simanId){
     toast(t('notesSaved'));
   } catch(e){ toast(t('err') + e.message); }
 }
+async function openItemNotes(type, id){
+  const rid = ME.id + '|it|' + type + '|' + id;
+  let html = '';
+  try {
+    const { data } = await sb.from(T.notes).select('html').eq('id', rid).maybeSingle();
+    if (data) html = data.html || '';
+  } catch(e){}
+  const title = NOTE_TITLE[type + '|' + id] || '';
+  openSheet(`${sheetHead(t('myNotesBtn') + (title ? ' · ' + title : ''))}
+    ${ntToolbar(`saveItemNotes('${type}','${id}')`, false)}
+    <div class="notes-editor" id="note-ed" contenteditable="true" data-ph="${t('notesPh')}" style="min-height:220px">${html}</div>`);
+}
+async function saveItemNotes(type, id){
+  const rid = ME.id + '|it|' + type + '|' + id;
+  try {
+    const { error } = await sb.from(T.notes).upsert({
+      id: rid, userId: ME.id, simanId: null, saif: null,
+      targetType: type, targetId: id, title: NOTE_TITLE[type + '|' + id] || '',
+      html: $('note-ed').innerHTML, updatedAt: new Date().toISOString()
+    });
+    fail(error);
+    closeSheet(); toast(t('notesSaved'));
+  } catch(e){ toast(t('err') + e.message); }
+}
 
 /* ═══════════ Mi contenido ═══════════ */
+function noteLink(n){
+  if (n.targetType){
+    if (n.targetType === 'mare'){
+      const i = (n.targetId || '').lastIndexOf('_');
+      return '/mare/' + n.targetId.slice(0, i) + '/' + n.targetId.slice(i + 1);
+    }
+    const map = { material:'/item/m/', shiur:'/item/s/', exam:'/item/e/', shared:'/item/c/', news:'/news/', question:'/qa/' };
+    return (map[n.targetType] || '/') + n.targetId;
+  }
+  return linkOf.saif(n.simanId, n.saif) + '/notes';
+}
+function noteLabel(n){
+  if (n.targetType) return n.title || t('myNotesBtn');
+  const sm = getSiman(n.simanId);
+  return (sm ? t('siman') + ' ' + gem(sm.number) + (sm.title ? ' · ' + sm.title : '') + ' · ' : '') + t('saif') + ' ' + gem(n.saif);
+}
 async function renderMyContent(){
   const { data, error } = await sb.from(T.notes).select('*').eq('userId', ME.id).order('updatedAt', { ascending:false });
   fail(error);
@@ -2181,14 +2303,15 @@ async function renderMyContent(){
   m.innerHTML = `
     <div class="pagehead">
       <div><h2>${t('myContentT')}</h2><div class="sub">${t('myContentSub')}</div></div>
-      ${notes.length ? `<div class="acts"><button class="btn" onclick="notesPdf()">${icon('down')} ${t('downloadPdf')}</button></div>` : ''}
+      <div class="acts">
+        <button class="btn soft" onclick="openGlobalAdd()">${icon('plus')} ${t('globalAdd')}</button>
+        ${notes.length ? `<button class="btn" onclick="notesPdf()">${icon('down')} ${t('downloadPdf')}</button>` : ''}
+      </div>
     </div>
     ${notes.length ? notes.map(n => {
-      const sm = getSiman(n.simanId);
-      const label = (sm ? t('siman') + ' ' + gem(sm.number) + (sm.title? ' · '+esc(sm.title):'') : '') + ' · ' + t('saif') + ' ' + gem(n.saif);
       const preview = esc((n.html||'').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,180));
-      return `<div class="note-prev" onclick="nav('${linkOf.saif(n.simanId, n.saif)}/notes')">
-        <div class="h"><span class="badge">${label}</span><span class="hint" style="margin:0">${fmtDate(n.updatedAt)}</span></div>
+      return `<div class="note-prev" onclick="nav('${noteLink(n)}')">
+        <div class="h"><span class="badge">${esc(noteLabel(n))}</span><span class="hint" style="margin:0">${fmtDate(n.updatedAt)}</span></div>
         <div class="body">${preview}</div>
       </div>`;
     }).join('')
@@ -2198,11 +2321,9 @@ async function renderMyContent(){
 function notesPdf(){
   const notes = window._MYNOTES || [];
   const dir = LANG === 'he' ? 'rtl' : 'ltr';
-  const blocks = notes.map(n => {
-    const sm = getSiman(n.simanId);
-    const label = (sm ? t('siman') + ' ' + gem(sm.number) + (sm.title? ' · '+esc(sm.title):'') : '') + ' · ' + t('saif') + ' ' + gem(n.saif);
-    return '<div class="nb"><h2>' + label + '</h2><div class="nc">' + n.html + '</div></div>';
-  }).join('');
+  const blocks = notes.map(n =>
+    '<div class="nb"><h2>' + esc(noteLabel(n)) + '</h2><div class="nc">' + n.html + '</div></div>'
+  ).join('');
   const w = window.open('', '_blank');
   w.document.write('<!DOCTYPE html><html lang="' + LANG + '" dir="' + dir + '"><head><meta charset="utf-8">'
     + '<title>' + esc(APP_NAME) + ' · ' + t('notesTitlePdf') + '</title>'
