@@ -43,17 +43,70 @@ METADATA = {
 }
 
 
+def olfatear(ruta):
+    """Extensión deducida del contenido, para los archivos que no traen ninguna.
+
+    En el Drive hay shiurim guardados sin extensión; sin esto quedaban afuera.
+    """
+    try:
+        with open(ruta, "rb") as fh:
+            cab = fh.read(16)
+    except OSError:
+        return None
+    if cab[:3] == b"ID3" or (len(cab) > 1 and cab[0] == 0xFF and cab[1] in (0xFB, 0xF3, 0xF2, 0xE3)):
+        return ".mp3"
+    if cab[4:8] == b"ftyp":
+        return ".mp4" if cab[8:12] in (b"mp42", b"isom", b"avc1") else ".m4a"
+    if cab[:4] == b"RIFF" and cab[8:12] == b"WAVE":
+        return ".wav"
+    if cab[:4] == b"OggS":
+        return ".ogg"
+    if cab[:4] == b"%PDF":
+        return ".pdf"
+    if cab[:4] == b"PK\x03\x04":
+        return ".docx"
+    return None
+
+
+def extension(nombre):
+    """Extensión real, o "" si no tiene.
+
+    Cuidado: os.path.splitext("01.אוהל ומחיצות") devuelve ".אוהל ומחיצות".
+    Ese punto es parte del nombre, no una extensión, así que exigimos algo
+    corto y alfanumérico ASCII.
+    """
+    ext = os.path.splitext(nombre)[1].lower()
+    cuerpo = ext[1:]
+    if not cuerpo or len(cuerpo) > 5 or not cuerpo.isascii() or not cuerpo.isalnum():
+        return ""
+    return ext
+
+
 def listar(carpeta):
-    """Devuelve [(ruta_local, nombre_remoto)] conservando las subcarpetas."""
-    salida = []
+    """Devuelve (archivos, sin_reconocer).
+
+    archivos es [(ruta_local, nombre_remoto)] conservando las subcarpetas.
+    Al que no tiene extensión se le agrega la que corresponda a su contenido:
+    archive.org la necesita para poder reproducir el audio.
+    """
+    salida, dudosos = [], []
     for raiz, _, archivos in os.walk(carpeta):
         for nombre in sorted(archivos):
-            if os.path.splitext(nombre)[1].lower() not in EXTS:
-                continue
             local = os.path.join(raiz, nombre)
             rel = os.path.relpath(local, carpeta).replace(os.sep, "/")
-            salida.append((local, rel))
-    return sorted(salida, key=lambda x: x[1])
+            ext = extension(nombre)
+            if ext in EXTS:
+                salida.append((local, rel))
+                continue
+            if ext in (".ini", ".db", ".lnk", ".tmp", ".url", ".gdoc", ".gsheet"):
+                continue
+            deducida = olfatear(local)
+            if deducida:
+                salida.append((local, rel + deducida))
+            else:
+                # Nada que perder en silencio: si no sé qué es, lo reporto
+                dudosos.append(rel)
+    return sorted(salida, key=lambda x: x[1]), dudosos
 
 
 def humano(n):
@@ -74,12 +127,19 @@ def main():
         sys.exit(f"No encuentro la carpeta:\n  {args.carpeta}\n"
                  f"Pasala con --carpeta \"ruta\\a\\la\\carpeta\"")
 
-    archivos = listar(args.carpeta)
+    archivos, dudosos = listar(args.carpeta)
     if not archivos:
         sys.exit("No hay archivos de audio ni PDFs en esa carpeta.")
 
     total = sum(os.path.getsize(l) for l, _ in archivos)
     print(f"{len(archivos)} archivos · {humano(total)}")
+    sin_ext = sum(1 for l, _ in archivos if not extension(os.path.basename(l)))
+    if sin_ext:
+        print(f"({sin_ext} venían sin extensión; se dedujo por su contenido)")
+    if dudosos:
+        print(f"\nOJO: {len(dudosos)} archivos sin extensión que no pude identificar:")
+        for d in dudosos[:10]:
+            print("   ", d)
     print(f"Ítem de destino: https://archive.org/details/{args.item}\n")
 
     if args.ver:
