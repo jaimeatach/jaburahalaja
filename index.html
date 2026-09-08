@@ -2932,7 +2932,7 @@ function openGlobalAdd(pre){
   if (!SIMANIM.length && (!pre.type || pre.type !== 'news')) { if (isAdmin()) openSimanEditor(); return; }
   const types = [...ADD_TYPES];
   if (isAdmin()) types.push(['news','typeNews','mega']);
-  const gaHal = SIMANIM.filter(s => !isMusar(s));
+  const gaHal = SIMANIM.filter(s => !isMusar(s)).sort((a,b) => (b.pinned?1:0) - (a.pinned?1:0));
   window._ga = { type: pre.type || 'file', simanId: pre.simanId || (gaHal[0] && gaHal[0].id), saif: pre.saif || 1 };
   openSheet(`${sheetHead(t('globalAdd'))}
     <div class="field"><label>${t('addTypeL')}</label>
@@ -2942,7 +2942,7 @@ function openGlobalAdd(pre){
     <div id="ga-siman-wrap">
       <div class="field"><label>${t('chooseSimanL')}</label>
         <select id="ga-siman" onchange="gaSiman(this.value)">
-          ${gaHal.map(s => `<option value="${s.id}" ${s.id===window._ga.simanId?'selected':''}>${t('siman')} ${gem(s.number)}${s.title? ' · '+esc(s.title):''}</option>`).join('')}
+          ${gaHal.map(s => `<option value="${s.id}" ${s.id===window._ga.simanId?'selected':''}>${s.pinned?'📌 ':''}${t('siman')} ${gem(s.number)}${s.title? ' · '+esc(s.title):''}</option>`).join('')}
         </select></div>
       <div class="field" id="ga-saif-wrap"><label>${t('chooseSaifL')}</label>
         <div class="chips" id="ga-saifs"></div></div>
