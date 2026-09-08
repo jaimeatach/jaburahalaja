@@ -94,6 +94,8 @@ main{max-width:940px;margin:0 auto;padding:26px 20px 160px}
 .siman-list{display:flex;flex-direction:column;gap:12px}
 .siman-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:border-color .15s, box-shadow .15s}
 .siman-card:hover{border-color:#CBD6E5;box-shadow:var(--shadow)}
+.siman-card.pinned{border:1.5px solid var(--blue);background:var(--blue-soft)}
+.pin-divider{border-top:2px solid var(--line);margin:18px 4px}
 .siman-med{width:52px;height:52px;flex:none;border-radius:15px;background:var(--blue-soft);color:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Frank Ruhl Libre',serif;font-size:23px;font-weight:700}
 .siman-info{flex:1;min-width:0}
 .siman-info .t{font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:18.5px}
@@ -348,7 +350,7 @@ const SUPABASE_URL = "https://enkofkroxudsblewxxos.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_nAsf0qU7fPUOZ5K7OgqwYw_hUPgzOrZ";
 const BUCKET = "jabura";
 const APP_NAME = "חבורת הלכה";
-const BUILD = "2026-09-08 · carpeta+sefarim";
+const BUILD = "2026-09-08 · pin siman actual";
 
 const $ = id => document.getElementById(id);
 const app = $('app');
@@ -376,6 +378,7 @@ const IC = {
   chat:'<path d="M21 12a8 8 0 0 1-8 8H4l1.5-3.5A8 8 0 1 1 21 12z"/>',
   link:'<path d="M10 13.5a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.2 1.2"/><path d="M14 10.5a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.2-1.2"/>',
   pencil:'<path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>',
+  pin:'<path d="M12 17v5"/><path d="M9 4h6l-.8 6.2 2.8 2.3V15H7v-2.5l2.8-2.3L9 4z"/>',
   trash:'<path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/>',
   x:'<path d="M18 6L6 18M6 6l12 12"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
@@ -441,6 +444,7 @@ he:{
   titleOpt:'כותרת (לא חובה)', simanTitlePh:'לדוגמה: דיני נטילת ידיים', createSiman:'יצירת הסימן', saveChanges:'שמירת שינויים', delSimanBtn:'מחיקת הסימן כולו',
   addSaif:'הוספת סעיף', saifTitlePh:'כותרת הסעיף (לא חובה)', invalidNum:'מספר סימן לא תקין (נסה 340 או שמ)', invalidCount:'מספר סעיפים לא תקין (נסה 12 או יב)',
   simanCreated:'הסימן נוצר', simanUpdated:'הסימן עודכן', simanDeleted:'הסימן נמחק', willCreate:'ייווצרו',
+  studyingNow:'לומדים עכשיו', pinT:'קביעה כסימן הנוכחי', unpinT:'הסרה מ"לומדים עכשיו"', pinnedOk:'נקבע כסימן הנוכחי', unpinnedOk:'הוסר',
   setupT:'⚙️ חסרה הגדרת Supabase',
   byWord:'העלה', updatedWord:'עודכן ע"י',
   notifT:'התראות', notifEmpty:'אין התראות חדשות', markSeen:'הכל נקרא',
@@ -520,6 +524,7 @@ es:{
   titleOpt:'Título (opcional)', simanTitlePh:'Ejemplo: Dinim de netilat yadaim', createSiman:'Crear siman', saveChanges:'Guardar cambios', delSimanBtn:'Eliminar todo el siman',
   addSaif:'Agregar saif', saifTitlePh:'Título del saif (opcional)', invalidNum:'Número de siman no válido (prueba 340 o שמ)', invalidCount:'Cantidad de saifim no válida (prueba 12 o יב)',
   simanCreated:'Siman creado', simanUpdated:'Siman actualizado', simanDeleted:'Siman eliminado', willCreate:'Se crearán',
+  studyingNow:'Estudiando ahora', pinT:'Fijar como el siman actual', unpinT:'Quitar de "Estudiando ahora"', pinnedOk:'Fijado como siman actual', unpinnedOk:'Quitado',
   setupT:'⚙️ Falta la configuración de Supabase',
   byWord:'Subió', updatedWord:'Actualizó',
   notifT:'Notificaciones', notifEmpty:'No hay notificaciones nuevas', markSeen:'Todo leído',
@@ -1714,18 +1719,26 @@ function catPendingHomeHTML(){
 /* ═══════════ Inicio ═══════════ */
 function renderHome(){
   const m = $('main'); if (!m) return;
-  const list = SIMANIM.length ? `<div class="siman-list">` + SIMANIM.map(s => {
+  const simanCard = s => {
     const n = (s.saifim||[]).length;
     return `
-    <div class="siman-card" onclick="nav('${linkOf.saif(s.id,1)}')">
+    <div class="siman-card${s.pinned ? ' pinned' : ''}" onclick="nav('${linkOf.saif(s.id,1)}')">
       <div class="siman-med">${gem(s.number)}</div>
       <div class="siman-info">
         <div class="t">${t('siman')} ${gem(s.number)}${s.title ? ' · ' + esc(s.title) : ''}</div>
         <div class="m">${n} ${t('saifimWord')} · <bdi class="serif">${gem(1)}–${gem(n)}</bdi></div>
       </div>
+      ${isAdmin() ? `<button class="iconbtn" onclick="event.stopPropagation();togglePinSiman('${s.id}')" title="${s.pinned ? t('unpinT') : t('pinT')}" style="${s.pinned ? 'color:var(--blue)' : ''}">${icon('pin')}</button>` : ''}
       ${isAdmin() ? `<button class="iconbtn" onclick="event.stopPropagation();openSimanEditor('${s.id}')" title="${t('simanEdit')}">${icon('pencil')}</button>` : ''}
       <div class="siman-arrow">${icon('arrow')}</div>
-    </div>`;}).join('') + `</div>`
+    </div>`;};
+  const pinnedList = SIMANIM.filter(s => s.pinned);
+  const restList   = SIMANIM.filter(s => !s.pinned);
+  const list = SIMANIM.length ?
+    (pinnedList.length ? `<div class="subhead">📌 ${t('studyingNow')}</div>
+       <div class="siman-list">${pinnedList.map(simanCard).join('')}</div>
+       <div class="pin-divider"></div>` : '') +
+    `<div class="siman-list">` + restList.map(simanCard).join('') + `</div>`
   : `<div class="panel"><div class="empty">
       <div class="e-ic">${icon('book',40)}</div>
       <div class="e-t">${t('emptySimanimT')}</div>
@@ -1744,6 +1757,22 @@ function renderHome(){
     </div>
     ${list}
     ${catPendingHomeHTML()}`;
+}
+
+async function togglePinSiman(id){
+  const s = getSiman(id);
+  try {
+    if (s && s.pinned){
+      const { error } = await sb.from(T.simanim).update({ pinned:false }).eq('id', id); fail(error);
+      toast(t('unpinnedOk'));
+    } else {
+      await sb.from(T.simanim).update({ pinned:false }).eq('pinned', true);
+      const { error } = await sb.from(T.simanim).update({ pinned:true }).eq('id', id); fail(error);
+      toast(t('pinnedOk'));
+    }
+    await loadSimanim();
+    renderHome();
+  } catch(e){ toast(t('err') + e.message); }
 }
 
 /* ═══════════ Crear / editar siman ═══════════ */
