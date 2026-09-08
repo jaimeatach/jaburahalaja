@@ -20,6 +20,15 @@ import os
 import sys
 import time
 
+# La consola de Windows no usa UTF-8 por defecto: sin esto, imprimir un nombre
+# en hebreo corta el script con UnicodeEncodeError.
+for flujo in (sys.stdout, sys.stderr):
+    try:
+        if (flujo.encoding or "").lower().replace("-", "") != "utf8":
+            flujo.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 CARPETA = r"G:\.shortcut-targets-by-id\1-1NbLQmWMK5QfqArZT1X0twlTL5M_dBk\חבורה הלכות שבת"
 ITEM = "jabura-halajot-shabat"
 EXTS = {".m4a", ".mp3", ".mp4", ".m4v", ".mov", ".wav", ".ogg", ".opus",
