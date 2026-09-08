@@ -364,7 +364,7 @@ const SUPABASE_URL = "https://enkofkroxudsblewxxos.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_nAsf0qU7fPUOZ5K7OgqwYw_hUPgzOrZ";
 const BUCKET = "jabura";
 const APP_NAME = "חבורת הלכה";
-const BUILD = "2026-09-08 · saifim";
+const BUILD = "2026-09-08 · saifim b";
 
 const $ = id => document.getElementById(id);
 const app = $('app');
@@ -1569,10 +1569,11 @@ const arcUrl = (id, name) =>
   'https://archive.org/download/' + encodeURIComponent(id) + '/' +
   String(name).split('/').map(encodeURIComponent).join('/');
 
-function arcOpen(){
+async function arcOpen(){
+  const id = await catArcIdConocido();
   openSheet(`${sheetHead(t('arcT'))}
     <div class="field"><label>${t('arcIdL')}</label>
-      <input id="arc-id" placeholder="${t('arcIdPh')}"></div>
+      <input id="arc-id" value="${esc(id)}" placeholder="${t('arcIdPh')}"></div>
     <div class="hint" style="margin:-6px 0 14px">${t('arcHint')}</div>
     <button class="btn full soft" id="arc-load" onclick="arcLoad()">${t('arcLoadBtn')}</button>
     <div id="arc-sum" style="margin-top:14px"></div>
@@ -1971,12 +1972,24 @@ function catDelCatalogo(){
   const titulos = new Set([...CATALOG.map(m => m.folder), ...CAT_LEGACY]);
   return SIMANIM.filter(s => titulos.has((s.title || '').trim()));
 }
-function catOpenReorder(){
+/* El identificador se recuerda en el navegador, pero si se importó desde otro
+   equipo se deduce de la URL de cualquier shiur ya cargado. */
+async function catArcIdConocido(){
+  try { const g = localStorage.getItem('jh_arc_id'); if (g) return g; } catch(e){}
+  try {
+    const { data } = await sb.from(T.shiurim).select('url').limit(50);
+    const fila = (data || []).find(x => /archive\.org\/download\//.test(x.url || ''));
+    if (fila) return decodeURIComponent(fila.url.split('/download/')[1].split('/')[0]);
+  } catch(e){}
+  return '';
+}
+async function catOpenReorder(){
   const viejos = catDelCatalogo();
+  const id = await catArcIdConocido();
   openSheet(`${sheetHead(t('reoT'))}
     <div class="hint" style="margin-bottom:14px">${t('reoWhat')}</div>
     <div class="field"><label>${t('arcIdL')}</label>
-      <input id="reo-id" value="${esc(localStorage.getItem('jh_arc_id') || '')}" placeholder="${t('arcIdPh')}"></div>
+      <input id="reo-id" value="${esc(id)}" placeholder="${t('arcIdPh')}"></div>
     <div class="hint" style="margin:-6px 0 14px">${viejos.length} ${t('reoCount')}</div>
     <button class="btn full" id="reo-go" onclick="catReorder()">${t('reoGo')}</button>
     <div class="hint" id="reo-msg" style="margin-top:10px"></div>`);
