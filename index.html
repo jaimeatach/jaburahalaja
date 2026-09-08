@@ -364,7 +364,7 @@ const SUPABASE_URL = "https://enkofkroxudsblewxxos.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_nAsf0qU7fPUOZ5K7OgqwYw_hUPgzOrZ";
 const BUCKET = "jabura";
 const APP_NAME = "חבורת הלכה";
-const BUILD = "2026-09-08 · subida robusta";
+const BUILD = "2026-09-08 · archive.org";
 
 const $ = id => document.getElementById(id);
 const app = $('app');
@@ -490,6 +490,10 @@ he:{
   catExists:'המודול כבר קיים', catPickFiles:'בחר את קבצי המודול מהמחשב', catMatch:'שיוך אוטומטי לפי שם הקובץ',
   catNoFile:'לא נבחרו קבצים', catUploadGo:'העלאה ושיוך', catUploaded:'הועלו', catSkip:'ללא שיוך',
   catTry:'ניסיון', catFailed:'נכשלו', catRetry:'נסה שוב את מה שנכשל',
+  arcBtn:'ייבוא מ-archive.org', arcT:'ייבוא שיעורים מ-archive.org',
+  arcIdL:'מזהה הפריט או הקישור ב-archive.org', arcIdPh:'archive.org/details/… או המזהה בלבד',
+  arcHint:'הקבצים נשארים ב-archive.org · האפליקציה שומרת רק את הקישור, בלי מגבלת נפח',
+  arcLoadBtn:'קריאת הפריט', arcGo:'ייבוא השיעורים', arcNeedId:'נא להזין מזהה', arcNotFound:'לא נמצאו קבצים בפריט הזה',
   errTooBig:'הקובץ גדול מהמגבלה של Supabase Storage — יש להגדיל את המגבלה בהגדרות ה-bucket jabura',
   catNeedSiman:'צור קודם את המודול', catFileCol:'קובץ', catTargetCol:'שיעור במודול',
   catHomeHead:'מודולים מהכונן · טרם נוצרו', catCreateOne:'יצירה',
@@ -578,6 +582,10 @@ es:{
   catExists:'El módulo ya existe', catPickFiles:'Elige los archivos del módulo desde tu computadora', catMatch:'Asignación automática por nombre de archivo',
   catNoFile:'No elegiste archivos', catUploadGo:'Subir y asignar', catUploaded:'subidos', catSkip:'Sin asignar',
   catTry:'intento', catFailed:'fallaron', catRetry:'Reintentar los que fallaron',
+  arcBtn:'Importar de archive.org', arcT:'Importar shiurim desde archive.org',
+  arcIdL:'Identificador o enlace del ítem en archive.org', arcIdPh:'archive.org/details/… o solo el identificador',
+  arcHint:'Los archivos quedan en archive.org · la app guarda solo el enlace, sin límite de espacio',
+  arcLoadBtn:'Leer el ítem', arcGo:'Importar los shiurim', arcNeedId:'Escribí el identificador', arcNotFound:'No se encontraron archivos en ese ítem',
   errTooBig:'El archivo supera el límite de Supabase Storage — hay que subirlo en la configuración del bucket jabura',
   catNeedSiman:'Primero crea el módulo', catFileCol:'Archivo', catTargetCol:'Shiur del módulo',
   catHomeHead:'Módulos del Drive · sin crear', catCreateOne:'Crear',
@@ -1478,6 +1486,7 @@ function renderImport(){
       <div><h2>${t('catTitle')}</h2><div class="sub">${t('catSub')} · <span style="opacity:.6">build ${esc(BUILD)}</span></div></div>
       <div class="acts">
         <button class="btn" onclick="catOpenDirUpload()">${icon('down')} ${t('catDirBtn')}</button>
+        <button class="btn soft" onclick="arcOpen()">${icon('link')} ${t('arcBtn')}</button>
         ${pending ? `<button class="btn soft" id="cat-all" onclick="catCreateAll()">${icon('plus')} ${t('catCreateAll')} (${pending})</button>` : ''}
       </div>
     </div>
@@ -1569,6 +1578,116 @@ async function catDoUpload(i){
   }
 }
 
+
+
+/* ═══════════ Importar desde archive.org ═══════════
+   El audio vive en archive.org y la app solo guarda el enlace: no pasa por
+   Supabase Storage, así que no hay límite de tamaño ni de cuota. */
+function arcId(v){
+  v = String(v || '').trim();
+  const m = v.match(/archive\.org\/(?:details|download|metadata|embed)\/([^\/?#]+)/i);
+  return m ? decodeURIComponent(m[1]) : v.replace(/^\/+|\/+$/g, '');
+}
+const arcUrl = (id, name) =>
+  'https://archive.org/download/' + encodeURIComponent(id) + '/' +
+  String(name).split('/').map(encodeURIComponent).join('/');
+
+function arcOpen(){
+  openSheet(`${sheetHead(t('arcT'))}
+    <div class="field"><label>${t('arcIdL')}</label>
+      <input id="arc-id" placeholder="${t('arcIdPh')}"></div>
+    <div class="hint" style="margin:-6px 0 14px">${t('arcHint')}</div>
+    <button class="btn full soft" id="arc-load" onclick="arcLoad()">${t('arcLoadBtn')}</button>
+    <div id="arc-sum" style="margin-top:14px"></div>
+    <div class="hint" id="arc-msg"></div>`, true);
+  setTimeout(() => { const e = $('arc-id'); if (e) e.focus(); }, 100);
+}
+async function arcLoad(){
+  const id = arcId(($('arc-id') || {}).value);
+  if (!id) return toast(t('arcNeedId'));
+  const btn = $('arc-load'); btn.disabled = true; btn.textContent = t('wait');
+  $('arc-msg').textContent = '';
+  try {
+    const r = await fetch('https://archive.org/metadata/' + encodeURIComponent(id));
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const meta = await r.json();
+    if (!meta || !meta.files || !meta.files.length) throw new Error(t('arcNotFound'));
+    /* Solo los archivos que subió el usuario: archive.org agrega derivados y metadatos */
+    const files = meta.files
+      .filter(f => f.source === 'original' && !/^_|_(files|meta|reviews)\.xml$|\.torrent$|^__ia_thumb/.test(f.name))
+      .map(f => ({ name: String(f.name).split('/').pop(), webkitRelativePath: f.name,
+                   size: parseInt(f.size || 0, 10) || 0, _arc: arcUrl(id, f.name) }));
+    if (!files.length) throw new Error(t('arcNotFound'));
+    window._arcId = id;
+    window._arcPlan = catPlan(files);
+    arcPreview();
+  } catch(e){
+    $('arc-msg').textContent = t('err') + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = t('arcLoadBtn');
+  }
+}
+function arcPreview(){
+  const plan = window._arcPlan || [];
+  const ok = plan.filter(p => p.mi >= 0);
+  const lost = plan.length - ok.length;
+  const el = $('arc-sum'); if (!el) return;
+  if (!ok.length){ el.innerHTML = `<div class="hint">${t('catDirNone')}</div>`; return; }
+  const byMod = {};
+  ok.forEach(p => { (byMod[p.mi] = byMod[p.mi] || []).push(p); });
+  el.innerHTML = `<div class="field"><label>${ok.length} ${t('catFilesN')} · ${esc(window._arcId)}</label>` +
+    Object.keys(byMod).map(mi => {
+      const list = byMod[mi];
+      const sinAsignar = list.filter(p => !p.n).length;
+      return `<div style="display:flex;gap:8px;align-items:center;margin-bottom:5px;font-size:13.5px">
+        <div style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(CATALOG[mi].folder)}</div>
+        <span class="badge">${list.length}</span>
+        ${sinAsignar ? `<span class="badge gold">${sinAsignar} ${t('catDirSkip')}</span>` : ''}
+      </div>`;
+    }).join('') +
+    (lost ? `<div class="hint" style="margin-top:8px">${lost} ${t('catDirSkip')}</div>` : '') +
+    `</div>
+    <button class="btn full" id="arc-go" onclick="arcImport()">${t('arcGo')}</button>`;
+}
+async function arcImport(){
+  const plan = (window._arcPlan || []).filter(p => p.mi >= 0);
+  if (!plan.length) return toast(t('catNoFile'));
+  const btn = $('arc-go'); btn.disabled = true; btn.textContent = t('wait');
+  let ok = 0, dup = 0;
+  try {
+    for (const mi of [...new Set(plan.map(p => p.mi))]){
+      if (!catSiman(CATALOG[mi])) await catCreateModule(mi, true);
+    }
+    const [shs, mts] = await Promise.all([
+      sb.from(T.shiurim).select('simanId,fileName'),
+      sb.from(T.materials).select('simanId,fileName')
+    ]);
+    const seen = new Set([...(shs.data||[]), ...(mts.data||[])].map(r => r.simanId + '|' + r.fileName));
+    for (const { f, mi, kind, n } of plan){
+      const mod = CATALOG[mi];
+      const s = catSiman(mod);
+      if (!s) continue;
+      if (seen.has(s.id + '|' + f.name)){ dup++; continue; }
+      const tbl = kind === 'shiur' ? T.shiurim : T.materials;
+      const title = n ? mod.items[n-1] : f.name.replace(/\.[^.]+$/, '');
+      /* Sin storagePath: el archivo no es nuestro, vive en archive.org */
+      const meta = { url: f._arc, fileName: f.name, size: f.size };
+      const { error } = await sb.from(tbl).insert({
+        simanId: s.id, saifim: [n || 1], title, ...meta, uploadedBy: ME.name
+      });
+      fail(error);
+      seen.add(s.id + '|' + f.name);
+      ok++;
+      if (tbl === T.materials) ok += await catSpreadSefer(title, meta, seen);
+    }
+    closeSheet();
+    toast(ok + ' ' + t('catUploaded') + (dup ? ' · ' + dup + ' ' + t('catDirDup') : ''));
+    show(CUR.view); notifBadge();
+  } catch(e){
+    toast(t('err') + e.message);
+    btn.disabled = false; btn.textContent = t('arcGo');
+  }
+}
 
 /* ═══════════ Subida de la carpeta completa del Drive ═══════════ */
 /* Sefarim cuyo nombre declara un rango de simanim: además de quedar en su módulo
@@ -1805,6 +1924,7 @@ function renderHome(){
         <button class="btn ghost" onclick="nav('/todo')">${icon('eye')} ${t('globalTodo')}</button>
         <button class="btn soft" onclick="openGlobalAdd()">${icon('plus')} ${t('globalAdd')}</button>
         ${isAdmin() ? `<button class="btn ghost" onclick="catOpenDirUpload()">${icon('down')} ${t('catDirBtn')}</button>` : ''}
+        ${isAdmin() ? `<button class="btn ghost" onclick="arcOpen()">${icon('link')} ${t('arcBtn')}</button>` : ''}
         ${isAdmin() ? `<button class="btn ghost" onclick="nav('/importar')">${icon('down')} ${t('catNav')}</button>` : ''}
         ${isAdmin() ? `<button class="btn" onclick="openSimanEditor()">${icon('plus')} ${t('newSiman')}</button>` : ''}
       </div>
