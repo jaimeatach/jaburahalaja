@@ -364,7 +364,7 @@ const SUPABASE_URL = "https://enkofkroxudsblewxxos.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_nAsf0qU7fPUOZ5K7OgqwYw_hUPgzOrZ";
 const BUCKET = "jabura";
 const APP_NAME = "חבורת הלכה";
-const BUILD = "2026-09-08 · orden";
+const BUILD = "2026-09-08 · jelek ג";
 
 const $ = id => document.getElementById(id);
 const app = $('app');
@@ -493,6 +493,9 @@ he:{
   arcBtn:'ייבוא מ-archive.org', arcT:'ייבוא שיעורים מ-archive.org',
   arcIdL:'מזהה הפריט או הקישור ב-archive.org', arcIdPh:'archive.org/details/… או המזהה בלבד',
   arcHint:'הקבצים נשארים ב-archive.org · האפליקציה שומרת רק את הקישור, בלי מגבלת נפח',
+  jelBtn:'פתיחת חלק ג', jelT:'פתיחת כל סימני חלק ג', jelGo:'פתיחת הסימנים',
+  jelWhat:'פותח את סימני רנ״ב–שד״מ עם הכותרת שלהם ומספר הסעיפים. סימן שכבר קיים מקבל את הכותרת ומשלים סעיפים חסרים, בלי לגעת בתוכן שלו.',
+  jelFaltan:'עדיין לא קיימים', jelTotal:'סימנים בסך הכל', jelNuevos:'נוצרו', jelActualizados:'עודכנו',
   reoBtn:'סידור מחדש', reoT:'סידור מחדש של מה שיובא', reoGo:'סידור מחדש',
   reoWhat:'מוחק את מה שנוצר מהקטלוג ובונה אותו מחדש: השיחות עוברות למוסר, הספרים נכנסים לתוכן של כל סימן, ולש·טוחן·מעבד מתאחדים בסימן שכ״א. הקבצים עצמם נשארים ב-archive.org.',
   reoCount:'סימנים ייבנו מחדש', reoReading:'קורא את הפריט…', reoCleaning:'מנקה…', reoImporting:'מייבא…',
@@ -588,6 +591,9 @@ es:{
   arcBtn:'Importar de archive.org', arcT:'Importar shiurim desde archive.org',
   arcIdL:'Identificador o enlace del ítem en archive.org', arcIdPh:'archive.org/details/… o solo el identificador',
   arcHint:'Los archivos quedan en archive.org · la app guarda solo el enlace, sin límite de espacio',
+  jelBtn:'Abrir jelek ג', jelT:'Abrir todos los simanim del jelek ג', jelGo:'Abrir los simanim',
+  jelWhat:'Abre los simanim רנ״ב–שד״מ con su título y su cantidad de saifim. Al que ya existe le pone el título y le completa los saifim que falten, sin tocar su contenido.',
+  jelFaltan:'todavía no existen', jelTotal:'simanim en total', jelNuevos:'nuevos', jelActualizados:'actualizados',
   reoBtn:'Reordenar', reoT:'Reordenar lo importado', reoGo:'Reordenar',
   reoWhat:'Borra lo que se creó desde el catálogo y lo rearma bien: las sijot pasan a Musar, los sefarim entran al Contenido de cada siman, y לש·טוחן·מעבד se unen en el simán שכ״א. Los archivos siguen en archive.org, no se tocan.',
   reoCount:'simanim se van a rearmar', reoReading:'Leyendo el ítem…', reoCleaning:'Limpiando…', reoImporting:'Importando…',
@@ -1383,7 +1389,8 @@ function catNorm(s){
 }
 /* Une el módulo del catálogo con el siman ya creado en la base */
 function catSiman(mod){
-  return SIMANIM.find(s => (s.title || '').trim() === mod.folder) || null;
+  if (mod.musar) return SIMANIM.find(s => (s.title || '').trim() === mod.folder) || null;
+  return SIMANIM.find(s => s.number === mod.siman && !isMusar(s)) || null;
 }
 /* Nº de saif (1..N) al que corresponde un archivo, o 0 si no hay match */
 function catMatchFile(fileName, items){
@@ -1453,6 +1460,7 @@ function renderImport(){
         <button class="btn" onclick="catOpenDirUpload()">${icon('down')} ${t('catDirBtn')}</button>
         <button class="btn soft" onclick="arcOpen()">${icon('link')} ${t('arcBtn')}</button>
         <button class="btn ghost" onclick="catOpenReorder()">${icon('check')} ${t('reoBtn')}</button>
+        <button class="btn ghost" onclick="catOpenJelek()">${icon('book')} ${t('jelBtn')}</button>
         ${pending ? `<button class="btn soft" id="cat-all" onclick="catCreateAll()">${icon('plus')} ${t('catCreateAll')} (${pending})</button>` : ''}
       </div>
     </div>
@@ -1461,10 +1469,12 @@ function renderImport(){
 async function catCreateModule(i, silent){
   const mod = CATALOG[i];
   if (catSiman(mod)){ if (!silent) toast(t('catExists')); return null; }
-  const saifim = mod.items.map((title, k) => ({ n: k + 1, title }));
+  /* Los saifim son los del שולחן ערוך, no uno por shiur */
+  const saifim = catSaifimDe(mod.siman, mod.items.length);
+  const titulo = (SA_MAP[mod.siman] && !mod.musar) ? SA_MAP[mod.siman].title : mod.folder;
   try {
     const { data, error } = await sb.from(T.simanim)
-      .insert({ number: mod.siman, title: mod.folder, saifim,
+      .insert({ number: mod.siman, title: mod.musar ? mod.folder : titulo, saifim,
                 kind: mod.musar ? 'musar' : 'halaja' }).select().single();
     fail(error);
     await loadSimanim();
@@ -1652,7 +1662,7 @@ async function arcImport(){
       /* Sin storagePath: el archivo no es nuestro, vive en archive.org */
       const meta = { url: f._arc, fileName: f.name, size: f.size };
       const { error } = await sb.from(tbl).insert({
-        simanId: s.id, saifim: [n || 1], title, ...meta, uploadedBy: ME.name
+        simanId: s.id, saifim: catSaifDeShiur(title), title, ...meta, uploadedBy: ME.name
       });
       fail(error);
       seen.add(s.id + '|' + f.name);
@@ -1670,6 +1680,181 @@ async function arcImport(){
   }
 }
 
+
+
+/* ═══════════ הלכות שבת · el jelek ג completo ═══════════ */
+/* סימני הלכות שבת · שולחן ערוך אורח חיים רנ״ב–שד״מ (חלק ג של המשנה ברורה).
+   Títulos y cantidad de סעיפים cargados de memoria: NO se pudo consultar
+   Sefaria ni alhatorah desde este entorno. Conviene repasarlos. */
+const SA_SHABAT = [
+  [252, 'דברים שמותר להתחיל בהם בערב שבת', 5],
+  [253, 'דין שהיית הקדרה על הכירה', 5],
+  [254, 'דיני צליית בשר בערב שבת', 8],
+  [255, 'דין נתינת פשתן לתנור וצמר ליורה', 2],
+  [256, 'שיתקע שש תקיעות בערב שבת', 1],
+  [257, 'דין הטמנת החמין', 8],
+  [258, 'להטמין דבר צונן', 2],
+  [259, 'דין הטמנה במוכין', 7],
+  [260, 'להתקדש בכניסת שבת', 2],
+  [261, 'דין תוספת שבת ובין השמשות', 4],
+  [262, 'דין כבוד השלחן והמטות', 3],
+  [263, 'דין הדלקת נרות שבת', 17],
+  [264, 'דיני הפתילות והשמנים', 10],
+  [265, 'דין נתינת כלי תחת הנר', 4],
+  [266, 'מי שקדש עליו היום בדרך', 13],
+  [267, 'סדר תפילת ערבית של שבת', 3],
+  [268, 'דין הטועה בתפילת שבת', 13],
+  [269, 'דין קידוש בבית הכנסת', 1],
+  [270, 'דין אמירת במה מדליקין', 2],
+  [271, 'סדר קידוש על היין', 15],
+  [272, 'על איזה יין מקדשין', 9],
+  [273, 'שאין קידוש אלא במקום סעודה', 7],
+  [274, 'דין בציעת הפת בשבת', 4],
+  [275, 'דברים האסורים לעשות לאור הנר', 12],
+  [276, 'דין נר שהדליק גוי בשבת', 5],
+  [277, 'שלא לפתוח הדלת כנגד המדורה', 5],
+  [278, 'דין כיבוי הנר מפני החולה', 1],
+  [279, 'דין טלטול הנר בשבת', 7],
+  [280, 'דין תשמיש המטה בשבת', 2],
+  [281, 'דין תפילת שחרית של שבת', 1],
+  [282, 'סדר קריאת התורה בשבת', 7],
+  [283, 'סדר תפילת מוסף', 1],
+  [284, 'סדר ההפטרה', 7],
+  [285, 'שיהא אדם משלים פרשיותיו', 7],
+  [286, 'זמן תפילת מוסף', 4],
+  [287, 'ביקור חולים ותנחומין בשבת', 1],
+  [288, 'איסור תענית בשבת', 10],
+  [289, 'סדר סעודת שחרית', 2],
+  [290, 'סדר היום עד המנחה', 2],
+  [291, 'דין סעודה שלישית', 11],
+  [292, 'סדר תפילת מנחה בשבת', 2],
+  [293, 'סדר מוצאי שבת', 3],
+  [294, 'דין הבדלה בחונן הדעת', 5],
+  [295, 'דין סדר מוצאי שבת', 1],
+  [296, 'סדר הבדלה על הכוס', 8],
+  [297, 'דיני בשמים במוצאי שבת', 5],
+  [298, 'דיני נר במוצאי שבת', 15],
+  [299, 'דברים האסורים קודם הבדלה', 10],
+  [300, 'שיסדר אדם שולחנו במוצאי שבת', 1],
+  [301, 'באיזה בגד מותר לצאת בשבת', 47],
+  [302, 'דיני קיפול בגדים ונקוי הבגד', 11],
+  [303, 'במה אשה יוצאה ובמה אינה יוצאה', 27],
+  [304, 'דין העבד לענין הוצאה', 4],
+  [305, 'במה בהמה יוצאה', 21],
+  [306, 'באיזה חפצים מותר לדבר בשבת', 12],
+  [307, 'דיני איסור דיבור בשבת', 22],
+  [308, 'דברים המותרים והאסורים לטלטל בשבת', 52],
+  [309, 'דין טלטול על ידי דבר אחר', 5],
+  [310, 'דיני מוקצה', 9],
+  [311, 'דין טלטול המת בשבת', 11],
+  [312, 'דיני קינוח והדחה בשבת', 10],
+  [313, 'דין מחזיר דלת של שידה ותיבה', 10],
+  [314, 'דין שבירת חבית בשבת', 12],
+  [315, 'דיני עשיית אהל בשבת', 13],
+  [316, 'דיני צידה בשבת', 12],
+  [317, 'דיני קשירה בשבת', 4],
+  [318, 'דין המבשל בשבת', 19],
+  [319, 'דיני ברירה', 16],
+  [320, 'דיני סחיטה', 20],
+  [321, 'דיני טחינה ולישה', 19],
+  [322, 'דיני מוקצה באוכלין', 6],
+  [323, 'דיני כלים בשבת', 10],
+  [324, 'דיני מאכל בהמה', 14],
+  [325, 'דין ישראל שעשה לו גוי מלאכה בשבת', 15],
+  [326, 'דיני רחיצה בשבת', 13],
+  [327, 'דיני סיכה בשבת', 4],
+  [328, 'דיני חולה בשבת', 49],
+  [329, 'דין פיקוח נפש בשבת', 9],
+  [330, 'דין יולדת בשבת', 11],
+  [331, 'דיני מילה בשבת', 11],
+  [332, 'דין בהמה שילדה בשבת', 4],
+  [333, 'דין פינוי אוצר בשבת', 2],
+  [334, 'דין הדליקה בשבת', 27],
+  [335, 'דין המערה שנפלה', 5],
+  [336, 'דיני אילן בשבת', 12],
+  [337, 'דין כיבוד הבית', 4],
+  [338, 'דיני השמעת קול בשבת', 8],
+  [339, 'דברים האסורים משום שבות', 8],
+  [340, 'דיני תולש וכותב ומוחק וקורע', 14],
+  [341, 'דין מת ביום טוב', 2],
+  [342, 'דין בין השמשות', 1],
+  [343, 'דין קטן שעשה מלאכה בשבת', 3],
+  [344, 'דין ההולך במדבר ואינו יודע מתי שבת', 2],
+];
+const SA_MAP = {};
+SA_SHABAT.forEach(([n, t, c]) => { SA_MAP[n] = { title: t, saifim: c }; });
+/* Saif del que habla un shiur, leído de su propio título.
+   "סעיף ב־ג־ד" son tres saifim; "סעיף א עד ג" es un rango. */
+const SAIF_NUM = '[א-ת]{1,4}(?:״|׳|")?[א-ת]?';
+function catSaifDe(titulo){
+  const t = String(titulo || '').replace(/[•·]/g, ' ');
+  const rango = t.match(new RegExp('סעי(?:ף|פים)\\s+(' + SAIF_NUM + ')\\s*עד\\s*(?:סעיף\\s+)?(' + SAIF_NUM + ')'));
+  if (rango){
+    const a = parseHebNum(rango[1]), b = parseHebNum(rango[2]);
+    if (a && b && a <= b && b <= 60)
+      return Array.from({length: b - a + 1}, (_, i) => a + i);
+  }
+  const re = new RegExp('סעי(?:ף|פים)\\s+(' + SAIF_NUM + '(?:\\s*[-־–]\\s*' + SAIF_NUM + ')*)', 'g');
+  let m, out = [];
+  while ((m = re.exec(t))){
+    m[1].split(/[-־–]/).forEach(p => { const n = parseHebNum(p); if (n && n <= 60) out.push(n); });
+  }
+  if (out.length === 2 && out[1] - out[0] > 2)
+    out = Array.from({length: out[1] - out[0] + 1}, (_, i) => out[0] + i);
+  return [...new Set(out)].sort((a, b) => a - b);
+}
+/* Un shiur de הקדמה, סיכום o חזרה no habla de un saif concreto */
+const catEsIntro = t => /הקדמה|פתיחה|סיכום|חזרה|חזרות|כללים|יסודות|הגדרה|הגדרים/.test(String(t || ''));
+/* Dónde va un shiur: su saif si lo dice, y si no el primero del siman */
+const catSaifDeShiur = t => { const s = catSaifDe(t); return s.length ? s : [1]; };
+
+/* Los saifim reales del siman, según el שולחן ערוך */
+function catSaifimDe(num, cuantos){
+  const sa = SA_MAP[num];
+  const n = (sa && sa.saifim) || cuantos || 1;
+  return Array.from({length: n}, (_, i) => ({ n: i + 1, title: '' }));
+}
+async function catAbrirJelek(){
+  const btn = $('jel-go'); if (btn){ btn.disabled = true; btn.textContent = t('wait'); }
+  const msg = $('jel-msg');
+  let creados = 0, actualizados = 0;
+  try {
+    for (const [num, titulo, cuantos] of SA_SHABAT){
+      const ya = SIMANIM.find(s => s.number === num && !isMusar(s));
+      if (ya){
+        /* Ya existe (vino del catálogo): se le pone el título del ש״ע y se
+           completan los saifim que le falten, sin tocar lo que tiene adentro. */
+        const saifim = (ya.saifim || []).slice();
+        while (saifim.length < cuantos) saifim.push({ n: saifim.length + 1, title: '' });
+        const { error } = await sb.from(T.simanim)
+          .update({ title: titulo, saifim }).eq('id', ya.id);
+        fail(error);
+        actualizados++;
+      } else {
+        const { error } = await sb.from(T.simanim)
+          .insert({ number: num, title: titulo, saifim: catSaifimDe(num, cuantos), kind: 'halaja' });
+        fail(error);
+        creados++;
+      }
+      if (msg) msg.textContent = (creados + actualizados) + ' / ' + SA_SHABAT.length;
+    }
+    await loadSimanim();
+    closeSheet();
+    toast(creados + ' ' + t('jelNuevos') + ' · ' + actualizados + ' ' + t('jelActualizados'));
+    show(CUR.view);
+  } catch(e){
+    if (msg) msg.textContent = t('err') + e.message;
+    if (btn){ btn.disabled = false; btn.textContent = t('jelGo'); }
+  }
+}
+function catOpenJelek(){
+  const faltan = SA_SHABAT.filter(([n]) => !SIMANIM.some(s => s.number === n && !isMusar(s))).length;
+  openSheet(`${sheetHead(t('jelT'))}
+    <div class="hint" style="margin-bottom:14px">${t('jelWhat')}</div>
+    <div class="hint" style="margin-bottom:14px">${faltan} ${t('jelFaltan')} · ${SA_SHABAT.length} ${t('jelTotal')}</div>
+    <button class="btn full" id="jel-go" onclick="catAbrirJelek()">${t('jelGo')}</button>
+    <div class="hint" id="jel-msg" style="margin-top:10px"></div>`);
+}
 
 /* ═══════════ Reordenar lo ya importado ═══════════
    La primera importación creó como simanim cosas que no lo son (los ספרים) y
@@ -1914,7 +2099,7 @@ async function catDirUpload(){
         const url = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
         const meta = { url, fileName: f.name, size: f.size, storagePath: path };
         const { error } = await sb.from(tbl).insert({
-          simanId: s.id, saifim: [n || 1], title, ...meta, uploadedBy: ME.name
+          simanId: s.id, saifim: catSaifDeShiur(title), title, ...meta, uploadedBy: ME.name
         });
         fail(error);
         seen.add(s.id + '|' + f.name);

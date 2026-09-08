@@ -61,3 +61,15 @@ El contenido de la jabura vive en un ítem de archive.org, no en Supabase Storag
 - `tools/subir_a_archive.py`: sube la carpeta del Drive a archive.org
   conservando las subcarpetas, de donde sale el reparto. Deduce por contenido la
   extensión de los archivos que en el Drive no la tienen.
+
+## Simanim de הלכות שבת
+
+- `SA_SHABAT` en `index.html`: los 93 simanim רנ״ב–שד״מ (el חלק ג del משנה ברורה)
+  con su título y su cantidad de סעיפים. **Cargado de memoria**: desde el entorno
+  de desarrollo no se puede consultar Sefaria ni alhatorah, así que conviene
+  repasarlo contra la fuente.
+- Botón **Abrir jelek ג**: crea los que faltan y a los que ya existen les pone el
+  título del שולחן ערוך y les completa los סעיפים, sin tocar su contenido.
+- `catSaifDe(titulo)` deduce de qué saif habla un shiur leyendo su propio nombre
+  ("סעיף ב־ג־ד" son tres, "סעיף א עד ג" es un rango). Solo 12 de los 131 shiurim
+  lo dicen; el resto queda en el primer saif hasta que se los ubique a mano.
