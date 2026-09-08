@@ -70,6 +70,12 @@ El contenido de la jabura vive en un ítem de archive.org, no en Supabase Storag
   repasarlo contra la fuente.
 - Botón **Abrir jelek ג**: crea los que faltan y a los que ya existen les pone el
   título del שולחן ערוך y les completa los סעיפים, sin tocar su contenido.
-- `catSaifDe(titulo)` deduce de qué saif habla un shiur leyendo su propio nombre
-  ("סעיף ב־ג־ד" son tres, "סעיף א עד ג" es un rango). Solo 12 de los 131 shiurim
-  lo dicen; el resto queda en el primer saif hasta que se los ubique a mano.
+- Cada shiur se ubica en su saif en tres pasos: `catSaifDe(titulo)` lee el saif
+  del propio nombre ("סעיף ב־ג־ד" son tres, "סעיף א עד ג" es un rango); si no lo
+  dice, `CAT_SAIF` lo ubica según el contenido del saif; y si tampoco, queda en
+  el primero porque es un shiur de הקדמה, סיכום o חזרה.
+- `CAT_SAIF` se armó con el catálogo temático del ש״ע con משנה ברורה que aportó
+  el Rav. De 131 shiurim, 12 dicen el saif, 62 se ubicaron por contenido y 57
+  quedan en el primer saif por no tratar de un saif concreto.
+- Los módulos que comparten siman se unen: מעבד·טוחן·לש en שכ״א y
+  גוזז·כותב ומוחק en ש״מ, cada uno con `groups` para resolver la numeración.
