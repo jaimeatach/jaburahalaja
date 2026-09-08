@@ -463,6 +463,10 @@ he:{
   catNoFile:'לא נבחרו קבצים', catUploadGo:'העלאה ושיוך', catUploaded:'הועלו', catSkip:'ללא שיוך',
   catNeedSiman:'צור קודם את המודול', catFileCol:'קובץ', catTargetCol:'שיעור במודול',
   catHomeHead:'מודולים מהכונן · טרם נוצרו', catCreateOne:'יצירה',
+  catDirBtn:'העלאת תיקייה שלמה', catDirT:'העלאת התיקייה מהכונן',
+  catDirPick:'בחר את התיקייה "חבורה הלכות שבת" מהמחשב', catFilesN:'קבצים',
+  catDirHint:'כל קובץ ישויך למודול ולשיעור שלו לפי שם התיקייה ושם הקובץ', catDirNone:'לא זוהו קבצים מהמודולים',
+  catDirSkip:'ללא שיוך', catDirDup:'כבר היו למעלה',
   publishQ:'פרסום השאלה', publishGen:'פרסום', expand:'הגדלה', shrink:'הקטנה', myNotesBtn:'ההערות שלי', sortRecent:'לפי תאריך', sortSiman:'לפי סימן וסעיף', qaSimanOpt:'סימן (לא חובה)', qaSaifOpt:'סעיף (לא חובה)', answeredYou:'ענו על השאלה שלך'
 },
 es:{
@@ -538,6 +542,10 @@ es:{
   catNoFile:'No elegiste archivos', catUploadGo:'Subir y asignar', catUploaded:'subidos', catSkip:'Sin asignar',
   catNeedSiman:'Primero crea el módulo', catFileCol:'Archivo', catTargetCol:'Shiur del módulo',
   catHomeHead:'Módulos del Drive · sin crear', catCreateOne:'Crear',
+  catDirBtn:'Subir carpeta completa', catDirT:'Subir la carpeta del Drive',
+  catDirPick:'Elegí la carpeta "חבורה הלכות שבת" desde tu computadora', catFilesN:'archivos',
+  catDirHint:'Cada archivo se asigna a su módulo y su shiur según la carpeta y el nombre', catDirNone:'No se reconoció ningún archivo de los módulos',
+  catDirSkip:'sin asignar', catDirDup:'ya estaban',
   publishQ:'Publicar pregunta', publishGen:'Publicar', expand:'Ampliar', shrink:'Reducir', myNotesBtn:'Mis apuntes', sortRecent:'Recientes', sortSiman:'Por siman y saif', qaSimanOpt:'Siman (opcional)', qaSaifOpt:'Saif (opcional)', answeredYou:'Respondieron tu pregunta'
 }};
 const t = k => (STR[LANG] && STR[LANG][k]) || STR.he[k] || k;
@@ -1281,7 +1289,7 @@ const CATALOG = [
   ]},
 
   /* ── שיחות מוסר ── */
-  { sec:'musar', kind:'shiur', folder:'שיחות מוסר · שאול לניאדו', siman:901, items:[
+  { sec:'musar', kind:'shiur', folder:'שיחות מוסר · שאול לניאדו', dir:'שאול לניאדו', siman:901, items:[
     'חיזוק בלימוד התורה',
     'שאיפה לידיעת התורה',
     'איך לסכם · חשיבות הכתיבה א',
@@ -1291,35 +1299,35 @@ const CATALOG = [
     'Musar Rosh Hashaná',
     'מוסר על חג השבועות'
   ]},
-  { sec:'musar', kind:'shiur', folder:'שיחות מוסר · רב יהודה חאסקי שליט״א', siman:902, items:[
+  { sec:'musar', kind:'shiur', folder:'שיחות מוסר · רב יהודה חאסקי שליט״א', dir:'רב יהודה חאסקי שליט א', siman:902, items:[
     'ועד שובבים',
     'טעם הלימוד ב',
     'טעם הלימוד ג',
     'טעם הלימוד ד',
     'טעם הלימוד ה'
   ]},
-  { sec:'musar', kind:'shiur', folder:'שיחות מוסר · ועדים ושיחות', siman:903, items:[
+  { sec:'musar', kind:'shiur', folder:'שיחות מוסר · ועדים ושיחות', dir:'שיחות מוסר', siman:903, items:[
     'ועד של הראש ישיבה הרה״ג רב דוד שוסטר שליט״א',
     'ועד של הראש ישיבה הרה״ג רב מלכיאל קוטלר שליט״א',
     'R\' Isajar Frand · siyum Shabat'
   ]},
 
   /* ── ספרים (PDF · תוכן) ── */
-  { sec:'sefarim', kind:'material', folder:'ספרים · טור ושולחן ערוך', siman:801, items:[
+  { sec:'sefarim', kind:'material', folder:'ספרים · טור ושולחן ערוך', dir:'טור ושולחן ערוך', siman:801, items:[
     'טור · אורח חיים [5 חלקים]',
     'שולחן ערוך ב · אורח חיים רמ״ב־תט״ז'
   ]},
-  { sec:'sefarim', kind:'material', folder:'ספרים · משנה ברורה מתיבתא', siman:802, items:[
+  { sec:'sefarim', kind:'material', folder:'ספרים · משנה ברורה מתיבתא', dir:'משנה ברורה מתיבתה', siman:802, items:[
     'משנה ברורה המבואר · חלק ג · סימנים רצ״א־ש״ה',
     'משנה ברורה המבואר · חלק ד · סימנים ש״ו־שט״ז',
     'משנה ברורה המבואר · חלק ה · סימנים שי״ז־שכ״ז',
     'משנה ברורה המבואר · חלק ו · סימנים שכ״ח־שד״מ'
   ]},
-  { sec:'sefarim', kind:'material', folder:'ספרים · כף החיים', siman:803, items:[
+  { sec:'sefarim', kind:'material', folder:'ספרים · כף החיים', dir:'כף החיים', siman:803, items:[
     'כף החיים או״ח ד · רמ״ב־שי״ח',
     'כף החיים או״ח ה · שי״ט־תכ״ח'
   ]},
-  { sec:'sefarim', kind:'material', folder:'ספרים · חזון עובדיה', siman:804, items:[
+  { sec:'sefarim', kind:'material', folder:'ספרים · חזון עובדיה', dir:'חזון עובדיה', siman:804, items:[
     'חזון עובדיה שבת א',
     'חזון עובדיה שבת ב',
     'חזון עובדיה שבת ג',
@@ -1327,20 +1335,20 @@ const CATALOG = [
     'חזון עובדיה שבת ה',
     'חזון עובדיה שבת ו'
   ]},
-  { sec:'sefarim', kind:'material', folder:'ספרים · מנוחת אהבה', siman:805, items:[
+  { sec:'sefarim', kind:'material', folder:'ספרים · מנוחת אהבה', dir:'מנוחת אהבה', siman:805, items:[
     'מנוחת אהבה א', 'מנוחת אהבה ב', 'מנוחת אהבה ג', 'מנוחת אהבה ד'
   ]},
-  { sec:'sefarim', kind:'material', folder:'ספרים · אגרות משה', siman:806, items:[
+  { sec:'sefarim', kind:'material', folder:'ספרים · אגרות משה', dir:'אגרות משה', siman:806, items:[
     'אגרות משה שו״ת · חלק א', 'אגרות משה שו״ת · חלק ב', 'אגרות משה שו״ת · חלק ג',
     'אגרות משה שו״ת · חלק ד', 'אגרות משה שו״ת · חלק ה', 'אגרות משה שו״ת · חלק ו',
     'אגרות משה שו״ת · חלק ז', 'אגרות משה שו״ת · חלק ח', 'אגרות משה שו״ת · חלק ט',
     'שו״ת מרכבות ארגמן ב · תניינא'
   ]},
-  { sec:'sefarim', kind:'material', folder:'ספרים · שלמי יהונתן', siman:807, items:[
+  { sec:'sefarim', kind:'material', folder:'ספרים · שלמי יהונתן', dir:'שלמי יהונתן', siman:807, items:[
     'שלמי יהונתן · הלכות שבת · סימן שט״ז־שי״ז',
     'שלמי יהונתן · הלכות שבת · סימן שי״ט־ש״כ'
   ]},
-  { sec:'sefarim', kind:'material', folder:'ספרים · שולחן מבואר', siman:808, items:[
+  { sec:'sefarim', kind:'material', folder:'ספרים · שולחן מבואר', dir:'שולחן מבואר', siman:808, items:[
     'שולחן מבואר · שבת'
   ]}
 ];
@@ -1350,8 +1358,9 @@ const CAT_SECS = [['shiurim','catSecShiurim'],['musar','catSecMusar'],['sefarim'
 function catNorm(s){
   return String(s || '').toLowerCase()
     .replace(/\.[a-z0-9]{2,4}$/, '')
-    .replace(/[֑-ׇ]/g, '')
-    .replace(/[׳״"'`.\-_·\[\]()]/g, ' ')
+    .replace(/[\u0591-\u05BD\u05BF-\u05C7]/g, '') /* nikud y טעמים, pero NO el maqaf U+05BE */
+    .replace(/[׳״'"]/g, '')                 /* geresh/gershayim van DENTRO del número: ש״ו → שו */
+    .replace(/[`.\-_·־–—\[\]()]/g, ' ')      /* el maqaf ־ sí separa: ש״ו־שט״ז → שו שטז */
     .replace(/\s+/g, ' ').trim();
 }
 /* Une el módulo del catálogo con el siman ya creado en la base */
@@ -1380,7 +1389,10 @@ function catMatchFile(fileName, items){
     if (!toks.length) return;
     const hits = toks.filter(w => f.includes(w));
     const score = hits.length / toks.length;          /* cuánto del título aparece */
-    const bonus = (tailN === i + 1) ? 1 : 0;          /* desempate por número final */
+    const lastTok = toks.length ? catNorm(it).split(' ').pop() : '';
+    const hebN = parseHebNum(lastTok);                /* letra hebrea final: … שבת ה */
+    const bonus = (tailN === i + 1 ||
+                   (hebN === i + 1 && f.split(' ').includes(lastTok))) ? 1 : 0;
     const spec  = hits.join('').length;               /* desempate por especificidad */
     if (score > bestScore ||
        (score === bestScore && bonus > bestBonus) ||
@@ -1420,7 +1432,8 @@ function renderImport(){
     <div class="pagehead">
       <div><h2>${t('catTitle')}</h2><div class="sub">${t('catSub')}</div></div>
       <div class="acts">
-        ${pending ? `<button class="btn" id="cat-all" onclick="catCreateAll()">${icon('plus')} ${t('catCreateAll')} (${pending})</button>` : ''}
+        <button class="btn" onclick="catOpenDirUpload()">${icon('down')} ${t('catDirBtn')}</button>
+        ${pending ? `<button class="btn soft" id="cat-all" onclick="catCreateAll()">${icon('plus')} ${t('catCreateAll')} (${pending})</button>` : ''}
       </div>
     </div>
     ${secs}`;
@@ -1511,6 +1524,158 @@ async function catDoUpload(i){
   }
 }
 
+
+/* ═══════════ Subida de la carpeta completa del Drive ═══════════ */
+/* Sefarim cuyo nombre declara un rango de simanim: además de quedar en su módulo
+   de ספרים, se referencian desde el contenido de cada siman que cubren. */
+const CAT_RANGES = {
+  'טור · אורח חיים [5 חלקים]': [1, 697],
+  'שולחן ערוך ב · אורח חיים רמ״ב־תט״ז': [242, 416],
+  'משנה ברורה המבואר · חלק ג · סימנים רצ״א־ש״ה': [291, 305],
+  'משנה ברורה המבואר · חלק ד · סימנים ש״ו־שט״ז': [306, 316],
+  'משנה ברורה המבואר · חלק ה · סימנים שי״ז־שכ״ז': [317, 327],
+  'משנה ברורה המבואר · חלק ו · סימנים שכ״ח־שד״מ': [328, 344],
+  'כף החיים או״ח ד · רמ״ב־שי״ח': [242, 318],
+  'כף החיים או״ח ה · שי״ט־תכ״ח': [319, 428],
+  'שלמי יהונתן · הלכות שבת · סימן שט״ז־שי״ז': [316, 317],
+  'שלמי יהונתן · הלכות שבת · סימן שי״ט־ש״כ': [319, 320]
+};
+/* Deja el sefer en el contenido de cada módulo de shiurim que su rango abarca.
+   Sube el archivo una sola vez: acá solo se agregan las referencias. */
+async function catSpreadSefer(title, meta, seen){
+  const rng = CAT_RANGES[title];
+  if (!rng) return 0;
+  let n = 0;
+  for (let i = 0; i < CATALOG.length; i++){
+    const mod = CATALOG[i];
+    if (mod.kind !== 'shiur' || mod.siman < rng[0] || mod.siman > rng[1]) continue;
+    let s = catSiman(mod);
+    if (!s) s = await catCreateModule(i, true);
+    if (!s || seen.has(s.id + '|' + meta.fileName) || seen.has(s.id + '|' + title)) continue;
+    const { error } = await sb.from(T.materials).insert({
+      simanId: s.id, saifim: (s.saifim || []).map(x => x.n), title, ...meta, uploadedBy: ME.name
+    });
+    fail(error);
+    seen.add(s.id + '|' + meta.fileName); seen.add(s.id + '|' + title);
+    n++;
+  }
+  return n;
+}
+
+const CAT_AV = /\.(mp3|m4a|aac|wav|ogg|opus|amr|aif|aiff|caf|wma|mp4|m4v|mov|3gp)$/i;
+/* Nombre real de la carpeta en el Drive (por defecto, el del módulo) */
+const catDirOf = mod => mod.dir || mod.folder;
+/* Encuentra el módulo mirando las carpetas de la ruta, de la más profunda a la más
+   superficial: así "…/שיחות מוסר/שאול לניאדו/x.m4a" cae en שאול לניאדו y no en el padre */
+function catRouteFile(f){
+  const rel = f.webkitRelativePath || f.name;
+  const dirs = rel.split('/').slice(0, -1);
+  for (let d = dirs.length - 1; d >= 0; d--){
+    const key = catNorm(dirs[d]);
+    const i = CATALOG.findIndex(mod => catNorm(catDirOf(mod)) === key);
+    if (i >= 0) return i;
+  }
+  return -1;
+}
+function catPlan(files){
+  return files.map(f => {
+    const mi = catRouteFile(f);
+    if (mi < 0) return { f, mi:-1 };
+    const mod = CATALOG[mi];
+    const kind = CAT_AV.test(f.name) ? 'shiur' : 'material';
+    /* Solo tomamos el título del catálogo si el tipo de archivo coincide con el
+       del módulo: un PDF dentro de un módulo de shiurim conserva su propio nombre */
+    const n = kind === mod.kind ? catMatchFile(f.name, mod.items) : 0;
+    return { f, mi, kind, n };
+  });
+}
+function catOpenDirUpload(){
+  openSheet(`${sheetHead(t('catDirT'))}
+    <div class="field"><label>${t('catDirPick')}</label>
+      <input id="cat-dir" type="file" multiple webkitdirectory directory onchange="catDirPreview()"></div>
+    <div class="hint" style="margin:-6px 0 14px">${t('catDirHint')}</div>
+    <div id="cat-dir-sum"></div>
+    <button class="btn full" id="cat-dir-go" onclick="catDirUpload()" disabled>${t('catUploadGo')}</button>
+    <div class="progress" id="up-prog"><div class="bar" id="up-bar"></div></div>
+    <div class="hint" id="up-hint"></div>`, true);
+}
+function catDirPreview(){
+  const files = [...($('cat-dir').files || [])];
+  window._catPlan = catPlan(files);
+  const el = $('cat-dir-sum'), go = $('cat-dir-go');
+  if (!el) return;
+  const ok = window._catPlan.filter(p => p.mi >= 0);
+  const lost = window._catPlan.length - ok.length;
+  if (!ok.length){
+    el.innerHTML = `<div class="hint">${t('catDirNone')}</div>`;
+    if (go) go.disabled = true;
+    return;
+  }
+  const byMod = {};
+  ok.forEach(p => { (byMod[p.mi] = byMod[p.mi] || []).push(p); });
+  el.innerHTML = `<div class="field"><label>${ok.length} ${t('catFilesN')}</label>` +
+    Object.keys(byMod).map(mi => {
+      const list = byMod[mi];
+      const unmatched = list.filter(p => !p.n).length;
+      return `<div style="display:flex;gap:8px;align-items:center;margin-bottom:5px;font-size:13.5px">
+        <div style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(CATALOG[mi].folder)}</div>
+        <span class="badge">${list.length}</span>
+        ${unmatched ? `<span class="badge gold">${unmatched} ${t('catDirSkip')}</span>` : ''}
+      </div>`;
+    }).join('') +
+    (lost ? `<div class="hint" style="margin-top:8px">${lost} ${t('catDirSkip')}</div>` : '') +
+    `</div>`;
+  if (go) go.disabled = false;
+}
+async function catDirUpload(){
+  const plan = (window._catPlan || []).filter(p => p.mi >= 0);
+  if (!plan.length) return toast(t('catNoFile'));
+  const btn = $('cat-dir-go'); btn.disabled = true; btn.textContent = t('uploading');
+  $('cat-dir').disabled = true;
+  $('up-prog').style.display = 'block';
+  let ok = 0, dup = 0;
+  try {
+    /* Crear los módulos que falten antes de subir nada */
+    for (const mi of [...new Set(plan.map(p => p.mi))]){
+      if (!catSiman(CATALOG[mi])) await catCreateModule(mi, true);
+    }
+    /* Lo ya subido antes no se vuelve a subir */
+    const [shs, mts] = await Promise.all([
+      sb.from(T.shiurim).select('simanId,fileName'),
+      sb.from(T.materials).select('simanId,fileName')
+    ]);
+    const seen = new Set([...(shs.data||[]), ...(mts.data||[])].map(r => r.simanId + '|' + r.fileName));
+    for (let k = 0; k < plan.length; k++){
+      const { f, mi, kind, n } = plan[k];
+      const mod = CATALOG[mi];
+      const s = catSiman(mod);
+      if (!s) continue;
+      if (seen.has(s.id + '|' + f.name)){ dup++; continue; }
+      const tbl = kind === 'shiur' ? T.shiurim : T.materials;
+      const title = n ? mod.items[n-1] : f.name.replace(/\.[^.]+$/, '');
+      const path = tbl + '/' + Date.now() + '_' + k + '_' + (f.name || 'archivo').replace(/[^\w.\-]+/g, '_');
+      await uploadWithProgress(path, f, `(${k+1}/${plan.length}) `);
+      const url = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+      const meta = { url, fileName: f.name, size: f.size, storagePath: path };
+      const { error } = await sb.from(tbl).insert({
+        simanId: s.id, saifim: [n || 1], title, ...meta, uploadedBy: ME.name
+      });
+      fail(error);
+      seen.add(s.id + '|' + f.name);
+      ok++;
+      /* Un sefer con rango de simanim queda también en el contenido de cada uno */
+      if (tbl === T.materials) ok += await catSpreadSefer(title, meta, seen);
+    }
+    closeSheet();
+    toast(ok + ' ' + t('catUploaded') + (dup ? ' · ' + dup + ' ' + t('catDirDup') : ''));
+    show(CUR.view); notifBadge();
+  } catch(e){
+    toast(t('err') + e.message);
+    btn.disabled = false; btn.textContent = t('catUploadGo');
+    $('cat-dir').disabled = false;
+  }
+}
+
 let CAT_SEEDED = false;
 /* Crea los módulos del Drive la primera vez que un admin abre la app, para que
    queden visibles para todos los miembros sin tener que apretar nada.
@@ -1571,6 +1736,7 @@ function renderHome(){
       <div class="acts">
         <button class="btn ghost" onclick="nav('/todo')">${icon('eye')} ${t('globalTodo')}</button>
         <button class="btn soft" onclick="openGlobalAdd()">${icon('plus')} ${t('globalAdd')}</button>
+        ${isAdmin() ? `<button class="btn ghost" onclick="catOpenDirUpload()">${icon('down')} ${t('catDirBtn')}</button>` : ''}
         ${isAdmin() ? `<button class="btn ghost" onclick="nav('/importar')">${icon('down')} ${t('catNav')}</button>` : ''}
         ${isAdmin() ? `<button class="btn" onclick="openSimanEditor()">${icon('plus')} ${t('newSiman')}</button>` : ''}
       </div>
