@@ -20,7 +20,7 @@ App web para una jabura (grupo de estudio de halajá). Permite gestionar simanim
 | Clave JS   | Tabla         | Uso |
 |------------|---------------|-----|
 | users      | `usuarios`    | usuarios con id, name, salt, hash, role (`admin`/`member`), photo. El primer usuario registrado es admin. |
-| simanim    | `simanim`     | simanim con number, title, saifim |
+| simanim    | `simanim`     | simanim con number, title, saifim, pinned (siman "Estudiando ahora"), kind (`halaja` default o `musar`; los musar son "temas/sijot" con secciones y solo tienen Contenido, Shiurim y Mis notas) |
 | mare       | `mare`        | mare mekomot por siman |
 | materials  | `materiales`  | materiales de estudio (archivos) |
 | shiurim    | `shiurim`     | shiurim (audio) por siman |
@@ -32,6 +32,7 @@ App web para una jabura (grupo de estudio de halajá). Permite gestionar simanim
 | questions  | `preguntas`   | preguntas de usuarios |
 | comments   | `comentarios` | comentarios (targetType/targetId, soporta respuestas vía parentId, visibilidad) |
 | likes      | `likes`       | likes (targetType/targetId/userId) |
+| marks      | `marcas`      | marcadores/clips en shiurim: shiurId, userId, userName, time (segundos), note |
 
 ## Convenciones
 
