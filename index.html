@@ -462,6 +462,7 @@ he:{
   catExists:'המודול כבר קיים', catPickFiles:'בחר את קבצי המודול מהמחשב', catMatch:'שיוך אוטומטי לפי שם הקובץ',
   catNoFile:'לא נבחרו קבצים', catUploadGo:'העלאה ושיוך', catUploaded:'הועלו', catSkip:'ללא שיוך',
   catNeedSiman:'צור קודם את המודול', catFileCol:'קובץ', catTargetCol:'שיעור במודול',
+  catHomeHead:'מודולים מהכונן · טרם נוצרו', catCreateOne:'יצירה',
   publishQ:'פרסום השאלה', publishGen:'פרסום', expand:'הגדלה', shrink:'הקטנה', myNotesBtn:'ההערות שלי', sortRecent:'לפי תאריך', sortSiman:'לפי סימן וסעיף', qaSimanOpt:'סימן (לא חובה)', qaSaifOpt:'סעיף (לא חובה)', answeredYou:'ענו על השאלה שלך'
 },
 es:{
@@ -536,6 +537,7 @@ es:{
   catExists:'El módulo ya existe', catPickFiles:'Elige los archivos del módulo desde tu computadora', catMatch:'Asignación automática por nombre de archivo',
   catNoFile:'No elegiste archivos', catUploadGo:'Subir y asignar', catUploaded:'subidos', catSkip:'Sin asignar',
   catNeedSiman:'Primero crea el módulo', catFileCol:'Archivo', catTargetCol:'Shiur del módulo',
+  catHomeHead:'Módulos del Drive · sin crear', catCreateOne:'Crear',
   publishQ:'Publicar pregunta', publishGen:'Publicar', expand:'Ampliar', shrink:'Reducir', myNotesBtn:'Mis apuntes', sortRecent:'Recientes', sortSiman:'Por siman y saif', qaSimanOpt:'Siman (opcional)', qaSaifOpt:'Saif (opcional)', answeredYou:'Respondieron tu pregunta'
 }};
 const t = k => (STR[LANG] && STR[LANG][k]) || STR.he[k] || k;
@@ -1432,7 +1434,7 @@ async function catCreateModule(i, silent){
       .insert({ number: mod.siman, title: mod.folder, saifim }).select().single();
     fail(error);
     await loadSimanim();
-    if (!silent){ toast(t('catCreated')); renderImport(); }
+    if (!silent){ toast(t('catCreated')); show(CUR.view); }
     return data;
   } catch(e){ toast(t('err') + e.message); return null; }
 }
@@ -1442,7 +1444,7 @@ async function catCreateAll(){
     if (!catSiman(CATALOG[i])) await catCreateModule(i, true);
   }
   toast(t('catAllDone'));
-  renderImport();
+  show(CUR.view);
 }
 function catOpenUpload(i){
   const mod = CATALOG[i];
@@ -1501,12 +1503,31 @@ async function catDoUpload(i){
     }
     closeSheet();
     toast(ok + ' ' + t('catUploaded'));
-    renderImport(); notifBadge();
+    show(CUR.view); notifBadge();
   } catch(e){
     toast(t('err') + e.message);
     btn.disabled = false; btn.textContent = t('catUploadGo');
     $('cat-file').disabled = false;
   }
+}
+
+/* Módulos del catálogo que todavía no existen como siman — se muestran en el inicio */
+function catPendingHomeHTML(){
+  if (!isAdmin()) return '';
+  const pend = CATALOG.map((mod, i) => [mod, i]).filter(([mod]) => !catSiman(mod));
+  if (!pend.length) return '';
+  return `<div class="subhead" style="margin-top:22px">${t('catHomeHead')} (${pend.length})
+      <button class="btn soft sm" style="margin-inline-start:10px" onclick="catCreateAll()">${icon('plus')} ${t('catCreateAll')}</button>
+    </div>
+    <div class="siman-list">` + pend.map(([mod, i]) => `
+    <div class="siman-card" style="opacity:.72" onclick="catCreateModule(${i})">
+      <div class="siman-med" style="background:var(--gold-soft);color:var(--gold)">${gem(mod.siman)}</div>
+      <div class="siman-info">
+        <div class="t">${esc(mod.folder)}</div>
+        <div class="m">${mod.items.length} ${t('catItems')} · ${t('catPending')}</div>
+      </div>
+      <button class="btn sm" onclick="event.stopPropagation();catCreateModule(${i})">${icon('plus')} ${t('catCreateOne')}</button>
+    </div>`).join('') + `</div>`;
 }
 
 /* ═══════════ Inicio ═══════════ */
@@ -1539,7 +1560,8 @@ function renderHome(){
         ${isAdmin() ? `<button class="btn" onclick="openSimanEditor()">${icon('plus')} ${t('newSiman')}</button>` : ''}
       </div>
     </div>
-    ${list}`;
+    ${list}
+    ${catPendingHomeHTML()}`;
 }
 
 /* ═══════════ Crear / editar siman ═══════════ */
