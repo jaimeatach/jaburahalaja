@@ -348,6 +348,7 @@ const SUPABASE_URL = "https://enkofkroxudsblewxxos.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_nAsf0qU7fPUOZ5K7OgqwYw_hUPgzOrZ";
 const BUCKET = "jabura";
 const APP_NAME = "חבורת הלכה";
+const BUILD = "2026-09-08 · carpeta+sefarim";
 
 const $ = id => document.getElementById(id);
 const app = $('app');
@@ -1430,7 +1431,7 @@ function renderImport(){
   }).join('');
   m.innerHTML = `
     <div class="pagehead">
-      <div><h2>${t('catTitle')}</h2><div class="sub">${t('catSub')}</div></div>
+      <div><h2>${t('catTitle')}</h2><div class="sub">${t('catSub')} · <span style="opacity:.6">build ${esc(BUILD)}</span></div></div>
       <div class="acts">
         <button class="btn" onclick="catOpenDirUpload()">${icon('down')} ${t('catDirBtn')}</button>
         ${pending ? `<button class="btn soft" id="cat-all" onclick="catCreateAll()">${icon('plus')} ${t('catCreateAll')} (${pending})</button>` : ''}

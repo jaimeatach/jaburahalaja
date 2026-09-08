@@ -1,0 +1,15 @@
+# Sitio de una sola página: no hay build, se publica la raíz del repo tal cual.
+[build]
+  publish = "."
+
+# El HTML no debe quedar cacheado: si no, un cambio publicado no se ve hasta
+# que el visitante fuerza la recarga.
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
