@@ -364,7 +364,7 @@ const SUPABASE_URL = "https://enkofkroxudsblewxxos.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_nAsf0qU7fPUOZ5K7OgqwYw_hUPgzOrZ";
 const BUCKET = "jabura";
 const APP_NAME = "חבורת הלכה";
-const BUILD = "2026-09-08 · musar + clips";
+const BUILD = "2026-09-08 · subida robusta";
 
 const $ = id => document.getElementById(id);
 const app = $('app');
@@ -489,6 +489,8 @@ he:{
   catDone:'נוצר', catPending:'טרם נוצר', catItems:'פריטים', catCreated:'המודול נוצר', catAllDone:'כל המודולים נוצרו',
   catExists:'המודול כבר קיים', catPickFiles:'בחר את קבצי המודול מהמחשב', catMatch:'שיוך אוטומטי לפי שם הקובץ',
   catNoFile:'לא נבחרו קבצים', catUploadGo:'העלאה ושיוך', catUploaded:'הועלו', catSkip:'ללא שיוך',
+  catTry:'ניסיון', catFailed:'נכשלו', catRetry:'נסה שוב את מה שנכשל',
+  errTooBig:'הקובץ גדול מהמגבלה של Supabase Storage — יש להגדיל את המגבלה בהגדרות ה-bucket jabura',
   catNeedSiman:'צור קודם את המודול', catFileCol:'קובץ', catTargetCol:'שיעור במודול',
   catHomeHead:'מודולים מהכונן · טרם נוצרו', catCreateOne:'יצירה',
   catDirBtn:'העלאת תיקייה שלמה', catDirT:'העלאת התיקייה מהכונן',
@@ -575,6 +577,8 @@ es:{
   catDone:'Creado', catPending:'Sin crear', catItems:'ítems', catCreated:'Módulo creado', catAllDone:'Todos los módulos fueron creados',
   catExists:'El módulo ya existe', catPickFiles:'Elige los archivos del módulo desde tu computadora', catMatch:'Asignación automática por nombre de archivo',
   catNoFile:'No elegiste archivos', catUploadGo:'Subir y asignar', catUploaded:'subidos', catSkip:'Sin asignar',
+  catTry:'intento', catFailed:'fallaron', catRetry:'Reintentar los que fallaron',
+  errTooBig:'El archivo supera el límite de Supabase Storage — hay que subirlo en la configuración del bucket jabura',
   catNeedSiman:'Primero crea el módulo', catFileCol:'Archivo', catTargetCol:'Shiur del módulo',
   catHomeHead:'Módulos del Drive · sin crear', catCreateOne:'Crear',
   catDirBtn:'Subir carpeta completa', catDirT:'Subir la carpeta del Drive',
@@ -1675,6 +1679,7 @@ async function catDirUpload(){
   $('cat-dir').disabled = true;
   $('up-prog').style.display = 'block';
   let ok = 0, dup = 0;
+  const fallidos = [];
   try {
     /* Crear los módulos que falten antes de subir nada */
     for (const mi of [...new Set(plan.map(p => p.mi))]){
@@ -1695,21 +1700,34 @@ async function catDirUpload(){
       const tbl = kind === 'shiur' ? T.shiurim : T.materials;
       const title = n ? mod.items[n-1] : f.name.replace(/\.[^.]+$/, '');
       const path = tbl + '/' + Date.now() + '_' + k + '_' + (f.name || 'archivo').replace(/[^\w.\-]+/g, '_');
-      await uploadWithProgress(path, f, `(${k+1}/${plan.length}) `);
-      const url = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
-      const meta = { url, fileName: f.name, size: f.size, storagePath: path };
-      const { error } = await sb.from(tbl).insert({
-        simanId: s.id, saifim: [n || 1], title, ...meta, uploadedBy: ME.name
-      });
-      fail(error);
-      seen.add(s.id + '|' + f.name);
-      ok++;
-      /* Un sefer con rango de simanim queda también en el contenido de cada uno */
-      if (tbl === T.materials) ok += await catSpreadSefer(title, meta, seen);
+      try {
+        await uploadWithProgress(path, f, `(${k+1}/${plan.length}) `);
+        const url = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+        const meta = { url, fileName: f.name, size: f.size, storagePath: path };
+        const { error } = await sb.from(tbl).insert({
+          simanId: s.id, saifim: [n || 1], title, ...meta, uploadedBy: ME.name
+        });
+        fail(error);
+        seen.add(s.id + '|' + f.name);
+        ok++;
+        /* Un sefer con rango de simanim queda también en el contenido de cada uno */
+        if (tbl === T.materials) ok += await catSpreadSefer(title, meta, seen);
+      } catch(e){
+        /* Un archivo que falla no puede tirar los otros 167: se anota y se sigue */
+        fallidos.push({ ...plan[k], _err: e.message });
+      }
     }
-    closeSheet();
-    toast(ok + ' ' + t('catUploaded') + (dup ? ' · ' + dup + ' ' + t('catDirDup') : ''));
+    const resumen = ok + ' ' + t('catUploaded') + (dup ? ' · ' + dup + ' ' + t('catDirDup') : '');
     show(CUR.view); notifBadge();
+    if (!fallidos.length){ window._catPlan = []; closeSheet(); return toast(resumen); }
+    /* Quedan pendientes: se dejan cargados para reintentar solo esos */
+    window._catPlan = fallidos;
+    toast(resumen + ' · ' + fallidos.length + ' ' + t('catFailed'));
+    const sum = $('cat-dir-sum');
+    if (sum) sum.innerHTML = `<div class="field"><label>${fallidos.length} ${t('catFailed')}</label>` +
+      fallidos.map(x => `<div style="font-size:13px;color:var(--muted);margin-bottom:4px">
+        ${esc(x.f.name)} — ${esc(x._err || '')}</div>`).join('') + `</div>`;
+    btn.disabled = false; btn.textContent = t('catRetry');
   } catch(e){
     toast(t('err') + e.message);
     btn.disabled = false; btn.textContent = t('catUploadGo');
@@ -2350,13 +2368,15 @@ async function deleteItem(tbl, id, storagePath){
 }
 
 /* ═══════════ Subida de archivos ═══════════ */
-function uploadWithProgress(path, file, label){
+function uploadOnce(path, file, label){
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', SUPABASE_URL + '/storage/v1/object/' + BUCKET + '/' + path);
     xhr.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_ANON_KEY);
     xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
-    xhr.setRequestHeader('x-upsert', 'false');
+    /* upsert: un reintento reescribe el objeto a medio subir en vez de chocar con 409 */
+    xhr.setRequestHeader('x-upsert', 'true');
+    xhr.timeout = 0;
     xhr.upload.onprogress = e => {
       if (!e.lengthComputable) return;
       const pct = Math.round(e.loaded / e.total * 100);
@@ -2364,10 +2384,32 @@ function uploadWithProgress(path, file, label){
       if (bar) bar.style.width = pct + '%';
       if (hint) hint.textContent = (label||'') + pct + '% · ' + fmtSize(e.loaded) + ' ' + t('ofWord') + ' ' + fmtSize(e.total);
     };
-    xhr.onload = () => xhr.status < 300 ? resolve() : reject(new Error('HTTP ' + xhr.status + ' — ' + xhr.responseText.slice(0,200)));
-    xhr.onerror = () => reject(new Error(t('netErr')));
+    xhr.onload = () => {
+      if (xhr.status < 300) return resolve();
+      const body = (xhr.responseText || '').slice(0, 200);
+      /* 413: el archivo pasa el límite del bucket. Reintentar no sirve, hay que subir el límite */
+      const msg = xhr.status === 413 ? t('errTooBig') : 'HTTP ' + xhr.status + ' — ' + body;
+      const err = new Error(msg);
+      err.retriable = xhr.status === 429 || xhr.status >= 500;
+      reject(err);
+    };
+    xhr.onerror   = () => { const e = new Error(t('netErr')); e.retriable = true; reject(e); };
+    xhr.ontimeout = () => { const e = new Error(t('netErr')); e.retriable = true; reject(e); };
     xhr.send(file);
   });
+}
+/* Los shiurim son archivos grandes: un corte de red puntual no debe tirar toda la carga */
+async function uploadWithProgress(path, file, label){
+  let last;
+  for (let intento = 1; intento <= 3; intento++){
+    try { return await uploadOnce(path, file, (label || '') + (intento > 1 ? '· ' + t('catTry') + ' ' + intento + ' ' : '')); }
+    catch(e){
+      last = e;
+      if (!e.retriable) throw e;
+      await new Promise(r => setTimeout(r, 1500 * intento * intento));
+    }
+  }
+  throw last;
 }
 async function uploadMany(folder, files){
   const out = [];
