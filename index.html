@@ -454,6 +454,14 @@ he:{
   addTypeL:'מה מעלים?', chooseSimanL:'לאיזה סימן?', chooseSaifL:'לאיזה סעיף?', continueW:'המשך',
   typeMare:'מראי מקומות', typeFile:'קובץ / מקור', typeShiur:'שיעור', typeExam:'מבחן', typeShared:'תוכן משותף', typeNews:'הודעת News',
   newContent:'תוכן חדש', inWord:'בסימן',
+ 
+  catTitle:'ייבוא מודולים מהכונן', catSub:'כל תיקייה בכונן היא מודול · כל קובץ הוא שיעור עם הכותרת שלו',
+  catNav:'ייבוא', catSecShiurim:'שיעורים בהלכה', catSecMusar:'שיחות מוסר', catSecSefarim:'ספרים',
+  catCreate:'יצירת המודול', catCreateAll:'יצירת כל המודולים', catOpen:'פתיחת המודול', catFiles:'העלאת קבצים',
+  catDone:'נוצר', catPending:'טרם נוצר', catItems:'פריטים', catCreated:'המודול נוצר', catAllDone:'כל המודולים נוצרו',
+  catExists:'המודול כבר קיים', catPickFiles:'בחר את קבצי המודול מהמחשב', catMatch:'שיוך אוטומטי לפי שם הקובץ',
+  catNoFile:'לא נבחרו קבצים', catUploadGo:'העלאה ושיוך', catUploaded:'הועלו', catSkip:'ללא שיוך',
+  catNeedSiman:'צור קודם את המודול', catFileCol:'קובץ', catTargetCol:'שיעור במודול',
   publishQ:'פרסום השאלה', publishGen:'פרסום', expand:'הגדלה', shrink:'הקטנה', myNotesBtn:'ההערות שלי', sortRecent:'לפי תאריך', sortSiman:'לפי סימן וסעיף', qaSimanOpt:'סימן (לא חובה)', qaSaifOpt:'סעיף (לא חובה)', answeredYou:'ענו על השאלה שלך'
 },
 es:{
@@ -520,6 +528,14 @@ es:{
   addTypeL:'¿Qué vas a subir?', chooseSimanL:'¿A qué siman?', chooseSaifL:'¿A qué saif?', continueW:'Continuar',
   typeMare:'Mare Mekomot', typeFile:'Archivo / fuente', typeShiur:'Shiur', typeExam:'Examen', typeShared:'Contenido compartido', typeNews:'Noticia de News',
   newContent:'Contenido nuevo', inWord:'en Simán',
+ 
+  catTitle:'Importar módulos del Drive', catSub:'Cada carpeta del Drive es un módulo · cada archivo es un shiur con su título',
+  catNav:'Importar', catSecShiurim:'Shiurim de halajá', catSecMusar:'Shijot musar', catSecSefarim:'Sefarim',
+  catCreate:'Crear el módulo', catCreateAll:'Crear todos los módulos', catOpen:'Abrir el módulo', catFiles:'Subir archivos',
+  catDone:'Creado', catPending:'Sin crear', catItems:'ítems', catCreated:'Módulo creado', catAllDone:'Todos los módulos fueron creados',
+  catExists:'El módulo ya existe', catPickFiles:'Elige los archivos del módulo desde tu computadora', catMatch:'Asignación automática por nombre de archivo',
+  catNoFile:'No elegiste archivos', catUploadGo:'Subir y asignar', catUploaded:'subidos', catSkip:'Sin asignar',
+  catNeedSiman:'Primero crea el módulo', catFileCol:'Archivo', catTargetCol:'Shiur del módulo',
   publishQ:'Publicar pregunta', publishGen:'Publicar', expand:'Ampliar', shrink:'Reducir', myNotesBtn:'Mis apuntes', sortRecent:'Recientes', sortSiman:'Por siman y saif', qaSimanOpt:'Siman (opcional)', qaSaifOpt:'Saif (opcional)', answeredYou:'Respondieron tu pregunta'
 }};
 const t = k => (STR[LANG] && STR[LANG][k]) || STR.he[k] || k;
@@ -655,6 +671,7 @@ function route(){
   }
   if (p[0] === 'mare' && p[1]){ CUR.simanId=p[1]; CUR.saif=parseInt(p[2]||'1')||1; CUR.tab='mare'; show('siman'); return; }
   if (p[0] === 'todo'){ show('todoall'); return; }
+  if (p[0] === 'importar'){ show('import'); return; }
   if (p[0] === 'micontenido'){ show('mycontent'); return; }
   if (p[0] === 'perfil'){ show('profile'); return; }
   if (p[0] === 'news'){ PENDING_FOCUS = p[1] ? 'it-' + p[1] : null; show('news'); return; }
@@ -670,6 +687,7 @@ function show(view){
   if (view === 'home')      renderHome();
   if (view === 'siman')     renderSiman();
   if (view === 'todoall')   renderTodoAll();
+  if (view === 'import')    renderImport();
   if (view === 'mycontent') renderMyContent();
   if (view === 'profile')   renderProfile();
   if (view === 'news')      renderNews();
@@ -1111,6 +1129,386 @@ async function openNotif(){
     : `<div class="empty"><div class="e-ic">${icon('bell',40)}</div><div class="e-t">${t('notifEmpty')}</div></div>`}`);
 }
 
+/* ═══════════ Catálogo del Drive · חבורה הלכות שבת ═══════════
+   Cada carpeta del Drive es un módulo. Cada archivo es un shiur (o un sefer).
+   El orden de la lista define el número de saif dentro del módulo. */
+const CATALOG = [
+  /* ── שיעורים בהלכה ── */
+  { sec:'shiurim', kind:'shiur', folder:'סימן שי ג בונה וסותר', siman:313, items:[
+    'הקדמה סימן שי״ג · בונה',
+    'סימן שי״ג · בונה · שיעור א',
+    'פקק החלון · וילון · פרוכת · ויסוד של בונה',
+    'סיכום על סימן שי״ג סעיף ב־ג־ד · וביאור בנין קבע · עראי · ובנין לשעה',
+    'הקדמה לסימן שי״ג סעיף ה · וביאור בפקק החלון',
+    'בנין בכלים · דעת החזון איש שי״ג סעיף ו',
+    'בנין בכלים בכיסוי הכלים',
+    'חשמל בשבת · רב דוד כהן',
+    'לפרק המושב של העגלה שמחוברת על ידי קפיץ',
+    'להכניס שרוך לנעליים · מכה בפטיש',
+    'מכה בפטיש ובנין בכלים',
+    'הגדרים של מכה בפטיש',
+    'חזרה בסיכום על סימן שי״ג (התחלה)'
+  ]},
+  { sec:'shiurim', kind:'shiur', folder:'סימן שי ד בנין וסתירה בכלים', siman:314, items:[
+    'האם מותר לפתוח קופסאות שימורים בשבת · בנין וסתירה בכלים',
+    'סתירה בכלים בעשיית פתח',
+    'פתיחת פחיות ופקק מתכת',
+    '״קורע״ קופסאות ובקבוקים',
+    'לעשות נקב במגופה · sacar vino con el Coravin',
+    'סיכום בדין פתיחת בקבוקים',
+    'הקדמה לפסיק רישיה ופס״ר דרבנן',
+    'פסיק רישא בעיקרו דרבנן ותרי דרבנן',
+    'כללים בפס״ר וגרמא',
+    'אופנים שיש משום בנין בכלים · ובענין אם ניסתם הצינור',
+    'חזרה בסיכום על סימן שי״ג ושי״ד'
+  ]},
+  { sec:'shiurim', kind:'shiur', folder:'סימן שט ו אוהל', siman:315, items:[
+    'אוהל ומחיצות · הקדמה (סימן שט״ו)',
+    'לתלות וילון ופרוכת קבוע · ולעשות מחיצה בבית הכנסת',
+    'תוספת אהל עראי',
+    'האם יש איסור אוהל בכובע',
+    'להעמיד שולחן על גבי הרגלים · ולכסות עוגה בכיסוי',
+    'שלשה דרגות באוהל',
+    'מטריה (paraguas) בשבת',
+    'טלית מקופלת',
+    'סעיף י״ב דין פרוכת · ואוהל נשוי בידי אדם · וסעיף ט משמרת',
+    'משמרת ולכסות החבית',
+    'חזרה בסיכום על סימן שי״ד ושט״ו',
+    'חזרה בסיכום על סימן שט״ו · חלק ב'
+  ]},
+  { sec:'shiurim', kind:'shiur', folder:'צידה', siman:316, items:[
+    'פתיחה לסימן שט״ז · מלאכת צידה',
+    'ספק פסיק רישא',
+    'על ידי שם · ועוד ציורים של צידה',
+    'ישב אחד על הפתח והשני על צדו',
+    'שנים שעשאוה · ומעלית שבת',
+    'צידה בבהמות שהם בני תרבות · ושבות דשבות ע״י ישראל',
+    'צידת חיות שמזיקים · חובל והוצאת דם',
+    'הריגת כינם',
+    'ביאור לסעיף י',
+    'הריגת מזיקים · ומירוח הרוק',
+    'חזרות סימן שט״ז סעיף א עד סעיף ג',
+    'חזרות פסיק רישיה וספק פסיק רישיה',
+    'כללים שיוצאים מסימן שט״ז',
+    'חזרה בסיכום על סימן שט״ז'
+  ]},
+  { sec:'shiurim', kind:'shiur', folder:'קושר', siman:317, items:[
+    'הקדמה למלאכת קושר',
+    'סימן שי״ז סעיף א',
+    'קשר על גבי קשר ועניבה',
+    'קשר עניבת המואר · ולהכניס הרצועות בתוך המנעל',
+    'מחלוקת הט״ז והלבוש בקשר של קיימא',
+    'סיכום וחזרה על סימן שי״ז'
+  ]},
+  { sec:'shiurim', kind:'shiur', folder:'בורר', siman:319, items:[
+    'הקדמה להלכות בורר',
+    'בורר · לאלתר',
+    'בורר בכלים',
+    'שלשה מיני תערובת',
+    'בורר שני מיני אוכלים',
+    'בורר פסולת מאוכל · קליפות וגרעינים',
+    'הבורר תורמוסים',
+    'סימן שי״ט סעיף ו־ז',
+    'לברור התוספת',
+    'הוספה להסביר החילוק בין דש לבורר',
+    'Filtro en Shabat · primera parte',
+    'Filtro en Shabat · segunda parte',
+    'Filtrar jugo de naranja de su pulpa',
+    'Lavar la fruta en Shabat',
+    'להוציא יין ולהשאיר יין עם שמרים בחבית · סעיף י״ד',
+    'בורר פסולת ואוכל עמו',
+    'סיכום וחזרה על הלכות בורר · א'
+  ]},
+  { sec:'shiurim', kind:'shiur', folder:'מלאכת סחיטה - דש', siman:320, items:[
+    'הקדמה לסימן ש״כ',
+    'סימן ש״כ א · סחיטת פירות · מיץ תפוזים',
+    'יניקה (sacaleche) · ומציצת משקים',
+    'משקה הבא לאוכל',
+    'סחיטת לימונים',
+    'ריסוק שלג וברד',
+    'הקדמה לסעיפים ט״ו־י״ח',
+    'סחיטת בגדים · toallitas parte 1',
+    'Toallitas en Shabat · segunda parte',
+    'סחיטה בשיער · מברשת',
+    'צביעה באוכלים ובמשקים',
+    'סיכום על סימן ש״כ'
+  ]},
+  { sec:'shiurim', kind:'shiur', folder:'מלאכת מעבד', siman:321, items:[
+    'סימן שכ״א · לעשות מי מלח',
+    'מעבד · מליחת ירקות'
+  ]},
+  { sec:'shiurim', kind:'shiur', folder:'טוחן', siman:321, items:[
+    'פתיחה להלכות טוחן',
+    'טוחן · מיעוך בננה',
+    'טוחן באוכלים · טוחן אחר טוחן · לאלתר',
+    'התרים למעשה בטוחן · לחתוך חתיכה קטנה מצנון',
+    'הרב שאול קרדי שליט״א · הגדרה של מלאכת טוחן',
+    'חזרה על מלאכת טוחן'
+  ]},
+  { sec:'shiurim', kind:'shiur', folder:'לש', siman:321, items:[
+    'הקדמה · לש',
+    'מתי יש איסור לש מדאורייתא · לש שיעור א',
+    'לש · השינויים כדי שיהיה מותר לעשות לישה',
+    'לש · לעשות טחינה בשבת',
+    'לש · חרדל · שינוי מערבו בנחת · ומה הדין ביד המזלג',
+    'לישה אחר לישה',
+    'לישה בדבר מבושל · האם מותר לאכול מסתיק בשבת'
+  ]},
+  { sec:'shiurim', kind:'shiur', folder:'גוזז', siman:340, items:[
+    'הקדמה למלאכת גוזז',
+    'כסוס ציפורנים ולגרד הזקן · גוזז ב',
+    'לסרוק בשבת על ידי גוי',
+    'ביאור המתירים לסרוק שערות על ידי גוי בשבת'
+  ]},
+  { sec:'shiurim', kind:'shiur', folder:'כותב ומוחק', siman:341, items:[
+    'הקדמה למלאכת כותב ומוחק',
+    'יסודות במלאכת מוחק · טשטוש דיו בידיו · האם אפשר לנקותו'
+  ]},
+  { sec:'shiurim', kind:'shiur', folder:'מוקצה', siman:308, items:[
+    'חריות של דקל · סעיף כ עד כד',
+    'ליקח ילד אבן או דבר מוקצה',
+    'גרעינים וקליפות · סעיף כ״ז'
+  ]},
+  { sec:'shiurim', kind:'shiur', folder:'חגים', siman:429, items:[
+    'הלכות פסח תשפ״ג',
+    'ערב פסח שחל בשבת',
+    'הלכות ליל הסדר',
+    'שיעור כזית והלכות ליל הסדר',
+    'שיעור בהלכות סוכה · ״מצטער פטור מן הסוכה״',
+    'מצטער פטור מן הסוכה · דפנות הסוכה'
+  ]},
+
+  /* ── שיחות מוסר ── */
+  { sec:'musar', kind:'shiur', folder:'שיחות מוסר · שאול לניאדו', siman:901, items:[
+    'חיזוק בלימוד התורה',
+    'שאיפה לידיעת התורה',
+    'איך לסכם · חשיבות הכתיבה א',
+    'חשיבות הכתיבה ב',
+    'מוסר · תשובה ביום הכיפורים',
+    'Musar Yom Kipur',
+    'Musar Rosh Hashaná',
+    'מוסר על חג השבועות'
+  ]},
+  { sec:'musar', kind:'shiur', folder:'שיחות מוסר · רב יהודה חאסקי שליט״א', siman:902, items:[
+    'ועד שובבים',
+    'טעם הלימוד ב',
+    'טעם הלימוד ג',
+    'טעם הלימוד ד',
+    'טעם הלימוד ה'
+  ]},
+  { sec:'musar', kind:'shiur', folder:'שיחות מוסר · ועדים ושיחות', siman:903, items:[
+    'ועד של הראש ישיבה הרה״ג רב דוד שוסטר שליט״א',
+    'ועד של הראש ישיבה הרה״ג רב מלכיאל קוטלר שליט״א',
+    'R\' Isajar Frand · siyum Shabat'
+  ]},
+
+  /* ── ספרים (PDF · תוכן) ── */
+  { sec:'sefarim', kind:'material', folder:'ספרים · טור ושולחן ערוך', siman:801, items:[
+    'טור · אורח חיים [5 חלקים]',
+    'שולחן ערוך ב · אורח חיים רמ״ב־תט״ז'
+  ]},
+  { sec:'sefarim', kind:'material', folder:'ספרים · משנה ברורה מתיבתא', siman:802, items:[
+    'משנה ברורה המבואר · חלק ג · סימנים רצ״א־ש״ה',
+    'משנה ברורה המבואר · חלק ד · סימנים ש״ו־שט״ז',
+    'משנה ברורה המבואר · חלק ה · סימנים שי״ז־שכ״ז',
+    'משנה ברורה המבואר · חלק ו · סימנים שכ״ח־שד״מ'
+  ]},
+  { sec:'sefarim', kind:'material', folder:'ספרים · כף החיים', siman:803, items:[
+    'כף החיים או״ח ד · רמ״ב־שי״ח',
+    'כף החיים או״ח ה · שי״ט־תכ״ח'
+  ]},
+  { sec:'sefarim', kind:'material', folder:'ספרים · חזון עובדיה', siman:804, items:[
+    'חזון עובדיה שבת א',
+    'חזון עובדיה שבת ב',
+    'חזון עובדיה שבת ג',
+    'חזון עובדיה שבת ד',
+    'חזון עובדיה שבת ה',
+    'חזון עובדיה שבת ו'
+  ]},
+  { sec:'sefarim', kind:'material', folder:'ספרים · מנוחת אהבה', siman:805, items:[
+    'מנוחת אהבה א', 'מנוחת אהבה ב', 'מנוחת אהבה ג', 'מנוחת אהבה ד'
+  ]},
+  { sec:'sefarim', kind:'material', folder:'ספרים · אגרות משה', siman:806, items:[
+    'אגרות משה שו״ת · חלק א', 'אגרות משה שו״ת · חלק ב', 'אגרות משה שו״ת · חלק ג',
+    'אגרות משה שו״ת · חלק ד', 'אגרות משה שו״ת · חלק ה', 'אגרות משה שו״ת · חלק ו',
+    'אגרות משה שו״ת · חלק ז', 'אגרות משה שו״ת · חלק ח', 'אגרות משה שו״ת · חלק ט',
+    'שו״ת מרכבות ארגמן ב · תניינא'
+  ]},
+  { sec:'sefarim', kind:'material', folder:'ספרים · שלמי יהונתן', siman:807, items:[
+    'שלמי יהונתן · הלכות שבת · סימן שט״ז־שי״ז',
+    'שלמי יהונתן · הלכות שבת · סימן שי״ט־ש״כ'
+  ]},
+  { sec:'sefarim', kind:'material', folder:'ספרים · שולחן מבואר', siman:808, items:[
+    'שולחן מבואר · שבת'
+  ]}
+];
+const CAT_SECS = [['shiurim','catSecShiurim'],['musar','catSecMusar'],['sefarim','catSecSefarim']];
+
+/* ═══════════ Importación de módulos (solo admin) ═══════════ */
+function catNorm(s){
+  return String(s || '').toLowerCase()
+    .replace(/\.[a-z0-9]{2,4}$/, '')
+    .replace(/[֑-ׇ]/g, '')
+    .replace(/[׳״"'`.\-_·\[\]()]/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+}
+/* Une el módulo del catálogo con el siman ya creado en la base */
+function catSiman(mod){
+  return SIMANIM.find(s => (s.title || '').trim() === mod.folder) || null;
+}
+/* Nº de saif (1..N) al que corresponde un archivo, o 0 si no hay match */
+function catMatchFile(fileName, items){
+  const f = catNorm(fileName);
+  const lead = f.match(/^(\d{1,3})\b/);
+  if (lead){
+    const n = parseInt(lead[1], 10);
+    if (n >= 1 && n <= items.length) return n;
+  }
+  const bracket = f.match(/\[(\d{1,3})\]/);
+  if (bracket){
+    const n = parseInt(bracket[1], 10);
+    if (n >= 1 && n <= items.length) return n;
+  }
+  /* Número al final del nombre ("… טעם הלימוד 3", "חשיבות הכתיבה -2") */
+  const tail = f.match(/(\d{1,3})\s*$/);
+  const tailN = tail ? parseInt(tail[1], 10) : 0;
+  let best = 0, bestScore = 0, bestBonus = 0, bestSpec = 0;
+  items.forEach((it, i) => {
+    const toks = catNorm(it).split(' ').filter(w => w.length > 2);
+    if (!toks.length) return;
+    const hits = toks.filter(w => f.includes(w));
+    const score = hits.length / toks.length;          /* cuánto del título aparece */
+    const bonus = (tailN === i + 1) ? 1 : 0;          /* desempate por número final */
+    const spec  = hits.join('').length;               /* desempate por especificidad */
+    if (score > bestScore ||
+       (score === bestScore && bonus > bestBonus) ||
+       (score === bestScore && bonus === bestBonus && spec > bestSpec)){
+      bestScore = score; bestBonus = bonus; bestSpec = spec; best = i + 1;
+    }
+  });
+  return bestScore >= 0.5 ? best : 0;
+}
+function renderImport(){
+  const m = $('main'); if (!m) return;
+  if (!isAdmin()) return nav('/');
+  const pending = CATALOG.filter(mod => !catSiman(mod)).length;
+  const secs = CAT_SECS.map(([sec, key]) => {
+    const mods = CATALOG.filter(mod => mod.sec === sec);
+    if (!mods.length) return '';
+    return `<div class="subhead">${t(key)}</div><div class="siman-list">` + mods.map(mod => {
+      const i = CATALOG.indexOf(mod);
+      const s = catSiman(mod);
+      return `
+      <div class="siman-card">
+        <div class="siman-med">${gem(mod.siman)}</div>
+        <div class="siman-info">
+          <div class="t">${esc(mod.folder)}</div>
+          <div class="m">${mod.items.length} ${t('catItems')} ·
+            <span class="badge ${s ? '' : 'gold'}">${s ? t('catDone') : t('catPending')}</span></div>
+        </div>
+        <div class="acts">
+          ${s ? `<button class="btn ghost sm" onclick="nav('${linkOf.saif(s.id,1)}')">${t('catOpen')}</button>
+                 <button class="btn soft sm" onclick="catOpenUpload(${i})">${icon('down')} ${t('catFiles')}</button>`
+              : `<button class="btn sm" onclick="catCreateModule(${i})">${icon('plus')} ${t('catCreate')}</button>`}
+        </div>
+      </div>`;
+    }).join('') + `</div>`;
+  }).join('');
+  m.innerHTML = `
+    <div class="pagehead">
+      <div><h2>${t('catTitle')}</h2><div class="sub">${t('catSub')}</div></div>
+      <div class="acts">
+        ${pending ? `<button class="btn" id="cat-all" onclick="catCreateAll()">${icon('plus')} ${t('catCreateAll')} (${pending})</button>` : ''}
+      </div>
+    </div>
+    ${secs}`;
+}
+async function catCreateModule(i, silent){
+  const mod = CATALOG[i];
+  if (catSiman(mod)){ if (!silent) toast(t('catExists')); return null; }
+  const saifim = mod.items.map((title, k) => ({ n: k + 1, title }));
+  try {
+    const { data, error } = await sb.from(T.simanim)
+      .insert({ number: mod.siman, title: mod.folder, saifim }).select().single();
+    fail(error);
+    await loadSimanim();
+    if (!silent){ toast(t('catCreated')); renderImport(); }
+    return data;
+  } catch(e){ toast(t('err') + e.message); return null; }
+}
+async function catCreateAll(){
+  const btn = $('cat-all'); if (btn) btn.disabled = true;
+  for (let i = 0; i < CATALOG.length; i++){
+    if (!catSiman(CATALOG[i])) await catCreateModule(i, true);
+  }
+  toast(t('catAllDone'));
+  renderImport();
+}
+function catOpenUpload(i){
+  const mod = CATALOG[i];
+  if (!catSiman(mod)) return toast(t('catNeedSiman'));
+  const isShiur = mod.kind === 'shiur';
+  openSheet(`${sheetHead(esc(mod.folder))}
+    <div class="field"><label>${t('catPickFiles')}</label>
+      <input id="cat-file" type="file" multiple ${isShiur ? 'accept="audio/*,video/*"' : ''} onchange="catPreview(${i})"></div>
+    <div class="hint" style="margin:-6px 0 14px">${t('catMatch')}</div>
+    <div id="cat-rows"></div>
+    <button class="btn full" id="cat-go" onclick="catDoUpload(${i})">${t('catUploadGo')}</button>
+    <div class="progress" id="up-prog"><div class="bar" id="up-bar"></div></div>
+    <div class="hint" id="up-hint"></div>`, true);
+}
+function catPreview(i){
+  const mod = CATALOG[i];
+  const files = [...($('cat-file').files || [])];
+  const el = $('cat-rows'); if (!el) return;
+  el.innerHTML = files.length ? `<div class="field"><label>${t('catFileCol')} → ${t('catTargetCol')}</label>` +
+    files.map((f, k) => {
+      const match = catMatchFile(f.name, mod.items);
+      return `<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+        <div style="flex:1;min-width:0;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(f.name)}">${esc(f.name)}</div>
+        <select id="cat-t-${k}" style="flex:1;min-width:0">
+          <option value="0">${t('catSkip')}</option>
+          ${mod.items.map((it, n) => `<option value="${n+1}" ${match === n+1 ? 'selected' : ''}>${gem(n+1)} · ${esc(it)}</option>`).join('')}
+        </select>
+      </div>`;
+    }).join('') + `</div>` : '';
+}
+async function catDoUpload(i){
+  const mod = CATALOG[i];
+  const s = catSiman(mod);
+  if (!s) return toast(t('catNeedSiman'));
+  const files = [...($('cat-file').files || [])];
+  if (!files.length) return toast(t('catNoFile'));
+  const tbl = mod.kind === 'shiur' ? T.shiurim : T.materials;
+  const btn = $('cat-go'); btn.disabled = true; btn.textContent = t('uploading');
+  $('cat-file').disabled = true;
+  $('up-prog').style.display = 'block';
+  let ok = 0;
+  try {
+    for (let k = 0; k < files.length; k++){
+      const f = files[k];
+      const n = parseInt(($('cat-t-' + k) || {}).value || '0', 10);
+      if (!n) continue;
+      const path = tbl + '/' + Date.now() + '_' + k + '_' + (f.name || 'archivo').replace(/[^\w.\-]+/g, '_');
+      await uploadWithProgress(path, f, `(${k+1}/${files.length}) `);
+      const url = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+      const { error } = await sb.from(tbl).insert({
+        simanId: s.id, saifim: [n], title: mod.items[n-1],
+        url, fileName: f.name, size: f.size, storagePath: path, uploadedBy: ME.name
+      });
+      fail(error);
+      ok++;
+    }
+    closeSheet();
+    toast(ok + ' ' + t('catUploaded'));
+    renderImport(); notifBadge();
+  } catch(e){
+    toast(t('err') + e.message);
+    btn.disabled = false; btn.textContent = t('catUploadGo');
+    $('cat-file').disabled = false;
+  }
+}
+
 /* ═══════════ Inicio ═══════════ */
 function renderHome(){
   const m = $('main'); if (!m) return;
@@ -1137,6 +1535,7 @@ function renderHome(){
       <div class="acts">
         <button class="btn ghost" onclick="nav('/todo')">${icon('eye')} ${t('globalTodo')}</button>
         <button class="btn soft" onclick="openGlobalAdd()">${icon('plus')} ${t('globalAdd')}</button>
+        ${isAdmin() ? `<button class="btn ghost" onclick="nav('/importar')">${icon('down')} ${t('catNav')}</button>` : ''}
         ${isAdmin() ? `<button class="btn" onclick="openSimanEditor()">${icon('plus')} ${t('newSiman')}</button>` : ''}
       </div>
     </div>
