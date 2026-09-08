@@ -918,7 +918,7 @@ async function boot(){
       if (data){ ME = data; saveSession(); }
     } catch(e){}
   }
-  if (ME){ await loadSimanim(); renderApp(); }
+  if (ME){ await loadSimanim(); await catAutoSeed(); renderApp(); }
   else renderAuth();
 }
 function renderSetup(err){
@@ -978,7 +978,7 @@ async function doRegister(){
     ME = { id, name, role: first ? 'admin' : 'member', photo: null };
     saveSession();
     toast(first ? t('welcomeFirst') : t('welcome'));
-    await loadSimanim(); renderApp();
+    await loadSimanim(); await catAutoSeed(); renderApp();
   } catch(e){ authErr(t('err') + e.message); btn.disabled=false; btn.textContent=t('register'); }
 }
 async function doLogin(){
@@ -994,7 +994,7 @@ async function doLogin(){
     if (hash !== u.hash){ authErr(t('errWrongPass')); btn.disabled=false; btn.textContent=t('login'); return; }
     ME = { id: u.id, name: u.name, role: u.role, photo: u.photo };
     saveSession();
-    await loadSimanim(); renderApp();
+    await loadSimanim(); await catAutoSeed(); renderApp();
   } catch(e){ authErr(t('err') + e.message); btn.disabled=false; btn.textContent=t('login'); }
 }
 function logout(){ ME = null; clearSession(); closePlayer(); location.hash=''; renderAuth(); }
@@ -1509,6 +1509,21 @@ async function catDoUpload(i){
     btn.disabled = false; btn.textContent = t('catUploadGo');
     $('cat-file').disabled = false;
   }
+}
+
+let CAT_SEEDED = false;
+/* Crea los módulos del Drive la primera vez que un admin abre la app, para que
+   queden visibles para todos los miembros sin tener que apretar nada.
+   Solo actúa si no existe todavía ninguno: si ya se crearon (o se borraron a
+   propósito) no vuelve a tocar la base. */
+async function catAutoSeed(){
+  if (CAT_SEEDED || !isAdmin()) return;
+  CAT_SEEDED = true;
+  if (CATALOG.some(mod => catSiman(mod))) return;
+  try { if (localStorage.getItem('jh_seeded') === '1') return; } catch(e){}
+  for (let i = 0; i < CATALOG.length; i++) await catCreateModule(i, true);
+  try { localStorage.setItem('jh_seeded', '1'); } catch(e){}
+  toast(t('catAllDone'));
 }
 
 /* Módulos del catálogo que todavía no existen como siman — se muestran en el inicio */
