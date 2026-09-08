@@ -40,3 +40,24 @@ App web para una jabura (grupo de estudio de halajá). Permite gestionar simanim
 - Constante `BUILD` en index.html (~línea 351) indica la versión; actualizarla al hacer cambios relevantes.
 - Al borrar registros con archivos, también se eliminan sus paths del bucket `jabura`.
 - Textos de UI duplicados en hebreo y español (objetos de traducción dentro del mismo archivo).
+
+## Catálogo del Drive y archive.org
+
+El contenido de la jabura vive en un ítem de archive.org, no en Supabase Storage
+(el audio son ~4 GB y no entra en el plan). En `index.html`:
+
+- `CATALOG`: los módulos (12 de halajá + 3 de musar) con los títulos de sus
+  shiurim en orden. El módulo del שכ״א sale de tres carpetas del Drive
+  (מעבד, טוחן, לש) y usa `groups` para que la numeración de cada carpeta se
+  resuelva dentro de su tramo.
+- `CAT_SEFARIM`: los PDFs no son módulos. Cada sefer declara el rango de
+  simanim que abarca y se referencia desde el Contenido de cada siman cubierto,
+  con una sola copia del archivo.
+- Botón **Importar de archive.org**: lee la metadata del ítem, descarta los
+  derivados que genera archive.org y arma las filas apuntando a sus URLs (sin
+  `storagePath`, porque el archivo no es nuestro).
+- Botón **Reordenar**: borra lo creado desde el catálogo y lo rearma. Reconoce
+  también los títulos viejos en `CAT_LEGACY`, y no toca los simanim propios.
+- `tools/subir_a_archive.py`: sube la carpeta del Drive a archive.org
+  conservando las subcarpetas, de donde sale el reparto. Deduce por contenido la
+  extensión de los archivos que en el Drive no la tienen.
