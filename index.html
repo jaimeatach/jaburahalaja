@@ -364,7 +364,7 @@ const SUPABASE_URL = "https://enkofkroxudsblewxxos.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_nAsf0qU7fPUOZ5K7OgqwYw_hUPgzOrZ";
 const BUCKET = "jabura";
 const APP_NAME = "חבורת הלכה";
-const BUILD = "2026-09-09 · audio móvil";
+const BUILD = "2026-09-09 · audio móvil + WhatsApp";
 
 const $ = id => document.getElementById(id);
 const app = $('app');
@@ -396,6 +396,7 @@ const IC = {
   pencil:'<path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>',
   pin:'<path d="M12 17v5"/><path d="M9 4h6l-.8 6.2 2.8 2.3V15H7v-2.5l2.8-2.3L9 4z"/>',
   bookmark:'<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>',
+  wa:'<path d="M21 11.5a8.5 8.5 0 0 1-12.3 7.6L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5z"/><path d="M9.3 8.8c.2-.5.9-.6 1.2-.1l.7 1.2c.2.3.1.6-.1.8l-.5.6c.5 1 1.4 1.9 2.4 2.4l.6-.5c.2-.2.5-.3.8-.1l1.2.7c.5.3.4 1-.1 1.2-.7.4-1.5.5-2.2.2-2-.8-3.6-2.4-4.4-4.4-.3-.7-.2-1.5.4-2z"/>',
   trash:'<path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/>',
   x:'<path d="M18 6L6 18M6 6l12 12"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
@@ -468,6 +469,7 @@ he:{
   createSija:'יצירת השיחה', sijaCreated:'השיחה נוצרה', delSijaBtn:'מחיקת השיחה כולה', delSijaQ:'למחוק את השיחה עם כל התוכן שלה?',
   emptyMusarT:'אין עדיין שיחות מוסר', emptyMusarA:'צור את השיחה הראשונה כדי להתחיל.', emptyMusarM:'המנהל טרם פתח שיחות מוסר.',
   clipT:'סימון ברגע הזה', clipNoteL:'הערה על הרגע הזה', clipPh:'על מה מדברים כאן…', clipSaved:'הסימון נשמר', clipsT:'סימונים', delClipQ:'למחוק את הסימון?',
+  waShareT:'שיתוף בוואטסאפ', waNewsQ:'ההודעה פורסמה! לשלוח לחבורה בוואטסאפ?', waSendBtn:'שליחה בוואטסאפ', notNow:'לא עכשיו',
   setupT:'⚙️ חסרה הגדרת Supabase',
   byWord:'העלה', updatedWord:'עודכן ע"י',
   notifT:'התראות', notifEmpty:'אין התראות חדשות', markSeen:'הכל נקרא',
@@ -566,6 +568,7 @@ es:{
   createSija:'Crear tema', sijaCreated:'Tema creado', delSijaBtn:'Eliminar todo el tema', delSijaQ:'¿Eliminar el tema con todo su contenido?',
   emptyMusarT:'Aún no hay temas de musar', emptyMusarA:'Crea el primer tema para comenzar.', emptyMusarM:'El administrador aún no abre temas de musar.',
   clipT:'Marcar este minuto', clipNoteL:'Nota sobre este momento', clipPh:'¿De qué hablan aquí?…', clipSaved:'Marcador guardado', clipsT:'Marcadores', delClipQ:'¿Eliminar el marcador?',
+  waShareT:'Compartir en WhatsApp', waNewsQ:'¡Noticia publicada! ¿Avisar a la jabura por WhatsApp?', waSendBtn:'Enviar por WhatsApp', notNow:'Ahora no',
   setupT:'⚙️ Falta la configuración de Supabase',
   byWord:'Subió', updatedWord:'Actualizó',
   notifT:'Notificaciones', notifEmpty:'No hay notificaciones nuevas', markSeen:'Todo leído',
@@ -724,6 +727,12 @@ function nav(path){
   else location.hash = path;
 }
 window.addEventListener('hashchange', () => { if (ME) route(); });
+function waShare(title, path){
+  const url = location.origin + location.pathname + '#' + path;
+  const msg = '📖 ' + APP_NAME + (title ? '\n' + title : '') + '\n' + url;
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+}
+function waShareKey(key, path){ waShare(NOTE_TITLE[key] || '', path); }
 function copyLink(path){
   const url = location.origin + location.pathname + '#' + path;
   if (navigator.clipboard && navigator.clipboard.writeText){
@@ -819,6 +828,7 @@ function socialBar(type, id, deepLink, extra, title){
     <button class="socbtn like" onclick="likeToggle(this,'${type}','${id}')">${icon('heart')}<span class="lc">·</span></button>
     <button class="socbtn" onclick="openComments('${type}','${id}')">${icon('chat')}<span class="cc">·</span></button>
     <button class="socbtn" title="${t('myNotesBtn')}" onclick="openItemNotes('${type}','${id}')">${icon('pencil')}</button>
+    <button class="socbtn" title="${t('waShareT')}" onclick="waShareKey('${type}|${id}','${deepLink}')">${icon('wa')}</button>
     <button class="socbtn" title="${t('copyLink')}" onclick="copyLink('${deepLink}')">${icon('link')}</button>
     ${extra || ''}
   </div>`;
@@ -3412,9 +3422,13 @@ async function publishNews(){
   $('up-prog').style.display = 'block';
   try {
     const uploaded = await uploadMany('news', files);
-    const { error } = await sb.from(T.news).insert({ title, body: bodyTxt, files: uploaded, createdBy: ME.name });
+    const { data, error } = await sb.from(T.news).insert({ title, body: bodyTxt, files: uploaded, createdBy: ME.name }).select().single();
     fail(error);
-    closeSheet(); toast(t('newsPublished')); renderNews(); notifBadge();
+    closeSheet(); renderNews(); notifBadge();
+    openSheet(`${sheetHead(t('newsPublished'))}
+      <div class="hint" style="margin:-6px 0 16px;font-size:15px">${t('waNewsQ')}</div>
+      <button class="btn full" onclick="waShare('${esc(title).replace(/'/g,'&#39;')}','${linkOf.news(data)}');closeSheet()">${icon('wa')} ${t('waSendBtn')}</button>
+      <button class="btn ghost full sm" style="margin-top:10px" onclick="closeSheet()">${t('notNow')}</button>`);
   } catch(e){
     toast(t('err') + e.message);
     btn.disabled = false; btn.textContent = t('publishGen');
