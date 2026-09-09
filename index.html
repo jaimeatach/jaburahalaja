@@ -1694,11 +1694,52 @@ async function arcImport(){
 
 
 /* ═══════════ Spotify ═══════════
-   El canal de la jabura. Para poner el episodio al lado del shiur hace falta
-   la lista de episodios: Spotify no la deja leer sin credenciales, así que
-   CAT_SPOTIFY se llena con los enlaces que pase el Rav, por título de shiur. */
+   El canal de la jabura. CAT_SPOTIFY sale del RSS del show
+   (tools/spotify_lista.py), emparejando cada episodio con el título del shiur.
+   Los episodios que no tienen shiur en el Drive no figuran. */
 const SPOTIFY_SHOW = 'https://open.spotify.com/show/1tH0BEW6Aj5Y6jjgaLyLp5';
-const CAT_SPOTIFY = {};
+const CAT_SPOTIFY = {
+  "לסרוק בשבת על ידי גוי": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3o12e3",
+  "הקדמה למלאכת גוזז": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3nf81t",
+  "לישה בדבר מבושל · האם מותר לאכול מסתיק בשבת": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3lt5qj",
+  "לישה אחר לישה": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3lh94l",
+  "לש · חרדל · שינוי מערבו בנחת · ומה הדין ביד המזלג": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3l2mgp",
+  "לש · לעשות טחינה בשבת": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3kmdas",
+  "לש · השינויים כדי שיהיה מותר לעשות לישה": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3kfj5j",
+  "מתי יש איסור לש מדאורייתא · לש שיעור א": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3kah32",
+  "הקדמה · לש": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3jurl5",
+  "שאיפה לידיעת התורה": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3jt69o",
+  "התרים למעשה בטוחן · לחתוך חתיכה קטנה מצנון": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3jd7r3",
+  "סימן שכ״א · לעשות מי מלח": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3i5bgi",
+  "סיכום על סימן ש״כ": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3gnhfv",
+  "צביעה באוכלים ובמשקים": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3g129l",
+  "סחיטה בשיער · מברשת": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3fn2es",
+  "Toallitas en Shabat · segunda parte": "https://podcasters.spotify.com/pod/show/---1901/episodes/Toallitas-en-Shabat-segunda-parte-e3fc9cg",
+  "סחיטת בגדים · toallitas parte 1": "https://podcasters.spotify.com/pod/show/---1901/episodes/--toallitas-parte-1-e3f1u70",
+  "הקדמה לסעיפים ט״ו־י״ח": "https://podcasters.spotify.com/pod/show/---1901/episodes/--e3euutr",
+  "ריסוק שלג וברד": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3eqsqq",
+  "סחיטת לימונים": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3ecu2r",
+  "משקה הבא לאוכל": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3e31ck",
+  "יניקה (sacaleche) · ומציצת משקים": "https://podcasters.spotify.com/pod/show/---1901/episodes/--sacaleche---e3dr2kc",
+  "סימן ש״כ א · סחיטת פירות · מיץ תפוזים": "https://podcasters.spotify.com/pod/show/---1901/episodes/--e3dg0p7",
+  "הקדמה לסימן ש״כ": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3d9db0",
+  "בורר פסולת ואוכל עמו": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3b8vqa",
+  "להוציא יין ולהשאיר יין עם שמרים בחבית · סעיף י״ד": "https://podcasters.spotify.com/pod/show/---1901/episodes/--e3b1688",
+  "Filtro en Shabat · primera parte": "https://podcasters.spotify.com/pod/show/---1901/episodes/Filtro-en-Shabat-e3a9u2u",
+  "Filtro en Shabat · segunda parte": "https://podcasters.spotify.com/pod/show/---1901/episodes/Filtro-en-Shabat-segunda-parte-e3alkd4",
+  "Filtrar jugo de naranja de su pulpa": "https://podcasters.spotify.com/pod/show/---1901/episodes/Filtrar-jugo-de-naranja-de-su-pulpa-e3alkci",
+  "הוספה להסביר החילוק בין דש לבורר": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3a83iv",
+  "לברור התוספת": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3a4osh",
+  "סימן שי״ט סעיף ו־ז": "https://podcasters.spotify.com/pod/show/---1901/episodes/--e3a4nlt",
+  "הרב שאול קרדי שליט״א · הגדרה של מלאכת טוחן": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3jl6jd",
+  "Lavar la fruta en Shabat": "https://podcasters.spotify.com/pod/show/---1901/episodes/Lavar-la-fruta-en-shabat-e3alkdn",
+  "כסוס ציפורנים ולגרד הזקן · גוזז ב": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3npnas",
+  "סיכום וחזרה על הלכות בורר · א": "https://podcasters.spotify.com/pod/show/---1901/episodes/--e3c05qi",
+  "סיכום וחזרה על סימן שי״ז": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3blvqs",
+  "חזרה על מלאכת טוחן": "https://podcasters.spotify.com/pod/show/---1901/episodes/ep-e3jt67t",
+  "סימן שי״ז סעיף א": "https://podcasters.spotify.com/pod/show/---1901/episodes/Yehuda-jasqui-e3bml49",
+  "הקדמה למלאכת קושר": "https://podcasters.spotify.com/pod/show/---1901/episodes/Yehuda-jasqui-e3bml3k",
+};
 const spotifyDe = t => CAT_SPOTIFY[String(t || '').trim()] || '';
 
 /* ═══════════ הלכות שבת · el jelek ג completo ═══════════ */

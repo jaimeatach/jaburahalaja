@@ -55,9 +55,12 @@ El contenido de la jabura vive en un ítem de archive.org, no en Supabase Storag
   con una sola copia del archivo. Los marcados con `p:1` nombran los simanim en
   su título (מ״ב, כף החיים, שלמי יהונתן, ש״ע) y van a TODOS los simanim del
   rango; los generales solo a los que tienen shiurim, para no saturar los 93.
-- `CAT_SPOTIFY`: mapa título de shiur → enlace del episodio. Spotify no permite
-  listar los episodios sin credenciales, así que se llena a mano con lo que
-  aporte el Rav. `SPOTIFY_SHOW` es el canal.
+- `CAT_SPOTIFY`: mapa título de shiur → enlace del episodio en Spotify. Sale del
+  RSS del show (`tools/spotify_lista.py` lo lee y deja `spotify_episodios.json`);
+  el show se subió directo en Spotify for Podcasters, no con el bot de los otros
+  repos. 40 de los 53 episodios tienen shiur en el Drive; los 13 restantes son
+  solo de Spotify. Para agregar episodios nuevos: correr el script y emparejar.
+  `SPOTIFY_SHOW` es el canal.
 - Botón **Importar de archive.org**: lee la metadata del ítem, descarta los
   derivados que genera archive.org y arma las filas apuntando a sus URLs (sin
   `storagePath`, porque el archivo no es nuestro).
