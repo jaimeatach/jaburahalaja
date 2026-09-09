@@ -351,7 +351,7 @@ input[type=range].seek::-moz-range-thumb{width:16px;height:16px;border-radius:50
     <div id="pl-marks"></div>
   </div></div>
 </div>
-<audio id="audio"></audio>
+<audio id="audio" preload="metadata" playsinline></audio>
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
 <div id="toast"></div>
@@ -364,7 +364,7 @@ const SUPABASE_URL = "https://enkofkroxudsblewxxos.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_nAsf0qU7fPUOZ5K7OgqwYw_hUPgzOrZ";
 const BUCKET = "jabura";
 const APP_NAME = "חבורת הלכה";
-const BUILD = "2026-09-08 · saifim b";
+const BUILD = "2026-09-09 · audio móvil";
 
 const $ = id => document.getElementById(id);
 const app = $('app');
@@ -496,7 +496,7 @@ he:{
   jelBtn:'פתיחת חלק ג', jelT:'פתיחת כל סימני חלק ג', jelGo:'פתיחת הסימנים',
   jelWhat:'פותח את סימני רנ״ב–שד״מ עם הכותרת שלהם ומספר הסעיפים. סימן שכבר קיים מקבל את הכותרת ומשלים סעיפים חסרים, בלי לגעת בתוכן שלו.',
   jelFaltan:'עדיין לא קיימים', jelTotal:'סימנים בסך הכל', jelNuevos:'נוצרו', jelActualizados:'עודכנו',
-  reoBtn:'סידור מחדש', reoT:'סידור מחדש של מה שיובא', reoGo:'סידור מחדש',
+  playErr:'לא ניתן להשמיע את השיעור', spotifyShow:'הערוץ ב-Spotify', reoBtn:'סידור מחדש', reoT:'סידור מחדש של מה שיובא', reoGo:'סידור מחדש',
   reoWhat:'מוחק את מה שנוצר מהקטלוג ובונה אותו מחדש: השיחות עוברות למוסר, הספרים נכנסים לתוכן של כל סימן, ולש·טוחן·מעבד מתאחדים בסימן שכ״א. הקבצים עצמם נשארים ב-archive.org.',
   reoCount:'סימנים ייבנו מחדש', reoReading:'קורא את הפריט…', reoCleaning:'מנקה…', reoImporting:'מייבא…',
   arcLoadBtn:'קריאת הפריט', arcGo:'ייבוא השיעורים', arcNeedId:'נא להזין מזהה', arcNotFound:'לא נמצאו קבצים בפריט הזה',
@@ -594,7 +594,7 @@ es:{
   jelBtn:'Abrir jelek ג', jelT:'Abrir todos los simanim del jelek ג', jelGo:'Abrir los simanim',
   jelWhat:'Abre los simanim רנ״ב–שד״מ con su título y su cantidad de saifim. Al que ya existe le pone el título y le completa los saifim que falten, sin tocar su contenido.',
   jelFaltan:'todavía no existen', jelTotal:'simanim en total', jelNuevos:'nuevos', jelActualizados:'actualizados',
-  reoBtn:'Reordenar', reoT:'Reordenar lo importado', reoGo:'Reordenar',
+  playErr:'No se pudo reproducir el shiur', spotifyShow:'El canal en Spotify', reoBtn:'Reordenar', reoT:'Reordenar lo importado', reoGo:'Reordenar',
   reoWhat:'Borra lo que se creó desde el catálogo y lo rearma bien: las sijot pasan a Musar, los sefarim entran al Contenido de cada siman, y לש·טוחן·מעבד se unen en el simán שכ״א. Los archivos siguen en archive.org, no se tocan.',
   reoCount:'simanim se van a rearmar', reoReading:'Leyendo el ítem…', reoCleaning:'Limpiando…', reoImporting:'Importando…',
   arcLoadBtn:'Leer el ítem', arcGo:'Importar los shiurim', arcNeedId:'Escribí el identificador', arcNotFound:'No se encontraron archivos en ese ítem',
@@ -1683,6 +1683,14 @@ async function arcImport(){
 
 
 
+/* ═══════════ Spotify ═══════════
+   El canal de la jabura. Para poner el episodio al lado del shiur hace falta
+   la lista de episodios: Spotify no la deja leer sin credenciales, así que
+   CAT_SPOTIFY se llena con los enlaces que pase el Rav, por título de shiur. */
+const SPOTIFY_SHOW = 'https://open.spotify.com/show/1tH0BEW6Aj5Y6jjgaLyLp5';
+const CAT_SPOTIFY = {};
+const spotifyDe = t => CAT_SPOTIFY[String(t || '').trim()] || '';
+
 /* ═══════════ הלכות שבת · el jelek ג completo ═══════════ */
 /* סימני הלכות שבת · שולחן ערוך אורח חיים רנ״ב–שד״מ (חלק ג של המשנה ברורה).
    Títulos y cantidad de סעיפים cargados de memoria: NO se pudo consultar
@@ -2033,18 +2041,18 @@ const SHABAT = [242, 365];
 const CAT_SEFARIM = [
   { dir:'טור ושולחן ערוך', items:[
     { t:'טור · אורח חיים [5 חלקים]', r:[1, 697] },
-    { t:'שולחן ערוך ב · אורח חיים רמ״ב־תט״ז', r:[242, 416] } ]},
+    { t:'שולחן ערוך ב · אורח חיים רמ״ב־תט״ז', r:[242, 416], p:1 } ]},
   { dir:'משנה ברורה מתיבתה', items:[
-    { t:'משנה ברורה המבואר · חלק ג · סימנים רצ״א־ש״ה', r:[291, 305] },
-    { t:'משנה ברורה המבואר · חלק ד · סימנים ש״ו־שט״ז', r:[306, 316] },
-    { t:'משנה ברורה המבואר · חלק ה · סימנים שי״ז־שכ״ז', r:[317, 327] },
-    { t:'משנה ברורה המבואר · חלק ו · סימנים שכ״ח־שד״מ', r:[328, 344] } ]},
+    { t:'משנה ברורה המבואר · חלק ג · סימנים רצ״א־ש״ה', r:[291, 305], p:1 },
+    { t:'משנה ברורה המבואר · חלק ד · סימנים ש״ו־שט״ז', r:[306, 316], p:1 },
+    { t:'משנה ברורה המבואר · חלק ה · סימנים שי״ז־שכ״ז', r:[317, 327], p:1 },
+    { t:'משנה ברורה המבואר · חלק ו · סימנים שכ״ח־שד״מ', r:[328, 344], p:1 } ]},
   { dir:'כף החיים', items:[
-    { t:'כף החיים או״ח ד · רמ״ב־שי״ח', r:[242, 318] },
-    { t:'כף החיים או״ח ה · שי״ט־תכ״ח', r:[319, 428] } ]},
+    { t:'כף החיים או״ח ד · רמ״ב־שי״ח', r:[242, 318], p:1 },
+    { t:'כף החיים או״ח ה · שי״ט־תכ״ח', r:[319, 428], p:1 } ]},
   { dir:'שלמי יהונתן', items:[
-    { t:'שלמי יהונתן · הלכות שבת · סימן שט״ז־שי״ז', r:[316, 317] },
-    { t:'שלמי יהונתן · הלכות שבת · סימן שי״ט־ש״כ', r:[319, 320] } ]},
+    { t:'שלמי יהונתן · הלכות שבת · סימן שט״ז־שי״ז', r:[316, 317], p:1 },
+    { t:'שלמי יהונתן · הלכות שבת · סימן שי״ט־ש״כ', r:[319, 320], p:1 } ]},
   { dir:'חזון עובדיה', items:[
     { t:'חזון עובדיה שבת א', r:SHABAT }, { t:'חזון עובדיה שבת ב', r:SHABAT },
     { t:'חזון עובדיה שבת ג', r:SHABAT }, { t:'חזון עובדיה שבת ד', r:SHABAT },
@@ -2062,19 +2070,36 @@ const CAT_SEFARIM = [
     { t:'שו״ת מרכבות ארגמן ב · תניינא', r:SHABAT } ]}
 ];
 const CAT_RANGES = {};
-CAT_SEFARIM.forEach(g => g.items.forEach(x => { CAT_RANGES[x.t] = x.r; }));
+/* Los que nombran los simanim que abarcan: van a cada uno de ellos */
+const CAT_PRECISO = new Set();
+CAT_SEFARIM.forEach(g => g.items.forEach(x => {
+  CAT_RANGES[x.t] = x.r;
+  if (x.p) CAT_PRECISO.add(x.t);
+}));
 /* Deja el sefer en el contenido de cada módulo de shiurim que su rango abarca.
    Sube el archivo una sola vez: acá solo se agregan las referencias. */
 async function catSpreadSefer(title, meta, seen){
   const rng = CAT_RANGES[title];
   if (!rng) return 0;
   let n = 0;
-  for (let i = 0; i < CATALOG.length; i++){
-    const mod = CATALOG[i];
-    if (mod.musar || mod.kind !== 'shiur' || mod.siman < rng[0] || mod.siman > rng[1]) continue;
-    let s = catSiman(mod);
-    if (!s) s = await catCreateModule(i, true);
-    if (!s || seen.has(s.id + '|' + meta.fileName) || seen.has(s.id + '|' + title)) continue;
+  /* Un sefer que declara simanim en su nombre (מ״ב, כף החיים, שלמי יהונתן,
+     ש״ע) va a TODOS los simanim de su rango. Los generales, que valen para
+     toda הלכות שבת, solo a los que tienen shiurim: si no, saturan los 93. */
+  let destinos;
+  if (CAT_PRECISO.has(title)){
+    destinos = SIMANIM.filter(s => !isMusar(s) && s.number >= rng[0] && s.number <= rng[1]);
+  } else {
+    destinos = [];
+    for (let i = 0; i < CATALOG.length; i++){
+      const mod = CATALOG[i];
+      if (mod.musar || mod.siman < rng[0] || mod.siman > rng[1]) continue;
+      let sm = catSiman(mod);
+      if (!sm) sm = await catCreateModule(i, true);
+      if (sm) destinos.push(sm);
+    }
+  }
+  for (const s of destinos){
+    if (seen.has(s.id + '|' + meta.fileName) || seen.has(s.id + '|' + title)) continue;
     const { error } = await sb.from(T.materials).insert({
       simanId: s.id, saifim: (s.saifim || []).map(x => x.n), title, ...meta, uploadedBy: ME.name
     });
@@ -2611,6 +2636,7 @@ function shiurHTML(x){
         <div class="m">${byLine(x.uploadedBy, x.createdAt)}</div>
       </div>
       <span class="badge ${(x.saifim||[]).length>1?'gold':''}">${saifLabel(x.saifim, x.simanId)}</span>
+      ${spotifyDe(x.title) ? `<a class="iconbtn" href="${esc(spotifyDe(x.title))}" target="_blank" rel="noopener" title="Spotify" onclick="event.stopPropagation()" style="color:#1DB954">${icon('audio')}</a>` : ''}
       ${isAdmin() ? `<button class="iconbtn" onclick="deleteItem('${T.shiurim}','${x.id}','${esc(x.storagePath||'')}')">${icon('trash')}</button>`:''}
     </div>
     ${socialBar('shiur', x.id, linkOf.shiur(x), '', x.title)}
@@ -2793,6 +2819,7 @@ async function renderShiurim(s){
     : `<div class="panel"><div class="empty"><div class="e-ic">${icon('audio',40)}</div>
         <div class="e-t">${t('emptyShiurT')}</div>
         <div>${isAdmin()?t('emptyShiurA'):t('emptyShiurM')}</div></div></div>`}
+    <div class="addrow"><a class="btn ghost sm" href="${SPOTIFY_SHOW}" target="_blank" rel="noopener">${icon('audio')} ${t('spotifyShow')}</a></div>
     ${isAdmin() ? `<div class="addrow"><button class="btn soft sm" onclick="openUpload('${T.shiurim}')">${icon('plus')} ${t('uploadShiurBtn')}</button></div>` : ''}`;
   loadSocial(); focusPending();
 }
@@ -2975,6 +3002,13 @@ async function doUpload(tbl){
 
 /* ═══════════ Reproductor ═══════════ */
 const audio = $('audio');
+/* Un fallo de red o un formato que el celular no soporta dejaban el shiur mudo
+   y sin aviso: así al menos se ve qué pasó. */
+audio.addEventListener('error', () => {
+  if (!PL.id) return;
+  const c = (audio.error && audio.error.code) || 0;
+  toast(t('playErr') + (c ? ' · ' + c : ''));
+});
 let PL = { id:null, playing:false };
 const SPEEDS = [1, 1.25, 1.5, 1.75, 2, 2.5, 3, 0.75];
 function playShiur(id){
@@ -2982,12 +3016,18 @@ function playShiur(id){
   if (!x) return;
   if (PL.id === id){ togglePlay(); return; }
   PL.id = id;
-  audio.src = x.url;
   const saved = parseFloat(localStorage.getItem('jh_pos_' + id) || '0');
-  audio.currentTime = 0;
+  audio.preload = 'metadata';
+  audio.src = x.url;
+  /* En iOS, tocar currentTime antes de que carguen los metadatos lanza
+     InvalidStateError y cortaba la reproducción entera. Se retoma la posición
+     recién cuando el navegador sabe la duración. */
   audio.addEventListener('loadedmetadata', function once(){
-    if (saved > 5 && saved < audio.duration - 10) audio.currentTime = saved;
     audio.removeEventListener('loadedmetadata', once);
+    if (PL.id !== id) return;                       /* ya cambió de shiur */
+    if (saved > 5 && saved < audio.duration - 10){
+      try { audio.currentTime = saved; } catch(e){}
+    }
   });
   const sm = getSiman(x.simanId);
   $('pl-title').textContent = x.title;
@@ -2996,13 +3036,24 @@ function playShiur(id){
     : t('siman') + ' <bdi>' + gem(sm?.number||'') + '</bdi>') + ' · ' + saifLabel(x.saifim, x.simanId);
   $('player').classList.add('show');
   MARKS = []; renderMarks(); loadMarks();
-  audio.play();
+  /* play() devuelve una promesa: si el navegador la rechaza hay que enterarse,
+     si no el shiur queda mudo sin decir por qué. */
+  const arranque = audio.play();
+  if (arranque && arranque.catch) arranque.catch(e => toast(t('playErr') + (e && e.name ? ' · ' + e.name : '')));
   if ('mediaSession' in navigator){
     navigator.mediaSession.metadata = new MediaMetadata({ title: x.title, artist: APP_NAME });
   }
 }
-function togglePlay(){ if (!PL.id) return; audio.paused ? audio.play() : audio.pause(); }
-function skip(sec){ if (PL.id) audio.currentTime = Math.max(0, Math.min(audio.duration||1e9, audio.currentTime + sec)); }
+function togglePlay(){
+  if (!PL.id) return;
+  if (!audio.paused) return audio.pause();
+  const p = audio.play();
+  if (p && p.catch) p.catch(e => toast(t('playErr') + (e && e.name ? ' · ' + e.name : '')));
+}
+function skip(sec){
+  if (!PL.id || !audio.duration) return;            /* sin metadatos no se puede buscar */
+  try { audio.currentTime = Math.max(0, Math.min(audio.duration, audio.currentTime + sec)); } catch(e){}
+}
 function cycleSpeed(){
   const i = SPEEDS.indexOf(audio.playbackRate);
   audio.playbackRate = SPEEDS[(i+1) % SPEEDS.length];

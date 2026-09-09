@@ -52,7 +52,12 @@ El contenido de la jabura vive en un ítem de archive.org, no en Supabase Storag
   resuelva dentro de su tramo.
 - `CAT_SEFARIM`: los PDFs no son módulos. Cada sefer declara el rango de
   simanim que abarca y se referencia desde el Contenido de cada siman cubierto,
-  con una sola copia del archivo.
+  con una sola copia del archivo. Los marcados con `p:1` nombran los simanim en
+  su título (מ״ב, כף החיים, שלמי יהונתן, ש״ע) y van a TODOS los simanim del
+  rango; los generales solo a los que tienen shiurim, para no saturar los 93.
+- `CAT_SPOTIFY`: mapa título de shiur → enlace del episodio. Spotify no permite
+  listar los episodios sin credenciales, así que se llena a mano con lo que
+  aporte el Rav. `SPOTIFY_SHOW` es el canal.
 - Botón **Importar de archive.org**: lee la metadata del ítem, descarta los
   derivados que genera archive.org y arma las filas apuntando a sus URLs (sin
   `storagePath`, porque el archivo no es nuestro).
