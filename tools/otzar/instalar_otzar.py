@@ -6,8 +6,8 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py --ver      # solo muestra qué haría, no toca nada
     python instalar_otzar.py --robot=C:\\ruta\\robotwhats   # si no encuentra el robot solo
 
-Los shows (nacach, peretz…) viven en C:\OTZAR; el robot en
-C:\Users\<usuario>\OneDrive\Escritorio\TORAHSPOTIFY\robotwhats. Los busca solo.
+Los shows (nacach, peretz…) viven en C:\\OTZAR; el robot en
+C:\\Users\\<usuario>\\OneDrive\\Escritorio\\TORAHSPOTIFY\\robotwhats. Los busca solo.
 
 Qué hace, con copia de respaldo de cada archivo que toca:
   1. Parcha robot_whatsapp.js: chats privados "@lid" (por eso se perdían audios
