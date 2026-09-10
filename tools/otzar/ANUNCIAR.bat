@@ -35,6 +35,14 @@ if exist "C:\OTZAR\jabura\jabura_publicar.py" (
   echo.
 )
 
+rem === nacach: copiar el feed al repo viejo (nacash), que es el que lee Spotify ===
+if exist "C:\OTZAR\nacach\espejo_nacash.py" (
+  pushd "C:\OTZAR\nacach"
+  python espejo_nacash.py
+  popd
+  echo.
+)
+
 echo anunciar> comando.txt
 
 if not exist "comando.txt" (

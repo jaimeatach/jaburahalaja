@@ -364,8 +364,8 @@ def instalar_anunciar():
         aviso("sin carpeta del robot no puedo poner ANUNCIAR.bat")
         return
     ruta = ROBOT / "ANUNCIAR.bat"
-    if ruta.exists() and "jabura_publicar" in ruta.read_text(encoding="utf-8", errors="replace"):
-        ok("ya tenía el paso de la jabura")
+    if ruta.exists() and "espejo_nacash" in ruta.read_text(encoding="utf-8", errors="replace"):
+        ok("ya tenía los pasos de la jabura y del espejo de nacach")
         return
     respaldar(ruta)
     if bajar("otzar/ANUNCIAR.bat", ruta):
@@ -479,6 +479,21 @@ def rescatar_nacach():
     subprocess.run([sys.executable, "podcast_bot.py"], cwd=str(nac))
 
 
+def espejo_nacach():
+    paso(6, "Nacach: espejo del feed al repo viejo (nacash), el que lee Spotify")
+    nac = BASE / "nacach"
+    if not nac.is_dir():
+        aviso("no está la carpeta nacach")
+        return
+    dest = nac / "espejo_nacash.py"
+    if not bajar("otzar/espejo_nacash.py", dest):
+        return
+    if VER:
+        print("   (correría) python espejo_nacash.py en", nac)
+        return
+    subprocess.run([sys.executable, "espejo_nacash.py"], cwd=str(nac))
+
+
 def main():
     print("=== Instalador Otzar · jabura + nacach ===")
     print("Base:", BASE, "(prueba en seco)" if VER else "")
@@ -490,6 +505,7 @@ def main():
     armar_jabura()
     instalar_anunciar()
     rescatar_nacach()
+    espejo_nacach()
     print("\nListo." if not VER else "\nPrueba en seco terminada: no se cambió nada.")
 
 
