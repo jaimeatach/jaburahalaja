@@ -117,3 +117,7 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    crean módulos.
 4. `anunciar.jabura` en el config del robot manda el aviso al mismo grupo;
    queda `pausado` hasta que exista el show nuevo en Spotify.
+5. `tools/otzar/instalar_otzar.py` (o `INSTALAR_OTZAR.bat`) hace todo en la PC
+   de Otzar de un tirón: parcha el robot (con respaldo), agrega la jabura al
+   `config_whatsapp.json`, arma `C:\OTZAR\jabura` y rescata los audios de
+   Nacach que quedaron sin publicar. `--ver` es prueba en seco.
