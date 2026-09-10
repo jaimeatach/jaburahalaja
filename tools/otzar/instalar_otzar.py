@@ -14,7 +14,10 @@ Qué hace, con copia de respaldo de cada archivo que toca:
   2. Agrega la jabura a config_whatsapp.json (escuchar + anunciar). Sin tocar
      los demás shows.
   3. Arma la carpeta jabura\\ con jabura_publicar.py, subir_a_archive.py,
-     jabura_publicar.bat y config.json, y le copia el github_token.txt.
+     jabura_publicar.bat, config.json y portada.jpg, y le copia el github_token.txt.
+     El publicador crea solo el repo rabmeireliyahu/jabura con Pages si no existe.
+  5. Pone en ANUNCIAR.bat el paso que sube la jabura antes de anunciar, y deja
+     anunciar.jabura activo: titulo + link a la app, al mismo grupo.
   4. Nacach: busca los audios que quedaron sin publicar (teshuba 5, Kaparot 1 y
      2, Rosh Hashana q se junta) en todas las carpetas del robot, los deja en la
      carpeta de WhatsApp de nacach y corre podcast_bot.py ahí.
@@ -124,7 +127,28 @@ HUNKS = [
 """, """    const item = { buffer, ext, ts, autor, timer: null, archivoTemp: null,
                    carpeta: destinoAudio.carpeta, show: destinoAudio.show };
 """),
+    # anuncio de la jabura sin Spotify: link a la app, sin audio, sin repetir el grupo
+    ("""const SHOWS_SIN_AUDIO = ['peretz'];
+""", """const SHOWS_SIN_AUDIO = ['peretz'];
+// "sin_audio": true en anunciar -> <show> hace lo mismo desde el config (la
+// jabura: el audio ya esta en el grupo, solo va el aviso).
+const sinAudio = show => SHOWS_SIN_AUDIO.includes(show) || !!((CFG.anunciar || {})[show] || {}).sin_audio;
+"""),
+    ("""        let texto = `*${ep.tit}*`;
+        if (spotShow) texto += `\\n${spotShow}`;
+        if (wa) texto += `\\nWhatsapp\\n${wa}`;
+        texto += `\\n\\n${DIFUNDE[idiomaDeShow(show)]}`;
+""", """        let texto = `*${ep.tit}*`;
+        if (spotShow) texto += `\\n${spotShow}`;
+        // "app": link a la app del show (la jabura) en vez de Spotify;
+        // "sin_whatsapp": no repetir el link del grupo cuando se anuncia en el mismo grupo
+        if (datos.app) texto += `\\nApp\\n${datos.app}`;
+        if (wa && !datos.sin_whatsapp) texto += `\\nWhatsapp\\n${wa}`;
+        texto += `\\n\\n${DIFUNDE[idiomaDeShow(show)]}`;
+"""),
+    ("""if (SHOWS_SIN_AUDIO.includes(show))""", """if (sinAudio(show))""", "todos"),
 ]
+MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "datos.app", "if (sinAudio(show))")
 
 
 def paso(n, msg):
@@ -147,20 +171,28 @@ def respaldar(ruta):
     ok(f"respaldo: {dest.name}")
 
 
+API_CONTENTS = "https://api.github.com/repos/jaimeatach/jaburahalaja/contents/tools/"
+
+
 def bajar(nombre, destino):
-    url = RAW + nombre
+    """Baja tools/<nombre> del repo. Primero por la API (siempre trae la última
+    versión); si falla, por raw.githubusercontent (que tarda unos minutos en refrescar)."""
     if VER:
-        print(f"   (bajaría) {url}")
+        print(f"   (bajaría) {RAW + nombre}")
         return True
-    try:
-        with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "instalar-otzar"}), timeout=60) as r:
-            datos = r.read()
-        destino.write_bytes(datos)
-        ok(f"bajado {destino.name} ({len(datos)//1024} KB)")
-        return True
-    except Exception as e:                                  # noqa: BLE001
-        aviso(f"no pude bajar {url}: {e}")
-        return False
+    intentos = [(API_CONTENTS + nombre, {"User-Agent": "instalar-otzar", "Accept": "application/vnd.github.raw"}),
+                (RAW + nombre, {"User-Agent": "instalar-otzar"})]
+    for url, cab in intentos:
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=cab), timeout=60) as r:
+                datos = r.read()
+            destino.write_bytes(datos)
+            ok(f"bajado {destino.name} ({len(datos)//1024} KB)")
+            return True
+        except Exception as e:                              # noqa: BLE001
+            ultimo = e
+    aviso(f"no pude bajar {nombre}: {ultimo}")
+    return False
 
 
 def escribir(ruta, texto):
@@ -180,17 +212,21 @@ def parchar_robot():
     ok(f"robot en {ROBOT}")
     crudo = ruta.read_bytes()
     texto = crudo.decode("utf-8")
-    if "PARCHE LID" in texto and "JABURA (sep/2026)" in texto:
+    if all(m in texto for m in MARCAS_ROBOT):
         ok("ya estaba parchado, no toco nada")
         return
     salto = "\r\n" if "\r\n" in texto else "\n"
     plano = texto.replace("\r\n", "\n")
     aplicados = 0
-    for viejo, nuevo in HUNKS:
-        if nuevo in plano:
+    for h in HUNKS:
+        viejo, nuevo, todos = h[0], h[1], len(h) > 2
+        if nuevo in plano and (todos and viejo not in plano or not todos):
             aplicados += 1
             continue
-        if plano.count(viejo) == 1:
+        if todos and viejo in plano:
+            plano = plano.replace(viejo, nuevo)
+            aplicados += 1
+        elif plano.count(viejo) == 1:
             plano = plano.replace(viejo, nuevo, 1)
             aplicados += 1
     if aplicados == len(HUNKS):
@@ -262,15 +298,21 @@ def configurar_whatsapp():
     else:
         ok(f"escuchar.jabura ya estaba (carpeta: {esc['jabura'].get('carpetaDestino')})")
     an = cfg.setdefault("anunciar", {})
-    if "jabura" not in an:
-        an["jabura"] = {
-            "spotify": "PENDIENTE_SHOW_NUEVO_DESDE_EL_RSS",
-            "invite": GRUPO_JABURA,
-            "idioma": "he", "max_anuncios": 1, "en_orden": True, "pausado": True,
-            "_nota": "Anuncia al mismo grupo donde caen los audios. Pausado hasta que exista el show nuevo "
-                     "en Spotify (feed https://rabmeireliyahu.github.io/jabura/feed.xml): pone el link y saca pausado."
-        }
-        ok("anunciar.jabura (pausado hasta tener el show en Spotify)")
+    quiero = {
+        "invite": GRUPO_JABURA, "idioma": "he", "max_anuncios": 2, "en_orden": True,
+        "sin_spotify": True, "sin_audio": True, "sin_whatsapp": True,
+        "app": "https://jaburahalajasaul.netlify.app",
+        "_nota": "Anuncia al mismo grupo donde caen los audios: titulo + link a la app, sin audio (ya esta en "
+                 "el grupo). Cuando exista el show en Spotify: pon el link en spotify y sin_spotify en false.",
+    }
+    ja = an.setdefault("jabura", {"spotify": "PENDIENTE_SHOW_NUEVO_DESDE_EL_RSS"})
+    antes = json.dumps(ja, sort_keys=True)
+    for k, v in quiero.items():
+        ja.setdefault(k, v)
+    ja["_nota"] = quiero["_nota"]
+    ja["pausado"] = False
+    if json.dumps(ja, sort_keys=True) != antes:
+        ok("anunciar.jabura: activo, con link a la app y sin Spotify por ahora")
         cambios += 1
     else:
         ok("anunciar.jabura ya estaba")
@@ -290,7 +332,10 @@ def armar_jabura():
     if not VER:
         d.mkdir(exist_ok=True)
     for nombre, remoto in [("jabura_publicar.py", "jabura_publicar.py"), ("subir_a_archive.py", "subir_a_archive.py"),
-                           ("jabura_publicar.bat", "jabura_publicar.bat"), ("config.json", "otzar/config.json")]:
+                           ("jabura_publicar.bat", "jabura_publicar.bat"), ("config.json", "otzar/config.json"),
+                           ("portada.jpg", "otzar/portada.jpg")]:
+        if nombre == "portada.jpg" and (d / nombre).exists():
+            continue
         dest = d / nombre
         if nombre == "config.json" and dest.exists():
             ok("config.json ya existe, lo respeto")
@@ -307,7 +352,21 @@ def armar_jabura():
             break
         else:
             aviso("no encontré github_token.txt en ninguna carpeta de show: cópialo a mano a jabura\\")
-    print("   → para publicar: doble clic en jabura\\jabura_publicar.bat")
+    print("   → para publicar: doble clic en jabura\\jabura_publicar.bat (o ANUNCIAR.bat, que ya lo corre)")
+
+
+def instalar_anunciar():
+    paso(5, "ANUNCIAR.bat: que suba la jabura antes de anunciar")
+    if not ROBOT:
+        aviso("sin carpeta del robot no puedo poner ANUNCIAR.bat")
+        return
+    ruta = ROBOT / "ANUNCIAR.bat"
+    if ruta.exists() and "jabura_publicar" in ruta.read_text(encoding="utf-8", errors="replace"):
+        ok("ya tenía el paso de la jabura")
+        return
+    respaldar(ruta)
+    if bajar("otzar/ANUNCIAR.bat", ruta):
+        ok("ANUNCIAR.bat actualizado: primero sube la jabura, luego anuncia todo")
 
 
 # ── 4. nacach ─────────────────────────────────────────────────────────────────
@@ -426,6 +485,7 @@ def main():
     parchar_robot()
     configurar_whatsapp()
     armar_jabura()
+    instalar_anunciar()
     rescatar_nacach()
     print("\nListo." if not VER else "\nPrueba en seco terminada: no se cambió nada.")
 

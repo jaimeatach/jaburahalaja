@@ -24,6 +24,7 @@ import os
 import re
 import sys
 import time
+import urllib.error
 import urllib.request
 from datetime import datetime
 from email.utils import format_datetime
@@ -156,32 +157,101 @@ def armar_feed(cfg, archivos, remotos_en_archive):
 
 
 # ── 3. publicar el feed en GitHub (mismo método que podcast_bot) ─────────────
+RAW_REPO = "https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/tools/otzar/"
+
+
+def gh(cab, metodo, url, cuerpo=None):
+    """Una llamada a la API de GitHub. Devuelve (status, json) y no revienta."""
+    datos = json.dumps(cuerpo).encode() if cuerpo is not None else None
+    req = urllib.request.Request(url, data=datos, headers=cab, method=metodo)
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            texto = r.read().decode()
+            return r.status, (json.loads(texto) if texto.strip() else {})
+    except urllib.error.HTTPError as e:
+        try:
+            return e.code, json.loads(e.read().decode())
+        except Exception:
+            return e.code, {}
+    except Exception as e:                              # noqa: BLE001
+        return 0, {"message": str(e)}
+
+
+def subir_archivo(cab, base, ruta, contenido, mensaje):
+    """Crea o actualiza un archivo del repo (PUT contents)."""
+    st, j = gh(cab, "GET", f"{base}/contents/{ruta}")
+    cuerpo = {"message": mensaje, "content": base64.b64encode(contenido).decode()}
+    if st == 200 and j.get("sha"):
+        cuerpo["sha"] = j["sha"]
+    st, j = gh(cab, "PUT", f"{base}/contents/{ruta}", cuerpo)
+    return st in (200, 201), j.get("message", "")
+
+
+def asegurar_repo(cfg, cab):
+    """Si el repo del feed no existe, lo crea y le prende GitHub Pages (main, raíz),
+    igual que los otros shows de Otzar. Devuelve True si el repo está listo."""
+    base = f"https://api.github.com/repos/{cfg['github_user']}/{cfg['github_repo']}"
+    st, _ = gh(cab, "GET", base)
+    if st == 200:
+        return True
+    if st != 404:
+        log(f"No pude ver el repo ({st}): revisa github_token.txt")
+        return False
+    log(f"El repo {cfg['github_user']}/{cfg['github_repo']} no existe: lo creo.")
+    cuerpo = {"name": cfg["github_repo"], "description": cfg.get("titulo", ""), "private": False,
+              "has_issues": False, "has_wiki": False, "auto_init": False}
+    st, j = gh(cab, "POST", "https://api.github.com/user/repos", cuerpo)
+    if st not in (200, 201):
+        log(f"ERROR creando el repo: {st} {j.get('message', '')}")
+        log("   (el token tiene que ser de la cuenta " + cfg["github_user"] + " y tener permiso 'repo')")
+        return False
+    log("Repo creado.")
+    # README y portada: con el primer archivo nace la rama main
+    ok_, msg = subir_archivo(cab, base, "README.md",
+                             f"# {cfg['github_repo']}\n{cfg.get('titulo', '')}\n\nFeed: https://{cfg['github_user']}.github.io/{cfg['github_repo']}/feed.xml\n".encode(),
+                             "readme")
+    if not ok_:
+        log(f"ERROR subiendo README: {msg}")
+        return False
+    portada = Path("portada.jpg")
+    if not portada.exists():
+        try:
+            with urllib.request.urlopen(RAW_REPO + "portada.jpg", timeout=60) as r:
+                portada.write_bytes(r.read())
+        except Exception:                               # noqa: BLE001
+            pass
+    if portada.exists():
+        ok_, msg = subir_archivo(cab, base, "portada.jpg", portada.read_bytes(), "portada")
+        log("Portada subida." if ok_ else f"No subí la portada: {msg}")
+    for intento in range(3):
+        st, j = gh(cab, "POST", f"{base}/pages", {"source": {"branch": "main", "path": "/"}})
+        if st in (200, 201):
+            log(f"GitHub Pages prendido: https://{cfg['github_user']}.github.io/{cfg['github_repo']}/")
+            break
+        if st == 409:                                   # ya estaba prendido
+            break
+        time.sleep(4)
+    else:
+        log(f"No pude prender Pages ({st} {j.get('message', '')}); préndelo a mano en Settings → Pages (main, /root).")
+    return True
+
+
 def subir_feed(cfg, xml):
     tok = Path("github_token.txt")
     if not tok.exists():
         log("Falta github_token.txt: el feed quedó en feed.xml pero no se publicó.")
         return False
     token = tok.read_text(encoding="utf-8").strip()
-    api = f"https://api.github.com/repos/{cfg['github_user']}/{cfg['github_repo']}/contents/feed.xml"
     cab = {"Authorization": f"token {token}", "User-Agent": "jabura-publicar", "Accept": "application/vnd.github+json"}
-    sha = None
-    try:
-        with urllib.request.urlopen(urllib.request.Request(api, headers=cab)) as r:
-            sha = json.loads(r.read().decode())["sha"]
-    except Exception:
-        pass
-    cuerpo = {"message": f"feed jabura {datetime.now():%d/%m/%Y %H:%M}",
-              "content": base64.b64encode(xml.encode("utf-8")).decode()}
-    if sha:
-        cuerpo["sha"] = sha
-    req = urllib.request.Request(api, data=json.dumps(cuerpo).encode(), headers=cab, method="PUT")
-    try:
-        with urllib.request.urlopen(req) as r:
-            if r.status in (200, 201):
-                log("feed.xml publicado en GitHub.")
-                return True
-    except Exception as e:                              # noqa: BLE001
-        log(f"ERROR publicando el feed: {e}")
+    if not asegurar_repo(cfg, cab):
+        return False
+    base = f"https://api.github.com/repos/{cfg['github_user']}/{cfg['github_repo']}"
+    ok_, msg = subir_archivo(cab, base, "feed.xml", xml.encode("utf-8"),
+                             f"feed jabura {datetime.now():%d/%m/%Y %H:%M}")
+    if ok_:
+        log(f"feed.xml publicado: https://{cfg['github_user']}.github.io/{cfg['github_repo']}/feed.xml")
+        return True
+    log(f"ERROR publicando el feed: {msg}")
     return False
 
 

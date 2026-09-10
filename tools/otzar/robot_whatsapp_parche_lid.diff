@@ -70,3 +70,61 @@
  
      // guardar YA en disco: si el robot se reinicia, el audio no se pierde
      try {
+@@ -1045,6 +1070,9 @@
+ // shows que NO llevan audio adjunto (ahi el audio ya circula solo).
+ // Estos reciben unicamente el mensaje: titulo + Spotify + WhatsApp.
+ const SHOWS_SIN_AUDIO = ['peretz'];
++// "sin_audio": true en anunciar -> <show> hace lo mismo desde el config (la
++// jabura: el audio ya esta en el grupo, solo va el aviso).
++const sinAudio = show => SHOWS_SIN_AUDIO.includes(show) || !!((CFG.anunciar || {})[show] || {}).sin_audio;
+ const MB_COMO_AUDIO = 16;
+ const MB_MAXIMO = 100;
+ const CARPETA_TEMP = path.join(__dirname, 'audio_temp');
+@@ -1336,7 +1364,7 @@
+   log(`PRUEBA enviada a "${reg[show].nombre}" (id de mensaje: ${(enviado && enviado.key && enviado.key.id) || '?'}): ${tit}`);
+   const audioUrl = (it.match(/<enclosure[^>]*url\s*=\s*"([^"]+)"/) || [])[1] || '';
+   const audioPeso = parseInt((it.match(/<enclosure[^>]*length\s*=\s*"(\d+)"/) || [])[1] || '0', 10);
+-  if (SHOWS_SIN_AUDIO.includes(show)) log(`PRUEBA ${show}: sin audio adjunto, solo el mensaje.`);
++  if (sinAudio(show)) log(`PRUEBA ${show}: sin audio adjunto, solo el mensaje.`);
+   else await mandarAudio(reg[show].id, audioUrl, tit, audioPeso);
+ }
+ 
+@@ -1538,7 +1566,7 @@
+         log(`ANUNCIADOS JUNTOS en "${g.nombre}": ${listos.length} shiurim`);
+         await new Promise(r => setTimeout(r, 1500));
+       }
+-      if (SHOWS_SIN_AUDIO.includes(show)) log(`   (${show}: sin audio adjunto, solo el mensaje)`);
++      if (sinAudio(show)) log(`   (${show}: sin audio adjunto, solo el mensaje)`);
+       else for (const x of listos) {
+         await mandarAudioAVarios(grupos, x.ep.audio, x.ep.tit, x.ep.peso);
+         await new Promise(r => setTimeout(r, 3000));
+@@ -1570,7 +1598,10 @@
+         if (yaAnunciado(show, ep.guid)) { log(`${show}: "${ep.tit.slice(0,40)}" ya se anuncio; lo salto.`); continue; }
+         let texto = `*${ep.tit}*`;
+         if (spotShow) texto += `\n${spotShow}`;
+-        if (wa) texto += `\nWhatsapp\n${wa}`;
++        // "app": link a la app del show (la jabura) en vez de Spotify;
++        // "sin_whatsapp": no repetir el link del grupo cuando se anuncia en el mismo grupo
++        if (datos.app) texto += `\nApp\n${datos.app}`;
++        if (wa && !datos.sin_whatsapp) texto += `\nWhatsapp\n${wa}`;
+         texto += `\n\n${DIFUNDE[idiomaDeShow(show)]}`;
+         const grupos = gruposDeShow(reg, show);
+         for (const g of grupos) {
+@@ -1578,7 +1609,7 @@
+           log(`ANUNCIADO en "${g.nombre}": ${ep.tit}   (link del show, no del episodio)`);
+           await new Promise(r => setTimeout(r, 1500));
+         }
+-        if (SHOWS_SIN_AUDIO.includes(show)) log(`   (${show}: sin audio adjunto, solo el mensaje)`);
++        if (sinAudio(show)) log(`   (${show}: sin audio adjunto, solo el mensaje)`);
+         else await mandarAudioAVarios(grupos, ep.audio, ep.tit, ep.peso);
+         marcarAnunciado(show, ep.guid);
+         estado[show].push(ep.guid);
+@@ -1606,7 +1637,7 @@
+         log(`ANUNCIADO en "${g.nombre}": ${ep.tit}`);
+         await new Promise(r => setTimeout(r, 1500));
+       }
+-      if (SHOWS_SIN_AUDIO.includes(show)) log(`   (${show}: sin audio adjunto, solo el mensaje)`);
++      if (sinAudio(show)) log(`   (${show}: sin audio adjunto, solo el mensaje)`);
+       else await mandarAudioAVarios(grupos, ep.audio, ep.tit, ep.peso);
+       marcarAnunciado(show, ep.guid); // se guarda YA, no al final
+       estado[show].push(ep.guid);
