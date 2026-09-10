@@ -43,7 +43,7 @@ BASE = Path(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--base="
 
 
 def hallar_robot():
-    """El robot (robot_whatsapp.js + config_whatsapp.json) no vive en C:\OTZAR:
+    """El robot (robot_whatsapp.js + config_whatsapp.json) no vive en C:\\OTZAR:
     está en la carpeta robotwhats del escritorio. Se busca en los lugares
     conocidos y, si no, por todo el perfil del usuario."""
     dado = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--robot=")), "")
@@ -346,6 +346,15 @@ def rescatar_nacach():
         cfgw = json.loads(((ROBOT or BASE) / "config_whatsapp.json").read_text(encoding="utf-8"))
     except Exception:
         cfgw = {}
+    # Primero el feed publicado: lo que ya está ahí no se vuelve a subir
+    feed = ""
+    try:
+        url = f"https://{cfgn.get('github_user', 'rabmeireliyahu')}.github.io/{cfgn.get('github_repo', 'nacach')}/feed.xml"
+        with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "instalar-otzar"}), timeout=30) as r:
+            feed = r.read().decode("utf-8", "replace")
+        ok(f"feed leído: {feed.count('<item>')} episodios publicados")
+    except Exception as e:                                  # noqa: BLE001
+        aviso(f"no pude leer el feed publicado ({e}); sigo sin esa referencia")
     hallados = []
     for carpeta in carpetas_del_robot(cfgw):
         if not carpeta.is_dir():
@@ -360,6 +369,28 @@ def rescatar_nacach():
     procesados = nac / "procesados_whatsapp.txt"
     lista = procesados.read_text(encoding="utf-8").splitlines() if procesados.exists() else []
     movidos = 0
+    publicados = [f for f in hallados if f"<title>{f.stem}</title>" in feed]
+    for f in publicados:
+        # Ya está en el feed: se marca como procesado para que el subidor no lo
+        # vuelva a subir, y si es un mp3 duplicado del m4a en la carpeta de
+        # WhatsApp (lo movió una corrida anterior de este instalador), se borra.
+        print(f"   · {f.name}  ({f.parent})  [YA PUBLICADO en el feed]")
+        if f.parent.resolve() == destino.resolve():
+            if f.name not in lista:
+                lista.append(f.name)
+                ok("marcado como procesado")
+            if f.suffix.lower() == ".mp3" and any((destino / (f.stem + e)).exists() for e in (".m4a", ".ogg", ".opus")):
+                if VER:
+                    print("     (borraría el mp3 duplicado)")
+                else:
+                    f.unlink()
+                    ok("mp3 duplicado borrado")
+    hallados = [f for f in hallados if f not in publicados]
+    if not hallados:
+        if not VER and procesados.exists() or lista:
+            procesados.write_text("\n".join(lista) + ("\n" if lista else ""), encoding="utf-8")
+        ok("Nacach al día: los 4 ya están en el feed.")
+        return
     for f in hallados:
         en_destino = f.parent.resolve() == destino.resolve()
         print(f"   · {f.name}  ({f.parent})" + ("  [ya en la carpeta de nacach]" if en_destino else ""))
