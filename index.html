@@ -364,7 +364,7 @@ const SUPABASE_URL = "https://enkofkroxudsblewxxos.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_nAsf0qU7fPUOZ5K7OgqwYw_hUPgzOrZ";
 const BUCKET = "jabura";
 const APP_NAME = "חבורת הלכה";
-const BUILD = "2026-09-10 · whatsapp";
+const BUILD = "2026-09-10 · spotify vivo";
 
 const $ = id => document.getElementById(id);
 const app = $('app');
@@ -992,6 +992,7 @@ async function delComment(cid, type, id, ownerId){
 /* ═══════════ Boot + Auth ═══════════ */
 async function boot(){
   if (!configOK()){ renderSetup(); return; }
+  spotifyCargar().then(() => { if (ME && CUR && CUR.view) show(CUR.view); });
   const saved = localStorage.getItem('jh_session');
   if (saved){
     try {
@@ -1808,7 +1809,72 @@ const CAT_SPOTIFY = {
   "סימן שי״ז סעיף א": "https://podcasters.spotify.com/pod/show/---1901/episodes/Yehuda-jasqui-e3bml49",
   "הקדמה למלאכת קושר": "https://podcasters.spotify.com/pod/show/---1901/episodes/Yehuda-jasqui-e3bml3k",
 };
-const spotifyDe = t => CAT_SPOTIFY[String(t || '').trim()] || '';
+/* Lista viva de episodios del show: tools/jabura_publicar.py la publica junto
+   al feed (spotify_episodios.json, con las llaves de la API). El nombre del
+   episodio es el título del feed ("módulo · título"), así que se empareja
+   por tokens con el título del shiur, sin editar CAT_SPOTIFY a mano. */
+let SPOTIFY_EPS = null;
+const SPOTIFY_HIT = {};
+async function spotifyCargar(){
+  try {
+    const r = await fetch('spotify_episodios.json', { cache: 'no-store' });
+    if (!r.ok) return;
+    const lista = await r.json();
+    SPOTIFY_EPS = (Array.isArray(lista) ? lista : []).map(e => ({
+      nombre: String(e.titulo || e.name || '').replace(/^[^·]{1,40}·\s*/, ''),
+      url: e.enlace || e.url || ''
+    })).filter(e => e.nombre && e.url);
+  } catch(e){}
+}
+/* Número final de un título ("טעם הלימוד ג" → 3, "… parte 2" → 2), o 0 */
+function spotifyNumFinal(s){
+  const m = catNorm(s).match(/(?:^|\s)(\d{1,3}|[\u05D0-\u05EA]{1,2})$/);
+  if (!m) return 0;
+  const n = parseHebNum(m[1]);
+  return n > 0 && n < 400 ? n : 0;
+}
+/* Cuánto del título a aparece en b: 1 = todas sus palabras */
+function spotifyPuntaje(a, b){
+  const toks = catNorm(a).split(' ').filter(w => w.length > 2);
+  if (!toks.length) return 0;
+  const nb = ' ' + catNorm(b) + ' ';
+  return toks.filter(w => nb.includes(' ' + w + ' ')).length / toks.length;
+}
+function spotifyMejor(t, nombres){
+  const nt = spotifyNumFinal(t);
+  let best = -1, bestScore = 0;
+  nombres.forEach((n, i) => {
+    const nn = spotifyNumFinal(n);
+    if (nt && nn && nt !== nn) return;          /* "שיעור ב" no es "שיעור 3" */
+    const sc = spotifyPuntaje(t, n);
+    if (sc > bestScore){ bestScore = sc; best = i; }
+  });
+  return bestScore >= 0.6 ? best : -1;
+}
+let CAT_TITULOS = null;
+function spotifyDe(t){
+  t = String(t || '').trim();
+  if (!t) return '';
+  if (SPOTIFY_EPS && SPOTIFY_EPS.length){
+    if (SPOTIFY_HIT[t] === undefined){
+      const k = catNorm(t);
+      let ep = SPOTIFY_EPS.find(e => catNorm(e.nombre) === k);
+      if (!ep){
+        const i = spotifyMejor(t, SPOTIFY_EPS.map(e => e.nombre));
+        if (i >= 0){
+          /* De ida y vuelta: el episodio también tiene que preferir este título,
+             si no "הקדמה לש" se cuelga de cualquier "הקדמה …" */
+          if (!CAT_TITULOS) CAT_TITULOS = CATALOG.flatMap(m => m.items);
+          const j = spotifyMejor(SPOTIFY_EPS[i].nombre, CAT_TITULOS);
+          if (j < 0 || CAT_TITULOS[j] === t) ep = SPOTIFY_EPS[i];
+        }
+      }
+      SPOTIFY_HIT[t] = ep ? ep.url : '';
+    }
+    if (SPOTIFY_HIT[t]) return SPOTIFY_HIT[t];
+  }
+  return CAT_SPOTIFY[t] || '';
+}
 /* El logo de Spotify (relleno), en su verde: se reconoce de un vistazo */
 const spotifyIcon = (s = 18) => `<svg viewBox="0 0 24 24" style="width:${s}px;height:${s}px" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.5 17.3c-.2.4-.7.5-1 .3-2.9-1.8-6.5-2.2-10.8-1.2-.4.1-.8-.2-.9-.6-.1-.4.2-.8.6-.9 4.7-1.1 8.7-.6 11.9 1.4.3.2.4.7.2 1zm1.5-3.3c-.3.4-.8.6-1.3.3-3.3-2-8.3-2.6-12.2-1.4-.5.1-1-.1-1.2-.6-.1-.5.1-1 .6-1.2 4.5-1.4 10-.7 13.8 1.6.4.3.6.9.3 1.3zm.1-3.4C15.2 8.2 8.6 8 4.8 9.1c-.6.2-1.2-.2-1.4-.8-.2-.6.2-1.2.8-1.4 4.4-1.3 11.7-1.1 16.3 1.6.5.3.7 1 .4 1.5-.3.6-1 .8-1.5.5z"/></svg>`;
 

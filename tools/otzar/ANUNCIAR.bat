@@ -35,6 +35,15 @@ if exist "C:\OTZAR\jabura\jabura_publicar.py" (
   echo.
 )
 
+rem === tefila (Rab Tofi Cherem): publicar los audios que dejo el robot ===
+if exist "C:\OTZAR\tefila\podcast_bot.py" (
+  echo --- Tefila: publicando shiurim nuevos ---
+  pushd "C:\OTZAR\tefila"
+  python podcast_bot.py
+  popd
+  echo.
+)
+
 rem === nacach: copiar el feed al repo viejo (nacash), que es el que lee Spotify ===
 if exist "C:\OTZAR\nacach\espejo_nacash.py" (
   pushd "C:\OTZAR\nacach"

@@ -362,7 +362,113 @@ def armar_jabura():
             break
         else:
             aviso("no encontré github_token.txt en ninguna carpeta de show: cópialo a mano a jabura\\")
+    llaves = d / "spotify_keys.txt"
+    if not llaves.exists() and ROBOT and (ROBOT / "spotify_keys.txt").exists():
+        if not VER:
+            shutil.copy2(ROBOT / "spotify_keys.txt", llaves)
+        ok("llaves de Spotify copiadas del robot: la app va a enlazar cada shiur con su episodio")
     print("   → para publicar: doble clic en jabura\\jabura_publicar.bat (o ANUNCIAR.bat, que ya lo corre)")
+
+
+# ── 7. tefila (Rab Tofi Cherem) ───────────────────────────────────────────────
+def tefila():
+    paso(7, "Tefila (Rab Tofi Cherem): grupo Clases Tefila Habitat → archive.org → feed → Spotify")
+    d = BASE / "tefila"
+    if not d.is_dir():
+        aviso("no está C:\\OTZAR\\tefila (NUEVO_TEFILA.bat no corrió); no toco nada")
+        return
+    carpeta_wa = str(d / "audios_whatsapp")
+    spot = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--tefila-spotify=")), "")
+    # config.json del show: herencia de peretz fuera
+    cfgp = d / "config.json"
+    if cfgp.exists():
+        c = json.loads(cfgp.read_text(encoding="utf-8"))
+        antes = json.dumps(c, sort_keys=True)
+        if "peret" in str(c.get("archive_id", "")).lower() or not c.get("archive_id"):
+            c["archive_id"] = "rab-tofi-cherem"
+            ok("archive_id propio: rab-tofi-cherem (antes era el ítem de Peretz)")
+        c.pop("rss_original", None)
+        c["modo_whatsapp"] = True
+        c["carpeta_whatsapp"] = carpeta_wa
+        c["solo_agregar"] = True
+        for k in list(c):
+            if "youtube" in k or k == "filtro_titulo":
+                c.pop(k)
+        if json.dumps(c, sort_keys=True) != antes:
+            respaldar(cfgp)
+            escribir(cfgp, json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+            ok("tefila\\config.json limpio")
+        else:
+            ok("tefila\\config.json ya estaba bien")
+    else:
+        aviso("falta tefila\\config.json")
+    if not VER:
+        (d / "audios_whatsapp").mkdir(exist_ok=True)
+    if not (d / "podcast_bot.py").exists():
+        aviso("falta tefila\\podcast_bot.py: cópialo de C:\\OTZAR\\peretz")
+    if not (d / "github_token.txt").exists():
+        for origen in sorted(BASE.glob("*/github_token.txt")):
+            if not VER:
+                shutil.copy2(origen, d / "github_token.txt")
+            ok(f"github_token.txt copiado de {origen.parent.name}\\")
+            break
+    # robot: escuchar y anunciar en el MISMO grupo, registrado con "!otzar tefila"
+    rw = (ROBOT or BASE) / "config_whatsapp.json"
+    if rw.exists():
+        cfg = json.loads(rw.read_text(encoding="utf-8"))
+        antes = json.dumps(cfg, sort_keys=True)
+        esc = cfg.setdefault("escuchar", {}).setdefault("tefila", {"invite": ""})
+        esc["carpetaDestino"] = carpeta_wa
+        for k in ("carpeta", "grupos"):
+            esc.pop(k, None)
+        an = cfg.setdefault("anunciar", {}).setdefault("tefila", {"spotify": "PENDIENTE", "invite": ""})
+        for k, v in {"idioma": "es", "max_anuncios": 2, "en_orden": True, "sin_audio": True, "sin_whatsapp": True}.items():
+            an.setdefault(k, v)
+        if spot.startswith("http"):
+            an["spotify"] = spot
+        tiene_spotify = str(an.get("spotify", "")).startswith("http")
+        an["sin_spotify"] = not tiene_spotify
+        an["pausado"] = not tiene_spotify
+        an["_nota"] = ("Anuncia en el mismo grupo del Rab (registrado con !otzar tefila): titulo + link exacto de "
+                       "Spotify, sin audio. Pausado hasta tener el show: python instalar_otzar.py --tefila-spotify=LINK")
+        for k in list(an):
+            if isinstance(an[k], str) and ("peret" in an[k].lower() and k != "_nota"):
+                an[k] = "" if k != "spotify" else "PENDIENTE"
+                aviso(f"anunciar.tefila.{k} traía algo de Peretz: lo vacié")
+        if json.dumps(cfg, sort_keys=True) != antes:
+            respaldar(rw)
+            escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+            ok("config_whatsapp.json: tefila en escuchar y anunciar")
+        else:
+            ok("config_whatsapp.json: tefila ya estaba bien")
+        ok("anunciar.tefila " + ("ACTIVO con Spotify" if tiene_spotify else "en pausa hasta tener el link del show"))
+    # ¿el grupo ya está registrado?
+    reg = (ROBOT or BASE) / "grupos_registrados.json"
+    try:
+        r = json.loads(reg.read_text(encoding="utf-8"))
+    except Exception:
+        r = {}
+    g = r.get("tefila") or r.get("escucha:tefila")
+    if g and g.get("id"):
+        ok(f"grupo registrado: {g.get('nombre', g['id'])}")
+        if "peret" in str(g.get("nombre", "")).lower():
+            aviso("¡ese grupo es de Peretz! Manda \"!otzar tefila\" en el grupo del Rab para corregirlo")
+    else:
+        aviso("grupo SIN registrar: con el robot prendido, manda \"!otzar tefila\" dentro de Clases Tefila Habitat")
+    # ¿qué hay capturado y qué hay publicado?
+    try:
+        n_audios = len([f for f in (d / "audios_whatsapp").iterdir() if f.suffix.lower() in AUDIO])
+    except Exception:
+        n_audios = 0
+    try:
+        with urllib.request.urlopen("https://rabmeireliyahu.github.io/tefila/feed.xml", timeout=30) as f:
+            n_feed = f.read().decode("utf-8", "replace").count("<item>")
+    except Exception:
+        n_feed = -1
+    print(f"   · audios capturados en tefila\\audios_whatsapp: {n_audios} · episodios en el feed: "
+          f"{n_feed if n_feed >= 0 else 'no pude leerlo'}")
+    print("   → Spotify: con el primer episodio en el feed, da de alta el show con "
+          "https://rabmeireliyahu.github.io/tefila/feed.xml y luego: python instalar_otzar.py --tefila-spotify=LINK")
 
 
 def instalar_anunciar():
@@ -371,8 +477,8 @@ def instalar_anunciar():
         aviso("sin carpeta del robot no puedo poner ANUNCIAR.bat")
         return
     ruta = ROBOT / "ANUNCIAR.bat"
-    if ruta.exists() and "espejo_nacash" in ruta.read_text(encoding="utf-8", errors="replace"):
-        ok("ya tenía los pasos de la jabura y del espejo de nacach")
+    if ruta.exists() and "tefila" in ruta.read_text(encoding="utf-8", errors="replace"):
+        ok("ya tenía los pasos de la jabura, tefila y el espejo de nacach")
         return
     respaldar(ruta)
     if bajar("otzar/ANUNCIAR.bat", ruta):
@@ -513,6 +619,7 @@ def main():
     instalar_anunciar()
     rescatar_nacach()
     espejo_nacach()
+    tefila()
     print("\nListo." if not VER else "\nPrueba en seco terminada: no se cambió nada.")
 
 

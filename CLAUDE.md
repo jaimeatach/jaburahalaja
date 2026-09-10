@@ -114,7 +114,10 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    la primera corrida en la PC pone los tamaños reales. El show existente de
    Spotify (`SPOTIFY_SHOW`) se redirige a ese RSS desde Spotify for Creators
    ("redirect to a new host"); al hacerlo, los episodios pasan a ser los del
-   feed y hay que rehacer `CAT_SPOTIFY` con `tools/spotify_lista.py`.
+   feed. El publicador, con las llaves de la API (`spotify_keys.txt`, las del
+   robot), publica `spotify_episodios.json` junto al feed y la app
+   (`spotifyCargar`/`spotifyDe`) enlaza cada shiur con su episodio por título,
+   con chequeo de ida y vuelta y de número final; `CAT_SPOTIFY` queda de respaldo.
    El feed va en el orden de la app (`ORDEN`): musar y חגים primero, luego los
    simanim por número, ש״מ al final; las fechas se reparten la primera vez y
    quedan fijas en `fechas.json` (junto al script), lo nuevo toma fecha de hoy.
@@ -132,5 +135,9 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    corre `jabura_publicar.py` antes de mandar la orden al robot.
 5. `tools/otzar/instalar_otzar.py` (o `INSTALAR_OTZAR.bat`) hace todo en la PC
    de Otzar de un tirón: parcha el robot (con respaldo), agrega la jabura al
-   `config_whatsapp.json`, arma `C:\OTZAR\jabura` y rescata los audios de
-   Nacach que quedaron sin publicar. `--ver` es prueba en seco.
+   `config_whatsapp.json`, arma `C:\OTZAR\jabura`, espeja el feed de Nacach
+   al repo viejo `nacash` (el que lee Spotify) y deja listo el show `tefila`
+   (Rab Tofi Cherem, grupo "Clases Tefila Habitat", estilo Peretz: el robot
+   guarda en `C:\OTZAR\tefila\audios_whatsapp`, `podcast_bot.py` publica desde
+   `ANUNCIAR.bat`; el grupo se registra mandando `!otzar tefila` en el grupo;
+   `--tefila-spotify=LINK` activa el anuncio). `--ver` es prueba en seco.

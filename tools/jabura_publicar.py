@@ -338,6 +338,60 @@ def asegurar_repo(cfg, cab):
     return True
 
 
+# ── 4. la lista de episodios de Spotify, para que la app enlace cada shiur ───
+def llaves_spotify(cfg):
+    """Client ID y secret de la API de Spotify: variables de entorno, o
+    spotify_keys.txt (línea 1 = ID, línea 2 = secret) aquí o en la carpeta del
+    robot, que ya las usa para anunciar."""
+    cid, sec = os.environ.get("SPOTIFY_CLIENT_ID", "").strip(), os.environ.get("SPOTIFY_CLIENT_SECRET", "").strip()
+    if cid and sec:
+        return cid, sec
+    for ruta in [Path("spotify_keys.txt"), Path(cfg.get("robot", r"C:\robotwhats")) / "spotify_keys.txt"]:
+        try:
+            l = [x.strip() for x in ruta.read_text(encoding="utf-8").splitlines() if x.strip()]
+            if len(l) >= 2:
+                return l[0], l[1]
+        except Exception:
+            pass
+    return "", ""
+
+
+def episodios_spotify(cfg):
+    show = cfg.get("spotify_show", "")
+    m = re.search(r"show/([A-Za-z0-9]+)", show)
+    if not m:
+        return None
+    cid, sec = llaves_spotify(cfg)
+    if not cid:
+        log("Sin llaves de Spotify (spotify_keys.txt): no actualizo la lista de episodios.")
+        return None
+    try:
+        cred = base64.b64encode(f"{cid}:{sec}".encode()).decode()
+        req = urllib.request.Request("https://accounts.spotify.com/api/token", data=b"grant_type=client_credentials",
+                                     headers={"Authorization": "Basic " + cred,
+                                              "Content-Type": "application/x-www-form-urlencoded"})
+        with urllib.request.urlopen(req, timeout=30) as r:
+            token = json.loads(r.read().decode())["access_token"]
+        salida, offset = [], 0
+        while True:
+            url = f"https://api.spotify.com/v1/shows/{m.group(1)}/episodes?limit=50&offset={offset}&market={cfg.get('market', 'MX')}"
+            with urllib.request.urlopen(urllib.request.Request(url, headers={"Authorization": "Bearer " + token}), timeout=30) as r:
+                pagina = json.loads(r.read().decode())
+            for ep in pagina.get("items") or []:
+                if ep:
+                    salida.append({"titulo": (ep.get("name") or "").strip(),
+                                   "enlace": (ep.get("external_urls") or {}).get("spotify", ""),
+                                   "fecha": ep.get("release_date", "")})
+            if not pagina.get("next"):
+                break
+            offset += 50
+        log(f"Spotify: {len(salida)} episodios en el show.")
+        return salida
+    except Exception as e:                              # noqa: BLE001
+        log(f"Spotify: no pude leer los episodios ({e}).")
+        return None
+
+
 def subir_feed(cfg, xml):
     tok = Path("github_token.txt")
     if not tok.exists():
@@ -357,6 +411,12 @@ def subir_feed(cfg, xml):
         st, _ = gh(cab, "GET", f"{base}/contents/portada.jpg")
         if st == 404 and Path("portada.jpg").exists():
             subir_archivo(cab, base, "portada.jpg", Path("portada.jpg").read_bytes(), "portada")
+        eps = episodios_spotify(cfg)
+        if eps:
+            datos = json.dumps(eps, ensure_ascii=False, indent=1).encode("utf-8")
+            Path("spotify_episodios.json").write_bytes(datos)
+            ok2, msg2 = subir_archivo(cab, base, "spotify_episodios.json", datos, "episodios de Spotify")
+            log("Lista de Spotify publicada: la app enlaza cada shiur con su episodio." if ok2 else f"No subí la lista de Spotify: {msg2}")
         return True
     log(f"ERROR publicando el feed: {msg}")
     return False
