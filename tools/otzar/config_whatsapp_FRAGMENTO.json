@@ -1,0 +1,9 @@
+{
+  "_comentario": "Esto va DENTRO de tu config_whatsapp.json, en la seccion escuchar. No es un archivo aparte.",
+  "escuchar": {
+    "jabura": {
+      "invite": "https://chat.whatsapp.com/PEGAR-EL-LINK-DEL-GRUPO",
+      "carpetaDestino": "G:\\Mi unidad\\otzar\\jabura\\whatsapp"
+    }
+  }
+}

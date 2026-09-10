@@ -1,0 +1,18 @@
+{
+  "titulo": "Jabura Halaja · חבורת הלכה",
+  "descripcion": "Shiurim de הלכות שבת de la jabura, siman por siman.",
+  "autor": "Jabura Halaja",
+  "email": "CAMBIAR@correo.com",
+  "idioma": "es",
+
+  "archive_id": "jabura-halajot-shabat",
+
+  "github_user": "rabmeireliyahu",
+  "github_repo": "jabura",
+
+  "modo_whatsapp": true,
+  "carpeta_whatsapp": "G:\\Mi unidad\\otzar\\jabura\\whatsapp",
+
+  "solo_agregar": true,
+  "manual": false
+}

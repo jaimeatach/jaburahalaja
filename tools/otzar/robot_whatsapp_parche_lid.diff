@@ -1,0 +1,26 @@
+553c553,561
+<     const soloDigitos = (jid.split('@')[0] || '').replace(/\D/g, '');
+---
+>     // === PARCHE LID (sep/2026) ===
+>     // WhatsApp ya manda muchos chats privados como "NNNN@lid": ese numero NO es el
+>     // telefono, asi que buscar el telefono dentro del jid fallaba en silencio y el
+>     // audio del rab se iba a la "nube" en vez de guardarse. Baileys trae el
+>     // telefono real en senderPn / participantPn / remoteJidAlt: se revisan todos.
+>     const k = m.key || {};
+>     const candidatos = [jid, k.senderPn, k.participantPn, k.remoteJidAlt, k.participantAlt]
+>       .filter(Boolean).map(x => String(x).split('@')[0].replace(/\D/g, ''));
+>     const soloDigitos = candidatos.join('|');
+570a579,583
+>     // Si lo que llego es un AUDIO y no reconocimos el chat, que quede escrito:
+>     // asi se ve en el log de quien vino y con que jid, en vez de perderse.
+>     if (audioDe(m)) log(`AUDIO IGNORADO (chat privado no registrado): jid=${jid}` +
+>       (m.key && m.key.senderPn ? ` tel=${m.key.senderPn}` : '') +
+>       ' -> si es un rab, agregalo en escuchar_directo o manda "!otzar <clave>" desde ese chat');
+612c625,629
+<   if (esGrupo && !escuchaGrupo) return;
+---
+>   if (esGrupo && !escuchaGrupo) {
+>     if (audioDe(m)) log(`AUDIO IGNORADO (grupo no registrado para escucha): jid=${jid}` +
+>       ' -> agrega el grupo en "escuchar" del config o manda "!otzar <clave>" en ese grupo');
+>     return;
+>   }
