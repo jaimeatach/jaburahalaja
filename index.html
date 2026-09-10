@@ -364,7 +364,7 @@ const SUPABASE_URL = "https://enkofkroxudsblewxxos.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_nAsf0qU7fPUOZ5K7OgqwYw_hUPgzOrZ";
 const BUCKET = "jabura";
 const APP_NAME = "חבורת הלכה";
-const BUILD = "2026-09-09 · audio móvil + WhatsApp";
+const BUILD = "2026-09-10 · whatsapp";
 
 const $ = id => document.getElementById(id);
 const app = $('app');
@@ -508,7 +508,7 @@ he:{
   catDirBtn:'העלאת תיקייה שלמה', catDirT:'העלאת התיקייה מהכונן',
   catDirPick:'בחר את התיקייה "חבורה הלכות שבת" מהמחשב', catFilesN:'קבצים',
   catDirHint:'כל קובץ ישויך למודול ולשיעור שלו לפי שם התיקייה ושם הקובץ', catDirNone:'לא זוהו קבצים מהמודולים',
-  catDirSkip:'ללא שיוך', catDirDup:'כבר היו למעלה', catSefarim:'ספרים · לתוכן של כל סימן',
+  catDirSkip:'ללא שיוך', catDirDup:'כבר היו למעלה', arcAutoNew:'שיעורים חדשים נוספו מ־archive.org', catSefarim:'ספרים · לתוכן של כל סימן',
   publishQ:'פרסום השאלה', publishGen:'פרסום', expand:'הגדלה', shrink:'הקטנה', myNotesBtn:'ההערות שלי', sortRecent:'לפי תאריך', sortSiman:'לפי סימן וסעיף', qaSimanOpt:'סימן (לא חובה)', qaSaifOpt:'סעיף (לא חובה)', answeredYou:'ענו על השאלה שלך'
 },
 es:{
@@ -607,7 +607,7 @@ es:{
   catDirBtn:'Subir carpeta completa', catDirT:'Subir la carpeta del Drive',
   catDirPick:'Elegí la carpeta "חבורה הלכות שבת" desde tu computadora', catFilesN:'archivos',
   catDirHint:'Cada archivo se asigna a su módulo y su shiur según la carpeta y el nombre', catDirNone:'No se reconoció ningún archivo de los módulos',
-  catDirSkip:'sin asignar', catDirDup:'ya estaban', catSefarim:'Sefarim · al contenido de cada siman',
+  catDirSkip:'sin asignar', catDirDup:'ya estaban', arcAutoNew:'shiurim nuevos agregados desde archive.org', catSefarim:'Sefarim · al contenido de cada siman',
   publishQ:'Publicar pregunta', publishGen:'Publicar', expand:'Ampliar', shrink:'Reducir', myNotesBtn:'Mis apuntes', sortRecent:'Recientes', sortSiman:'Por siman y saif', qaSimanOpt:'Siman (opcional)', qaSaifOpt:'Saif (opcional)', answeredYou:'Respondieron tu pregunta'
 }};
 const t = k => (STR[LANG] && STR[LANG][k]) || STR.he[k] || k;
@@ -1000,7 +1000,7 @@ async function boot(){
       if (data){ ME = data; saveSession(); }
     } catch(e){}
   }
-  if (ME){ await loadSimanim(); await catAutoSeed(); renderApp(); }
+  if (ME){ await loadSimanim(); await catAutoSeed(); renderApp(); arcAutoImport(); }
   else renderAuth();
 }
 function renderSetup(err){
@@ -1060,7 +1060,7 @@ async function doRegister(){
     ME = { id, name, role: first ? 'admin' : 'member', photo: null };
     saveSession();
     toast(first ? t('welcomeFirst') : t('welcome'));
-    await loadSimanim(); await catAutoSeed(); renderApp();
+    await loadSimanim(); await catAutoSeed(); renderApp(); arcAutoImport();
   } catch(e){ authErr(t('err') + e.message); btn.disabled=false; btn.textContent=t('register'); }
 }
 async function doLogin(){
@@ -1076,7 +1076,7 @@ async function doLogin(){
     if (hash !== u.hash){ authErr(t('errWrongPass')); btn.disabled=false; btn.textContent=t('login'); return; }
     ME = { id: u.id, name: u.name, role: u.role, photo: u.photo };
     saveSession();
-    await loadSimanim(); await catAutoSeed(); renderApp();
+    await loadSimanim(); await catAutoSeed(); renderApp(); arcAutoImport();
   } catch(e){ authErr(t('err') + e.message); btn.disabled=false; btn.textContent=t('login'); }
 }
 function logout(){ ME = null; clearSession(); closePlayer(); location.hash=''; renderAuth(); }
@@ -1397,6 +1397,36 @@ function catNorm(s){
     .replace(/[`.\-_·־–—\[\]()]/g, ' ')      /* el maqaf ־ sí separa: ש״ו־שט״ז → שו שטז */
     .replace(/\s+/g, ' ').trim();
 }
+/* Título de un archivo que no figura en el catálogo: sin extensión y sin el
+   número de orden que le pone el robot ("03 …", "3.", "[3]", "3-") */
+function catTituloLibre(name){
+  return String(name || '').replace(/\.[^.]+$/, '')
+    .replace(/^\s*\[?\d{1,3}\]?[.\-_\s]*/, '')
+    .replace(/\s+/g, ' ').trim() || String(name || '');
+}
+/* Carpeta nueva que no está en el catálogo pero nombra su siman
+   ("סימן שמא", "סימן שמ״ב מכה בפטיש", "341 …"): devuelve el número o 0 */
+function catSimanDeCarpeta(dirs){
+  for (let d = dirs.length - 1; d >= 0; d--){
+    const m = String(dirs[d]).trim().match(/^(?:סימן|סי׳|סי'|siman)?\s*([\u05D0-\u05EA״׳"']{1,5}|\d{1,3})(?=\s|$)/);
+    if (!m) continue;
+    const n = parseHebNum(m[1]);
+    if (n >= 242 && n <= 365) return n;
+  }
+  return 0;
+}
+/* El siman por número; si no existe lo crea con el título y los סעיפים del ש״ע */
+async function catEnsureSiman(num){
+  let s = SIMANIM.find(x => x.number === num && !isMusar(x));
+  if (s) return s;
+  const sa = SA_MAP[num];
+  const { data, error } = await sb.from(T.simanim)
+    .insert({ number: num, title: sa ? sa.title : 'סימן ' + gem(num), saifim: catSaifimDe(num, 1), kind: 'halaja' })
+    .select().single();
+  fail(error);
+  await loadSimanim();
+  return data;
+}
 /* Une el módulo del catálogo con el siman ya creado en la base */
 function catSiman(mod){
   if (mod.musar) return SIMANIM.find(s => (s.title || '').trim() === mod.folder) || null;
@@ -1409,6 +1439,9 @@ function catMatchFile(fileName, items){
   if (lead){
     const n = parseInt(lead[1], 10);
     if (n >= 1 && n <= items.length) return n;
+    /* Numerado más allá del catálogo: es un shiur nuevo (lo puso el robot de
+       WhatsApp), conserva su propio nombre en vez de parecerse a otro */
+    if (n > items.length) return 0;
   }
   const bracket = f.match(/\[(\d{1,3})\]/);
   if (bracket){
@@ -1621,18 +1654,20 @@ async function arcLoad(){
 }
 function arcPreview(){
   const plan = window._arcPlan || [];
-
+  const ok = plan.filter(p => p.mi >= 0 || p.siman);
+  const sefarim = plan.filter(p => p.sefer && p.sefer.ii);
   const lost = plan.length - ok.length;
   const el = $('arc-sum'); if (!el) return;
   if (!ok.length && !sefarim.length){ el.innerHTML = `<div class="hint">${t('catDirNone')}</div>`; return; }
   const byMod = {};
-  ok.forEach(p => { (byMod[p.mi] = byMod[p.mi] || []).push(p); });
+  ok.forEach(p => { (byMod[p.mi >= 0 ? p.mi : 's' + p.siman] = byMod[p.mi >= 0 ? p.mi : 's' + p.siman] || []).push(p); });
   el.innerHTML = `<div class="field"><label>${ok.length + sefarim.length} ${t('catFilesN')} · ${esc(window._arcId)}</label>` +
     Object.keys(byMod).map(mi => {
       const list = byMod[mi];
       const sinAsignar = list.filter(p => !p.n).length;
+      const nombre = mi[0] === 's' ? 'סימן ' + gem(mi.slice(1)) : CATALOG[mi].folder;
       return `<div style="display:flex;gap:8px;align-items:center;margin-bottom:5px;font-size:13.5px">
-        <div style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(CATALOG[mi].folder)}</div>
+        <div style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(nombre)}</div>
         <span class="badge">${list.length}</span>
         ${sinAsignar ? `<span class="badge gold">${sinAsignar} ${t('catDirSkip')}</span>` : ''}
       </div>`;
@@ -1643,43 +1678,61 @@ function arcPreview(){
     `</div>
     <button class="btn full" id="arc-go" onclick="arcImport()">${t('arcGo')}</button>`;
 }
+/* Importa un plan (de arcFetchPlan): crea lo que falte y agrega solo lo nuevo.
+   Con silent no toca la pantalla: lo usa la importación automática. */
+async function arcImportPlan(plan, silent){
+  plan = (plan || []).filter(p => p.mi >= 0 || p.siman || (p.sefer && p.sefer.ii));
+  let ok = 0, dup = 0;
+  if (!plan.length) return { ok, dup };
+  const [shs, mts] = await Promise.all([
+    sb.from(T.shiurim).select('simanId,fileName'),
+    sb.from(T.materials).select('simanId,fileName')
+  ]);
+  const seen = new Set([...(shs.data||[]), ...(mts.data||[])].map(r => r.simanId + '|' + r.fileName));
+  /* Solo se crean módulos si traen algo nuevo: así la importación automática
+     no rearma un módulo que se borró a propósito */
+  const nuevos = plan.filter(p => {
+    if (p.sefer) return true;
+    const s = p.mi >= 0 ? catSiman(CATALOG[p.mi]) : SIMANIM.find(x => x.number === p.siman && !isMusar(x));
+    return !s || !seen.has(s.id + '|' + p.f.name);
+  });
+  if (!nuevos.length) return { ok, dup: plan.length };
+  for (const mi of [...new Set(nuevos.filter(p => p.mi >= 0).map(p => p.mi))]){
+    if (!catSiman(CATALOG[mi])) await catCreateModule(mi, true);
+  }
+  /* Los sefarim van al final: así alcanzan también a los simanim recién creados */
+  const orden = [...plan.filter(p => !p.sefer), ...plan.filter(p => p.sefer)];
+  for (const { f, mi, kind, n, sefer, siman } of orden){
+    if (sefer){
+      /* Un sefer no tiene módulo propio: se referencia en cada siman de su rango */
+      const titulo = CAT_SEFARIM[sefer.gi].items[sefer.ii - 1].t;
+      ok += await catSpreadSefer(titulo, { url: f._arc, fileName: f.name, size: f.size }, seen, silent);
+      continue;
+    }
+    const mod = mi >= 0 ? CATALOG[mi] : null;
+    const s = mod ? catSiman(mod) : await catEnsureSiman(siman);
+    if (!s) continue;
+    if (seen.has(s.id + '|' + f.name)){ dup++; continue; }
+    const tbl = kind === 'shiur' ? T.shiurim : T.materials;
+    const title = n ? mod.items[n-1] : catTituloLibre(f.name);
+    /* Sin storagePath: el archivo no es nuestro, vive en archive.org */
+    const meta = { url: f._arc, fileName: f.name, size: f.size };
+    const { error } = await sb.from(tbl).insert({
+      simanId: s.id, saifim: catSaifDeShiur(title), title, ...meta, uploadedBy: ME.name
+    });
+    fail(error);
+    seen.add(s.id + '|' + f.name);
+    ok++;
+    if (tbl === T.materials) ok += await catSpreadSefer(title, meta, seen, silent);
+  }
+  return { ok, dup };
+}
 async function arcImport(){
-  const plan = (window._arcPlan || []).filter(p => p.mi >= 0 || (p.sefer && p.sefer.ii));
+  const plan = (window._arcPlan || []).filter(p => p.mi >= 0 || p.siman || (p.sefer && p.sefer.ii));
   if (!plan.length) return toast(t('catNoFile'));
   const btn = $('arc-go'); if (btn){ btn.disabled = true; btn.textContent = t('wait'); }
-  let ok = 0, dup = 0;
   try {
-    for (const mi of [...new Set(plan.map(p => p.mi))]){
-      if (mi >= 0 && !catSiman(CATALOG[mi])) await catCreateModule(mi, true);
-    }
-    const [shs, mts] = await Promise.all([
-      sb.from(T.shiurim).select('simanId,fileName'),
-      sb.from(T.materials).select('simanId,fileName')
-    ]);
-    const seen = new Set([...(shs.data||[]), ...(mts.data||[])].map(r => r.simanId + '|' + r.fileName));
-    for (const { f, mi, kind, n, sefer } of plan){
-      if (sefer){
-        /* Un sefer no tiene módulo propio: se referencia en cada siman de su rango */
-        const titulo = CAT_SEFARIM[sefer.gi].items[sefer.ii - 1].t;
-        ok += await catSpreadSefer(titulo, { url: f._arc, fileName: f.name, size: f.size }, seen);
-        continue;
-      }
-      const mod = CATALOG[mi];
-      const s = catSiman(mod);
-      if (!s) continue;
-      if (seen.has(s.id + '|' + f.name)){ dup++; continue; }
-      const tbl = kind === 'shiur' ? T.shiurim : T.materials;
-      const title = n ? mod.items[n-1] : f.name.replace(/\.[^.]+$/, '');
-      /* Sin storagePath: el archivo no es nuestro, vive en archive.org */
-      const meta = { url: f._arc, fileName: f.name, size: f.size };
-      const { error } = await sb.from(tbl).insert({
-        simanId: s.id, saifim: catSaifDeShiur(title), title, ...meta, uploadedBy: ME.name
-      });
-      fail(error);
-      seen.add(s.id + '|' + f.name);
-      ok++;
-      if (tbl === T.materials) ok += await catSpreadSefer(title, meta, seen);
-    }
+    const { ok, dup } = await arcImportPlan(plan);
     if (window._arcId) localStorage.setItem('jh_arc_id', window._arcId);
     closeSheet();
     toast(ok + ' ' + t('catUploaded') + (dup ? ' · ' + dup + ' ' + t('catDirDup') : ''));
@@ -1689,6 +1742,21 @@ async function arcImport(){
     if (btn){ btn.disabled = false; btn.textContent = t('arcGo'); }
     throw e;
   }
+}
+/* Al entrar como admin: mira el ítem de archive.org y agrega lo que el robot
+   subió desde WhatsApp (tools/jabura_publicar.py). Una vez por hora, y sin
+   molestar si no hay nada nuevo. */
+async function arcAutoImport(){
+  if (!isAdmin()) return;
+  try { if (Date.now() - parseInt(sessionStorage.getItem('jh_arc_auto') || 0, 10) < 3600e3) return; } catch(e){}
+  try { sessionStorage.setItem('jh_arc_auto', String(Date.now())); } catch(e){}
+  const id = await catArcIdConocido();
+  if (!id) return;
+  try {
+    const plan = await arcFetchPlan(id);
+    const { ok } = await arcImportPlan(plan, true);
+    if (ok){ toast(ok + ' ' + t('arcAutoNew')); show(CUR.view); notifBadge(); }
+  } catch(e){ console.warn('arcAutoImport', e); }
 }
 
 
@@ -1832,13 +1900,13 @@ const SA_SHABAT = [
   [332, 'דין בהמה שילדה בשבת', 4],
   [333, 'דין פינוי אוצר בשבת', 2],
   [334, 'דין הדליקה בשבת', 27],
-  [335, 'דין המערה שנפלה', 5],
+  [335, 'דין חבית שנשברה', 5],
   [336, 'דיני אילן בשבת', 12],
   [337, 'דין כיבוד הבית', 4],
   [338, 'דיני השמעת קול בשבת', 8],
   [339, 'דברים האסורים משום שבות', 8],
   [340, 'דיני תולש וכותב ומוחק וקורע', 14],
-  [341, 'דין מת ביום טוב', 2],
+  [341, 'דיני נדרים בשבת', 2],
   [342, 'דין בין השמשות', 1],
   [343, 'דין קטן שעשה מלאכה בשבת', 3],
   [344, 'דין ההולך במדבר ואינו יודע מתי שבת', 2],
@@ -2131,7 +2199,7 @@ CAT_SEFARIM.forEach(g => g.items.forEach(x => {
 }));
 /* Deja el sefer en el contenido de cada módulo de shiurim que su rango abarca.
    Sube el archivo una sola vez: acá solo se agregan las referencias. */
-async function catSpreadSefer(title, meta, seen){
+async function catSpreadSefer(title, meta, seen, soloExistentes){
   const rng = CAT_RANGES[title];
   if (!rng) return 0;
   let n = 0;
@@ -2147,7 +2215,7 @@ async function catSpreadSefer(title, meta, seen){
       const mod = CATALOG[i];
       if (mod.musar || mod.siman < rng[0] || mod.siman > rng[1]) continue;
       let sm = catSiman(mod);
-      if (!sm) sm = await catCreateModule(i, true);
+      if (!sm && !soloExistentes) sm = await catCreateModule(i, true);
       if (sm) destinos.push(sm);
     }
   }
@@ -2209,6 +2277,8 @@ function catPlan(files){
     if (mi < 0){
       const sef = catRouteSefer(f);
       if (sef) return { f, mi:-1, sefer:sef, kind:'material' };
+      const num = catSimanDeCarpeta((f.webkitRelativePath || f.name).split('/').slice(0, -1));
+      if (num) return { f, mi:-1, siman:num, kind: CAT_AV.test(f.name) ? 'shiur' : 'material', n:0 };
       return { f, mi:-1 };
     }
     const mod = CATALOG[mi];
@@ -2235,7 +2305,7 @@ function catDirPreview(){
   window._catPlan = catPlan(files);
   const el = $('cat-dir-sum'), go = $('cat-dir-go');
   if (!el) return;
-  const ok = window._catPlan.filter(p => p.mi >= 0);
+  const ok = window._catPlan.filter(p => p.mi >= 0 || p.siman);
   const lost = window._catPlan.length - ok.length;
   if (!ok.length){
     el.innerHTML = `<div class="hint">${t('catDirNone')}</div>`;
@@ -2243,13 +2313,14 @@ function catDirPreview(){
     return;
   }
   const byMod = {};
-  ok.forEach(p => { (byMod[p.mi] = byMod[p.mi] || []).push(p); });
+  ok.forEach(p => { const k = p.mi >= 0 ? p.mi : 's' + p.siman; (byMod[k] = byMod[k] || []).push(p); });
   el.innerHTML = `<div class="field"><label>${ok.length} ${t('catFilesN')}</label>` +
     Object.keys(byMod).map(mi => {
       const list = byMod[mi];
       const unmatched = list.filter(p => !p.n).length;
+      const nombre = mi[0] === 's' ? 'סימן ' + gem(mi.slice(1)) : CATALOG[mi].folder;
       return `<div style="display:flex;gap:8px;align-items:center;margin-bottom:5px;font-size:13.5px">
-        <div style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(CATALOG[mi].folder)}</div>
+        <div style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(nombre)}</div>
         <span class="badge">${list.length}</span>
         ${unmatched ? `<span class="badge gold">${unmatched} ${t('catDirSkip')}</span>` : ''}
       </div>`;
@@ -2259,7 +2330,7 @@ function catDirPreview(){
   if (go) go.disabled = false;
 }
 async function catDirUpload(){
-  const plan = (window._catPlan || []).filter(p => p.mi >= 0);
+  const plan = (window._catPlan || []).filter(p => p.mi >= 0 || p.siman);
   if (!plan.length) return toast(t('catNoFile'));
   const btn = $('cat-dir-go'); btn.disabled = true; btn.textContent = t('uploading');
   $('cat-dir').disabled = true;
@@ -2268,7 +2339,7 @@ async function catDirUpload(){
   const fallidos = [];
   try {
     /* Crear los módulos que falten antes de subir nada */
-    for (const mi of [...new Set(plan.map(p => p.mi))]){
+    for (const mi of [...new Set(plan.filter(p => p.mi >= 0).map(p => p.mi))]){
       if (!catSiman(CATALOG[mi])) await catCreateModule(mi, true);
     }
     /* Lo ya subido antes no se vuelve a subir */
@@ -2278,13 +2349,13 @@ async function catDirUpload(){
     ]);
     const seen = new Set([...(shs.data||[]), ...(mts.data||[])].map(r => r.simanId + '|' + r.fileName));
     for (let k = 0; k < plan.length; k++){
-      const { f, mi, kind, n } = plan[k];
-      const mod = CATALOG[mi];
-      const s = catSiman(mod);
+      const { f, mi, kind, n, siman } = plan[k];
+      const mod = mi >= 0 ? CATALOG[mi] : null;
+      const s = mod ? catSiman(mod) : await catEnsureSiman(siman);
       if (!s) continue;
       if (seen.has(s.id + '|' + f.name)){ dup++; continue; }
       const tbl = kind === 'shiur' ? T.shiurim : T.materials;
-      const title = n ? mod.items[n-1] : f.name.replace(/\.[^.]+$/, '');
+      const title = n ? mod.items[n-1] : catTituloLibre(f.name);
       const path = tbl + '/' + Date.now() + '_' + k + '_' + (f.name || 'archivo').replace(/[^\w.\-]+/g, '_');
       try {
         await uploadWithProgress(path, f, `(${k+1}/${plan.length}) `);

@@ -75,7 +75,8 @@ El contenido de la jabura vive en un ítem de archive.org, no en Supabase Storag
 - `SA_SHABAT` en `index.html`: los 93 simanim רנ״ב–שד״מ (el חלק ג del משנה ברורה)
   con su título y su cantidad de סעיפים. **Cargado de memoria**: desde el entorno
   de desarrollo no se puede consultar Sefaria ni alhatorah, así que conviene
-  repasarlo contra la fuente.
+  repasarlo contra la fuente (ya se corrigieron של״ה y שמ״א). Volver a apretar
+  **Abrir jelek ג** actualiza los títulos de los simanim que ya existen.
 - Botón **Abrir jelek ג**: crea los que faltan y a los que ya existen les pone el
   título del שולחן ערוך y les completa los סעיפים, sin tocar su contenido.
 - Cada shiur se ubica en su saif en tres pasos: `catSaifDe(titulo)` lee el saif
@@ -87,3 +88,32 @@ El contenido de la jabura vive en un ítem de archive.org, no en Supabase Storag
   quedan en el primer saif por no tratar de un saif concreto.
 - Los módulos que comparten siman se unen: מעבד·טוחן·לש en שכ״א y
   גוזז·כותב ומוחק en ש״מ, cada uno con `groups` para resolver la numeración.
+
+## WhatsApp → archive.org → Spotify (el flujo de Otzar, para la jabura)
+
+Los shiurim nuevos llegan a un grupo de WhatsApp y terminan en la app, en
+archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
+
+1. `robot_whatsapp.js` (Baileys, `C:\OTZAR`) escucha el grupo `escuchar.jabura`
+   y guarda cada audio en `carpetaDestino`, que es la subcarpeta del siman que
+   se estudia AHORA dentro del Drive de la jabura (`…\שיעורים בהלכה\<módulo>`).
+   Los nombra numerados ("03 título.m4a") para conservar el orden. Al cambiar
+   de siman se cambia esa línea del `config_whatsapp.json`
+   (`tools/otzar/config_whatsapp_FRAGMENTO.json`). `tools/otzar/robot_whatsapp.js`
+   es el robot del usuario con dos parches: JIDs `@lid` (busca el teléfono en
+   `senderPn`/`participantPn`) y la numeración de la jabura.
+2. `tools/jabura_publicar.py` (con `config.json` de `tools/otzar/`) sube a
+   archive.org solo lo que falta, conservando las subcarpetas, NUNCA borra del
+   Drive, arma `feed.xml` (título = "módulo · nombre", orden por fecha) y lo
+   publica en `rabmeireliyahu/jabura` (GitHub Pages). El RSS es
+   `https://rabmeireliyahu.github.io/jabura/feed.xml`; de ahí sale un show NUEVO
+   en Spotify (el show existente se subió a mano y no acepta RSS externo).
+3. La app, al entrar un admin, corre `arcAutoImport()`: lee el ítem de
+   archive.org (una vez por hora) y agrega lo nuevo. Un archivo en una carpeta
+   del `CATALOG` va a ese módulo; una carpeta nueva que nombra su siman
+   ("סימן שמא") va a ese siman por número (`catSimanDeCarpeta`, lo crea con el
+   título del ש״ע si falta); el título es el nombre sin el número
+   (`catTituloLibre`). Sefarim se procesan al final y en modo automático no
+   crean módulos.
+4. `anunciar.jabura` en el config del robot manda el aviso al mismo grupo;
+   queda `pausado` hasta que exista el show nuevo en Spotify.

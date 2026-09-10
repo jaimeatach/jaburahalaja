@@ -1,18 +1,15 @@
 {
+  "_que_es": "config.json de la jabura para tools/jabura_publicar.py. Va en C:\\OTZAR\\jabura junto con jabura_publicar.py, subir_a_archive.py y github_token.txt.",
   "titulo": "Jabura Halaja · חבורת הלכה",
   "descripcion": "Shiurim de הלכות שבת de la jabura, siman por siman.",
   "autor": "Jabura Halaja",
   "email": "CAMBIAR@correo.com",
-  "idioma": "es",
+  "idioma": "he",
 
   "archive_id": "jabura-halajot-shabat",
 
   "github_user": "rabmeireliyahu",
   "github_repo": "jabura",
 
-  "modo_whatsapp": true,
-  "carpeta_whatsapp": "G:\\Mi unidad\\otzar\\jabura\\whatsapp",
-
-  "solo_agregar": true,
-  "manual": false
+  "carpeta": "G:\\.shortcut-targets-by-id\\1-1NbLQmWMK5QfqArZT1X0twlTL5M_dBk\\חבורה הלכות שבת"
 }

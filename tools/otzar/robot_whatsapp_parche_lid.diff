@@ -1,26 +1,72 @@
-553c553,561
-<     const soloDigitos = (jid.split('@')[0] || '').replace(/\D/g, '');
----
->     // === PARCHE LID (sep/2026) ===
->     // WhatsApp ya manda muchos chats privados como "NNNN@lid": ese numero NO es el
->     // telefono, asi que buscar el telefono dentro del jid fallaba en silencio y el
->     // audio del rab se iba a la "nube" en vez de guardarse. Baileys trae el
->     // telefono real en senderPn / participantPn / remoteJidAlt: se revisan todos.
->     const k = m.key || {};
->     const candidatos = [jid, k.senderPn, k.participantPn, k.remoteJidAlt, k.participantAlt]
->       .filter(Boolean).map(x => String(x).split('@')[0].replace(/\D/g, ''));
->     const soloDigitos = candidatos.join('|');
-570a579,583
->     // Si lo que llego es un AUDIO y no reconocimos el chat, que quede escrito:
->     // asi se ve en el log de quien vino y con que jid, en vez de perderse.
->     if (audioDe(m)) log(`AUDIO IGNORADO (chat privado no registrado): jid=${jid}` +
->       (m.key && m.key.senderPn ? ` tel=${m.key.senderPn}` : '') +
->       ' -> si es un rab, agregalo en escuchar_directo o manda "!otzar <clave>" desde ese chat');
-612c625,629
-<   if (esGrupo && !escuchaGrupo) return;
----
->   if (esGrupo && !escuchaGrupo) {
->     if (audioDe(m)) log(`AUDIO IGNORADO (grupo no registrado para escucha): jid=${jid}` +
->       ' -> agrega el grupo en "escuchar" del config o manda "!otzar <clave>" en ese grupo');
->     return;
->   }
+--- robot_whatsapp.js
++++ robot_whatsapp.js
+@@ -491,9 +491,17 @@
+   } catch (e) {}
+   const _etq = _ETIQUETAS_OTZAR[_showCarpeta] ||
+     ('Shiur ' + (_showCarpeta ? _showCarpeta.charAt(0).toUpperCase() + _showCarpeta.slice(1) : 'Otzar'));
+-  const base = limpiarTitulo(titulo) ||
++  let base = limpiarTitulo(titulo) ||
+     (_etq + ' ' + new Date(item.ts).toLocaleDateString('es-MX').replace(/\//g, '-') +
+      ' ' + new Date(item.ts).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }).replace(':', '.'));
++  // === JABURA (sep/2026): los shiurim van numerados para conservar el orden ===
++  // La carpeta de la jabura es la misma que lee la app: cada archivo lleva el
++  // numero que sigue ("5 titulo.m4a"), contando los audios que ya hay.
++  if (item.show === 'jabura' || /jabura/i.test(String(carpeta))) {
++    let n = 0;
++    try { n = fs.readdirSync(carpeta).filter(f => /\.(m4a|mp3|ogg|opus|aac|wav|amr)$/i.test(f)).length; } catch (e) {}
++    base = String(n + 1).padStart(2, '0') + ' ' + base;
++  }
+   const nombre = nombreLibre(carpeta, base, item.ext);
+   const destino = path.join(carpeta, nombre);
+   try {
+@@ -550,7 +558,15 @@
+     for (const e of lista) {
+       if (reg['dm:' + e.show] && reg['dm:' + e.show].id === jid) return e;
+     }
+-    const soloDigitos = (jid.split('@')[0] || '').replace(/\D/g, '');
++    // === PARCHE LID (sep/2026) ===
++    // WhatsApp ya manda muchos chats privados como "NNNN@lid": ese numero NO es el
++    // telefono, asi que buscar el telefono dentro del jid fallaba en silencio y el
++    // audio del rab se iba a la "nube" en vez de guardarse. Baileys trae el
++    // telefono real en senderPn / participantPn / remoteJidAlt: se revisan todos.
++    const k = m.key || {};
++    const candidatos = [jid, k.senderPn, k.participantPn, k.remoteJidAlt, k.participantAlt]
++      .filter(Boolean).map(x => String(x).split('@')[0].replace(/\D/g, ''));
++    const soloDigitos = candidatos.join('|');
+     for (const e of lista) {
+       const num = String(e.numero || '').replace(/\D/g, '').slice(-10);
+       if (num && soloDigitos.includes(num)) {
+@@ -568,6 +584,11 @@
+   // ===== NUBE DE TORA: solo privados que NO son chat directo =====
+   // Todo va dentro de try/catch: si truena, el robot ni se entera.
+   if (!esGrupo && !directo && !/^!otzar\s/i.test(textoDe(m))) {
++    // Si lo que llego es un AUDIO y no reconocimos el chat, que quede escrito:
++    // asi se ve en el log de quien vino y con que jid, en vez de perderse.
++    if (audioDe(m)) log(`AUDIO IGNORADO (chat privado no registrado): jid=${jid}` +
++      (m.key && m.key.senderPn ? ` tel=${m.key.senderPn}` : '') +
++      ' -> si es un rab, agregalo en escuchar_directo o manda "!otzar <clave>" desde ese chat');
+     try {
+       const N = nube();
+       if (N && typeof N.atender === 'function') await N.atender(sock, m);
+@@ -609,7 +630,11 @@
+ 
+   const escuchaGrupo = esGrupo ? grupoEscuchaDe(jid) : null;
+ 
+-  if (esGrupo && !escuchaGrupo) return;
++  if (esGrupo && !escuchaGrupo) {
++    if (audioDe(m)) log(`AUDIO IGNORADO (grupo no registrado para escucha): jid=${jid}` +
++      ' -> agrega el grupo en "escuchar" del config o manda "!otzar <clave>" en ese grupo');
++    return;
++  }
+ 
+   // de aqui en adelante: o es un grupo escuchado (peretz, ofir...), o un chat directo valido
+ 
+@@ -639,7 +664,7 @@
+     if (!buffer) { log('No pude bajar el audio tras 3 intentos.'); return; }
+     const ext = extensionDe(info.mime, info.nombre);
+     const item = { buffer, ext, ts, autor, timer: null, archivoTemp: null,
+-                   carpeta: destinoAudio.carpeta };
++                   carpeta: destinoAudio.carpeta, show: destinoAudio.show };
+ 
+     // guardar YA en disco: si el robot se reinicia, el audio no se pierde
+     try {

@@ -1,9 +1,21 @@
 {
-  "_comentario": "Esto va DENTRO de tu config_whatsapp.json, en la seccion escuchar. No es un archivo aparte.",
+  "_comentario": "Esto va DENTRO de tu config_whatsapp.json (C:\\OTZAR\\config_whatsapp.json). No es un archivo aparte: agrega la clave jabura en escuchar y en anunciar.",
+  "_carpeta": "carpetaDestino es la subcarpeta del siman que se esta estudiando AHORA dentro del Drive de la jabura. Cuando cambien de siman, cambia solo esa linea (p. ej. ...\\שיעורים בהלכה\\סימן שמא). Si la carpeta no existe, el robot la crea.",
   "escuchar": {
     "jabura": {
-      "invite": "https://chat.whatsapp.com/PEGAR-EL-LINK-DEL-GRUPO",
-      "carpetaDestino": "G:\\Mi unidad\\otzar\\jabura\\whatsapp"
+      "invite": "https://chat.whatsapp.com/DOallmE8DiABCZcaebstOY",
+      "carpetaDestino": "G:\\.shortcut-targets-by-id\\1-1NbLQmWMK5QfqArZT1X0twlTL5M_dBk\\חבורה הלכות שבת\\שיעורים בהלכה\\כותב ומוחק"
+    }
+  },
+  "anunciar": {
+    "jabura": {
+      "spotify": "PENDIENTE_SHOW_NUEVO_DESDE_EL_RSS",
+      "invite": "https://chat.whatsapp.com/DOallmE8DiABCZcaebstOY",
+      "idioma": "he",
+      "max_anuncios": 1,
+      "en_orden": true,
+      "pausado": true,
+      "_nota": "Los anuncios van al MISMO grupo donde caen los audios. Queda pausado hasta que exista el show nuevo en Spotify (feed https://rabmeireliyahu.github.io/jabura/feed.xml): pone el link en spotify y saca pausado."
     }
   }
 }
