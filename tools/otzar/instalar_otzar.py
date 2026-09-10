@@ -188,20 +188,31 @@ def parchar_robot():
 def carpeta_siman_actual():
     """La subcarpeta del siman que se estudia ahora. Si el Drive está a mano,
     toma la carpeta con el audio más reciente; si no, כותב ומוחק (שמ)."""
+    fijo = DRIVE_JABURA + "\\שיעורים בהלכה\\כותב ומוחק"
+    if "--sin-drive" in sys.argv:
+        return fijo
     base = Path(DRIVE_JABURA) / "שיעורים בהלכה"
+    print("   mirando el Drive para ver qué siman va (si tarda, Ctrl+C y corre con --sin-drive)...")
+    limite = time.time() + 20                      # el Drive por streaming puede ser lento
     try:
         mejor, cuando = None, 0
         for d in base.iterdir():
             if not d.is_dir():
                 continue
-            for f in d.rglob("*"):
-                if f.suffix.lower() in AUDIO and f.stat().st_mtime > cuando:
-                    mejor, cuando = d, f.stat().st_mtime
+            for f in d.iterdir():                  # solo el primer nivel, sin rglob
+                if time.time() > limite:
+                    raise TimeoutError
+                if f.suffix.lower() in AUDIO:
+                    m = f.stat().st_mtime
+                    if m > cuando:
+                        mejor, cuando = d, m
         if mejor:
             return str(mejor)
+    except TimeoutError:
+        aviso("el Drive tarda demasiado; dejo כותב ומוחק")
     except Exception:
         pass
-    return DRIVE_JABURA + "\\שיעורים בהלכה\\כותב ומוחק"
+    return fijo
 
 
 def configurar_whatsapp():
