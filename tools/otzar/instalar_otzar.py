@@ -4,6 +4,10 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
 
     python instalar_otzar.py            # hace todo
     python instalar_otzar.py --ver      # solo muestra qué haría, no toca nada
+    python instalar_otzar.py --robot=C:\\ruta\\robotwhats   # si no encuentra el robot solo
+
+Los shows (nacach, peretz…) viven en C:\OTZAR; el robot en
+C:\Users\<usuario>\OneDrive\Escritorio\TORAHSPOTIFY\robotwhats. Los busca solo.
 
 Qué hace, con copia de respaldo de cada archivo que toca:
   1. Parcha robot_whatsapp.js: chats privados "@lid" (por eso se perdían audios
@@ -37,6 +41,31 @@ for flujo in (sys.stdout, sys.stderr):
 RAW = "https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/tools/"
 VER = "--ver" in sys.argv
 BASE = Path(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--base=")), r"C:\OTZAR"))
+
+
+def hallar_robot():
+    """El robot (robot_whatsapp.js + config_whatsapp.json) no vive en C:\OTZAR:
+    está en la carpeta robotwhats del escritorio. Se busca en los lugares
+    conocidos y, si no, por todo el perfil del usuario."""
+    dado = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--robot=")), "")
+    candidatos = [Path(dado)] if dado else []
+    perfil = Path(os.environ.get("USERPROFILE") or Path.home())
+    candidatos += [BASE, perfil / "OneDrive" / "Escritorio" / "TORAHSPOTIFY" / "robotwhats",
+                   perfil / "Desktop" / "TORAHSPOTIFY" / "robotwhats",
+                   perfil / "Escritorio" / "TORAHSPOTIFY" / "robotwhats"]
+    for c in candidatos:
+        if (c / "robot_whatsapp.js").exists():
+            return c
+    for raiz in (perfil / "OneDrive", perfil / "Desktop", perfil / "Escritorio", perfil, Path("C:\\")):
+        try:
+            for r in raiz.glob("**/robotwhats/robot_whatsapp.js"):
+                return r.parent
+        except Exception:
+            pass
+    return None
+
+
+ROBOT = hallar_robot()
 SHA_ROBOT_ORIGINAL = "20799775c6a828c5a6eb5938bfa15eb2344f8d1d2ebdf52f3d8c0f27863905a1"
 AUDIO = (".m4a", ".mp3", ".ogg", ".opus", ".aac", ".wav", ".amr")
 NACACH_PERDIDOS = ["10 días de teshuba 5", "kaparot 1", "kaparot 2", "rosh hashana q se junta"]
@@ -144,10 +173,11 @@ def escribir(ruta, texto):
 # ── 1. robot ──────────────────────────────────────────────────────────────────
 def parchar_robot():
     paso(1, "Robot de WhatsApp (robot_whatsapp.js)")
-    ruta = BASE / "robot_whatsapp.js"
-    if not ruta.exists():
-        aviso(f"no está {ruta}: ¿estás corriendo esto en {BASE}?")
+    if not ROBOT:
+        aviso("no encontré robot_whatsapp.js; pásame la carpeta con --robot=C:\\ruta\\robotwhats")
         return
+    ruta = ROBOT / "robot_whatsapp.js"
+    ok(f"robot en {ROBOT}")
     crudo = ruta.read_bytes()
     texto = crudo.decode("utf-8")
     if "PARCHE LID" in texto and "JABURA (sep/2026)" in texto:
@@ -217,7 +247,7 @@ def carpeta_siman_actual():
 
 def configurar_whatsapp():
     paso(2, "config_whatsapp.json: agregar la jabura")
-    ruta = BASE / "config_whatsapp.json"
+    ruta = (ROBOT or BASE) / "config_whatsapp.json"
     if not ruta.exists():
         aviso(f"no está {ruta}")
         return
@@ -289,7 +319,7 @@ def carpetas_del_robot(cfg):
     for e in cfg.get("escuchar_directo") or []:
         if e.get("carpetaDestino"):
             vistas.append(Path(e["carpetaDestino"]))
-    vistas.append(BASE / "audios_esperando_titulo")
+    vistas.append((ROBOT or BASE) / "audios_esperando_titulo")
     for show in BASE.iterdir():
         if show.is_dir():
             vistas += [show / "audios_whatsapp", show / "episodios"]
@@ -313,7 +343,7 @@ def rescatar_nacach():
     destino = Path(cfgn.get("carpeta_whatsapp") or (nac / "audios_whatsapp"))
     ok(f"el subidor de nacach lee: {destino}")
     try:
-        cfgw = json.loads((BASE / "config_whatsapp.json").read_text(encoding="utf-8"))
+        cfgw = json.loads(((ROBOT or BASE) / "config_whatsapp.json").read_text(encoding="utf-8"))
     except Exception:
         cfgw = {}
     hallados = []
@@ -359,9 +389,9 @@ def rescatar_nacach():
 def main():
     print("=== Instalador Otzar · jabura + nacach ===")
     print("Base:", BASE, "(prueba en seco)" if VER else "")
-    if not (BASE / "robot_whatsapp.js").exists() and not (BASE / "config_whatsapp.json").exists():
-        sys.exit(f"En {BASE} no veo robot_whatsapp.js ni config_whatsapp.json. Corre esto desde C:\\OTZAR "
-                 f"o pásale --base=C:\\ruta\\de\\otzar")
+    print("Robot:", ROBOT or "NO ENCONTRADO (pásame --robot=C:\\ruta\\robotwhats)")
+    if not BASE.is_dir():
+        sys.exit(f"No existe {BASE}. Pásame --base=C:\\ruta\\de\\los\\shows")
     parchar_robot()
     configurar_whatsapp()
     armar_jabura()
