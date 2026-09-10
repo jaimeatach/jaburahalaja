@@ -6,8 +6,7 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py --ver      # solo muestra qué haría, no toca nada
     python instalar_otzar.py --robot=C:\\ruta\\robotwhats   # si no encuentra el robot solo
 
-Los shows (nacach, peretz…) viven en C:\\OTZAR; el robot en
-C:\\Users\\<usuario>\\OneDrive\\Escritorio\\TORAHSPOTIFY\\robotwhats. Los busca solo.
+Los shows (nacach, peretz…) viven en C:\\OTZAR; el robot en C:\\robotwhats. Los busca solo.
 
 Qué hace, con copia de respaldo de cada archivo que toca:
   1. Parcha robot_whatsapp.js: chats privados "@lid" (por eso se perdían audios
@@ -50,7 +49,8 @@ def hallar_robot():
     dado = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--robot=")), "")
     candidatos = [Path(dado)] if dado else []
     perfil = Path(os.environ.get("USERPROFILE") or Path.home())
-    candidatos += [BASE, perfil / "OneDrive" / "Escritorio" / "TORAHSPOTIFY" / "robotwhats",
+    candidatos += [Path(r"C:\robotwhats"), BASE, BASE / "robotwhats",
+                   perfil / "OneDrive" / "Escritorio" / "TORAHSPOTIFY" / "robotwhats",
                    perfil / "Desktop" / "TORAHSPOTIFY" / "robotwhats",
                    perfil / "Escritorio" / "TORAHSPOTIFY" / "robotwhats"]
     for c in candidatos:
