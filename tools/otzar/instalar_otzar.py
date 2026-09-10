@@ -5,6 +5,8 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py            # hace todo
     python instalar_otzar.py --ver      # solo muestra qué haría, no toca nada
     python instalar_otzar.py --robot=C:\\ruta\\robotwhats   # si no encuentra el robot solo
+    python instalar_otzar.py --tefila-grupo=LINK            # link de invitación de Clases Tefila Habitat
+    python instalar_otzar.py --tefila-spotify=LINK          # cuando exista el show en Spotify
 
 Los shows (nacach, peretz…) viven en C:\\OTZAR; el robot en C:\\robotwhats. Los busca solo.
 
@@ -379,6 +381,7 @@ def tefila():
         return
     carpeta_wa = str(d / "audios_whatsapp")
     spot = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--tefila-spotify=")), "")
+    grupo = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--tefila-grupo=")), "").split("?")[0]
     # config.json del show: herencia de peretz fuera
     cfgp = d / "config.json"
     if cfgp.exists():
@@ -422,6 +425,12 @@ def tefila():
         for k in ("carpeta", "grupos"):
             esc.pop(k, None)
         an = cfg.setdefault("anunciar", {}).setdefault("tefila", {"spotify": "PENDIENTE", "invite": ""})
+        if grupo.startswith("http"):
+            # con el link de invitación el robot registra el grupo solo al arrancar,
+            # para escuchar y para anunciar; no hace falta mandar "!otzar tefila"
+            esc["invite"] = grupo
+            an["invite"] = grupo
+            ok("grupo Clases Tefila Habitat puesto por link: el robot lo registra al arrancar")
         for k, v in {"idioma": "es", "max_anuncios": 2, "en_orden": True, "sin_audio": True, "sin_whatsapp": True}.items():
             an.setdefault(k, v)
         if spot.startswith("http"):
@@ -449,7 +458,9 @@ def tefila():
     except Exception:
         r = {}
     g = r.get("tefila") or r.get("escucha:tefila")
-    if g and g.get("id"):
+    if grupo.startswith("http") and not (g and g.get("id")):
+        print("   → reinicia el robot: al arrancar debe decir 'OK escucha tefila -> Clases Tefila Habitat'")
+    elif g and g.get("id"):
         ok(f"grupo registrado: {g.get('nombre', g['id'])}")
         if "peret" in str(g.get("nombre", "")).lower():
             aviso("¡ese grupo es de Peretz! Manda \"!otzar tefila\" en el grupo del Rab para corregirlo")
