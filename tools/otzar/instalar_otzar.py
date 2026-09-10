@@ -341,8 +341,15 @@ def armar_jabura():
             continue
         dest = d / nombre
         if nombre == "config.json" and dest.exists():
-            ok("config.json ya existe, lo respeto")
-            continue
+            try:
+                viejo = json.loads(dest.read_text(encoding="utf-8"))
+            except Exception:
+                viejo = {}
+            if viejo.get("feed_url"):
+                ok("config.json ya existe, lo respeto")
+                continue
+            # config viejo (feed en rabmeireliyahu/jabura): ahora el feed vive con la app en Netlify
+            respaldar(dest)
         bajar(remoto, dest)
     tok = d / "github_token.txt"
     if not tok.exists():

@@ -8,8 +8,11 @@
 
   "archive_id": "jabura-halajot-shabat",
 
-  "github_user": "rabmeireliyahu",
-  "github_repo": "jabura",
+  "_feed": "El feed se publica en el repo de la app y lo sirve Netlify: https://jaburahalajasaul.netlify.app/feed.xml",
+  "github_user": "jaimeatach",
+  "github_repo": "jaburahalaja",
+  "feed_url": "https://jaburahalajasaul.netlify.app",
+  "link": "https://jaburahalajasaul.netlify.app",
 
   "carpeta": "G:\\.shortcut-targets-by-id\\1-1NbLQmWMK5QfqArZT1X0twlTL5M_dBk\\חבורה הלכות שבת"
 }

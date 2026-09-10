@@ -166,7 +166,13 @@ def rango(remoto):
 FECHAS = Path("fechas.json")
 
 
-def fechas_del_feed(entradas):
+def feed_url_de(cfg):
+    """Dónde vive el feed: por defecto GitHub Pages del repo; "feed_url" en
+    config.json lo cambia (la jabura lo sirve Netlify junto con la app)."""
+    return (cfg.get("feed_url") or f"https://{cfg['github_user']}.github.io/{cfg['github_repo']}").rstrip("/")
+
+
+def fechas_del_feed(entradas, cfg=None):
     """Cada episodio conserva su fecha entre corridas (fechas.json). La primera vez
     se reparten hacia atrás desde hoy, en el orden de la app, cada 12 horas; los
     que llegan después toman la fecha del archivo (o ahora), siempre más nueva
@@ -175,6 +181,15 @@ def fechas_del_feed(entradas):
     if FECHAS.exists():
         try:
             fechas = json.loads(FECHAS.read_text(encoding="utf-8"))
+        except Exception:
+            fechas = {}
+    if not fechas and cfg:
+        # sin copia local (PC nueva): las fechas ya publicadas mandan, para que
+        # el orden y las fechas no cambien entre una máquina y otra
+        try:
+            with urllib.request.urlopen(feed_url_de(cfg) + "/fechas.json", timeout=30) as r:
+                fechas = json.loads(r.read().decode("utf-8"))
+            log(f"fechas.json tomado del feed publicado ({len(fechas)} fechas).")
         except Exception:
             fechas = {}
     ahora = time.time()
@@ -195,7 +210,7 @@ def fechas_del_feed(entradas):
 def armar_feed(cfg, archivos, remotos_en_archive):
     """archivos: [(local, remoto)] del Drive; solo entran los que ya están arriba."""
     base_url = f"https://archive.org/download/{cfg['archive_id']}"
-    feed_url = f"https://{cfg['github_user']}.github.io/{cfg['github_repo']}"
+    feed_url = feed_url_de(cfg)
     entradas = []
     for local, remoto in archivos:
         if SA.extension(Path(remoto).name) not in AUDIO and Path(remoto).suffix.lower() not in AUDIO:
@@ -212,7 +227,7 @@ def armar_feed(cfg, archivos, remotos_en_archive):
         entradas.append({"guid": remoto, "mtime": mtime, "peso": peso,
                          "orden": (mod, num, mtime if num == 900 else 0, nombre)})
     entradas.sort(key=lambda e: e["orden"])             # el orden de la app
-    fechas = fechas_del_feed(entradas)
+    fechas = fechas_del_feed(entradas, cfg)
     items = []
     for e in entradas:
         remoto, peso, cuando = e["guid"], e["peso"], fechas[e["guid"]]
@@ -230,7 +245,7 @@ def armar_feed(cfg, archivos, remotos_en_archive):
   <channel>
     <title>{escape(cfg["titulo"])}</title>
     <description>{escape(cfg["descripcion"])}</description>
-    <link>{feed_url}</link>
+    <link>{cfg.get("link") or feed_url}</link>
     <language>{cfg.get("idioma", "es")}</language>
     <itunes:author>{escape(cfg["autor"])}</itunes:author>
     <itunes:owner><itunes:name>{escape(cfg["autor"])}</itunes:name><itunes:email>{cfg["email"]}</itunes:email></itunes:owner>
@@ -336,7 +351,12 @@ def subir_feed(cfg, xml):
     ok_, msg = subir_archivo(cab, base, "feed.xml", xml.encode("utf-8"),
                              f"feed jabura {datetime.now():%d/%m/%Y %H:%M}")
     if ok_:
-        log(f"feed.xml publicado: https://{cfg['github_user']}.github.io/{cfg['github_repo']}/feed.xml")
+        log(f"feed.xml publicado: {feed_url_de(cfg)}/feed.xml")
+        if FECHAS.exists():
+            subir_archivo(cab, base, "fechas.json", FECHAS.read_bytes(), "fechas del feed")
+        st, _ = gh(cab, "GET", f"{base}/contents/portada.jpg")
+        if st == 404 and Path("portada.jpg").exists():
+            subir_archivo(cab, base, "portada.jpg", Path("portada.jpg").read_bytes(), "portada")
         return True
     log(f"ERROR publicando el feed: {msg}")
     return False

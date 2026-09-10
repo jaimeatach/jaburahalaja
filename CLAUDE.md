@@ -105,9 +105,13 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
 2. `tools/jabura_publicar.py` (con `config.json` de `tools/otzar/`) sube a
    archive.org solo lo que falta, conservando las subcarpetas, NUNCA borra del
    Drive, arma `feed.xml` (título = "módulo · nombre", orden por fecha) y lo
-   publica en `rabmeireliyahu/jabura` (GitHub Pages); si el repo no existe lo
-   crea y prende Pages con el `github_token.txt`. El RSS es
-   `https://rabmeireliyahu.github.io/jabura/feed.xml`. El show existente de
+   publica con la API de GitHub (`github_token.txt`) en el repo que diga
+   `config.json`: para la jabura es ESTE repo (`jaimeatach/jaburahalaja`), así
+   que `feed.xml`, `fechas.json` y `portada.jpg` viven en la raíz y los sirve
+   Netlify. El RSS es `https://jaburahalajasaul.netlify.app/feed.xml`
+   (`feed_url` en el config; sin él usaría GitHub Pages y crearía el repo).
+   El primer feed se generó desde el entorno de desarrollo con `length="0"`;
+   la primera corrida en la PC pone los tamaños reales. El show existente de
    Spotify (`SPOTIFY_SHOW`) se redirige a ese RSS desde Spotify for Creators
    ("redirect to a new host"); al hacerlo, los episodios pasan a ser los del
    feed y hay que rehacer `CAT_SPOTIFY` con `tools/spotify_lista.py`.
