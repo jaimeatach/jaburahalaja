@@ -73,6 +73,7 @@ SHA_ROBOT_ORIGINAL = "20799775c6a828c5a6eb5938bfa15eb2344f8d1d2ebdf52f3d8c0f2786
 AUDIO = (".m4a", ".mp3", ".ogg", ".opus", ".aac", ".wav", ".amr")
 NACACH_PERDIDOS = ["10 días de teshuba 5", "kaparot 1", "kaparot 2", "rosh hashana q se junta"]
 GRUPO_JABURA = "https://chat.whatsapp.com/DOallmE8DiABCZcaebstOY"
+SPOTIFY_JABURA = "https://open.spotify.com/show/1tH0BEW6Aj5Y6jjgaLyLp5"
 DRIVE_JABURA = r"G:\.shortcut-targets-by-id\1-1NbLQmWMK5QfqArZT1X0twlTL5M_dBk\חבורה הלכות שבת"
 
 # Los cinco cambios del robot, tal cual el diff (tools/otzar/robot_whatsapp_parche_lid.diff)
@@ -303,13 +304,15 @@ def configurar_whatsapp():
         "sin_spotify": True, "sin_audio": True, "sin_whatsapp": True,
         "app": "https://jaburahalajasaul.netlify.app",
         "_nota": "Anuncia al mismo grupo donde caen los audios: titulo + link a la app, sin audio (ya esta en "
-                 "el grupo). Cuando exista el show en Spotify: pon el link en spotify y sin_spotify en false.",
+                 "el grupo). Cuando el show de Spotify ya lea el feed nuevo, pon sin_spotify en false.",
     }
     ja = an.setdefault("jabura", {"spotify": "PENDIENTE_SHOW_NUEVO_DESDE_EL_RSS"})
     antes = json.dumps(ja, sort_keys=True)
     for k, v in quiero.items():
         ja.setdefault(k, v)
     ja["_nota"] = quiero["_nota"]
+    if not str(ja.get("spotify", "")).startswith("http"):
+        ja["spotify"] = SPOTIFY_JABURA
     ja["pausado"] = False
     if json.dumps(ja, sort_keys=True) != antes:
         ok("anunciar.jabura: activo, con link a la app y sin Spotify por ahora")

@@ -105,9 +105,15 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
 2. `tools/jabura_publicar.py` (con `config.json` de `tools/otzar/`) sube a
    archive.org solo lo que falta, conservando las subcarpetas, NUNCA borra del
    Drive, arma `feed.xml` (título = "módulo · nombre", orden por fecha) y lo
-   publica en `rabmeireliyahu/jabura` (GitHub Pages). El RSS es
-   `https://rabmeireliyahu.github.io/jabura/feed.xml`; de ahí sale un show NUEVO
-   en Spotify (el show existente se subió a mano y no acepta RSS externo).
+   publica en `rabmeireliyahu/jabura` (GitHub Pages); si el repo no existe lo
+   crea y prende Pages con el `github_token.txt`. El RSS es
+   `https://rabmeireliyahu.github.io/jabura/feed.xml`. El show existente de
+   Spotify (`SPOTIFY_SHOW`) se redirige a ese RSS desde Spotify for Creators
+   ("redirect to a new host"); al hacerlo, los episodios pasan a ser los del
+   feed y hay que rehacer `CAT_SPOTIFY` con `tools/spotify_lista.py`.
+   El feed va en el orden de la app (`ORDEN`): musar y חגים primero, luego los
+   simanim por número, ש״מ al final; las fechas se reparten la primera vez y
+   quedan fijas en `fechas.json` (junto al script), lo nuevo toma fecha de hoy.
 3. La app, al entrar un admin, corre `arcAutoImport()`: lee el ítem de
    archive.org (una vez por hora) y agrega lo nuevo. Un archivo en una carpeta
    del `CATALOG` va a ese módulo; una carpeta nueva que nombra su siman
@@ -115,8 +121,11 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    título del ש״ע si falta); el título es el nombre sin el número
    (`catTituloLibre`). Sefarim se procesan al final y en modo automático no
    crean módulos.
-4. `anunciar.jabura` en el config del robot manda el aviso al mismo grupo;
-   queda `pausado` hasta que exista el show nuevo en Spotify.
+4. `anunciar.jabura` en el config del robot manda el aviso al mismo grupo:
+   título + link a la app (`app`), `sin_audio` (el audio ya está en el grupo),
+   `sin_whatsapp`, y `sin_spotify` hasta que el show lea el feed nuevo. Los
+   tres flags son parches al robot (`sinAudio()`, `datos.app`). `ANUNCIAR.bat`
+   corre `jabura_publicar.py` antes de mandar la orden al robot.
 5. `tools/otzar/instalar_otzar.py` (o `INSTALAR_OTZAR.bat`) hace todo en la PC
    de Otzar de un tirón: parcha el robot (con respaldo), agrega la jabura al
    `config_whatsapp.json`, arma `C:\OTZAR\jabura` y rescata los audios de

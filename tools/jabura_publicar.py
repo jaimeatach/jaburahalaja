@@ -109,6 +109,88 @@ def titulo_de(remoto):
 MIME = {".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".mp4": "audio/mp4", ".aac": "audio/aac",
         ".ogg": "audio/ogg", ".opus": "audio/ogg", ".wav": "audio/wav"}
 
+# ── el orden del feed es el de la app ────────────────────────────────────────
+# Lo más viejo es el musar, después חגים, y luego los simanim por número: מוקצה
+# (ש״ח), שי״ג, שי״ד… hasta ש״מ, que queda al final como lo más nuevo. Los módulos
+# que comparten siman (מעבד·טוחן·לש en שכ״א, גוזז·כותב ומוחק en ש״מ) van en ese
+# orden. Una carpeta nueva que nombre su siman ("סימן שמא") se ubica por el número.
+ORDEN = [
+    ("שאול לניאדו", 0), ("רב יהודה חאסקי שליט א", 1), ("שיחות מוסר", 2), ("חגים", 3),
+    ("מוקצה", 308), ("סימן שי ג בונה וסותר", 313), ("סימן שי ד בנין וסתירה בכלים", 314),
+    ("סימן שט ו אוהל", 315), ("צידה", 316), ("קושר", 317), ("בורר", 319),
+    ("מלאכת סחיטה - דש", 320), ("מלאכת מעבד", 321.0), ("טוחן", 321.1), ("לש", 321.2),
+    ("גוזז", 340.0), ("כותב ומוחק", 340.1),
+]
+GEMATRIA = {"א": 1, "ב": 2, "ג": 3, "ד": 4, "ה": 5, "ו": 6, "ז": 7, "ח": 8, "ט": 9, "י": 10, "כ": 20, "ך": 20,
+            "ל": 30, "מ": 40, "ם": 40, "נ": 50, "ן": 50, "ס": 60, "ע": 70, "פ": 80, "ף": 80, "צ": 90, "ץ": 90,
+            "ק": 100, "ר": 200, "ש": 300, "ת": 400}
+
+
+def norm(t):
+    t = re.sub(r"[\u0591-\u05BD\u05BF-\u05C7]", "", str(t))
+    t = re.sub(r"[׳״'\"]", "", t)
+    return re.sub(r"\s+", " ", re.sub(r"[`.\-_·־–—\[\]()]", " ", t)).strip().lower()
+
+
+ORDEN_N = [(norm(k), v) for k, v in ORDEN]
+
+
+def siman_de_carpeta(nombre):
+    m = re.match(r"^(?:סימן|סי)?\s*([\u05D0-\u05EA]{1,5}|\d{1,3})(?:\s|$)", norm(nombre))
+    if not m:
+        return 0
+    v = m.group(1)
+    n = int(v) if v.isdigit() else sum(GEMATRIA.get(c, 0) for c in v)
+    return n if 242 <= n <= 365 else 0
+
+
+def rango(remoto):
+    """(módulo, número dentro del módulo, nombre) para ordenar como la app."""
+    partes = remoto.split("/")
+    dirs, base = partes[:-1], partes[-1]
+    mod = 999.0
+    for d in reversed(dirs):
+        k = norm(d)
+        hit = next((v for kk, v in ORDEN_N if kk == k), None)
+        if hit is None:
+            n = siman_de_carpeta(d)
+            hit = float(n) if n else None
+        if hit is not None:
+            mod = float(hit)
+            break
+    m = re.match(r"^\s*\[?(\d{1,3})\]?", base)
+    num = int(m.group(1)) if m else 900
+    return (mod, num, norm(base))
+
+
+FECHAS = Path("fechas.json")
+
+
+def fechas_del_feed(entradas):
+    """Cada episodio conserva su fecha entre corridas (fechas.json). La primera vez
+    se reparten hacia atrás desde hoy, en el orden de la app, cada 12 horas; los
+    que llegan después toman la fecha del archivo (o ahora), siempre más nueva
+    que todo lo anterior, para que Spotify y el robot los vean como nuevos."""
+    fechas = {}
+    if FECHAS.exists():
+        try:
+            fechas = json.loads(FECHAS.read_text(encoding="utf-8"))
+        except Exception:
+            fechas = {}
+    ahora = time.time()
+    nuevos = [e for e in entradas if e["guid"] not in fechas]
+    if not fechas and nuevos:                           # primera vez: todos hacia atrás
+        for i, e in enumerate(nuevos):
+            fechas[e["guid"]] = ahora - (len(nuevos) - 1 - i) * 12 * 3600
+    else:
+        tope = max(fechas.values(), default=0)
+        for e in nuevos:
+            f = max(e["mtime"], tope + 60, ahora - 60)
+            fechas[e["guid"]] = f
+            tope = f
+    FECHAS.write_text(json.dumps(fechas, ensure_ascii=False, indent=0), encoding="utf-8")
+    return fechas
+
 
 def armar_feed(cfg, archivos, remotos_en_archive):
     """archivos: [(local, remoto)] del Drive; solo entran los que ya están arriba."""
@@ -122,13 +204,18 @@ def armar_feed(cfg, archivos, remotos_en_archive):
             continue
         try:
             st = os.stat(local)
-            cuando, peso = st.st_mtime, st.st_size
+            mtime, peso = st.st_mtime, st.st_size
         except OSError:
-            cuando, peso = time.time(), 0
-        entradas.append((cuando, remoto, peso))
-    entradas.sort()                                     # del más viejo al más nuevo
+            mtime, peso = time.time(), 0
+        mod, num, nombre = rango(remoto)
+        # sin número en el nombre (musar, ועדים): por fecha del archivo
+        entradas.append({"guid": remoto, "mtime": mtime, "peso": peso,
+                         "orden": (mod, num, mtime if num == 900 else 0, nombre)})
+    entradas.sort(key=lambda e: e["orden"])             # el orden de la app
+    fechas = fechas_del_feed(entradas)
     items = []
-    for cuando, remoto, peso in entradas:
+    for e in entradas:
+        remoto, peso, cuando = e["guid"], e["peso"], fechas[e["guid"]]
         url = base_url + "/" + "/".join(quote(p) for p in remoto.split("/"))
         items.append(f"""    <item>
       <title>{escape(titulo_de(remoto))}</title>
