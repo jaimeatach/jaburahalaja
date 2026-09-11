@@ -19,7 +19,8 @@ Qué hace, con copia de respaldo de cada archivo que toca:
      jabura_publicar.bat, config.json y portada.jpg, y le copia el github_token.txt.
      El publicador crea solo el repo rabmeireliyahu/jabura con Pages si no existe.
   5. Pone en ANUNCIAR.bat el paso que sube la jabura antes de anunciar, y deja
-     anunciar.jabura activo: titulo + link a la app, al mismo grupo.
+     anunciar.jabura activo: titulo + link a la app, al mismo grupo. Nada corre
+     programado: todo pasa cuando se pica ANUNCIAR.bat.
   4. Nacach: busca los audios que quedaron sin publicar (teshuba 5, Kaparot 1 y
      2, Rosh Hashana q se junta) en todas las carpetas del robot, los deja en la
      carpeta de WhatsApp de nacach y corre podcast_bot.py ahí.
@@ -413,68 +414,19 @@ def armar_jabura():
     print("   → para publicar: doble clic en jabura\\jabura_publicar.bat (o ANUNCIAR.bat, que ya lo corre)")
 
 
-# ── 8. tarea programada: cada 30 minutos, solo ─────────────────────────────────
+# ── 8. sin tarea programada: todo pasa cuando Beto pica ANUNCIAR.bat ──────────
 def tarea_programada():
-    paso(8, "Tarea programada: publicar solo cada 30 minutos")
-    d = BASE / "jabura"
-    dest = d / "auto_publicar.bat"
-    if not bajar("otzar/auto_publicar.bat", dest):
-        return
+    paso(8, "Tarea programada: quitarla (todo corre con ANUNCIAR.bat)")
     if VER or os.name != "nt":
-        print("   (crearía) tarea 'Otzar publicar' cada 30 min →", dest)
+        print("   (borraría) la tarea 'Otzar publicar' si existiera")
         return
-    cmd = ["schtasks", "/Create", "/F", "/TN", "Otzar publicar", "/SC", "MINUTE", "/MO", "30",
-           "/TR", f'cmd /c ""{dest}""', "/RL", "LIMITED"]
-    r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
-    if r.returncode == 0:
-        ok("tarea 'Otzar publicar' creada: cada 30 min sube jabura y tefila, espeja nacach y avisa al robot si hay shiur nuevo")
-    print("   corriendo auto_publicar.bat ahora mismo (lo mismo que hará la tarea)...")
-    subprocess.run(["cmd", "/c", str(dest)])
-    logf = d / "auto.log"
-    if logf.exists():
-        lineas = logf.read_text(encoding="utf-8", errors="replace").splitlines()
-        print("   --- últimas líneas de jabura\\auto.log ---")
-        for l in lineas[-14:]:
-            print("   " + l[:160])
-    else:
-        aviso("no pude crear la tarea: " + (r.stderr or r.stdout).strip()[:200])
-        aviso("créala a mano en el Programador de tareas apuntando a " + str(dest))
-
-
-# ── 9. diagnóstico de la jabura: ¿qué hizo el robot con el último audio? ───────
-def diagnostico_jabura():
-    paso(9, "Jabura: últimos audios en el Drive y qué dijo el robot")
-    try:
-        cfg = json.loads(((ROBOT or BASE) / "config_whatsapp.json").read_text(encoding="utf-8"))
-        carpeta = Path(cfg["escuchar"]["jabura"]["carpetaDestino"])
-    except Exception:
-        carpeta = None
-    if carpeta:
-        try:
-            archivos = sorted([f for f in carpeta.iterdir() if f.is_file()], key=lambda f: f.stat().st_mtime)[-5:]
-            print(f"   carpeta: {carpeta}")
-            for f in archivos:
-                print(f"   · {time.strftime('%d/%m %H:%M', time.localtime(f.stat().st_mtime))}  {f.name}  ({f.stat().st_size // 1024} KB)")
-            if not archivos:
-                aviso("la carpeta está vacía")
-        except Exception as e:                              # noqa: BLE001
-            aviso(f"no pude leer la carpeta del Drive: {e}")
-    log_robot = (ROBOT or BASE) / "robot_whatsapp.log"
-    if log_robot.exists():
-        hoy = time.strftime("%-d/%-m/%Y") if os.name != "nt" else time.strftime("%#d/%#m/%Y")
-        lineas = log_robot.read_text(encoding="utf-8", errors="replace").splitlines()
-        claves = ("GUARDADO", "IGNORADO", "Esperando titulo", "escucha jabura", "Mekorot", "AUDIO", "REGISTRADO", "RECUPERADOS")
-        util = [l for l in lineas if any(k in l for k in claves) and hoy in l[:14]]
-        print(f"   robot hoy ({hoy}): {len(util)} líneas de audio")
-        for l in util[-15:]:
-            print("   " + l[:150])
-        if not util:
-            ult = [l for l in lineas if "GUARDADO" in l][-3:]
-            print("   últimos GUARDADO de cualquier día:")
-            for l in ult:
-                print("   " + l[:150])
-    else:
-        aviso("no encontré robot_whatsapp.log")
+    r = subprocess.run(["schtasks", "/Delete", "/TN", "Otzar publicar", "/F"], capture_output=True, text=True,
+                       encoding="utf-8", errors="replace")
+    ok("tarea 'Otzar publicar' borrada" if r.returncode == 0 else "no había tarea programada")
+    viejo = BASE / "jabura" / "auto_publicar.bat"
+    if viejo.exists():
+        viejo.unlink()
+    print("   → ANUNCIAR.bat hace todo: sube jabura y tefila, espeja nacach y manda anunciar al robot")
 
 
 # ── 7. tefila (Rab Tofi Cherem) ───────────────────────────────────────────────
