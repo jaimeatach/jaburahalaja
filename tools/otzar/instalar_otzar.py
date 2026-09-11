@@ -429,6 +429,42 @@ def tarea_programada():
     print("   → ANUNCIAR.bat hace todo: sube jabura y tefila, espeja nacach y manda anunciar al robot")
 
 
+# ── 9. diagnóstico de la jabura: ¿qué hizo el robot con el último audio? ───────
+def diagnostico_jabura():
+    paso(9, "Jabura: últimos audios en el Drive y qué dijo el robot")
+    try:
+        cfg = json.loads(((ROBOT or BASE) / "config_whatsapp.json").read_text(encoding="utf-8"))
+        carpeta = Path(cfg["escuchar"]["jabura"]["carpetaDestino"])
+    except Exception:
+        carpeta = None
+    if carpeta:
+        try:
+            archivos = sorted([f for f in carpeta.iterdir() if f.is_file()], key=lambda f: f.stat().st_mtime)[-5:]
+            print(f"   carpeta: {carpeta}")
+            for f in archivos:
+                print(f"   · {time.strftime('%d/%m %H:%M', time.localtime(f.stat().st_mtime))}  {f.name}  ({f.stat().st_size // 1024} KB)")
+            if not archivos:
+                aviso("la carpeta está vacía")
+        except Exception as e:                              # noqa: BLE001
+            aviso(f"no pude leer la carpeta del Drive: {e}")
+    log_robot = (ROBOT or BASE) / "robot_whatsapp.log"
+    if log_robot.exists():
+        hoy = time.strftime("%-d/%-m/%Y") if os.name != "nt" else time.strftime("%#d/%#m/%Y")
+        lineas = log_robot.read_text(encoding="utf-8", errors="replace").splitlines()
+        claves = ("GUARDADO", "IGNORADO", "Esperando titulo", "escucha jabura", "Mekorot", "AUDIO", "REGISTRADO", "RECUPERADOS", "ANUNCIADO")
+        util = [l for l in lineas if any(k in l for k in claves) and hoy in l[:14]]
+        print(f"   robot hoy ({hoy}): {len(util)} líneas de audio")
+        for l in util[-15:]:
+            print("   " + l[:150])
+        if not util:
+            ult = [l for l in lineas if "GUARDADO" in l][-3:]
+            print("   últimos GUARDADO de cualquier día:")
+            for l in ult:
+                print("   " + l[:150])
+    else:
+        aviso("no encontré robot_whatsapp.log")
+
+
 # ── 7. tefila (Rab Tofi Cherem) ───────────────────────────────────────────────
 def tefila():
     paso(7, "Tefila (Rab Tofi Cherem): grupo Clases Tefila Habitat → archive.org → feed → Spotify")
