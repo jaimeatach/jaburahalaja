@@ -42,6 +42,7 @@ for flujo in (sys.stdout, sys.stderr):
     except Exception:
         pass
 
+HUBO_NUEVOS = False          # True si esta corrida subió shiurim nuevos (sale con código 3)
 AUDIO = {".m4a", ".mp3", ".mp4", ".m4v", ".mov", ".wav", ".ogg", ".opus", ".aac", ".wma", ".aif", ".aiff", ".3gp"}
 
 
@@ -86,6 +87,8 @@ def subir_nuevos(cfg, archivos, ver):
                 else:
                     time.sleep(5 * intento)
     log(f"Subidos {subidos} de {len(pendientes)}.")
+    global HUBO_NUEVOS
+    HUBO_NUEVOS = subidos > 0
     return ya
 
 
@@ -438,8 +441,10 @@ def main():
     if ver:
         log("Prueba en seco: no se subió ni se publicó nada.")
         return
-    subir_feed(cfg, xml)
+    publicado = subir_feed(cfg, xml)
     log("Listo. En la app, los nuevos aparecen solos al entrar como admin.")
+    if HUBO_NUEVOS and publicado:
+        sys.exit(3)                  # aviso para auto_publicar.bat: hay que anunciar
 
 
 if __name__ == "__main__":

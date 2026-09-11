@@ -372,6 +372,28 @@ def armar_jabura():
     print("   → para publicar: doble clic en jabura\\jabura_publicar.bat (o ANUNCIAR.bat, que ya lo corre)")
 
 
+# ── 8. tarea programada: cada 30 minutos, solo ─────────────────────────────────
+def tarea_programada():
+    paso(8, "Tarea programada: publicar solo cada 30 minutos")
+    d = BASE / "jabura"
+    dest = d / "auto_publicar.bat"
+    if not bajar("otzar/auto_publicar.bat", dest):
+        return
+    if VER or os.name != "nt":
+        print("   (crearía) tarea 'Otzar publicar' cada 30 min →", dest)
+        return
+    cmd = ["schtasks", "/Create", "/F", "/TN", "Otzar publicar", "/SC", "MINUTE", "/MO", "30",
+           "/TR", f'cmd /c ""{dest}""', "/RL", "LIMITED"]
+    r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if r.returncode == 0:
+        ok("tarea 'Otzar publicar' creada: cada 30 min sube jabura y tefila, espeja nacach y avisa al robot si hay shiur nuevo")
+        subprocess.run(["schtasks", "/Run", "/TN", "Otzar publicar"], capture_output=True)
+        ok("primera corrida lanzada ahora; el registro queda en jabura\\auto.log")
+    else:
+        aviso("no pude crear la tarea: " + (r.stderr or r.stdout).strip()[:200])
+        aviso("créala a mano en el Programador de tareas apuntando a " + str(dest))
+
+
 # ── 7. tefila (Rab Tofi Cherem) ───────────────────────────────────────────────
 def tefila():
     paso(7, "Tefila (Rab Tofi Cherem): grupo Clases Tefila Habitat → archive.org → feed → Spotify")
@@ -631,6 +653,7 @@ def main():
     rescatar_nacach()
     espejo_nacach()
     tefila()
+    tarea_programada()
     print("\nListo." if not VER else "\nPrueba en seco terminada: no se cambió nada.")
 
 

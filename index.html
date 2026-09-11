@@ -327,6 +327,7 @@ input[type=range].seek::-moz-range-thumb{width:16px;height:16px;border-radius:50
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
           <span>Clip</span>
         </button>
+        <a class="pl-speed" id="pl-open" href="#" target="_blank" rel="noopener" title="Abrir audio" style="text-decoration:none">↗</a>
         <button class="pl-speed" id="pl-speed" onclick="cycleSpeed()">1x</button>
         <button class="pl-btn" onclick="skip(-30)" title="-30s">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2-9.4L1 10"/></svg>
@@ -364,7 +365,7 @@ const SUPABASE_URL = "https://enkofkroxudsblewxxos.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_nAsf0qU7fPUOZ5K7OgqwYw_hUPgzOrZ";
 const BUCKET = "jabura";
 const APP_NAME = "חבורת הלכה";
-const BUILD = "2026-09-10 · spotify vivo";
+const BUILD = "2026-09-11 · auto";
 
 const $ = id => document.getElementById(id);
 const app = $('app');
@@ -3220,6 +3221,9 @@ function playShiur(id){
     }
   });
   const sm = getSiman(x.simanId);
+  /* Salida de emergencia: si el celular no reproduce dentro de la app, el
+     mismo archivo se abre en el reproductor del teléfono */
+  const abrir = $('pl-open'); if (abrir) abrir.href = x.url;
   $('pl-title').textContent = x.title;
   $('pl-sub').innerHTML = (isMusar(sm)
     ? esc(sm.title || t('sija'))
