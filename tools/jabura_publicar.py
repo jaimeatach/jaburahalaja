@@ -22,6 +22,7 @@ import base64
 import json
 import os
 import re
+import subprocess
 import sys
 import time
 import urllib.error
@@ -56,6 +57,42 @@ def cargar_config():
         sys.exit("Falta config.json en esta carpeta.")
     with open(ruta, encoding="utf-8") as f:
         return json.load(f)
+
+
+# ── 0. lo que iPhone y Spotify no reproducen (notas de voz .ogg/.opus, .amr,
+#       .wav) se convierte a mp3 con ffmpeg; el Drive no se toca: la copia mp3
+#       queda en convertidos\ y es la que sube y va al feed ────────────────────
+CONVERTIR = {".ogg", ".opus", ".amr", ".wav", ".aac", ".wma", ".aif", ".aiff", ".3gp"}
+
+
+def convertir_a_mp3(archivos, ver):
+    salida = []
+    cache = Path("convertidos")
+    for local, remoto in archivos:
+        ext = Path(remoto).suffix.lower()
+        if ext not in CONVERTIR:
+            salida.append((local, remoto))
+            continue
+        remoto_mp3 = remoto[: -len(ext)] + ".mp3"
+        destino = cache / Path(remoto_mp3)
+        if not destino.exists():
+            if ver:
+                print("    (convertiría a mp3)", remoto)
+            else:
+                destino.parent.mkdir(parents=True, exist_ok=True)
+                r = subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", local,
+                                    "-codec:a", "libmp3lame", "-b:a", "96k", str(destino)])
+                if r.returncode != 0 or not destino.exists():
+                    log(f"  no pude convertir {remoto} (¿falta ffmpeg?); lo dejo como está")
+                    salida.append((local, remoto))
+                    continue
+                try:
+                    os.utime(destino, (os.stat(local).st_mtime, os.stat(local).st_mtime))
+                except OSError:
+                    pass
+                log(f"  mp3: {remoto_mp3}")
+        salida.append((str(destino) if destino.exists() else local, remoto_mp3))
+    return salida
 
 
 # ── 1. subir lo nuevo a archive.org, conservando la ruta ─────────────────────
@@ -360,7 +397,7 @@ def llaves_spotify(cfg):
 
 
 def episodios_spotify(cfg):
-    show = cfg.get("spotify_show", "")
+    show = cfg.get("spotify_show") or "https://open.spotify.com/show/1tH0BEW6Aj5Y6jjgaLyLp5"
     m = re.search(r"show/([A-Za-z0-9]+)", show)
     if not m:
         return None
@@ -434,6 +471,7 @@ def main():
     archivos, dudosos = SA.listar(carpeta)
     if dudosos:
         log(f"OJO: {len(dudosos)} archivos sin extensión que no identifiqué; se saltean.")
+    archivos = convertir_a_mp3(archivos, ver)
     arriba = subir_nuevos(cfg, archivos, ver)
     xml, n = armar_feed(cfg, archivos, arriba)
     Path("feed.xml").write_text(xml, encoding="utf-8")

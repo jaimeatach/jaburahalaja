@@ -365,7 +365,7 @@ const SUPABASE_URL = "https://enkofkroxudsblewxxos.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_nAsf0qU7fPUOZ5K7OgqwYw_hUPgzOrZ";
 const BUCKET = "jabura";
 const APP_NAME = "חבורת הלכה";
-const BUILD = "2026-09-11 · auto";
+const BUILD = "2026-09-11 · mp3";
 
 const $ = id => document.getElementById(id);
 const app = $('app');
@@ -679,9 +679,9 @@ async function sha256(text){
 }
 function randSalt(){ return [...crypto.getRandomValues(new Uint8Array(12))].map(b=>b.toString(16).padStart(2,'0')).join(''); }
 let toastTimer;
-function toast(msg){
+function toast(msg, ms){
   const el = $('toast'); el.textContent = msg; el.classList.add('show');
-  clearTimeout(toastTimer); toastTimer = setTimeout(()=>el.classList.remove('show'), 2600);
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>el.classList.remove('show'), ms || 2600);
 }
 function openSheet(html, wide){
   const sh = $('sheet');
@@ -3197,8 +3197,11 @@ const audio = $('audio');
    y sin aviso: así al menos se ve qué pasó. */
 audio.addEventListener('error', () => {
   if (!PL.id) return;
-  const c = (audio.error && audio.error.code) || 0;
-  toast(t('playErr') + (c ? ' · ' + c : ''));
+  const err = audio.error || {};
+  const nombres = { 1: 'ABORTED', 2: 'NETWORK', 3: 'DECODE', 4: 'SRC_NOT_SUPPORTED' };
+  const detalle = [nombres[err.code] || err.code || '', err.message || ''].filter(Boolean).join(' · ');
+  toast(t('playErr') + (detalle ? ' · ' + detalle : '') + ' · ↗', 6000);
+  const abrir = $('pl-open'); if (abrir) abrir.style.color = 'var(--gold)';
 });
 let PL = { id:null, playing:false };
 const SPEEDS = [1, 1.25, 1.5, 1.75, 2, 2.5, 3, 0.75];
@@ -3233,7 +3236,10 @@ function playShiur(id){
   /* play() devuelve una promesa: si el navegador la rechaza hay que enterarse,
      si no el shiur queda mudo sin decir por qué. */
   const arranque = audio.play();
-  if (arranque && arranque.catch) arranque.catch(e => toast(t('playErr') + (e && e.name ? ' · ' + e.name : '')));
+  if (arranque && arranque.catch) arranque.catch(e => {
+    toast(t('playErr') + (e && e.name ? ' · ' + e.name : '') + (e && e.message ? ' · ' + e.message : '') + ' · ↗', 6000);
+    const abrir = $('pl-open'); if (abrir) abrir.style.color = 'var(--gold)';
+  });
   if ('mediaSession' in navigator){
     navigator.mediaSession.metadata = new MediaMetadata({ title: x.title, artist: APP_NAME });
   }

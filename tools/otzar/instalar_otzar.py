@@ -348,7 +348,13 @@ def armar_jabura():
             except Exception:
                 viejo = {}
             if viejo.get("feed_url"):
-                ok("config.json ya existe, lo respeto")
+                faltan = {"spotify_show": SPOTIFY_JABURA, "robot": str(ROBOT or r"C:\robotwhats"),
+                          "link": "https://jaburahalajasaul.netlify.app"}
+                nuevas = {k: v for k, v in faltan.items() if not viejo.get(k)}
+                if nuevas and not VER:
+                    viejo.update(nuevas)
+                    dest.write_text(json.dumps(viejo, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+                ok("config.json ya existe" + (f", le agregué {', '.join(nuevas)}" if nuevas else ", lo respeto"))
                 continue
             # config viejo (feed en rabmeireliyahu/jabura): ahora el feed vive con la app en Netlify
             respaldar(dest)
