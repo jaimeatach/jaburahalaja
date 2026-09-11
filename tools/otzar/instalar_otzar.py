@@ -7,6 +7,7 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py --robot=C:\\ruta\\robotwhats   # si no encuentra el robot solo
     python instalar_otzar.py --tefila-grupo=LINK            # link de invitación de Clases Tefila Habitat
     python instalar_otzar.py --tefila-spotify=LINK          # cuando exista el show en Spotify
+    python instalar_otzar.py --reanunciar-jabura            # que el próximo ANUNCIAR mande el último shiur
 
 Los shows (nacach, peretz…) viven en C:\\OTZAR; el robot en C:\\robotwhats. Los busca solo.
 
@@ -429,6 +430,37 @@ def tarea_programada():
     print("   → ANUNCIAR.bat hace todo: sube jabura y tefila, espeja nacach y manda anunciar al robot")
 
 
+# ── 10. --reanunciar-jabura: que el próximo ANUNCIAR mande el último shiur ─────
+def reanunciar_jabura():
+    if "--reanunciar-jabura" not in sys.argv:
+        return
+    paso(10, "Jabura: volver a poner en cola el último shiur para el próximo ANUNCIAR")
+    estado = (ROBOT or BASE) / "estado_anuncios.json"
+    try:
+        with urllib.request.urlopen("https://jaburahalajasaul.netlify.app/feed.xml", timeout=30) as r:
+            feed = r.read().decode("utf-8", "replace")
+        guids = re.findall(r"<guid[^>]*>(.*?)</guid>", feed)
+        ultimo = guids[-1].replace("&amp;", "&") if guids else ""
+    except Exception as e:                                  # noqa: BLE001
+        aviso(f"no pude leer el feed: {e}")
+        return
+    if not ultimo:
+        aviso("el feed no tiene episodios")
+        return
+    try:
+        e = json.loads(estado.read_text(encoding="utf-8")) if estado.exists() else {}
+    except Exception:
+        e = {}
+    lista = e.get("jabura") or []
+    if ultimo in lista:
+        respaldar(estado)
+        e["jabura"] = [g for g in lista if g != ultimo]
+        escribir(estado, json.dumps(e, ensure_ascii=False, indent=2))
+        ok(f"desmarcado: {ultimo.split('/')[-1]} → sale en el próximo ANUNCIAR")
+    else:
+        ok(f"'{ultimo.split('/')[-1]}' no estaba marcado: sale en el próximo ANUNCIAR")
+
+
 # ── 9. diagnóstico de la jabura: ¿qué hizo el robot con el último audio? ───────
 def diagnostico_jabura():
     paso(9, "Jabura: últimos audios en el Drive y qué dijo el robot")
@@ -726,6 +758,7 @@ def main():
     tefila()
     tarea_programada()
     diagnostico_jabura()
+    reanunciar_jabura()
     print("\nListo." if not VER else "\nPrueba en seco terminada: no se cambió nada.")
 
 
