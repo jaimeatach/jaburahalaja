@@ -365,7 +365,7 @@ const SUPABASE_URL = "https://enkofkroxudsblewxxos.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_nAsf0qU7fPUOZ5K7OgqwYw_hUPgzOrZ";
 const BUCKET = "jabura";
 const APP_NAME = "חבורת הלכה";
-const BUILD = "2026-09-11 · mp3";
+const BUILD = "2026-09-11 · anuncio";
 
 const $ = id => document.getElementById(id);
 const app = $('app');
@@ -509,7 +509,7 @@ he:{
   catDirBtn:'העלאת תיקייה שלמה', catDirT:'העלאת התיקייה מהכונן',
   catDirPick:'בחר את התיקייה "חבורה הלכות שבת" מהמחשב', catFilesN:'קבצים',
   catDirHint:'כל קובץ ישויך למודול ולשיעור שלו לפי שם התיקייה ושם הקובץ', catDirNone:'לא זוהו קבצים מהמודולים',
-  catDirSkip:'ללא שיוך', catDirDup:'כבר היו למעלה', arcAutoNew:'שיעורים חדשים נוספו מ־archive.org', catSefarim:'ספרים · לתוכן של כל סימן',
+  catDirSkip:'ללא שיוך', catDirDup:'כבר היו למעלה', arcAutoNew:'שיעורים חדשים נוספו מ־archive.org', arcAutoPend:'השיעור עוד לא נכנס לאפליקציה; ייכנס כשהמנהל ייכנס', catSefarim:'ספרים · לתוכן של כל סימן',
   publishQ:'פרסום השאלה', publishGen:'פרסום', expand:'הגדלה', shrink:'הקטנה', myNotesBtn:'ההערות שלי', sortRecent:'לפי תאריך', sortSiman:'לפי סימן וסעיף', qaSimanOpt:'סימן (לא חובה)', qaSaifOpt:'סעיף (לא חובה)', answeredYou:'ענו על השאלה שלך'
 },
 es:{
@@ -608,7 +608,7 @@ es:{
   catDirBtn:'Subir carpeta completa', catDirT:'Subir la carpeta del Drive',
   catDirPick:'Elegí la carpeta "חבורה הלכות שבת" desde tu computadora', catFilesN:'archivos',
   catDirHint:'Cada archivo se asigna a su módulo y su shiur según la carpeta y el nombre', catDirNone:'No se reconoció ningún archivo de los módulos',
-  catDirSkip:'sin asignar', catDirDup:'ya estaban', arcAutoNew:'shiurim nuevos agregados desde archive.org', catSefarim:'Sefarim · al contenido de cada siman',
+  catDirSkip:'sin asignar', catDirDup:'ya estaban', arcAutoNew:'shiurim nuevos agregados desde archive.org', arcAutoPend:'El shiur todavía no entró a la app; entra cuando el admin abra la app', catSefarim:'Sefarim · al contenido de cada siman',
   publishQ:'Publicar pregunta', publishGen:'Publicar', expand:'Ampliar', shrink:'Reducir', myNotesBtn:'Mis apuntes', sortRecent:'Recientes', sortSiman:'Por siman y saif', qaSimanOpt:'Siman (opcional)', qaSaifOpt:'Saif (opcional)', answeredYou:'Respondieron tu pregunta'
 }};
 const t = k => (STR[LANG] && STR[LANG][k]) || STR.he[k] || k;
@@ -760,6 +760,7 @@ function route(){
   if (p[0] === 'news'){ PENDING_FOCUS = p[1] ? 'it-' + p[1] : null; show('news'); return; }
   if (p[0] === 'qa'){ PENDING_FOCUS = p[1] ? 'it-' + p[1] : null; show('qa'); return; }
   if (p[0] === 'item' && p[1] && p[2]){ resolveItem(p[1], p[2]); return; }
+  if (p[0] === 's' && p[1] && p[2]){ resolveShiurTitulo(p[1], p.slice(2).join('/')); return; }
   if (p[0] === 'add'){ openAddFromLink(p[1], p[2], p[3]); return; }
   show('home');
 }
@@ -789,6 +790,33 @@ async function resolveItem(kind, id){
     CUR.tab = def[1];
     PENDING_FOCUS = 'it-' + id;
     window._pendingOpen = { kind, id };
+    show('siman');
+  } catch(e){ show('home'); }
+}
+/* Link del anuncio de WhatsApp: #/s/<número de siman>/<título>. El robot no
+   conoce los ids de la base, así que se busca por número y por título. */
+async function resolveShiurTitulo(num, titulo){
+  const sm = SIMANIM.find(x => x.number === parseInt(num, 10) && !isMusar(x));
+  if (!sm){ toast(t('err') + '404'); return show('home'); }
+  const buscar = async () => {
+    const { data } = await sb.from(T.shiurim).select('*').eq('simanId', sm.id);
+    const lista = data || [];
+    let x = lista.find(y => catNorm(y.title) === catNorm(titulo));
+    if (!x){ const i = spotifyMejor(titulo, lista.map(y => y.title)); if (i >= 0) x = lista[i]; }
+    return x;
+  };
+  try {
+    let x = await buscar();
+    if (!x && isAdmin()){
+      /* Recién publicado: el admin lo trae de archive.org ahora mismo */
+      try { sessionStorage.removeItem('jh_arc_auto'); } catch(e){}
+      await arcAutoImport();
+      x = await buscar();
+    }
+    CUR.simanId = sm.id; CUR.tab = 'shiurim';
+    CUR.saif = (x && x.saifim && x.saifim[0]) || 1;
+    if (x){ PENDING_FOCUS = 'it-' + x.id; window._pendingOpen = { kind:'s', id:x.id }; }
+    else toast(t('arcAutoPend'), 5000);
     show('siman');
   } catch(e){ show('home'); }
 }

@@ -269,12 +269,21 @@ def armar_feed(cfg, archivos, remotos_en_archive):
     entradas.sort(key=lambda e: e["orden"])             # el orden de la app
     fechas = fechas_del_feed(entradas, cfg)
     items = []
+    app = (cfg.get("link") or feed_url).rstrip("/")
     for e in entradas:
         remoto, peso, cuando = e["guid"], e["peso"], fechas[e["guid"]]
         url = base_url + "/" + "/".join(quote(p) for p in remoto.split("/"))
+        # link directo al shiur dentro de la app: #/s/<siman>/<título>; el robot
+        # lo pone en el anuncio del grupo. Musar y חגים van a su pestaña.
+        mod = e["orden"][0]
+        if mod >= 100:
+            link = f"{app}/#/s/{int(mod)}/{quote(titulo_de(remoto).split(' · ', 1)[-1])}"
+        else:
+            link = f"{app}/#/musar"
         items.append(f"""    <item>
       <title>{escape(titulo_de(remoto))}</title>
       <description>{escape(titulo_de(remoto))}</description>
+      <link>{escape(link)}</link>
       <enclosure url="{url}" length="{peso}" type="{MIME.get(Path(remoto).suffix.lower(), 'audio/mpeg')}"/>
       <guid isPermaLink="false">{escape(remoto)}</guid>
       <pubDate>{format_datetime(datetime.fromtimestamp(cuando))}</pubDate>

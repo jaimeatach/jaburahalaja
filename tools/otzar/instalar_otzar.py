@@ -150,8 +150,43 @@ const sinAudio = show => SHOWS_SIN_AUDIO.includes(show) || !!((CFG.anunciar || {
         texto += `\\n\\n${DIFUNDE[idiomaDeShow(show)]}`;
 """),
     ("""if (SHOWS_SIN_AUDIO.includes(show))""", """if (sinAudio(show))""", "todos"),
+    # link directo al shiur (el <link> del feed) en el anuncio, con formato
+    ("""      .map(it => ({ tit: sacaTitulo(it), guid: sacaGuid(it), audio: sacaAudio(it), peso: sacaPeso(it), fecha: sacaFecha(it) }))
+""", """      .map(it => ({ tit: sacaTitulo(it), guid: sacaGuid(it), audio: sacaAudio(it), peso: sacaPeso(it), fecha: sacaFecha(it),
+                    link: ((it.match(/<link>([\\s\\S]*?)<\\/link>/) || [])[1] || '').trim() }))
+"""),
+    ("""function armarMensaje(titulo, spotify, whatsapp, show) {
+  let t = `*${titulo}*`;
+  if (spotify)  t += `\\nSpotify\\n${spotify}`;
+  if (whatsapp) t += `\\nWhatsapp\\n${whatsapp}`;
+""", """function armarMensaje(titulo, spotify, whatsapp, show, app) {
+  // "app": link directo al shiur en la app del show (viene del <link> del feed)
+  let t = app ? `🎧 *${titulo}*` : `*${titulo}*`;
+  if (app)      t += `\\n📲 App\\n${app}`;
+  if (spotify)  t += app ? `\\n🎵 Spotify\\n${spotify}` : `\\nSpotify\\n${spotify}`;
+  if (whatsapp) t += `\\nWhatsapp\\n${whatsapp}`;
+"""),
+    ("""        let texto = `*${ep.tit}*`;
+        if (spotShow) texto += `\\n${spotShow}`;
+        // "app": link a la app del show (la jabura) en vez de Spotify;
+        // "sin_whatsapp": no repetir el link del grupo cuando se anuncia en el mismo grupo
+        if (datos.app) texto += `\\nApp\\n${datos.app}`;
+        if (wa && !datos.sin_whatsapp) texto += `\\nWhatsapp\\n${wa}`;
+        texto += `\\n\\n${DIFUNDE[idiomaDeShow(show)]}`;
+""", """        // "app": link directo al shiur en la app (el <link> del feed, o el de la app);
+        // "sin_whatsapp": no repetir el link del grupo cuando se anuncia en el mismo grupo
+        const appLink = datos.app ? (ep.link || datos.app) : '';
+        let texto = appLink ? `🎧 *${ep.tit}*` : `*${ep.tit}*`;
+        if (appLink) texto += `\\n📲 App\\n${appLink}`;
+        if (spotShow) texto += appLink ? `\\n🎵 Spotify\\n${spotShow}` : `\\n${spotShow}`;
+        if (wa && !datos.sin_whatsapp) texto += `\\nWhatsapp\\n${wa}`;
+        texto += `\\n\\n${DIFUNDE[idiomaDeShow(show)]}`;
+"""),
+    ("""      const texto = armarMensaje(ep.tit, epLink, wa, show);
+""", """      const texto = armarMensaje(ep.tit, epLink, wa, show, datos.app ? (ep.link || datos.app) : '');
+"""),
 ]
-MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "datos.app", "if (sinAudio(show))")
+MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)")
 
 
 def paso(n, msg):
@@ -393,8 +428,14 @@ def tarea_programada():
     r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode == 0:
         ok("tarea 'Otzar publicar' creada: cada 30 min sube jabura y tefila, espeja nacach y avisa al robot si hay shiur nuevo")
-        subprocess.run(["schtasks", "/Run", "/TN", "Otzar publicar"], capture_output=True)
-        ok("primera corrida lanzada ahora; el registro queda en jabura\\auto.log")
+    print("   corriendo auto_publicar.bat ahora mismo (lo mismo que hará la tarea)...")
+    subprocess.run(["cmd", "/c", str(dest)])
+    logf = d / "auto.log"
+    if logf.exists():
+        lineas = logf.read_text(encoding="utf-8", errors="replace").splitlines()
+        print("   --- últimas líneas de jabura\\auto.log ---")
+        for l in lineas[-14:]:
+            print("   " + l[:160])
     else:
         aviso("no pude crear la tarea: " + (r.stderr or r.stdout).strip()[:200])
         aviso("créala a mano en el Programador de tareas apuntando a " + str(dest))

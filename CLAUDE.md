@@ -129,10 +129,17 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    (`catTituloLibre`). Sefarim se procesan al final y en modo automático no
    crean módulos.
 4. `anunciar.jabura` en el config del robot manda el aviso al mismo grupo:
-   título + link a la app (`app`), `sin_audio` (el audio ya está en el grupo),
-   `sin_whatsapp`, y `sin_spotify` hasta que el show lea el feed nuevo. Los
-   tres flags son parches al robot (`sinAudio()`, `datos.app`). `ANUNCIAR.bat`
-   corre `jabura_publicar.py` antes de mandar la orden al robot.
+   "🎧 *título* / 📲 App / link directo / 🎵 Spotify", `sin_audio` (el audio
+   ya está en el grupo), `sin_whatsapp`, y `sin_spotify` hasta que el show lea
+   el feed nuevo. El link directo es el `<link>` de cada item del feed
+   (`#/s/<siman>/<título>`), que la app resuelve en `resolveShiurTitulo`
+   (por número y título; si el admin abre el link y el shiur aún no está,
+   lo importa de archive.org al vuelo). Los flags son parches al robot
+   (`sinAudio()`, `appLink`, `armarMensaje(..., app)`). `ANUNCIAR.bat` corre
+   `jabura_publicar.py` antes de mandar la orden al robot, y la tarea
+   programada "Otzar publicar" (`tools/otzar/auto_publicar.bat`, cada 30 min)
+   publica sola y pide anunciar cuando el publicador sale con código 3.
+   Las notas de voz (.ogg) se convierten a mp3 (`convertidos\`) antes de subir.
 5. `tools/otzar/instalar_otzar.py` (o `INSTALAR_OTZAR.bat`) hace todo en la PC
    de Otzar de un tirón: parcha el robot (con respaldo), agrega la jabura al
    `config_whatsapp.json`, arma `C:\OTZAR\jabura`, espeja el feed de Nacach

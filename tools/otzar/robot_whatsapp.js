@@ -1268,9 +1268,11 @@ function idiomaDeShow(show) {
   return DIFUNDE[i] ? i : 'he';
 }
 
-function armarMensaje(titulo, spotify, whatsapp, show) {
-  let t = `*${titulo}*`;
-  if (spotify)  t += `\nSpotify\n${spotify}`;
+function armarMensaje(titulo, spotify, whatsapp, show, app) {
+  // "app": link directo al shiur en la app del show (viene del <link> del feed)
+  let t = app ? `🎧 *${titulo}*` : `*${titulo}*`;
+  if (app)      t += `\n📲 App\n${app}`;
+  if (spotify)  t += app ? `\n🎵 Spotify\n${spotify}` : `\nSpotify\n${spotify}`;
   if (whatsapp) t += `\nWhatsapp\n${whatsapp}`;
   if (show) t += `\n\n${DIFUNDE[idiomaDeShow(show)]}`;
   return t;
@@ -1474,7 +1476,8 @@ async function anunciarInterno(esVigilante) {
     // config del show. Entonces se anuncia del MAS VIEJO al mas nuevo.
     const enOrden = !!((CFG.anunciar && CFG.anunciar[show] || {}).en_orden);
     let nuevos = items
-      .map(it => ({ tit: sacaTitulo(it), guid: sacaGuid(it), audio: sacaAudio(it), peso: sacaPeso(it), fecha: sacaFecha(it) }))
+      .map(it => ({ tit: sacaTitulo(it), guid: sacaGuid(it), audio: sacaAudio(it), peso: sacaPeso(it), fecha: sacaFecha(it),
+                    link: ((it.match(/<link>([\s\S]*?)<\/link>/) || [])[1] || '').trim() }))
       .filter(ep => !vistos.has(ep.guid))
       .sort((a, b) => enOrden ? (a.fecha - b.fecha) : (b.fecha - a.fecha));
 
@@ -1596,11 +1599,12 @@ async function anunciarInterno(esVigilante) {
 
       if (!epLink && sinSpot) {
         if (yaAnunciado(show, ep.guid)) { log(`${show}: "${ep.tit.slice(0,40)}" ya se anuncio; lo salto.`); continue; }
-        let texto = `*${ep.tit}*`;
-        if (spotShow) texto += `\n${spotShow}`;
-        // "app": link a la app del show (la jabura) en vez de Spotify;
+        // "app": link directo al shiur en la app (el <link> del feed, o el de la app);
         // "sin_whatsapp": no repetir el link del grupo cuando se anuncia en el mismo grupo
-        if (datos.app) texto += `\nApp\n${datos.app}`;
+        const appLink = datos.app ? (ep.link || datos.app) : '';
+        let texto = appLink ? `🎧 *${ep.tit}*` : `*${ep.tit}*`;
+        if (appLink) texto += `\n📲 App\n${appLink}`;
+        if (spotShow) texto += appLink ? `\n🎵 Spotify\n${spotShow}` : `\n${spotShow}`;
         if (wa && !datos.sin_whatsapp) texto += `\nWhatsapp\n${wa}`;
         texto += `\n\n${DIFUNDE[idiomaDeShow(show)]}`;
         const grupos = gruposDeShow(reg, show);
@@ -1628,7 +1632,7 @@ async function anunciarInterno(esVigilante) {
         log(`   (lo mas parecido que tiene Spotify: ${diag.masParecidos.join('  |  ')})`);
         continue; // NO se marca: el proximo ANUNCIAR lo reintenta
       }
-      const texto = armarMensaje(ep.tit, epLink, wa, show);
+      const texto = armarMensaje(ep.tit, epLink, wa, show, datos.app ? (ep.link || datos.app) : '');
       // ultima revision antes de mandar: si otra corrida ya lo anuncio, lo salto
       if (yaAnunciado(show, ep.guid)) { log(`${show}: "${ep.tit.slice(0,40)}" ya se anuncio; lo salto.`); continue; }
       const grupos = gruposDeShow(reg, show);

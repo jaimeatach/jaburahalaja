@@ -80,7 +80,22 @@
  const MB_COMO_AUDIO = 16;
  const MB_MAXIMO = 100;
  const CARPETA_TEMP = path.join(__dirname, 'audio_temp');
-@@ -1336,7 +1364,7 @@
+@@ -1240,9 +1268,11 @@
+   return DIFUNDE[i] ? i : 'he';
+ }
+ 
+-function armarMensaje(titulo, spotify, whatsapp, show) {
+-  let t = `*${titulo}*`;
+-  if (spotify)  t += `\nSpotify\n${spotify}`;
++function armarMensaje(titulo, spotify, whatsapp, show, app) {
++  // "app": link directo al shiur en la app del show (viene del <link> del feed)
++  let t = app ? `🎧 *${titulo}*` : `*${titulo}*`;
++  if (app)      t += `\n📲 App\n${app}`;
++  if (spotify)  t += app ? `\n🎵 Spotify\n${spotify}` : `\nSpotify\n${spotify}`;
+   if (whatsapp) t += `\nWhatsapp\n${whatsapp}`;
+   if (show) t += `\n\n${DIFUNDE[idiomaDeShow(show)]}`;
+   return t;
+@@ -1336,7 +1366,7 @@
    log(`PRUEBA enviada a "${reg[show].nombre}" (id de mensaje: ${(enviado && enviado.key && enviado.key.id) || '?'}): ${tit}`);
    const audioUrl = (it.match(/<enclosure[^>]*url\s*=\s*"([^"]+)"/) || [])[1] || '';
    const audioPeso = parseInt((it.match(/<enclosure[^>]*length\s*=\s*"(\d+)"/) || [])[1] || '0', 10);
@@ -89,7 +104,17 @@
    else await mandarAudio(reg[show].id, audioUrl, tit, audioPeso);
  }
  
-@@ -1538,7 +1566,7 @@
+@@ -1446,7 +1476,8 @@
+     // config del show. Entonces se anuncia del MAS VIEJO al mas nuevo.
+     const enOrden = !!((CFG.anunciar && CFG.anunciar[show] || {}).en_orden);
+     let nuevos = items
+-      .map(it => ({ tit: sacaTitulo(it), guid: sacaGuid(it), audio: sacaAudio(it), peso: sacaPeso(it), fecha: sacaFecha(it) }))
++      .map(it => ({ tit: sacaTitulo(it), guid: sacaGuid(it), audio: sacaAudio(it), peso: sacaPeso(it), fecha: sacaFecha(it),
++                    link: ((it.match(/<link>([\s\S]*?)<\/link>/) || [])[1] || '').trim() }))
+       .filter(ep => !vistos.has(ep.guid))
+       .sort((a, b) => enOrden ? (a.fecha - b.fecha) : (b.fecha - a.fecha));
+ 
+@@ -1538,7 +1569,7 @@
          log(`ANUNCIADOS JUNTOS en "${g.nombre}": ${listos.length} shiurim`);
          await new Promise(r => setTimeout(r, 1500));
        }
@@ -98,19 +123,24 @@
        else for (const x of listos) {
          await mandarAudioAVarios(grupos, x.ep.audio, x.ep.tit, x.ep.peso);
          await new Promise(r => setTimeout(r, 3000));
-@@ -1570,7 +1598,10 @@
+@@ -1568,9 +1599,13 @@
+ 
+       if (!epLink && sinSpot) {
          if (yaAnunciado(show, ep.guid)) { log(`${show}: "${ep.tit.slice(0,40)}" ya se anuncio; lo salto.`); continue; }
-         let texto = `*${ep.tit}*`;
-         if (spotShow) texto += `\n${spotShow}`;
+-        let texto = `*${ep.tit}*`;
+-        if (spotShow) texto += `\n${spotShow}`;
 -        if (wa) texto += `\nWhatsapp\n${wa}`;
-+        // "app": link a la app del show (la jabura) en vez de Spotify;
++        // "app": link directo al shiur en la app (el <link> del feed, o el de la app);
 +        // "sin_whatsapp": no repetir el link del grupo cuando se anuncia en el mismo grupo
-+        if (datos.app) texto += `\nApp\n${datos.app}`;
++        const appLink = datos.app ? (ep.link || datos.app) : '';
++        let texto = appLink ? `🎧 *${ep.tit}*` : `*${ep.tit}*`;
++        if (appLink) texto += `\n📲 App\n${appLink}`;
++        if (spotShow) texto += appLink ? `\n🎵 Spotify\n${spotShow}` : `\n${spotShow}`;
 +        if (wa && !datos.sin_whatsapp) texto += `\nWhatsapp\n${wa}`;
          texto += `\n\n${DIFUNDE[idiomaDeShow(show)]}`;
          const grupos = gruposDeShow(reg, show);
          for (const g of grupos) {
-@@ -1578,7 +1609,7 @@
+@@ -1578,7 +1613,7 @@
            log(`ANUNCIADO en "${g.nombre}": ${ep.tit}   (link del show, no del episodio)`);
            await new Promise(r => setTimeout(r, 1500));
          }
@@ -119,7 +149,16 @@
          else await mandarAudioAVarios(grupos, ep.audio, ep.tit, ep.peso);
          marcarAnunciado(show, ep.guid);
          estado[show].push(ep.guid);
-@@ -1606,7 +1637,7 @@
+@@ -1597,7 +1632,7 @@
+         log(`   (lo mas parecido que tiene Spotify: ${diag.masParecidos.join('  |  ')})`);
+         continue; // NO se marca: el proximo ANUNCIAR lo reintenta
+       }
+-      const texto = armarMensaje(ep.tit, epLink, wa, show);
++      const texto = armarMensaje(ep.tit, epLink, wa, show, datos.app ? (ep.link || datos.app) : '');
+       // ultima revision antes de mandar: si otra corrida ya lo anuncio, lo salto
+       if (yaAnunciado(show, ep.guid)) { log(`${show}: "${ep.tit.slice(0,40)}" ya se anuncio; lo salto.`); continue; }
+       const grupos = gruposDeShow(reg, show);
+@@ -1606,7 +1641,7 @@
          log(`ANUNCIADO en "${g.nombre}": ${ep.tit}`);
          await new Promise(r => setTimeout(r, 1500));
        }
