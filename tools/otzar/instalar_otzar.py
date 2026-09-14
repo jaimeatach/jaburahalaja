@@ -821,7 +821,26 @@ def restaurar():
            "User-Agent": "instalar-otzar", "Accept": "application/vnd.github+json"}
     for repo in [x.strip() for x in arg.split(",") if x.strip()]:
         base = f"https://api.github.com/repos/rabmeireliyahu/{repo}"
-        for archivo in ("feed.xml", "portada.jpg", "portada_20260831.jpg"):
+        # el feed NO se reemplaza entero (podría tener episodios nuevos): solo se
+        # devuelve la portada a portada_20260831.jpg y se quita el bloque <image> agregado
+        try:
+            with urllib.request.urlopen(urllib.request.Request(f"{base}/contents/feed.xml", headers=cab), timeout=60) as r:
+                j = json.loads(r.read().decode())
+            feed = base64.b64decode(j["content"]).decode("utf-8")
+            nuevo = re.sub(r'<itunes:image href="[^"]*"/>',
+                           f'<itunes:image href="https://rabmeireliyahu.github.io/{repo}/portada_20260831.jpg"/>', feed, count=1)
+            nuevo = re.sub(r"\n\s*<image>[\s\S]*?</image>", "", nuevo, count=1)
+            if nuevo != feed and not VER:
+                cuerpo = {"message": "portada de vuelta a la del 31/8", "sha": j["sha"],
+                          "content": base64.b64encode(nuevo.encode("utf-8")).decode()}
+                req = urllib.request.Request(f"{base}/contents/feed.xml", data=json.dumps(cuerpo).encode(), headers=cab, method="PUT")
+                with urllib.request.urlopen(req, timeout=120):
+                    ok(f"{repo}/feed.xml: portada apuntando a la del 31/8, episodios intactos")
+            elif nuevo == feed:
+                ok(f"{repo}/feed.xml ya apuntaba a la portada del 31/8")
+        except Exception as e:                              # noqa: BLE001
+            aviso(f"{repo}/feed.xml: {e}")
+        for archivo in ("portada.jpg", "portada_20260831.jpg"):
             url = API_CONTENTS.replace("/contents/tools/", f"/contents/tools/otzar/restaurar/{repo}/") + archivo
             try:
                 with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "instalar-otzar", "Accept": "application/vnd.github.raw"}), timeout=60) as r:
