@@ -11,6 +11,7 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py --grupos-generales=L1,L2       # grupos generales donde anuncian Nacach y Tefila
     python instalar_otzar.py --al-dia=nacach:2,peretz:2     # publica lo pendiente y memoriza todo menos los últimos N
     python instalar_otzar.py --ofir-grupo=LINK              # Ofir Malka también en tu grupo
+    python instalar_otzar.py --tefila-rss=URL               # rescatar lo subido a mano en Spotify (RSS del show) al feed
     python instalar_otzar.py --nacach-spotify=LINK          # el show de Nacach en Spotify
 
 Los shows (nacach, peretz…) viven en C:\\OTZAR; el robot en C:\\robotwhats. Los busca solo.
@@ -579,6 +580,36 @@ def ofir_grupo():
         ok("ya estaba")
 
 
+# ── 17. --tefila-rss=URL: rescatar lo que ya se subió a mano en Spotify ────────
+def tefila_rescate():
+    rss = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--tefila-rss=")), "").strip()
+    if not rss.startswith("http"):
+        return
+    paso(17, "Tefila: rescatar los episodios subidos a mano en Spotify y meterlos al feed")
+    d = BASE / "tefila"
+    cfgp = d / "config.json"
+    if not (d / "podcast_bot.py").exists() or not cfgp.exists():
+        aviso("falta tefila\\podcast_bot.py o config.json")
+        return
+    c = json.loads(cfgp.read_text(encoding="utf-8"))
+    if c.get("rss_original") != rss:
+        c["rss_original"] = rss
+        respaldar(cfgp)
+        escribir(cfgp, json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+        ok("rss_original guardado")
+    if VER:
+        print("   (correría) podcast_bot.py rescatar / subir / feed en", d)
+        return
+    for cmd in ("rescatar", "subir", "feed"):
+        print(f"   --- podcast_bot.py {cmd} ---")
+        r = subprocess.run([sys.executable, "podcast_bot.py", cmd], cwd=str(d))
+        if r.returncode != 0:
+            aviso(f"podcast_bot.py {cmd} terminó con error; revisa arriba")
+            return
+    ok("episodios rescatados, subidos a archive.org y publicados en el feed de tefila")
+    print("   → ahora en Spotify for Creators haz el redirect a https://rabmeireliyahu.github.io/tefila/feed.xml")
+
+
 # ── 12. tefila: feed inicial en el repo (podcast_bot solo AGREGA; sin feed truena) ─
 def tefila_feed_inicial():
     d = BASE / "tefila"
@@ -1066,6 +1097,7 @@ def main():
     reanunciar_jabura()
     nacach_anuncio()
     tefila_feed_inicial()
+    tefila_rescate()
     shows_whatsapp_al_dia()
     ofir_grupo()
     sin_atrasos_config()
