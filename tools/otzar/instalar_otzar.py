@@ -806,6 +806,49 @@ def portada():
         aviso(f"no pude subir la portada: {e}")
 
 
+# ── 20. --restaurar=mishnaberura,yalkutyosef: dejar el feed y las portadas como
+#        estaban antes del 14/9 (lo cambiaron otras sesiones por PR) ────────────
+def restaurar():
+    arg = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--restaurar=")), "")
+    if not arg:
+        return
+    paso(20, "Restaurar feed y portadas al estado anterior al 14/9")
+    tok = next((BASE / m / "github_token.txt" for m in ("nacach", "peretz", "jabura") if (BASE / m / "github_token.txt").exists()), None)
+    if not tok:
+        aviso("no encuentro github_token.txt")
+        return
+    cab = {"Authorization": "token " + tok.read_text(encoding="utf-8").strip(),
+           "User-Agent": "instalar-otzar", "Accept": "application/vnd.github+json"}
+    for repo in [x.strip() for x in arg.split(",") if x.strip()]:
+        base = f"https://api.github.com/repos/rabmeireliyahu/{repo}"
+        for archivo in ("feed.xml", "portada.jpg", "portada_20260831.jpg"):
+            url = API_CONTENTS.replace("/contents/tools/", f"/contents/tools/otzar/restaurar/{repo}/") + archivo
+            try:
+                with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "instalar-otzar", "Accept": "application/vnd.github.raw"}), timeout=60) as r:
+                    datos = r.read()
+            except Exception as e:                          # noqa: BLE001
+                aviso(f"{repo}/{archivo}: no pude bajar la copia buena ({e})")
+                continue
+            if VER:
+                print(f"   (subiría) {repo}/{archivo} ({len(datos)//1024} KB)")
+                continue
+            sha = None
+            try:
+                with urllib.request.urlopen(urllib.request.Request(f"{base}/contents/{archivo}", headers=cab), timeout=60) as r:
+                    sha = json.loads(r.read().decode()).get("sha")
+            except Exception:
+                pass
+            cuerpo = {"message": f"restaurar {archivo} (estado del 31/8)", "content": base64.b64encode(datos).decode()}
+            if sha:
+                cuerpo["sha"] = sha
+            req = urllib.request.Request(f"{base}/contents/{archivo}", data=json.dumps(cuerpo).encode(), headers=cab, method="PUT")
+            try:
+                with urllib.request.urlopen(req, timeout=120):
+                    ok(f"{repo}/{archivo} restaurado")
+            except Exception as e:                          # noqa: BLE001
+                aviso(f"{repo}/{archivo}: {e}")
+
+
 # ── 12. tefila: feed inicial en el repo (podcast_bot solo AGREGA; sin feed truena) ─
 def tefila_feed_inicial():
     d = BASE / "tefila"
@@ -1296,6 +1339,7 @@ def main():
     tefila_rescate()
     show_nuevo()
     portada()
+    restaurar()
     shows_whatsapp_al_dia()
     ofir_grupo()
     sin_atrasos_config()
