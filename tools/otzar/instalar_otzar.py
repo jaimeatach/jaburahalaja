@@ -9,7 +9,8 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py --tefila-spotify=LINK          # cuando exista el show en Spotify
     python instalar_otzar.py --reanunciar-jabura            # que el próximo ANUNCIAR mande el último shiur
     python instalar_otzar.py --grupos-generales=L1,L2       # grupos generales donde anuncian Nacach y Tefila
-    python instalar_otzar.py --al-dia=nacach,peretz         # memorizar lo viejo del feed: solo se anuncia lo nuevo
+    python instalar_otzar.py --al-dia=nacach:2,peretz:2     # publica lo pendiente y memoriza todo menos los últimos N
+    python instalar_otzar.py --ofir-grupo=LINK              # Ofir Malka también en tu grupo
     python instalar_otzar.py --nacach-spotify=LINK          # el show de Nacach en Spotify
 
 Los shows (nacach, peretz…) viven en C:\\OTZAR; el robot en C:\\robotwhats. Los busca solo.
@@ -514,8 +515,8 @@ def nacach_anuncio():
         lista = [g.strip().split("?")[0] for g in grupos.split(",") if g.strip().startswith("http")]
         for g in lista:
             cod = g.rstrip("/").split("/")[-1]
-            if len(cod) != 22:
-                aviso(f"este link se ve mal cortado (el código debe tener 22 letras, tiene {len(cod)}): {g}")
+            if len(cod) < 20:
+                aviso(f"este link se ve mal cortado: {g}")
         if lista:
             an["invite"] = lista if len(lista) > 1 else lista[0]
             ok(f"{len(lista)} grupo(s) de anuncio")
@@ -535,6 +536,27 @@ def nacach_anuncio():
     if not n_inv:
         aviso("sin grupos: python instalar_otzar.py --nacach-grupos=LINK1,LINK2,LINK3")
     ok("link exacto de Spotify" if tiene else "sin show en Spotify: manda el link directo al mp3 (--nacach-spotify=LINK para cambiarlo)")
+
+
+# ── 15. Ofir Malka: también en el grupo de Beto ───────────────────────────────
+def ofir_grupo():
+    link = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--ofir-grupo=")), "").split("?")[0]
+    if not link.startswith("http"):
+        return
+    paso(15, "Ofir Malka: anunciar también en tu grupo")
+    rw = (ROBOT or BASE) / "config_whatsapp.json"
+    cfg = json.loads(rw.read_text(encoding="utf-8"))
+    an = cfg.setdefault("anunciar", {}).setdefault("ofirmalka", {})
+    inv = an.get("invite") or []
+    inv = inv if isinstance(inv, list) else ([inv] if inv else [])
+    if link not in inv:
+        inv.append(link)
+        an["invite"] = inv
+        respaldar(rw)
+        escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+        ok(f"ofirmalka anuncia en {len(inv)} grupos")
+    else:
+        ok("ya estaba")
 
 
 # ── 12. tefila: feed inicial en el repo (podcast_bot solo AGREGA; sin feed truena) ─
@@ -671,7 +693,14 @@ def al_dia():
     except Exception:
         e = {}
     cambio = False
-    for show in [x.strip() for x in shows.split(",") if x.strip()]:
+    for item in [x.strip() for x in shows.split(",") if x.strip()]:
+        show, _, n = item.partition(":")
+        dejar = int(n) if n.isdigit() else 0
+        d = BASE / show
+        if show != "jabura" and (d / "podcast_bot.py").exists() and not VER:
+            # primero se publica lo que el robot dejó pendiente, para que el feed esté completo
+            print(f"   {show}: publicando lo pendiente antes de ponerlo al día...")
+            subprocess.run([sys.executable, "podcast_bot.py"], cwd=str(d))
         url = FEED_JABURA if show == "jabura" else f"https://rabmeireliyahu.github.io/{show}/feed.xml"
         try:
             with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "instalar-otzar"}), timeout=30) as r:
@@ -680,10 +709,16 @@ def al_dia():
             aviso(f"{show}: no pude leer el feed ({ex})")
             continue
         guids = [g.replace("&amp;", "&") for g in re.findall(r"<guid[^>]*>(.*?)</guid>", feed)]
-        nuevos = [g for g in guids if g not in (e.get(show) or [])]
-        e[show] = ((e.get(show) or []) + nuevos)[-2000:]
-        cambio = cambio or bool(nuevos)
-        ok(f"{show}: {len(nuevos)} memorizados; desde ahora solo se anuncia lo nuevo")
+        # el feed va del más viejo al más nuevo: los últimos N quedan sin memorizar para que salgan
+        ultimos = guids[-dejar:] if dejar else []
+        memorizar = [g for g in guids if g not in ultimos]
+        previos = e.get(show) or []
+        nuevos = [g for g in memorizar if g not in previos]
+        e[show] = [g for g in previos if g not in ultimos] + nuevos
+        e[show] = e[show][-2000:]
+        cambio = True
+        ok(f"{show}: {len(memorizar)} memorizados; salen los últimos {dejar}: " +
+           " | ".join(g.split("/")[-1][:40] for g in ultimos) if dejar else f"{show}: {len(memorizar)} memorizados; solo se anuncia lo nuevo")
     if cambio and not VER:
         respaldar(estado)
         escribir(estado, json.dumps(e, ensure_ascii=False, indent=2))
@@ -1001,6 +1036,7 @@ def main():
     nacach_anuncio()
     tefila_feed_inicial()
     shows_whatsapp_al_dia()
+    ofir_grupo()
     al_dia()
     print("\nListo." if not VER else "\nPrueba en seco terminada: no se cambió nada.")
 
