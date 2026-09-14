@@ -12,6 +12,7 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py --al-dia=nacach:2,peretz:2     # publica lo pendiente y memoriza todo menos los últimos N
     python instalar_otzar.py --ofir-grupo=LINK              # Ofir Malka también en tu grupo
     python instalar_otzar.py --tefila-rss=URL               # rescatar lo subido a mano en Spotify (RSS del show) al feed
+    python instalar_otzar.py --portada=tefila:C:\\ruta\\img.jpg  # portada del show (va al repo, Spotify la toma del feed)
     python instalar_otzar.py --nuevo=hilu --nuevo-nombre="Rab Joshua Hilu" --nuevo-rss=URL --nuevo-spotify=URL [--nuevo-grupo=LINK]
     python instalar_otzar.py --nacach-spotify=LINK          # el show de Nacach en Spotify
 
@@ -760,6 +761,51 @@ def show_nuevo():
         print(f"   → cuando tengas el grupo del Rab: python instalar_otzar.py --sin-drive --nuevo={clave} --nuevo-grupo=LINK")
 
 
+# ── 19. --portada=show:C:\\ruta\\imagen.jpg → portada del show en su repo ────────
+def portada():
+    arg = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--portada=")), "")
+    if not arg or ":" not in arg:
+        return
+    show, ruta = arg.split(":", 1)
+    ruta = Path(ruta.strip('"'))
+    paso(19, f"Portada de {show}")
+    d = BASE / show
+    if not ruta.exists():
+        aviso(f"no encuentro la imagen: {ruta}")
+        return
+    c = json.loads((d / "config.json").read_text(encoding="utf-8")) if (d / "config.json").exists() else {}
+    tok = d / "github_token.txt"
+    if not tok.exists():
+        aviso("falta github_token.txt en la carpeta del show")
+        return
+    img = ruta.read_bytes()
+    if len(img) > 2_500_000:
+        aviso("la imagen pesa más de 2.5 MB; Spotify la puede rechazar. Redúcela y vuelve a correr")
+    if not VER:
+        shutil.copy2(ruta, d / "portada.jpg")
+    cab = {"Authorization": "token " + tok.read_text(encoding="utf-8").strip(),
+           "User-Agent": "instalar-otzar", "Accept": "application/vnd.github+json"}
+    base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}"
+    if VER:
+        print("   (subiría) portada.jpg a", base)
+        return
+    sha = None
+    try:
+        with urllib.request.urlopen(urllib.request.Request(f"{base}/contents/portada.jpg", headers=cab), timeout=60) as r:
+            sha = json.loads(r.read().decode()).get("sha")
+    except Exception:
+        pass
+    cuerpo = {"message": "portada", "content": base64.b64encode(img).decode()}
+    if sha:
+        cuerpo["sha"] = sha
+    req = urllib.request.Request(f"{base}/contents/portada.jpg", data=json.dumps(cuerpo).encode(), headers=cab, method="PUT")
+    try:
+        with urllib.request.urlopen(req, timeout=120) as r:
+            ok(f"portada subida ({len(img) // 1024} KB). Spotify la toma al leer el feed (mínimo 1400x1400 px).")
+    except Exception as e:                                  # noqa: BLE001
+        aviso(f"no pude subir la portada: {e}")
+
+
 # ── 12. tefila: feed inicial en el repo (podcast_bot solo AGREGA; sin feed truena) ─
 def tefila_feed_inicial():
     d = BASE / "tefila"
@@ -1249,6 +1295,7 @@ def main():
     tefila_feed_inicial()
     tefila_rescate()
     show_nuevo()
+    portada()
     shows_whatsapp_al_dia()
     ofir_grupo()
     sin_atrasos_config()
