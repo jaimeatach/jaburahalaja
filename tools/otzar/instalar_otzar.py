@@ -379,11 +379,12 @@ def configurar_whatsapp():
         ja.setdefault(k, v)
     ja["_nota"] = quiero["_nota"]
     ja["feed"] = FEED_JABURA           # el robot lee el feed de aquí (netlify.app no siempre abre en esa PC)
+    ja["sin_spotify"] = False          # el show ya lee el feed: va el link exacto del episodio
     if not str(ja.get("spotify", "")).startswith("http"):
         ja["spotify"] = SPOTIFY_JABURA
     ja["pausado"] = False
     if json.dumps(ja, sort_keys=True) != antes:
-        ok("anunciar.jabura: activo, con link a la app y sin Spotify por ahora")
+        ok("anunciar.jabura: activo, con link a la app y link exacto de Spotify")
         cambios += 1
     else:
         ok("anunciar.jabura ya estaba")
@@ -480,8 +481,15 @@ def reanunciar_jabura():
         e = json.loads(estado.read_text(encoding="utf-8")) if estado.exists() else {}
     except Exception:
         e = {}
-    lista = e.get("jabura") or []
-    if ultimo in lista:
+    lista = e.get("jabura")
+    if lista is None:
+        # Primera vez del show: el robot memorizaría TODO el catálogo sin anunciar.
+        # Se le deja memorizado todo menos el último, para que ese sí salga.
+        respaldar(estado)
+        e["jabura"] = [g.replace("&amp;", "&") for g in guids[:-1]]
+        escribir(estado, json.dumps(e, ensure_ascii=False, indent=2))
+        ok(f"catálogo memorizado ({len(guids) - 1}); '{ultimo.split('/')[-1]}' sale en el próximo ANUNCIAR")
+    elif ultimo in lista:
         respaldar(estado)
         e["jabura"] = [g for g in lista if g != ultimo]
         escribir(estado, json.dumps(e, ensure_ascii=False, indent=2))
