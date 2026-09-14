@@ -365,7 +365,7 @@ const SUPABASE_URL = "https://enkofkroxudsblewxxos.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_nAsf0qU7fPUOZ5K7OgqwYw_hUPgzOrZ";
 const BUCKET = "jabura";
 const APP_NAME = "חבורת הלכה";
-const BUILD = "2026-09-11 · anuncio";
+const BUILD = "2026-09-14 · iphone";
 
 const $ = id => document.getElementById(id);
 const app = $('app');
@@ -2942,7 +2942,7 @@ async function fetchSimanData(simanId){
 }
 async function renderAllSaifim(s){
   const data = await fetchSimanData(s.id);
-  SHIUR_CACHE = data.shiurs;
+  SHIUR_CACHE = data.shiurs; arcPrecalienta();
   const body = $('tabbody'); if (!body) return;
   body.innerHTML = saifBlocksHTML(s, data) ||
     `<div class="panel"><div class="empty"><div class="e-ic">${icon('book',40)}</div><div class="e-t">${t('emptyContentT')}</div></div></div>`;
@@ -2955,7 +2955,7 @@ async function renderTodoAll(){
       <div class="acts"><button class="btn soft" onclick="openGlobalAdd()">${icon('plus')} ${t('globalAdd')}</button></div>
     </div><div id="todo-body"><div style="padding:40px"><div class="spin"></div></div></div>`;
   const data = await fetchSimanData(null);
-  SHIUR_CACHE = data.shiurs;
+  SHIUR_CACHE = data.shiurs; arcPrecalienta();
   const body = $('todo-body'); if (!body) return;
   body.innerHTML = SIMANIM.filter(s => !isMusar(s)).map(s => {
     const blocks = saifBlocksHTML(s, data);
@@ -3030,7 +3030,7 @@ async function renderContent(s){
 let SHIUR_CACHE = [];
 async function renderShiurim(s){
   const all = await fetchBySiman(T.shiurim, s.id);
-  SHIUR_CACHE = all;
+  SHIUR_CACHE = all; arcPrecalienta();
   const items = all.filter(x => (x.saifim||[]).includes(CUR.saif));
   const body = $('tabbody'); if (!body) return;
   body.innerHTML = `
@@ -3223,9 +3223,22 @@ async function doUpload(tbl){
 const audio = $('audio');
 /* Un fallo de red o un formato que el celular no soporta dejaban el shiur mudo
    y sin aviso: así al menos se ve qué pasó. */
-audio.addEventListener('error', () => {
+audio.addEventListener('error', async () => {
   if (!PL.id) return;
   const err = audio.error || {};
+  /* Primer intento fallido con la URL de archive.org: se resuelve la
+     redirección y se vuelve a intentar una vez con el destino directo */
+  const original = audio.dataset.original || '';
+  if (original && !audio.dataset.reintento && (err.code === 2 || err.code === 4)){
+    audio.dataset.reintento = '1';
+    const directo = await arcResuelve(original);
+    if (directo !== audio.src){
+      audio.src = directo;
+      const p = audio.play();
+      if (p && p.catch) p.catch(() => {});
+      return;
+    }
+  }
   const nombres = { 1: 'ABORTED', 2: 'NETWORK', 3: 'DECODE', 4: 'SRC_NOT_SUPPORTED' };
   const detalle = [nombres[err.code] || err.code || '', err.message || ''].filter(Boolean).join(' · ');
   toast(t('playErr') + (detalle ? ' · ' + detalle : '') + ' · ↗', 6000);
@@ -3233,6 +3246,23 @@ audio.addEventListener('error', () => {
 });
 let PL = { id:null, playing:false };
 const SPEEDS = [1, 1.25, 1.5, 1.75, 2, 2.5, 3, 0.75];
+/* archive.org/download/… responde 302 hacia iaNNNN.us.archive.org. En iPhone el
+   <audio> a veces no sigue esa redirección y marca "NETWORK". Se resuelve el
+   destino final con un HEAD por adelantado (archive.org manda CORS) y se toca
+   directo; si el HEAD falla, se usa la URL original como siempre. */
+const ARC_RESUELTO = {};
+async function arcResuelve(url){
+  if (!/archive\.org\/download\//.test(url || '')) return url;
+  if (ARC_RESUELTO[url]) return ARC_RESUELTO[url];
+  try {
+    const r = await fetch(url, { method: 'HEAD', redirect: 'follow', cache: 'no-store' });
+    if (r.ok && r.url && r.url !== url) ARC_RESUELTO[url] = r.url;
+  } catch(e){}
+  return ARC_RESUELTO[url] || url;
+}
+function arcPrecalienta(){
+  (SHIUR_CACHE || []).slice(0, 25).forEach(s => { if (s && s.url) arcResuelve(s.url); });
+}
 function playShiur(id){
   const x = SHIUR_CACHE.find(s => s.id === id);
   if (!x) return;
@@ -3240,7 +3270,9 @@ function playShiur(id){
   PL.id = id;
   const saved = parseFloat(localStorage.getItem('jh_pos_' + id) || '0');
   audio.preload = 'metadata';
-  audio.src = x.url;
+  delete audio.dataset.reintento;
+  audio.src = ARC_RESUELTO[x.url] || x.url;
+  audio.dataset.original = x.url;
   /* En iOS, tocar currentTime antes de que carguen los metadatos lanza
      InvalidStateError y cortaba la reproducción entera. Se retoma la posición
      recién cuando el navegador sabe la duración. */
