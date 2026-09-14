@@ -538,6 +538,26 @@ def nacach_anuncio():
     ok("link exacto de Spotify" if tiene else "sin show en Spotify: manda el link directo al mp3 (--nacach-spotify=LINK para cambiarlo)")
 
 
+# ── 16. sin atrasos: solo_ultimos por show (lo aplica mantenimiento.py en cada ANUNCIAR)
+def sin_atrasos_config():
+    rw = (ROBOT or BASE) / "config_whatsapp.json"
+    if not rw.exists():
+        return
+    paso(16, "Sin atrasos: cada show anuncia solo sus últimos N")
+    cfg = json.loads(rw.read_text(encoding="utf-8"))
+    an = cfg.setdefault("anunciar", {})
+    defectos = {"nacach": 2, "peretz": 2, "ofirmalka": 2, "tefila": 2, "jabura": 3}
+    cambios = 0
+    for show, n in defectos.items():
+        if show in an and an[show].get("solo_ultimos") != n and "solo_ultimos" not in an[show]:
+            an[show]["solo_ultimos"] = n
+            cambios += 1
+    if cambios:
+        respaldar(rw)
+        escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+    ok(", ".join(f"{s}: {an[s]['solo_ultimos']}" for s in defectos if s in an and an[s].get("solo_ultimos")))
+
+
 # ── 15. Ofir Malka: también en el grupo de Beto ───────────────────────────────
 def ofir_grupo():
     link = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--ofir-grupo=")), "").split("?")[0]
@@ -886,13 +906,13 @@ def instalar_anunciar():
         return
     ruta = ROBOT / "ANUNCIAR.bat"
     if not VER:
-        bajar("otzar/publicar_todos.py", BASE / "jabura" / "publicar_todos.py")
-    if ruta.exists() and "publicar_todos" in ruta.read_text(encoding="utf-8", errors="replace"):
-        ok("ya tenía los pasos de la jabura, los shows de WhatsApp y el espejo de nacach")
+        bajar("otzar/mantenimiento.py", BASE / "jabura" / "mantenimiento.py")
+    if ruta.exists() and "mantenimiento.py" in ruta.read_text(encoding="utf-8", errors="replace"):
+        ok("ya llama al mantenimiento (jabura, shows de WhatsApp, espejo, sin atrasos)")
         return
     respaldar(ruta)
     if bajar("otzar/ANUNCIAR.bat", ruta):
-        ok("ANUNCIAR.bat actualizado: primero sube la jabura, luego anuncia todo")
+        ok("ANUNCIAR.bat actualizado: mantenimiento completo y luego anuncia")
 
 
 # ── 4. nacach ─────────────────────────────────────────────────────────────────
@@ -1037,6 +1057,7 @@ def main():
     tefila_feed_inicial()
     shows_whatsapp_al_dia()
     ofir_grupo()
+    sin_atrasos_config()
     al_dia()
     print("\nListo." if not VER else "\nPrueba en seco terminada: no se cambió nada.")
 

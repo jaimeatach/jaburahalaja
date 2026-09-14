@@ -136,10 +136,12 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    (por número y título; si el admin abre el link y el shiur aún no está,
    lo importa de archive.org al vuelo). Los flags son parches al robot
    (`sinAudio()`, `appLink`, `armarMensaje(..., app)`). `ANUNCIAR.bat` corre
-   `jabura_publicar.py`, `publicar_todos.py` (el `podcast_bot.py` de cada show
-   con `modo_whatsapp`: Peretz, Nacach, Ofir, Tefila) y el espejo de nacach
-   antes de mandar la orden al robot: ese botón es el único disparador, el
-   usuario no quiere tareas programadas (el instalador borra la que se creó).
+   `tools/otzar/mantenimiento.py` antes de mandar la orden al robot: alinea la
+   carpeta de cada bot con la del robot y marca lo ya publicado, publica la
+   jabura y cada show con `modo_whatsapp` (Peretz, Nacach, Ofir, Tefila),
+   espeja nacach y aplica `solo_ultimos` (por show en `anunciar`): memoriza
+   todo el feed salvo los últimos N, así nunca se arrastra un rezago. Ese
+   botón es el único disparador; el usuario no quiere tareas programadas.
    El robot lee el feed de la jabura de `anunciar.jabura.feed` (el raw de
    GitHub: netlify.app no siempre abre en esa PC); parche `feedDeShow()`.
    Nacach anuncia "título + link" a varios grupos (`invite` en lista) sin

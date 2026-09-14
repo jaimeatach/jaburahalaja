@@ -24,28 +24,11 @@ rem === daf de hoy por calendario (otzar) ===
 set PYTHONUTF8=1
 python "%~dp0dafyomi_calendario.py"
 
-rem === jabura (sep/2026): subir lo nuevo del Drive a archive.org y al feed ===
-rem Asi el anuncio de abajo ya encuentra el shiur nuevo en el feed.
-if exist "C:\OTZAR\jabura\jabura_publicar.py" (
-  echo.
-  echo --- Jabura: subiendo shiurim nuevos ---
-  pushd "C:\OTZAR\jabura"
-  python jabura_publicar.py
-  popd
-  echo.
-)
-
-rem === Peretz, Nacach, Ofir, Tefila...: publicar lo que dejo el robot (modo_whatsapp) ===
-if exist "C:\OTZAR\jabura\publicar_todos.py" (
-  python "C:\OTZAR\jabura\publicar_todos.py"
-  echo.
-)
-
-rem === nacach: copiar el feed al repo viejo (nacash), que es el que lee Spotify ===
-if exist "C:\OTZAR\nacach\espejo_nacash.py" (
-  pushd "C:\OTZAR\nacach"
-  python espejo_nacash.py
-  popd
+rem === Otzar (sep/2026): mantenimiento antes de anunciar ===
+rem Publica jabura y los shows de WhatsApp (Peretz, Nacach, Ofir, Tefila...),
+rem alinea carpetas, espeja nacach y deja memorizado lo viejo (sin atrasos).
+if exist "C:\OTZAR\jabura\mantenimiento.py" (
+  python "C:\OTZAR\jabura\mantenimiento.py"
   echo.
 )
 
