@@ -9,6 +9,7 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py --tefila-spotify=LINK          # cuando exista el show en Spotify
     python instalar_otzar.py --reanunciar-jabura            # que el próximo ANUNCIAR mande el último shiur
     python instalar_otzar.py --grupos-generales=L1,L2       # grupos generales donde anuncian Nacach y Tefila
+    python instalar_otzar.py --al-dia=nacach,peretz         # memorizar lo viejo del feed: solo se anuncia lo nuevo
     python instalar_otzar.py --nacach-spotify=LINK          # el show de Nacach en Spotify
 
 Los shows (nacach, peretz…) viven en C:\\OTZAR; el robot en C:\\robotwhats. Los busca solo.
@@ -511,6 +512,10 @@ def nacach_anuncio():
     antes = json.dumps(an, sort_keys=True)
     if grupos:
         lista = [g.strip().split("?")[0] for g in grupos.split(",") if g.strip().startswith("http")]
+        for g in lista:
+            cod = g.rstrip("/").split("/")[-1]
+            if len(cod) != 22:
+                aviso(f"este link se ve mal cortado (el código debe tener 22 letras, tiene {len(cod)}): {g}")
         if lista:
             an["invite"] = lista if len(lista) > 1 else lista[0]
             ok(f"{len(lista)} grupo(s) de anuncio")
@@ -587,6 +592,101 @@ def tefila_feed_inicial():
             ok("GitHub Pages prendido")
     else:
         aviso(f"no pude ver el repo tefila ({st}): revisa github_token.txt")
+
+
+# ── 13. shows de WhatsApp al día: carpeta del bot = carpeta del robot, y lo que
+#        ya está en el feed no se vuelve a subir ─────────────────────────────────
+def shows_whatsapp_al_dia():
+    rw = (ROBOT or BASE) / "config_whatsapp.json"
+    if not rw.exists():
+        return
+    paso(13, "Shows de WhatsApp: carpeta del bot = carpeta del robot; lo publicado, marcado")
+    cfgw = json.loads(rw.read_text(encoding="utf-8"))
+    carpetas = {}
+    for show, datos in (cfgw.get("escuchar") or {}).items():
+        if isinstance(datos, dict) and datos.get("carpetaDestino"):
+            carpetas[show] = datos["carpetaDestino"]
+    for e in cfgw.get("escuchar_directo") or []:
+        if e.get("show") and e.get("carpetaDestino"):
+            carpetas.setdefault(e["show"], e["carpetaDestino"])
+    for show, carpeta in sorted(carpetas.items()):
+        d = BASE / show
+        cfgp = d / "config.json"
+        if not (d.is_dir() and cfgp.exists()):
+            continue
+        try:
+            c = json.loads(cfgp.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if not c.get("modo_whatsapp"):
+            continue
+        # (a) el bot tiene que leer donde el robot escribe
+        if str(c.get("carpeta_whatsapp", "")).rstrip("\\").lower() != str(carpeta).rstrip("\\").lower():
+            aviso(f"{show}: el robot guarda en {carpeta} pero el bot leía {c.get('carpeta_whatsapp')}")
+            c["carpeta_whatsapp"] = carpeta
+            respaldar(cfgp)
+            escribir(cfgp, json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+            ok(f"{show}: bot apuntado a la carpeta del robot")
+        # (b) lo que ya está en el feed, marcado como procesado (si no, se resube cada vez)
+        try:
+            url = f"https://{c.get('github_user', 'rabmeireliyahu')}.github.io/{c.get('github_repo', show)}/feed.xml"
+            with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "instalar-otzar"}), timeout=30) as r:
+                feed = r.read().decode("utf-8", "replace")
+        except Exception:
+            feed = ""
+        if not feed:
+            continue
+        procesados = d / "procesados_whatsapp.txt"
+        lista = procesados.read_text(encoding="utf-8").splitlines() if procesados.exists() else []
+        marcados = 0
+        try:
+            audios = [f for f in Path(carpeta).iterdir() if f.is_file() and f.suffix.lower() in AUDIO]
+        except Exception:
+            audios = []
+        for f in audios:
+            if f.name in lista:
+                continue
+            titulo = re.sub(r"\s+", " ", f.stem).strip()
+            if f"<title>{titulo}</title>" in feed or f"<guid isPermaLink=\"false\">{titulo}.mp3</guid>" in feed:
+                lista.append(f.name)
+                marcados += 1
+                mp3 = d / "episodios" / (re.sub(r'[<>:"/\\|?*]', "", f.stem).strip()[:120] + ".mp3")
+                if mp3.exists() and not VER:
+                    mp3.unlink()
+        if marcados and not VER:
+            procesados.write_text("\n".join(lista) + "\n", encoding="utf-8")
+        pend = len([f for f in audios if f.name not in lista])
+        ok(f"{show}: {marcados} marcados como ya publicados · {pend} por publicar en el próximo ANUNCIAR")
+
+
+# ── 14. --al-dia=show1,show2: memorizar todo lo del feed sin anunciar ───────────
+def al_dia():
+    shows = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--al-dia=")), "")
+    if not shows:
+        return
+    paso(14, "Anuncios al día: memorizar lo que ya está en el feed, sin mandarlo")
+    estado = (ROBOT or BASE) / "estado_anuncios.json"
+    try:
+        e = json.loads(estado.read_text(encoding="utf-8")) if estado.exists() else {}
+    except Exception:
+        e = {}
+    cambio = False
+    for show in [x.strip() for x in shows.split(",") if x.strip()]:
+        url = FEED_JABURA if show == "jabura" else f"https://rabmeireliyahu.github.io/{show}/feed.xml"
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "instalar-otzar"}), timeout=30) as r:
+                feed = r.read().decode("utf-8", "replace")
+        except Exception as ex:                             # noqa: BLE001
+            aviso(f"{show}: no pude leer el feed ({ex})")
+            continue
+        guids = [g.replace("&amp;", "&") for g in re.findall(r"<guid[^>]*>(.*?)</guid>", feed)]
+        nuevos = [g for g in guids if g not in (e.get(show) or [])]
+        e[show] = ((e.get(show) or []) + nuevos)[-2000:]
+        cambio = cambio or bool(nuevos)
+        ok(f"{show}: {len(nuevos)} memorizados; desde ahora solo se anuncia lo nuevo")
+    if cambio and not VER:
+        respaldar(estado)
+        escribir(estado, json.dumps(e, ensure_ascii=False, indent=2))
 
 
 # ── 9. diagnóstico de la jabura: ¿qué hizo el robot con el último audio? ───────
@@ -900,6 +1000,8 @@ def main():
     reanunciar_jabura()
     nacach_anuncio()
     tefila_feed_inicial()
+    shows_whatsapp_al_dia()
+    al_dia()
     print("\nListo." if not VER else "\nPrueba en seco terminada: no se cambió nada.")
 
 
