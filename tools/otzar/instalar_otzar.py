@@ -8,6 +8,8 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py --tefila-grupo=LINK            # link de invitación de Clases Tefila Habitat
     python instalar_otzar.py --tefila-spotify=LINK          # cuando exista el show en Spotify
     python instalar_otzar.py --reanunciar-jabura            # que el próximo ANUNCIAR mande el último shiur
+    python instalar_otzar.py --nacach-grupos=L1,L2,L3       # los 3 grupos donde Nacach anuncia (links de invitación)
+    python instalar_otzar.py --nacach-spotify=LINK          # el show de Nacach en Spotify
 
 Los shows (nacach, peretz…) viven en C:\\OTZAR; el robot en C:\\robotwhats. Los busca solo.
 
@@ -26,6 +28,7 @@ Qué hace, con copia de respaldo de cada archivo que toca:
      2, Rosh Hashana q se junta) en todas las carpetas del robot, los deja en la
      carpeta de WhatsApp de nacach y corre podcast_bot.py ahí.
 """
+import base64
 import hashlib
 import json
 import os
@@ -34,6 +37,7 @@ import shutil
 import subprocess
 import sys
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -187,8 +191,30 @@ const sinAudio = show => SHOWS_SIN_AUDIO.includes(show) || !!((CFG.anunciar || {
     ("""      const texto = armarMensaje(ep.tit, epLink, wa, show);
 """, """      const texto = armarMensaje(ep.tit, epLink, wa, show, datos.app ? (ep.link || datos.app) : '');
 """),
+    # feed por show (la jabura no vive en github.io) y link directo al audio
+    ("""  try { xml = await fetchTexto(`https://rabmeireliyahu.github.io/${show}/feed.xml`); }
+""", """  try { xml = await fetchTexto(feedDeShow(show)); }
+""", "todos"),
+    ("""function armarMensaje(titulo, spotify, whatsapp, show, app) {
+""", """// "feed": URL del RSS del show cuando no vive en rabmeireliyahu.github.io
+// (la jabura lo publica junto con su app). Por defecto, el de siempre.
+function feedDeShow(show) {
+  const d = (CFG.anunciar || {})[show] || {};
+  return (d.feed && String(d.feed).startsWith('http')) ? d.feed : `https://rabmeireliyahu.github.io/${show}/feed.xml`;
+}
+function armarMensaje(titulo, spotify, whatsapp, show, app) {
+"""),
+    ("""        if (spotShow) texto += appLink ? `\\n🎵 Spotify\\n${spotShow}` : `\\n${spotShow}`;
+        if (wa && !datos.sin_whatsapp) texto += `\\nWhatsapp\\n${wa}`;
+""", """        if (spotShow) texto += appLink ? `\\n🎵 Spotify\\n${spotShow}` : `\\n${spotShow}`;
+        // "link_audio": el link directo al mp3 (archive.org) mientras no haya Spotify
+        if (datos.link_audio && ep.audio) texto += `\\n🎧 Audio\\n${ep.audio}`;
+        if (wa && !datos.sin_whatsapp) texto += `\\nWhatsapp\\n${wa}`;
+"""),
 ]
-MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)")
+MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
+                "function feedDeShow", "datos.link_audio")
+FEED_JABURA = "https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/feed.xml"
 
 
 def paso(n, msg):
@@ -258,7 +284,7 @@ def parchar_robot():
     salto = "\r\n" if "\r\n" in texto else "\n"
     plano = texto.replace("\r\n", "\n")
     aplicados = 0
-    for h in HUNKS:
+    for i, h in enumerate(HUNKS):
         viejo, nuevo, todos = h[0], h[1], len(h) > 2
         if nuevo in plano and (todos and viejo not in plano or not todos):
             aplicados += 1
@@ -269,6 +295,8 @@ def parchar_robot():
         elif plano.count(viejo) == 1:
             plano = plano.replace(viejo, nuevo, 1)
             aplicados += 1
+        elif viejo not in plano and any(h2[1] in plano for h2 in HUNKS[i + 1:]):
+            aplicados += 1                    # un parche posterior ya reemplazó este bloque
     if aplicados == len(HUNKS):
         respaldar(ruta)
         escribir(ruta, plano.replace("\n", salto))
@@ -350,6 +378,7 @@ def configurar_whatsapp():
     for k, v in quiero.items():
         ja.setdefault(k, v)
     ja["_nota"] = quiero["_nota"]
+    ja["feed"] = FEED_JABURA           # el robot lee el feed de aquí (netlify.app no siempre abre en esa PC)
     if not str(ja.get("spotify", "")).startswith("http"):
         ja["spotify"] = SPOTIFY_JABURA
     ja["pausado"] = False
@@ -437,7 +466,7 @@ def reanunciar_jabura():
     paso(10, "Jabura: volver a poner en cola el último shiur para el próximo ANUNCIAR")
     estado = (ROBOT or BASE) / "estado_anuncios.json"
     try:
-        with urllib.request.urlopen("https://jaburahalajasaul.netlify.app/feed.xml", timeout=30) as r:
+        with urllib.request.urlopen(urllib.request.Request(FEED_JABURA, headers={"User-Agent": "instalar-otzar"}), timeout=30) as r:
             feed = r.read().decode("utf-8", "replace")
         guids = re.findall(r"<guid[^>]*>(.*?)</guid>", feed)
         ultimo = guids[-1].replace("&amp;", "&") if guids else ""
@@ -459,6 +488,97 @@ def reanunciar_jabura():
         ok(f"desmarcado: {ultimo.split('/')[-1]} → sale en el próximo ANUNCIAR")
     else:
         ok(f"'{ultimo.split('/')[-1]}' no estaba marcado: sale en el próximo ANUNCIAR")
+
+
+# ── 11. nacach: título + link a tres grupos ───────────────────────────────────
+def nacach_anuncio():
+    grupos = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--nacach-grupos=")), "")
+    spot = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--nacach-spotify=")), "")
+    rw = (ROBOT or BASE) / "config_whatsapp.json"
+    if not rw.exists():
+        return
+    paso(11, "Nacach: anuncio = título + link, a sus grupos")
+    cfg = json.loads(rw.read_text(encoding="utf-8"))
+    an = cfg.setdefault("anunciar", {}).setdefault("nacach", {"spotify": "PENDIENTE", "invite": "", "idioma": "es"})
+    antes = json.dumps(an, sort_keys=True)
+    if grupos:
+        lista = [g.strip().split("?")[0] for g in grupos.split(",") if g.strip().startswith("http")]
+        if lista:
+            an["invite"] = lista if len(lista) > 1 else lista[0]
+            ok(f"{len(lista)} grupo(s) de anuncio")
+    if spot.startswith("http"):
+        an["spotify"] = spot
+    tiene = str(an.get("spotify", "")).startswith("http")
+    an.update({"sin_audio": True, "sin_whatsapp": True, "max_anuncios": 2, "en_orden": True,
+               "sin_spotify": not tiene, "link_audio": not tiene, "pausado": False})
+    an["_nota"] = ("Solo título + link, sin audio adjunto. Con link del show en spotify va el episodio exacto; "
+                   "mientras, va el link directo al mp3 (link_audio).")
+    if json.dumps(an, sort_keys=True) != antes:
+        respaldar(rw)
+        escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+        ok("anunciar.nacach guardado")
+    inv = an.get("invite")
+    n_inv = len(inv) if isinstance(inv, list) else (1 if str(inv).startswith("http") else 0)
+    if not n_inv:
+        aviso("sin grupos: python instalar_otzar.py --nacach-grupos=LINK1,LINK2,LINK3")
+    ok("link exacto de Spotify" if tiene else "sin show en Spotify: manda el link directo al mp3 (--nacach-spotify=LINK para cambiarlo)")
+
+
+# ── 12. tefila: feed inicial en el repo (podcast_bot solo AGREGA; sin feed truena) ─
+def tefila_feed_inicial():
+    d = BASE / "tefila"
+    tok = d / "github_token.txt"
+    cfgp = d / "config.json"
+    if not (d.is_dir() and tok.exists() and cfgp.exists()):
+        return
+    paso(12, "Tefila: feed inicial en rabmeireliyahu/tefila")
+    c = json.loads(cfgp.read_text(encoding="utf-8"))
+    cab = {"Authorization": "token " + tok.read_text(encoding="utf-8").strip(),
+           "User-Agent": "instalar-otzar", "Accept": "application/vnd.github+json"}
+    base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', 'tefila')}"
+    def gh(metodo, url, cuerpo=None):
+        datos = json.dumps(cuerpo).encode() if cuerpo is not None else None
+        req = urllib.request.Request(url, data=datos, headers=cab, method=metodo)
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+                t = r.read().decode()
+                return r.status, (json.loads(t) if t.strip() else {})
+        except urllib.error.HTTPError as e:
+            return e.code, {}
+        except Exception as e:                              # noqa: BLE001
+            return 0, {"message": str(e)}
+    st, _ = gh("GET", f"{base}/contents/feed.xml")
+    if st == 200:
+        ok("feed.xml ya existe en el repo")
+    elif st == 404:
+        from xml.sax.saxutils import escape
+        pages = f"https://{c.get('github_user', 'rabmeireliyahu')}.github.io/{c.get('github_repo', 'tefila')}"
+        xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>{escape(c.get('titulo', 'Rab Tofi Cherem'))}</title>
+    <description>{escape(c.get('descripcion', ''))}</description>
+    <link>{pages}</link>
+    <language>{c.get('idioma', 'es')}</language>
+    <itunes:author>{escape(c.get('autor', ''))}</itunes:author>
+    <itunes:owner><itunes:name>{escape(c.get('autor', ''))}</itunes:name><itunes:email>{c.get('email', '')}</itunes:email></itunes:owner>
+    <itunes:image href="{pages}/portada.jpg"/>
+    <itunes:category text="Religion &amp; Spirituality"/>
+    <itunes:explicit>false</itunes:explicit>
+  </channel>
+</rss>
+"""
+        if VER:
+            print("   (subiría) feed.xml vacío al repo")
+        else:
+            st, j = gh("PUT", f"{base}/contents/feed.xml",
+                       {"message": "feed inicial", "content": base64.b64encode(xml.encode("utf-8")).decode()})
+            ok("feed.xml inicial creado (0 episodios): el bot ya puede agregarle") if st in (200, 201) else aviso(f"no pude crear el feed: {st} {j.get('message', '')}")
+        st, j = gh("POST", f"{base}/pages", {"source": {"branch": "main", "path": "/"}})
+        if st in (200, 201):
+            ok("GitHub Pages prendido")
+    else:
+        aviso(f"no pude ver el repo tefila ({st}): revisa github_token.txt")
 
 
 # ── 9. diagnóstico de la jabura: ¿qué hizo el robot con el último audio? ───────
@@ -613,8 +733,10 @@ def instalar_anunciar():
         aviso("sin carpeta del robot no puedo poner ANUNCIAR.bat")
         return
     ruta = ROBOT / "ANUNCIAR.bat"
-    if ruta.exists() and "tefila" in ruta.read_text(encoding="utf-8", errors="replace"):
-        ok("ya tenía los pasos de la jabura, tefila y el espejo de nacach")
+    if not VER:
+        bajar("otzar/publicar_todos.py", BASE / "jabura" / "publicar_todos.py")
+    if ruta.exists() and "publicar_todos" in ruta.read_text(encoding="utf-8", errors="replace"):
+        ok("ya tenía los pasos de la jabura, los shows de WhatsApp y el espejo de nacach")
         return
     respaldar(ruta)
     if bajar("otzar/ANUNCIAR.bat", ruta):
@@ -759,6 +881,8 @@ def main():
     tarea_programada()
     diagnostico_jabura()
     reanunciar_jabura()
+    nacach_anuncio()
+    tefila_feed_inicial()
     print("\nListo." if not VER else "\nPrueba en seco terminada: no se cambió nada.")
 
 

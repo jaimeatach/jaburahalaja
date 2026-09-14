@@ -136,9 +136,14 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    (por número y título; si el admin abre el link y el shiur aún no está,
    lo importa de archive.org al vuelo). Los flags son parches al robot
    (`sinAudio()`, `appLink`, `armarMensaje(..., app)`). `ANUNCIAR.bat` corre
-   `jabura_publicar.py` (y tefila y el espejo de nacach) antes de mandar la
-   orden al robot: ese botón es el único disparador, el usuario no quiere
-   tareas programadas (el instalador borra la que se creó).
+   `jabura_publicar.py`, `publicar_todos.py` (el `podcast_bot.py` de cada show
+   con `modo_whatsapp`: Peretz, Nacach, Ofir, Tefila) y el espejo de nacach
+   antes de mandar la orden al robot: ese botón es el único disparador, el
+   usuario no quiere tareas programadas (el instalador borra la que se creó).
+   El robot lee el feed de la jabura de `anunciar.jabura.feed` (el raw de
+   GitHub: netlify.app no siempre abre en esa PC); parche `feedDeShow()`.
+   Nacach anuncia "título + link" a varios grupos (`invite` en lista) sin
+   audio; sin show en Spotify va el link directo al mp3 (`link_audio`).
    Las notas de voz (.ogg) se convierten a mp3 (`convertidos\`) antes de subir.
 5. `tools/otzar/instalar_otzar.py` (o `INSTALAR_OTZAR.bat`) hace todo en la PC
    de Otzar de un tirón: parcha el robot (con respaldo), agrega la jabura al

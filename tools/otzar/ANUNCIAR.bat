@@ -35,12 +35,9 @@ if exist "C:\OTZAR\jabura\jabura_publicar.py" (
   echo.
 )
 
-rem === tefila (Rab Tofi Cherem): publicar los audios que dejo el robot ===
-if exist "C:\OTZAR\tefila\podcast_bot.py" (
-  echo --- Tefila: publicando shiurim nuevos ---
-  pushd "C:\OTZAR\tefila"
-  python podcast_bot.py
-  popd
+rem === Peretz, Nacach, Ofir, Tefila...: publicar lo que dejo el robot (modo_whatsapp) ===
+if exist "C:\OTZAR\jabura\publicar_todos.py" (
+  python "C:\OTZAR\jabura\publicar_todos.py"
   echo.
 )
 

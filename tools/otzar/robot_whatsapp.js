@@ -1268,6 +1268,12 @@ function idiomaDeShow(show) {
   return DIFUNDE[i] ? i : 'he';
 }
 
+// "feed": URL del RSS del show cuando no vive en rabmeireliyahu.github.io
+// (la jabura lo publica junto con su app). Por defecto, el de siempre.
+function feedDeShow(show) {
+  const d = (CFG.anunciar || {})[show] || {};
+  return (d.feed && String(d.feed).startsWith('http')) ? d.feed : `https://rabmeireliyahu.github.io/${show}/feed.xml`;
+}
 function armarMensaje(titulo, spotify, whatsapp, show, app) {
   // "app": link directo al shiur en la app del show (viene del <link> del feed)
   let t = app ? `🎧 *${titulo}*` : `*${titulo}*`;
@@ -1324,7 +1330,7 @@ async function anunciarPrueba(show, sinLimpiar) {
   if (!datos) { log(`PRUEBA: no existe el show "${show}" en el config`); return; }
   if (!reg[show]) { log(`PRUEBA: el show "${show}" no tiene grupo registrado`); return; }
   let xml;
-  try { xml = await fetchTexto(`https://rabmeireliyahu.github.io/${show}/feed.xml`); }
+  try { xml = await fetchTexto(feedDeShow(show)); }
   catch (e) { log(`PRUEBA: no pude leer el feed de ${show}`); return; }
   // agarrar el item MAS NUEVO por fecha (lo nuevo a veces cae hasta abajo del feed)
   const items = xml.match(/<item>[\s\S]*?<\/item>/g) || [];
@@ -1433,7 +1439,7 @@ async function anunciarInterno(esVigilante) {
     if (!reg[show]) continue;
 
     let xml;
-    try { xml = await fetchTexto(`https://rabmeireliyahu.github.io/${show}/feed.xml`); }
+    try { xml = await fetchTexto(feedDeShow(show)); }
     catch (e) { log(`${show}: no pude leer el feed`); continue; }
 
     const items = xml.match(/<item>[\s\S]*?<\/item>/g) || [];
@@ -1605,6 +1611,8 @@ async function anunciarInterno(esVigilante) {
         let texto = appLink ? `🎧 *${ep.tit}*` : `*${ep.tit}*`;
         if (appLink) texto += `\n📲 App\n${appLink}`;
         if (spotShow) texto += appLink ? `\n🎵 Spotify\n${spotShow}` : `\n${spotShow}`;
+        // "link_audio": el link directo al mp3 (archive.org) mientras no haya Spotify
+        if (datos.link_audio && ep.audio) texto += `\n🎧 Audio\n${ep.audio}`;
         if (wa && !datos.sin_whatsapp) texto += `\nWhatsapp\n${wa}`;
         texto += `\n\n${DIFUNDE[idiomaDeShow(show)]}`;
         const grupos = gruposDeShow(reg, show);
