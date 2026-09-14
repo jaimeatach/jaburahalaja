@@ -8,7 +8,7 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py --tefila-grupo=LINK            # link de invitación de Clases Tefila Habitat
     python instalar_otzar.py --tefila-spotify=LINK          # cuando exista el show en Spotify
     python instalar_otzar.py --reanunciar-jabura            # que el próximo ANUNCIAR mande el último shiur
-    python instalar_otzar.py --nacach-grupos=L1,L2,L3       # los 3 grupos donde Nacach anuncia (links de invitación)
+    python instalar_otzar.py --grupos-generales=L1,L2       # grupos generales donde anuncian Nacach y Tefila
     python instalar_otzar.py --nacach-spotify=LINK          # el show de Nacach en Spotify
 
 Los shows (nacach, peretz…) viven en C:\\OTZAR; el robot en C:\\robotwhats. Los busca solo.
@@ -500,7 +500,7 @@ def reanunciar_jabura():
 
 # ── 11. nacach: título + link a tres grupos ───────────────────────────────────
 def nacach_anuncio():
-    grupos = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--nacach-grupos=")), "")
+    grupos = next((a.split("=", 1)[1] for a in sys.argv if a.startswith(("--nacach-grupos=", "--grupos-generales="))), "")
     spot = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--nacach-spotify=")), "")
     rw = (ROBOT or BASE) / "config_whatsapp.json"
     if not rw.exists():
@@ -678,21 +678,30 @@ def tefila():
         for k in ("carpeta", "grupos"):
             esc.pop(k, None)
         an = cfg.setdefault("anunciar", {}).setdefault("tefila", {"spotify": "PENDIENTE", "invite": ""})
+        generales = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--grupos-generales=")), "")
+        generales = [g.strip().split("?")[0] for g in generales.split(",") if g.strip().startswith("http")]
         if grupo.startswith("http"):
-            # con el link de invitación el robot registra el grupo solo al arrancar,
-            # para escuchar y para anunciar; no hace falta mandar "!otzar tefila"
+            # con el link de invitación el robot registra el grupo solo al arrancar;
+            # no hace falta mandar "!otzar tefila". Ese grupo es la FUENTE de audios.
             esc["invite"] = grupo
-            an["invite"] = grupo
             ok("grupo Clases Tefila Habitat puesto por link: el robot lo registra al arrancar")
+        if generales:
+            # los avisos van a los grupos generales (los mismos de Nacach), no al grupo de clases
+            an["invite"] = generales if len(generales) > 1 else generales[0]
+            ok(f"anuncios de tefila a {len(generales)} grupo(s) generales")
+        elif grupo.startswith("http") and not an.get("invite"):
+            an["invite"] = grupo
         for k, v in {"idioma": "es", "max_anuncios": 2, "en_orden": True, "sin_audio": True, "sin_whatsapp": True}.items():
             an.setdefault(k, v)
         if spot.startswith("http"):
             an["spotify"] = spot
         tiene_spotify = str(an.get("spotify", "")).startswith("http")
         an["sin_spotify"] = not tiene_spotify
-        an["pausado"] = not tiene_spotify
-        an["_nota"] = ("Anuncia en el mismo grupo del Rab (registrado con !otzar tefila): titulo + link exacto de "
-                       "Spotify, sin audio. Pausado hasta tener el show: python instalar_otzar.py --tefila-spotify=LINK")
+        an["link_audio"] = not tiene_spotify
+        tiene_grupos = bool(an.get("invite"))
+        an["pausado"] = not tiene_grupos
+        an["_nota"] = ("Titulo + link (sin audio) a los grupos generales. Sin show en Spotify va el link directo al mp3; "
+                       "con show: python instalar_otzar.py --tefila-spotify=LINK")
         for k in list(an):
             if isinstance(an[k], str) and ("peret" in an[k].lower() and k != "_nota"):
                 an[k] = "" if k != "spotify" else "PENDIENTE"
@@ -703,7 +712,7 @@ def tefila():
             ok("config_whatsapp.json: tefila en escuchar y anunciar")
         else:
             ok("config_whatsapp.json: tefila ya estaba bien")
-        ok("anunciar.tefila " + ("ACTIVO con Spotify" if tiene_spotify else "en pausa hasta tener el link del show"))
+        ok("anunciar.tefila " + ("ACTIVO con link exacto de Spotify" if tiene_spotify else ("ACTIVO con link al mp3 (sin show en Spotify aún)" if tiene_grupos else "en pausa: faltan los grupos generales (--grupos-generales=L1,L2)")))
     # ¿el grupo ya está registrado?
     reg = (ROBOT or BASE) / "grupos_registrados.json"
     try:
