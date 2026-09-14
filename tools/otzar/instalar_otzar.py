@@ -12,6 +12,7 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py --al-dia=nacach:2,peretz:2     # publica lo pendiente y memoriza todo menos los últimos N
     python instalar_otzar.py --ofir-grupo=LINK              # Ofir Malka también en tu grupo
     python instalar_otzar.py --tefila-rss=URL               # rescatar lo subido a mano en Spotify (RSS del show) al feed
+    python instalar_otzar.py --nuevo=hilu --nuevo-nombre="Rab Joshua Hilu" --nuevo-rss=URL --nuevo-spotify=URL [--nuevo-grupo=LINK]
     python instalar_otzar.py --nacach-spotify=LINK          # el show de Nacach en Spotify
 
 Los shows (nacach, peretz…) viven en C:\\OTZAR; el robot en C:\\robotwhats. Los busca solo.
@@ -610,6 +611,155 @@ def tefila_rescate():
     print("   → ahora en Spotify for Creators haz el redirect a https://rabmeireliyahu.github.io/tefila/feed.xml")
 
 
+# ── 18. show nuevo estilo Peretz, de un tirón ─────────────────────────────────
+#   --nuevo=hilu --nuevo-nombre="Rab Joshua Hilu" --nuevo-rss=URL --nuevo-spotify=URL [--nuevo-grupo=LINK]
+def show_nuevo():
+    arg = lambda k: next((a.split("=", 1)[1] for a in sys.argv if a.startswith(f"--{k}=")), "").strip()
+    clave = re.sub(r"[^a-z0-9]", "", arg("nuevo").lower())
+    if not clave:
+        return
+    nombre = arg("nuevo-nombre") or clave
+    rss = arg("nuevo-rss")
+    spot = arg("nuevo-spotify").split("?")[0]
+    grupo = arg("nuevo-grupo").split("?")[0]
+    paso(18, f"Show nuevo: {nombre} ({clave})")
+    d = BASE / clave
+    modelo = next((BASE / m for m in ("tefila", "peretz", "nacach") if (BASE / m / "podcast_bot.py").exists()), None)
+    if not modelo:
+        aviso("no encuentro un podcast_bot.py de otro show para copiar")
+        return
+    if not VER:
+        (d / "audios_whatsapp").mkdir(parents=True, exist_ok=True)
+        for f in ("podcast_bot.py", "github_token.txt"):
+            if not (d / f).exists() and (modelo / f).exists():
+                shutil.copy2(modelo / f, d / f)
+    cfgp = d / "config.json"
+    c = json.loads(cfgp.read_text(encoding="utf-8")) if cfgp.exists() else {}
+    base_cfg = json.loads((modelo / "config.json").read_text(encoding="utf-8"))
+    antes = json.dumps(c, sort_keys=True)
+    c.setdefault("titulo", nombre)
+    c.setdefault("descripcion", f"Shiurim de {nombre}. Otzar HaTorah - אוצר התורה")
+    c.setdefault("autor", nombre)
+    c.setdefault("email", base_cfg.get("email", "rabmeireliyahu@gmail.com"))
+    c.setdefault("idioma", "es")
+    c["modo_whatsapp"] = True
+    c["carpeta_whatsapp"] = str(d / "audios_whatsapp")
+    c.setdefault("archive_id", "rab-" + clave)
+    c.setdefault("github_user", "rabmeireliyahu")
+    c.setdefault("github_repo", clave)
+    c["solo_agregar"] = True
+    if rss:
+        c["rss_original"] = rss
+    if json.dumps(c, sort_keys=True) != antes:
+        if cfgp.exists():
+            respaldar(cfgp)
+        escribir(cfgp, json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+        ok("config.json del show")
+    # repo + Pages + portada (la del show en Spotify) + feed inicial
+    tok = d / "github_token.txt"
+    if tok.exists() and not VER:
+        cab = {"Authorization": "token " + tok.read_text(encoding="utf-8").strip(),
+               "User-Agent": "instalar-otzar", "Accept": "application/vnd.github+json"}
+        base = f"https://api.github.com/repos/{c['github_user']}/{c['github_repo']}"
+        def gh(metodo, url, cuerpo=None):
+            datos = json.dumps(cuerpo).encode() if cuerpo is not None else None
+            req = urllib.request.Request(url, data=datos, headers=cab, method=metodo)
+            try:
+                with urllib.request.urlopen(req, timeout=60) as r:
+                    t = r.read().decode()
+                    return r.status, (json.loads(t) if t.strip() else {})
+            except urllib.error.HTTPError as e:
+                return e.code, {}
+            except Exception as e:                          # noqa: BLE001
+                return 0, {"message": str(e)}
+        def poner(ruta, contenido, msg):
+            st, j = gh("GET", f"{base}/contents/{ruta}")
+            cuerpo = {"message": msg, "content": base64.b64encode(contenido).decode()}
+            if st == 200 and j.get("sha"):
+                cuerpo["sha"] = j["sha"]
+            st, _ = gh("PUT", f"{base}/contents/{ruta}", cuerpo)
+            return st in (200, 201)
+        st, _ = gh("GET", base)
+        if st == 404:
+            st, j = gh("POST", "https://api.github.com/user/repos",
+                       {"name": c["github_repo"], "description": nombre, "private": False, "auto_init": False})
+            ok("repo creado" if st in (200, 201) else f"no pude crear el repo ({st})")
+            poner("README.md", f"# {clave}\n{nombre}\n".encode(), "readme")
+        pages = f"https://{c['github_user']}.github.io/{c['github_repo']}"
+        st, _ = gh("GET", f"{base}/contents/portada.jpg")
+        if st == 404 and rss:
+            try:
+                with urllib.request.urlopen(urllib.request.Request(rss, headers={"User-Agent": "Mozilla/5.0"}), timeout=40) as r:
+                    xml = r.read().decode("utf-8", "replace")
+                m = re.search(r'<itunes:image[^>]*href="([^"]+)"', xml) or re.search(r"<url>([^<]+)</url>", xml)
+                if m:
+                    with urllib.request.urlopen(urllib.request.Request(m.group(1), headers={"User-Agent": "Mozilla/5.0"}), timeout=60) as r:
+                        img = r.read()
+                    if poner("portada.jpg", img, "portada"):
+                        ok("portada tomada del show en Spotify")
+            except Exception as e:                          # noqa: BLE001
+                aviso(f"portada: {e}")
+        st, _ = gh("GET", f"{base}/contents/feed.xml")
+        if st == 404:
+            from xml.sax.saxutils import escape
+            xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>{escape(c['titulo'])}</title>
+    <description>{escape(c['descripcion'])}</description>
+    <link>{pages}</link>
+    <language>{c['idioma']}</language>
+    <itunes:author>{escape(c['autor'])}</itunes:author>
+    <itunes:owner><itunes:name>{escape(c['autor'])}</itunes:name><itunes:email>{c['email']}</itunes:email></itunes:owner>
+    <itunes:image href="{pages}/portada.jpg"/>
+    <itunes:category text="Religion &amp; Spirituality"/>
+    <itunes:explicit>false</itunes:explicit>
+  </channel>
+</rss>
+"""
+            ok("feed inicial creado" if poner("feed.xml", xml.encode("utf-8"), "feed inicial") else "no pude crear el feed")
+        st, _ = gh("POST", f"{base}/pages", {"source": {"branch": "main", "path": "/"}})
+        if st in (200, 201):
+            ok("GitHub Pages prendido")
+    # robot: escuchar (grupo fuente) + anunciar (grupos generales, como nacach)
+    rw = (ROBOT or BASE) / "config_whatsapp.json"
+    cfg = json.loads(rw.read_text(encoding="utf-8"))
+    antes = json.dumps(cfg, sort_keys=True)
+    esc = cfg.setdefault("escuchar", {}).setdefault(clave, {"invite": ""})
+    esc["carpetaDestino"] = str(d / "audios_whatsapp")
+    if grupo.startswith("http"):
+        esc["invite"] = grupo
+    an = cfg.setdefault("anunciar", {}).setdefault(clave, {"spotify": "PENDIENTE", "invite": ""})
+    generales = (cfg.get("anunciar", {}).get("nacach") or {}).get("invite")
+    if generales and not an.get("invite"):
+        an["invite"] = generales
+    if spot.startswith("http"):
+        an["spotify"] = spot
+    tiene = str(an.get("spotify", "")).startswith("http")
+    for k, v in {"idioma": "es", "max_anuncios": 2, "en_orden": True, "sin_audio": True, "sin_whatsapp": True, "solo_ultimos": 2}.items():
+        an.setdefault(k, v)
+    an["sin_spotify"] = not tiene
+    an["link_audio"] = not tiene
+    an["pausado"] = not bool(an.get("invite"))
+    if json.dumps(cfg, sort_keys=True) != antes:
+        respaldar(rw)
+        escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+        ok(f"robot: escucha {clave}" + (" (grupo por link)" if grupo else " (falta el grupo: --nuevo-grupo=LINK)") +
+           f" · anuncia en {len(an['invite']) if isinstance(an.get('invite'), list) else (1 if an.get('invite') else 0)} grupo(s)")
+    # rescatar lo que ya está en Spotify
+    if rss and not VER:
+        for cmd in ("rescatar", "subir", "feed"):
+            print(f"   --- podcast_bot.py {cmd} ---")
+            r = subprocess.run([sys.executable, "podcast_bot.py", cmd], cwd=str(d))
+            if r.returncode != 0:
+                aviso(f"podcast_bot.py {cmd} terminó con error")
+                return
+        ok("episodios rescatados y publicados en el feed nuevo")
+        print(f"   → en Spotify for Creators, redirect del show a https://{c['github_user']}.github.io/{c['github_repo']}/feed.xml")
+    if not grupo.startswith("http") and not esc.get("invite"):
+        print(f"   → cuando tengas el grupo del Rab: python instalar_otzar.py --sin-drive --nuevo={clave} --nuevo-grupo=LINK")
+
+
 # ── 12. tefila: feed inicial en el repo (podcast_bot solo AGREGA; sin feed truena) ─
 def tefila_feed_inicial():
     d = BASE / "tefila"
@@ -1098,6 +1248,7 @@ def main():
     nacach_anuncio()
     tefila_feed_inicial()
     tefila_rescate()
+    show_nuevo()
     shows_whatsapp_al_dia()
     ofir_grupo()
     sin_atrasos_config()
