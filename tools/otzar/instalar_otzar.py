@@ -503,7 +503,7 @@ def reanunciar_jabura():
 # ── 11. nacach: título + link a tres grupos ───────────────────────────────────
 def nacach_anuncio():
     grupos = next((a.split("=", 1)[1] for a in sys.argv if a.startswith(("--nacach-grupos=", "--grupos-generales="))), "")
-    spot = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--nacach-spotify=")), "")
+    spot = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--nacach-spotify=")), "").split("?")[0]
     rw = (ROBOT or BASE) / "config_whatsapp.json"
     if not rw.exists():
         return
@@ -799,7 +799,7 @@ def tefila():
         aviso("no está C:\\OTZAR\\tefila (NUEVO_TEFILA.bat no corrió); no toco nada")
         return
     carpeta_wa = str(d / "audios_whatsapp")
-    spot = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--tefila-spotify=")), "")
+    spot = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--tefila-spotify=")), "").split("?")[0]
     grupo = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--tefila-grupo=")), "").split("?")[0]
     # config.json del show: herencia de peretz fuera
     cfgp = d / "config.json"
