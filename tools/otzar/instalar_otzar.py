@@ -771,18 +771,47 @@ def portada():
     paso(19, f"Portada de {show}")
     d = BASE / show
     if not ruta.exists():
-        aviso(f"no encuentro la imagen: {ruta}")
-        return
+        # sin extensión o con otra: se busca "nombre.*" en esa carpeta
+        candidatos = sorted(ruta.parent.glob(ruta.stem + ".*")) if ruta.parent.exists() else []
+        candidatos = [c for c in candidatos if c.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp")]
+        if candidatos:
+            ruta = candidatos[0]
+        else:
+            aviso(f"no encuentro la imagen: {ruta}")
+            return
     c = json.loads((d / "config.json").read_text(encoding="utf-8")) if (d / "config.json").exists() else {}
     tok = d / "github_token.txt"
     if not tok.exists():
         aviso("falta github_token.txt en la carpeta del show")
         return
     img = ruta.read_bytes()
+    # Spotify quiere JPG/PNG cuadrado de 1400 a 3000 px: con Pillow se deja en JPG
+    # de 1400 mínimo; sin Pillow se sube tal cual y se avisa
+    try:
+        from PIL import Image
+        import io
+        im = Image.open(io.BytesIO(img)).convert("RGB")
+        w, h = im.size
+        lado = min(w, h)
+        if w != h:
+            im = im.crop(((w - lado) // 2, (h - lado) // 2, (w - lado) // 2 + lado, (h - lado) // 2 + lado))
+        if lado < 1400:
+            im = im.resize((1400, 1400), Image.LANCZOS)
+        elif lado > 3000:
+            im = im.resize((3000, 3000), Image.LANCZOS)
+        buf = io.BytesIO()
+        im.save(buf, "JPEG", quality=90)
+        img = buf.getvalue()
+        ok(f"imagen preparada: {im.size[0]}x{im.size[1]} JPG ({len(img) // 1024} KB)")
+    except ImportError:
+        if not img[:3] == b"\xff\xd8\xff":
+            aviso("la imagen no es JPG y no tengo Pillow para convertirla (pip install pillow); la subo igual")
+    except Exception as e:                                  # noqa: BLE001
+        aviso(f"no pude preparar la imagen ({e}); la subo tal cual")
     if len(img) > 2_500_000:
-        aviso("la imagen pesa más de 2.5 MB; Spotify la puede rechazar. Redúcela y vuelve a correr")
+        aviso("la imagen pesa más de 2.5 MB; Spotify la puede rechazar")
     if not VER:
-        shutil.copy2(ruta, d / "portada.jpg")
+        (d / "portada.jpg").write_bytes(img)
     cab = {"Authorization": "token " + tok.read_text(encoding="utf-8").strip(),
            "User-Agent": "instalar-otzar", "Accept": "application/vnd.github+json"}
     base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}"
