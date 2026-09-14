@@ -20,6 +20,7 @@ import subprocess
 import sys
 import time
 import urllib.request
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 BASE = Path(r"C:\OTZAR")
@@ -157,10 +158,22 @@ def sin_atrasos(cfgw):
         feed = bajar(feed_de(show, datos, leer_json(BASE / show / "config.json")))
         if not feed:
             continue
-        guids = [g.replace("&amp;", "&") for g in re.findall(r"<guid[^>]*>(.*?)</guid>", feed)]
-        if not guids:
+        items = re.findall(r"<item>([\s\S]*?)</item>", feed)
+        pares = []
+        for it in items:
+            g = re.search(r"<guid[^>]*>(.*?)</guid>", it)
+            d = re.search(r"<pubDate>(.*?)</pubDate>", it)
+            if not g:
+                continue
+            try:
+                cuando = parsedate_to_datetime(d.group(1).strip()).timestamp() if d else 0
+            except Exception:
+                cuando = 0
+            pares.append((cuando, g.group(1).replace("&amp;", "&")))
+        if not pares:
             continue
-        ultimos = guids[-n:]
+        guids = [g for _, g in pares]
+        ultimos = [g for _, g in sorted(pares)[-n:]]     # los N más nuevos por fecha
         previos = e.get(show) or []
         memorizar = [g for g in guids if g not in ultimos and g not in previos]
         if memorizar or show not in e:

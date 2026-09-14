@@ -728,14 +728,25 @@ def al_dia():
         except Exception as ex:                             # noqa: BLE001
             aviso(f"{show}: no pude leer el feed ({ex})")
             continue
-        guids = [g.replace("&amp;", "&") for g in re.findall(r"<guid[^>]*>(.*?)</guid>", feed)]
-        # el feed va del más viejo al más nuevo: los últimos N quedan sin memorizar para que salgan
-        ultimos = guids[-dejar:] if dejar else []
+        from email.utils import parsedate_to_datetime
+        pares = []
+        for it in re.findall(r"<item>([\s\S]*?)</item>", feed):
+            g = re.search(r"<guid[^>]*>(.*?)</guid>", it)
+            d = re.search(r"<pubDate>(.*?)</pubDate>", it)
+            if not g:
+                continue
+            try:
+                cuando = parsedate_to_datetime(d.group(1).strip()).timestamp() if d else 0
+            except Exception:
+                cuando = 0
+            pares.append((cuando, g.group(1).replace("&amp;", "&")))
+        guids = [g for _, g in pares]
+        # los N más nuevos por fecha quedan sin memorizar para que salgan; lo ya anunciado no se toca
+        ultimos = [g for _, g in sorted(pares)[-dejar:]] if dejar else []
         memorizar = [g for g in guids if g not in ultimos]
         previos = e.get(show) or []
         nuevos = [g for g in memorizar if g not in previos]
-        e[show] = [g for g in previos if g not in ultimos] + nuevos
-        e[show] = e[show][-2000:]
+        e[show] = (previos + nuevos)[-2000:]
         cambio = True
         ok(f"{show}: {len(memorizar)} memorizados; salen los últimos {dejar}: " +
            " | ".join(g.split("/")[-1][:40] for g in ultimos) if dejar else f"{show}: {len(memorizar)} memorizados; solo se anuncia lo nuevo")
