@@ -55,7 +55,7 @@
      if (r && r.id === jid) return { show: e.show, carpeta: e.carpetaDestino };
    }
    return null;
-@@ -423,6 +440,37 @@
+@@ -423,13 +440,44 @@
  
  
  
@@ -93,16 +93,29 @@
  async function resolverGruposEscucha() {
  
    for (const [show, datos] of Object.entries(CFG.escuchar || {})) {
-@@ -447,9 +495,19 @@
  
-       if (!cod) { log(`  escucha ${show}: invitacion rara`); continue; }
+     if (show === 'peretz') continue; // su grupo ya se resuelve por "anunciar"
  
--      const info = await sock.groupGetInviteInfo(cod);
+-    if (!datos.invite) continue;
++    if (!datos.invite && !datos.nombre) continue;  // sin link ni nombre no hay como ubicarlo
+ 
+     const reg = leerRegistro();
+ 
+@@ -445,11 +493,23 @@
+ 
+       const cod = codigoDeInvite(datos.invite);
+ 
+-      if (!cod) { log(`  escucha ${show}: invitacion rara`); continue; }
 -
+-      const info = await sock.groupGetInviteInfo(cod);
++      if (!cod && !datos.nombre) { log(`  escucha ${show}: invitacion rara`); continue; }
+ 
 -      if (!info || !info.id) { log(`  escucha ${show}: sin ID (esta el robot en el grupo?)`); continue; }
 +      let info = null;
-+      try { info = await sock.groupGetInviteInfo(cod); }
-+      catch (e) { log(`  escucha ${show}: no pude leer la invitacion (${e.message || e}); busco el grupo por nombre`); }
++      if (cod) {
++        try { info = await sock.groupGetInviteInfo(cod); }
++        catch (e) { log(`  escucha ${show}: no pude leer la invitacion (${e.message || e}); busco el grupo por nombre`); }
++      }
 +      if ((!info || !info.id) && datos.nombre) {
 +        // === FUENTE POR NOMBRE (sep/2026): entre los grupos del robot
 +        try {
@@ -116,7 +129,7 @@
  
        reg['escucha:' + show] = { id: info.id, nombre: info.subject || show, invite: datos.invite };
  
-@@ -491,9 +549,23 @@
+@@ -491,9 +551,23 @@
    } catch (e) {}
    const _etq = _ETIQUETAS_OTZAR[_showCarpeta] ||
      ('Shiur ' + (_showCarpeta ? _showCarpeta.charAt(0).toUpperCase() + _showCarpeta.slice(1) : 'Otzar'));
@@ -143,7 +156,7 @@
    const nombre = nombreLibre(carpeta, base, item.ext);
    const destino = path.join(carpeta, nombre);
    try {
-@@ -507,7 +579,7 @@
+@@ -507,7 +581,7 @@
        return;
      }
    } catch (e) { log('Error guardando audio: ' + (e.message || e)); return; }
@@ -152,7 +165,7 @@
  }
  
  // Si el robot se reinicio con audios esperando titulo, no se pierden:
-@@ -550,7 +622,15 @@
+@@ -550,7 +624,15 @@
      for (const e of lista) {
        if (reg['dm:' + e.show] && reg['dm:' + e.show].id === jid) return e;
      }
@@ -169,7 +182,7 @@
      for (const e of lista) {
        const num = String(e.numero || '').replace(/\D/g, '').slice(-10);
        if (num && soloDigitos.includes(num)) {
-@@ -568,6 +648,11 @@
+@@ -568,6 +650,11 @@
    // ===== NUBE DE TORA: solo privados que NO son chat directo =====
    // Todo va dentro de try/catch: si truena, el robot ni se entera.
    if (!esGrupo && !directo && !/^!otzar\s/i.test(textoDe(m))) {
@@ -181,7 +194,7 @@
      try {
        const N = nube();
        if (N && typeof N.atender === 'function') await N.atender(sock, m);
-@@ -595,21 +680,52 @@
+@@ -595,21 +682,52 @@
        }
        return;
      }
@@ -239,7 +252,7 @@
  
    // de aqui en adelante: o es un grupo escuchado (peretz, ofir...), o un chat directo valido
  
-@@ -639,7 +755,7 @@
+@@ -639,7 +757,7 @@
      if (!buffer) { log('No pude bajar el audio tras 3 intentos.'); return; }
      const ext = extensionDe(info.mime, info.nombre);
      const item = { buffer, ext, ts, autor, timer: null, archivoTemp: null,
@@ -248,7 +261,7 @@
  
      // guardar YA en disco: si el robot se reinicia, el audio no se pierde
      try {
-@@ -1045,6 +1161,9 @@
+@@ -1045,6 +1163,9 @@
  // shows que NO llevan audio adjunto (ahi el audio ya circula solo).
  // Estos reciben unicamente el mensaje: titulo + Spotify + WhatsApp.
  const SHOWS_SIN_AUDIO = ['peretz'];
@@ -258,7 +271,7 @@
  const MB_COMO_AUDIO = 16;
  const MB_MAXIMO = 100;
  const CARPETA_TEMP = path.join(__dirname, 'audio_temp');
-@@ -1240,9 +1359,17 @@
+@@ -1240,9 +1361,17 @@
    return DIFUNDE[i] ? i : 'he';
  }
  
@@ -279,7 +292,7 @@
    if (whatsapp) t += `\nWhatsapp\n${whatsapp}`;
    if (show) t += `\n\n${DIFUNDE[idiomaDeShow(show)]}`;
    return t;
-@@ -1294,7 +1421,7 @@
+@@ -1294,7 +1423,7 @@
    if (!datos) { log(`PRUEBA: no existe el show "${show}" en el config`); return; }
    if (!reg[show]) { log(`PRUEBA: el show "${show}" no tiene grupo registrado`); return; }
    let xml;
@@ -288,7 +301,7 @@
    catch (e) { log(`PRUEBA: no pude leer el feed de ${show}`); return; }
    // agarrar el item MAS NUEVO por fecha (lo nuevo a veces cae hasta abajo del feed)
    const items = xml.match(/<item>[\s\S]*?<\/item>/g) || [];
-@@ -1336,7 +1463,7 @@
+@@ -1336,7 +1465,7 @@
    log(`PRUEBA enviada a "${reg[show].nombre}" (id de mensaje: ${(enviado && enviado.key && enviado.key.id) || '?'}): ${tit}`);
    const audioUrl = (it.match(/<enclosure[^>]*url\s*=\s*"([^"]+)"/) || [])[1] || '';
    const audioPeso = parseInt((it.match(/<enclosure[^>]*length\s*=\s*"(\d+)"/) || [])[1] || '0', 10);
@@ -297,7 +310,7 @@
    else await mandarAudio(reg[show].id, audioUrl, tit, audioPeso);
  }
  
-@@ -1403,7 +1530,7 @@
+@@ -1403,7 +1532,7 @@
      if (!reg[show]) continue;
  
      let xml;
@@ -306,7 +319,7 @@
      catch (e) { log(`${show}: no pude leer el feed`); continue; }
  
      const items = xml.match(/<item>[\s\S]*?<\/item>/g) || [];
-@@ -1446,7 +1573,8 @@
+@@ -1446,7 +1575,8 @@
      // config del show. Entonces se anuncia del MAS VIEJO al mas nuevo.
      const enOrden = !!((CFG.anunciar && CFG.anunciar[show] || {}).en_orden);
      let nuevos = items
@@ -316,7 +329,7 @@
        .filter(ep => !vistos.has(ep.guid))
        .sort((a, b) => enOrden ? (a.fecha - b.fecha) : (b.fecha - a.fecha));
  
-@@ -1538,7 +1666,7 @@
+@@ -1538,7 +1668,7 @@
          log(`ANUNCIADOS JUNTOS en "${g.nombre}": ${listos.length} shiurim`);
          await new Promise(r => setTimeout(r, 1500));
        }
@@ -325,7 +338,7 @@
        else for (const x of listos) {
          await mandarAudioAVarios(grupos, x.ep.audio, x.ep.tit, x.ep.peso);
          await new Promise(r => setTimeout(r, 3000));
-@@ -1568,9 +1696,15 @@
+@@ -1568,9 +1698,15 @@
  
        if (!epLink && sinSpot) {
          if (yaAnunciado(show, ep.guid)) { log(`${show}: "${ep.tit.slice(0,40)}" ya se anuncio; lo salto.`); continue; }
@@ -344,7 +357,7 @@
          texto += `\n\n${DIFUNDE[idiomaDeShow(show)]}`;
          const grupos = gruposDeShow(reg, show);
          for (const g of grupos) {
-@@ -1578,7 +1712,7 @@
+@@ -1578,7 +1714,7 @@
            log(`ANUNCIADO en "${g.nombre}": ${ep.tit}   (link del show, no del episodio)`);
            await new Promise(r => setTimeout(r, 1500));
          }
@@ -353,7 +366,7 @@
          else await mandarAudioAVarios(grupos, ep.audio, ep.tit, ep.peso);
          marcarAnunciado(show, ep.guid);
          estado[show].push(ep.guid);
-@@ -1597,7 +1731,7 @@
+@@ -1597,7 +1733,7 @@
          log(`   (lo mas parecido que tiene Spotify: ${diag.masParecidos.join('  |  ')})`);
          continue; // NO se marca: el proximo ANUNCIAR lo reintenta
        }
@@ -362,7 +375,7 @@
        // ultima revision antes de mandar: si otra corrida ya lo anuncio, lo salto
        if (yaAnunciado(show, ep.guid)) { log(`${show}: "${ep.tit.slice(0,40)}" ya se anuncio; lo salto.`); continue; }
        const grupos = gruposDeShow(reg, show);
-@@ -1606,7 +1740,7 @@
+@@ -1606,7 +1742,7 @@
          log(`ANUNCIADO en "${g.nombre}": ${ep.tit}`);
          await new Promise(r => setTimeout(r, 1500));
        }

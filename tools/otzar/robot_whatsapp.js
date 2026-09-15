@@ -477,7 +477,7 @@ async function resolverGruposEscucha() {
 
     if (show === 'peretz') continue; // su grupo ya se resuelve por "anunciar"
 
-    if (!datos.invite) continue;
+    if (!datos.invite && !datos.nombre) continue;  // sin link ni nombre no hay como ubicarlo
 
     const reg = leerRegistro();
 
@@ -493,11 +493,13 @@ async function resolverGruposEscucha() {
 
       const cod = codigoDeInvite(datos.invite);
 
-      if (!cod) { log(`  escucha ${show}: invitacion rara`); continue; }
+      if (!cod && !datos.nombre) { log(`  escucha ${show}: invitacion rara`); continue; }
 
       let info = null;
-      try { info = await sock.groupGetInviteInfo(cod); }
-      catch (e) { log(`  escucha ${show}: no pude leer la invitacion (${e.message || e}); busco el grupo por nombre`); }
+      if (cod) {
+        try { info = await sock.groupGetInviteInfo(cod); }
+        catch (e) { log(`  escucha ${show}: no pude leer la invitacion (${e.message || e}); busco el grupo por nombre`); }
+      }
       if ((!info || !info.id) && datos.nombre) {
         // === FUENTE POR NOMBRE (sep/2026): entre los grupos del robot
         try {

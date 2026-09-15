@@ -426,13 +426,41 @@ async function grupoPorNombre(nombre) {
   }
 """, """  if (esGrupo && !escuchaGrupo) return;  // (ya se avisó arriba)
 """, "todos"),
+    # fuente por nombre aunque el show no tenga link de invitacion (grupo de Nacach)
+    ("""    if (!datos.invite) continue;
+
+    const reg = leerRegistro();
+""", """    if (!datos.invite && !datos.nombre) continue;  // sin link ni nombre no hay como ubicarlo
+
+    const reg = leerRegistro();
+""", "todos"),
+    ("""      const cod = codigoDeInvite(datos.invite);
+
+      if (!cod) { log(`  escucha ${show}: invitacion rara`); continue; }
+
+      let info = null;
+      try { info = await sock.groupGetInviteInfo(cod); }
+      catch (e) { log(`  escucha ${show}: no pude leer la invitacion (${e.message || e}); busco el grupo por nombre`); }
+""", """      const cod = codigoDeInvite(datos.invite);
+
+      if (!cod && !datos.nombre) { log(`  escucha ${show}: invitacion rara`); continue; }
+
+      let info = null;
+      if (cod) {
+        try { info = await sock.groupGetInviteInfo(cod); }
+        catch (e) { log(`  escucha ${show}: no pude leer la invitacion (${e.message || e}); busco el grupo por nombre`); }
+      }
+""", "todos"),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre")
-GRUPOS_NOMBRE = {"https://chat.whatsapp.com/5xGJ6YLeGT97rL94uJnPyZo": "3 Solo Shiurim"}
-NOMBRES_FUENTE = {"tefila": "Clases Tefila Habitat", "jabura": "Mekorot"}
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre")
+GRUPOS_NOMBRE = {"https://chat.whatsapp.com/5xGJ6YLeGT97rL94uJnPyZo": "3 Solo Shiurim",
+                 "https://chat.whatsapp.com/BjgiQwlndcK6hyzFPuP7Vn": "Clases Tefila Habitat"}
+NOMBRES_FUENTE = {"tefila": "Clases Tefila Habitat", "jabura": "Mekorot", "nacach": "Shiurim jajam ezra nacach"}
+# shows que toman audios de un grupo (por nombre) aunque el config solo tuviera chat directo
+FUENTES_NUEVAS = {"nacach": "Shiurim jajam ezra nacach"}
 TITULOS_DEFECTO = {"tefila": "Clase de Tefilá · Rab Tofi Cherem", "hilu": "Shiur · Rab Joshua Hilu"}
 FEED_JABURA = "https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/feed.xml"
 
@@ -517,7 +545,7 @@ def parchar_robot():
             aplicados += 1
         elif viejo not in plano and any(h2[1] in plano for h2 in HUNKS[i + 1:]):
             aplicados += 1                    # un parche posterior ya reemplazó este bloque
-    if aplicados == len(HUNKS):
+    if aplicados == len(HUNKS) and all(m in plano for m in MARCAS_ROBOT):
         respaldar(ruta)
         escribir(ruta, plano.replace("\n", salto))
         ok(f"{len(HUNKS)} cambios aplicados a tu robot")
@@ -526,9 +554,18 @@ def parchar_robot():
         if bajar("otzar/robot_whatsapp.js", ruta):
             ok("robot reemplazado por la copia parchada")
     else:
-        aviso(f"tu robot cambió y solo pude aplicar {aplicados} de {len(HUNKS)} cambios; lo dejo como está.")
-        aviso("Bájate tools/otzar/robot_whatsapp.js del repo y compáralo a mano.")
-        return
+        aviso(f"tu robot cambió y solo pude aplicar {aplicados} de {len(HUNKS)} cambios")
+        for i, h in enumerate(HUNKS):
+            v_, n_, todos_ = h[0], h[1], len(h) > 2
+            if n_ in plano or (todos_ and v_ not in plano) or plano.count(v_) == 1:
+                continue
+            print(f"     · parche {i + 1} no encontró: {v_.strip().splitlines()[0][:70]}")
+        # la copia del repo ES tu robot con todos los parches: se pone entera (con respaldo)
+        respaldar(ruta)
+        if bajar("otzar/robot_whatsapp.js", ruta):
+            ok("robot reemplazado por la copia parchada del repo (tu versión quedó en el respaldo)")
+        else:
+            return
     if not VER:
         r = subprocess.run(["node", "--check", str(ruta)], capture_output=True, text=True)
         if r.returncode == 0:
@@ -1243,6 +1280,12 @@ def verificar():
         img = re.search(r'<itunes:image href="([^"]+)"', feed)
         print(f"   {repo}: canal '{titulos[0].strip() if titulos else '?'}' · {feed.count('<item>')} episodios · "
               f"último: '{titulos[-1].strip()[:50] if len(titulos) > 1 else '-'}' · portada: {img.group(1).split('/')[-1] if img else '?'}")
+        try:
+            an = json.loads(((ROBOT or BASE) / "config_whatsapp.json").read_text(encoding="utf-8")).get("anunciar", {}).get(repo) or {}
+            if str(an.get("spotify", "")).startswith("http"):
+                print(f"      en el robot, {repo} anuncia con el show {an['spotify'].split('?')[0]}")
+        except Exception:
+            pass
     if shows and not any("show/" in x for x in shows):
         aviso("--spotify-ver= necesita los links de los shows (https://open.spotify.com/show/...), separados por coma")
         shows = []
@@ -1331,6 +1374,21 @@ def fuentes():
     paso(25, "Fuentes: de qué grupo toma audios cada show (y de cuáles NO)")
     cfg = json.loads(rw.read_text(encoding="utf-8"))
     cambio = False
+    for show, nombre in FUENTES_NUEVAS.items():
+        # el grupo del Rab como fuente (además del chat directo, si lo hay)
+        if show in (cfg.get("escuchar") or {}):
+            continue
+        carpeta = next((e.get("carpetaDestino") for e in (cfg.get("escuchar_directo") or []) if e.get("show") == show and e.get("carpetaDestino")), None)
+        if not carpeta:
+            c = BASE / show / "config.json"
+            try:
+                carpeta = json.loads(c.read_text(encoding="utf-8")).get("carpeta_whatsapp")
+            except Exception:
+                carpeta = None
+        carpeta = carpeta or str(BASE / show / "audios_whatsapp")
+        cfg.setdefault("escuchar", {})[show] = {"invite": "", "nombre": nombre, "carpetaDestino": carpeta}
+        cambio = True
+        ok(f"{show}: su grupo \"{nombre}\" queda como fuente de audios (carpeta {carpeta})")
     for show, nombre in NOMBRES_FUENTE.items():
         esc = (cfg.get("escuchar") or {}).get(show)
         if isinstance(esc, dict) and not esc.get("nombre"):
@@ -1375,6 +1433,45 @@ def fuentes():
     if faltan:
         print("   → arranca el robot; al conectar busca cada fuente por link y por nombre. Si sigue sin ubicarla,")
         print("     manda el texto  !otzar <show>  DENTRO del grupo del Rab (p. ej. !otzar tefila) y vuelve a correr esto.")
+
+
+# ── 26. Spotify: link exacto solo cuando el show ya lee nuestro feed ────────────
+#   Mientras el show siga alojado en Spotify (sin redirect), los episodios nuevos
+#   no existen ahí y el robot se quedaría esperando el link exacto para siempre.
+#   Hasta entonces: link del show + audio directo. --redirigido=tefila,hilu lo cambia.
+SHOWS_REDIRECT = ("tefila", "hilu")
+def spotify_redirigido():
+    rw = (ROBOT or BASE) / "config_whatsapp.json"
+    if not rw.exists():
+        return
+    marcar = [x.strip() for x in next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--redirigido=")), "").split(",") if x.strip()]
+    paso(26, "Spotify: link exacto del episodio solo cuando el show ya lee nuestro feed")
+    cfg = json.loads(rw.read_text(encoding="utf-8"))
+    cambio = False
+    for show in SHOWS_REDIRECT:
+        an = (cfg.get("anunciar") or {}).get(show)
+        if not isinstance(an, dict):
+            continue
+        if show in marcar and not an.get("redirigido"):
+            an["redirigido"] = True
+            cambio = True
+        tiene = str(an.get("spotify", "")).startswith("http") and bool(an.get("redirigido"))
+        if an.get("sin_spotify") != (not tiene) or an.get("link_audio") != (not tiene):
+            an["sin_spotify"] = not tiene
+            an["link_audio"] = not tiene
+            cambio = True
+        if tiene:
+            ok(f"{show}: link EXACTO del episodio en Spotify")
+        else:
+            print(f"   · {show}: link del show en Spotify + audio directo (el show aún no lee "
+                  f"https://rabmeireliyahu.github.io/{show}/feed.xml)")
+    if cambio:
+        respaldar(rw)
+        escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+    pend = [s for s in SHOWS_REDIRECT if isinstance((cfg.get("anunciar") or {}).get(s), dict) and not (cfg["anunciar"][s].get("redirigido"))]
+    if pend:
+        print("   → cuando hagas el redirect en Spotify for Creators (Settings → Redirect to a new host → el feed.xml de arriba):")
+        print(f"     python instalar_otzar.py --sin-drive --redirigido={','.join(pend)}")
 
 
 # ── 12. tefila: feed inicial en el repo (podcast_bot solo AGREGA; sin feed truena) ─
@@ -1638,6 +1735,8 @@ def tefila():
         cfg = json.loads(rw.read_text(encoding="utf-8"))
         antes = json.dumps(cfg, sort_keys=True)
         esc = cfg.setdefault("escuchar", {}).setdefault("tefila", {"invite": ""})
+        if not grupo.startswith("http") and str(esc.get("invite", "")).startswith("http"):
+            grupo = esc["invite"].split("?")[0]   # el link que ya estaba en el config
         esc["carpetaDestino"] = carpeta_wa
         esc.setdefault("nombre", NOMBRES_FUENTE["tefila"])
         for k in ("carpeta", "grupos"):
@@ -1650,17 +1749,22 @@ def tefila():
             # no hace falta mandar "!otzar tefila". Ese grupo es la FUENTE de audios.
             esc["invite"] = grupo
             ok("grupo Clases Tefila Habitat puesto por link: el robot lo registra al arrancar")
-        if generales:
-            # los avisos van a los grupos generales (los mismos de Nacach), no al grupo de clases
-            an["invite"] = generales if len(generales) > 1 else generales[0]
-            ok(f"anuncios de tefila a {len(generales)} grupo(s) generales")
-        elif grupo.startswith("http") and not an.get("invite"):
-            an["invite"] = grupo
+        if not generales:
+            # sin --grupos-generales: los que ya tenga nacach (los generales de siempre)
+            g_n = (cfg.get("anunciar", {}).get("nacach") or {}).get("invite") or []
+            generales = [g for g in (g_n if isinstance(g_n, list) else [g_n]) if str(g).startswith("http")]
+        # el aviso va al grupo del Rab (primero, para que "Whatsapp" sea el link de SU grupo)
+        # y a los grupos generales; sin audio, porque en su grupo ya está
+        destinos = ([grupo] if grupo.startswith("http") else []) + [g for g in generales if g != grupo]
+        if destinos:
+            an["invite"] = destinos if len(destinos) > 1 else destinos[0]
+            an["sin_whatsapp"] = not grupo.startswith("http")
+            ok(f"anuncios de tefila a su grupo + {len(generales)} grupo(s) generales")
         for k, v in {"idioma": "es", "max_anuncios": 2, "en_orden": True, "sin_audio": True, "sin_whatsapp": True}.items():
             an.setdefault(k, v)
         if spot.startswith("http"):
             an["spotify"] = spot
-        tiene_spotify = str(an.get("spotify", "")).startswith("http")
+        tiene_spotify = str(an.get("spotify", "")).startswith("http") and bool(an.get("redirigido"))
         an["sin_spotify"] = not tiene_spotify
         an["link_audio"] = not tiene_spotify
         tiene_grupos = bool(an.get("invite"))
@@ -1677,7 +1781,7 @@ def tefila():
             ok("config_whatsapp.json: tefila en escuchar y anunciar")
         else:
             ok("config_whatsapp.json: tefila ya estaba bien")
-        ok("anunciar.tefila " + ("ACTIVO con link exacto de Spotify" if tiene_spotify else ("ACTIVO con link al mp3 (sin show en Spotify aún)" if tiene_grupos else "en pausa: faltan los grupos generales (--grupos-generales=L1,L2)")))
+        ok("anunciar.tefila " + ("ACTIVO con link exacto de Spotify" if tiene_spotify else ("ACTIVO con link del show + audio (hasta el redirect en Spotify)" if tiene_grupos else "en pausa: faltan los grupos generales (--grupos-generales=L1,L2)")))
     # ¿el grupo ya está registrado?
     reg = (ROBOT or BASE) / "grupos_registrados.json"
     try:
@@ -1878,6 +1982,7 @@ def main():
     verificar()
     titulos_defecto()
     fuentes()
+    spotify_redirigido()
     shows_whatsapp_al_dia()
     ofir_grupo()
     sin_atrasos_config()
