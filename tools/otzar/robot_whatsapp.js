@@ -300,7 +300,14 @@ async function resolverGrupos() {
     const invites = invitesDeShow(datos);
     if (!invites.length) continue;
 
-    const yaTiene = gruposDeShow(reg, show);
+    // los grupos registrados con un link que YA NO esta en el config se sueltan
+    const yaTeniaTodos = gruposDeShow(reg, show);
+    const yaTiene = yaTeniaTodos.filter(g => !g.invite || invites.includes(g.invite));
+    if (yaTiene.length !== yaTeniaTodos.length) {
+      log(`  ${show}: ya no anuncia en ${yaTeniaTodos.filter(g => !yaTiene.includes(g)).map(g => g.nombre).join(' + ')}`);
+      if (yaTiene.length) reg[show] = { id: yaTiene[0].id, nombre: yaTiene[0].nombre, grupos: yaTiene };
+      else delete reg[show];
+    }
     if (yaTiene.length >= invites.length) {
       log(`  ${show}: ya identificado (${yaTiene.map(g => g.nombre).join(' + ')})`);
       continue;
@@ -560,6 +567,10 @@ function guardarAudio(item, titulo) {
       ? (_porDefecto + ' ' + new Date(item.ts).toLocaleDateString('es-MX').replace(/\//g, '-'))
       : (_etq + ' ' + new Date(item.ts).toLocaleDateString('es-MX').replace(/\//g, '-') +
          ' ' + new Date(item.ts).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }).replace(':', '.')));
+  // "prefijo_titulo" en escuchar -> <show>: el nombre del Rab al frente del titulo
+  // (va a grupos generales), salvo que el titulo ya lo traiga.
+  const _pref = String(((CFG.escuchar || {})[item.show] || {}).prefijo_titulo || '').trim();
+  if (_pref && !base.toLowerCase().includes(_pref.replace(/[·:\-–]+$/, '').trim().toLowerCase())) base = _pref + ' ' + base;
   // === JABURA (sep/2026): los shiurim van numerados para conservar el orden ===
   // La carpeta de la jabura es la misma que lee la app: cada archivo lleva el
   // numero que sigue ("5 titulo.m4a"), contando los audios que ya hay.

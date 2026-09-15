@@ -453,16 +453,38 @@ async function grupoPorNombre(nombre) {
         catch (e) { log(`  escucha ${show}: no pude leer la invitacion (${e.message || e}); busco el grupo por nombre`); }
       }
 """, "todos"),
+    # nombre del Rab al frente del titulo (prefijo_titulo) y grupos de anuncio quitados del config
+    ("""         ' ' + new Date(item.ts).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }).replace(':', '.')));
+""", """         ' ' + new Date(item.ts).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }).replace(':', '.')));
+  // "prefijo_titulo" en escuchar -> <show>: el nombre del Rab al frente del titulo
+  // (va a grupos generales), salvo que el titulo ya lo traiga.
+  const _pref = String(((CFG.escuchar || {})[item.show] || {}).prefijo_titulo || '').trim();
+  if (_pref && !base.toLowerCase().includes(_pref.replace(/[·:\\-–]+$/, '').trim().toLowerCase())) base = _pref + ' ' + base;
+"""),
+    ("""    const yaTiene = gruposDeShow(reg, show);
+""", """    // los grupos registrados con un link que YA NO esta en el config se sueltan
+    const yaTeniaTodos = gruposDeShow(reg, show);
+    const yaTiene = yaTeniaTodos.filter(g => !g.invite || invites.includes(g.invite));
+    if (yaTiene.length !== yaTeniaTodos.length) {
+      log(`  ${show}: ya no anuncia en ${yaTeniaTodos.filter(g => !yaTiene.includes(g)).map(g => g.nombre).join(' + ')}`);
+      if (yaTiene.length) reg[show] = { id: yaTiene[0].id, nombre: yaTiene[0].nombre, grupos: yaTiene };
+      else delete reg[show];
+    }
+"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos")
 GRUPOS_NOMBRE = {"https://chat.whatsapp.com/5xGJ6YLeGT97rL94uJnPyZo": "3 Solo Shiurim",
                  "https://chat.whatsapp.com/BjgiQwlndcK6hyzFPuP7Vn": "Clases Tefila Habitat"}
 NOMBRES_FUENTE = {"tefila": "Clases Tefila Habitat", "jabura": "Mekorot", "nacach": "Shiurim jajam ezra nacach"}
 # shows que toman audios de un grupo (por nombre) aunque el config solo tuviera chat directo
 FUENTES_NUEVAS = {"nacach": "Shiurim jajam ezra nacach"}
+# nombre del Rab al frente del titulo (va a grupos generales)
+PREFIJOS = {"tefila": "Rab Tofi Cherem ·"}
+# shows que NO van a cierto grupo general (tefila solo al 6, no al 3)
+SIN_GRUPO = {"tefila": ["https://chat.whatsapp.com/5xGJ6YLeGT97rL94uJnPyZo"]}
 TITULOS_DEFECTO = {"tefila": "Clase de Tefilá · Rab Tofi Cherem", "hilu": "Shiur · Rab Joshua Hilu", "nacach": "Shiur · Rab Ezra Nacach"}
 FEED_JABURA = "https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/feed.xml"
 
@@ -1343,6 +1365,12 @@ def titulos_defecto():
         if esc is not None and not esc.get("titulo_defecto"):
             esc["titulo_defecto"] = titulo
             cambio = True
+    for show, pref in PREFIJOS.items():
+        esc = (cfg.get("escuchar") or {}).get(show)
+        if esc is not None and esc.get("prefijo_titulo") != pref:
+            esc["prefijo_titulo"] = pref
+            cambio = True
+            ok(f"{show}: los títulos llevan \"{pref}\" al frente")
     if cambio:
         respaldar(rw)
         escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
@@ -1759,11 +1787,13 @@ def tefila():
             generales = [g for g in (g_n if isinstance(g_n, list) else [g_n]) if str(g).startswith("http")]
         # el aviso va al grupo del Rab (primero, para que "Whatsapp" sea el link de SU grupo)
         # y a los grupos generales; sin audio, porque en su grupo ya está
+        generales = [g for g in generales if g.split("?")[0] not in SIN_GRUPO.get("tefila", [])]
         destinos = ([grupo] if grupo.startswith("http") else []) + [g for g in generales if g != grupo]
         if destinos:
             an["invite"] = destinos if len(destinos) > 1 else destinos[0]
             an["sin_whatsapp"] = not grupo.startswith("http")
-            ok(f"anuncios de tefila a su grupo + {len(generales)} grupo(s) generales")
+            ok(f"anuncios de tefila a su grupo + {len(generales)} grupo(s) generales (no al 3)")
+        esc["prefijo_titulo"] = PREFIJOS["tefila"]
         for k, v in {"idioma": "es", "max_anuncios": 2, "en_orden": True, "sin_audio": True, "sin_whatsapp": True}.items():
             an.setdefault(k, v)
         if spot.startswith("http"):
