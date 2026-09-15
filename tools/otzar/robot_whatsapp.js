@@ -433,6 +433,26 @@ function grupoEscuchaDe(jid) {
 
 
 
+// nombre (subject) de un grupo, con cache; '' si no se pudo leer
+const _nombresGrupo = {};
+async function nombreDeGrupo(jid) {
+  if (_nombresGrupo[jid] !== undefined) return _nombresGrupo[jid];
+  let n = '';
+  try { const md = await sock.groupMetadata(jid); n = (md && md.subject) || ''; } catch (e) {}
+  _nombresGrupo[jid] = n;
+  return n;
+}
+// show de escuchar.<show>.nombre cuyo nombre esta contenido en el subject del grupo
+function showPorNombre(subject) {
+  const s = String(subject || '').toLowerCase().trim();
+  if (!s) return null;
+  for (const [show, datos] of Object.entries(CFG.escuchar || {})) {
+    const n = String((datos && datos.nombre) || '').toLowerCase().trim();
+    if (n && (s === n || s.includes(n) || n.includes(s))) return show;
+  }
+  return null;
+}
+
 async function resolverGruposEscucha() {
 
   for (const [show, datos] of Object.entries(CFG.escuchar || {})) {
@@ -457,9 +477,19 @@ async function resolverGruposEscucha() {
 
       if (!cod) { log(`  escucha ${show}: invitacion rara`); continue; }
 
-      const info = await sock.groupGetInviteInfo(cod);
-
-      if (!info || !info.id) { log(`  escucha ${show}: sin ID (esta el robot en el grupo?)`); continue; }
+      let info = null;
+      try { info = await sock.groupGetInviteInfo(cod); }
+      catch (e) { log(`  escucha ${show}: no pude leer la invitacion (${e.message || e}); busco el grupo por nombre`); }
+      if ((!info || !info.id) && datos.nombre) {
+        // === FUENTE POR NOMBRE (sep/2026): entre los grupos del robot
+        try {
+          const todos = await sock.groupFetchAllParticipating();
+          const n = String(datos.nombre).toLowerCase().trim();
+          const hit = Object.values(todos || {}).find(g => String(g.subject || '').toLowerCase().includes(n));
+          if (hit) info = { id: hit.id, subject: hit.subject };
+        } catch (e) { log(`  escucha ${show}: no pude listar los grupos (${e.message || e})`); }
+      }
+      if (!info || !info.id) { log(`  escucha ${show}: sin ID (esta el robot en el grupo? manda "!otzar ${show}" dentro del grupo)`); continue; }
 
       reg['escucha:' + show] = { id: info.id, nombre: info.subject || show, invite: datos.invite };
 
@@ -531,7 +561,7 @@ function guardarAudio(item, titulo) {
       return;
     }
   } catch (e) { log('Error guardando audio: ' + (e.message || e)); return; }
-  log('GUARDADO: ' + nombre);
+  log(`GUARDADO [${item.show || '?'}]: ${nombre}  -> ${carpeta}`);
 }
 
 // Si el robot se reinicio con audios esperando titulo, no se pierden:
@@ -632,25 +662,52 @@ async function procesarMensaje(m) {
       }
       return;
     }
-    const validas = Object.keys(CFG.anunciar || {});
+    const validas = Object.keys(CFG.anunciar || {}).concat(Object.keys(CFG.escuchar || {}));
     if (!clave || !validas.includes(clave)) {
       log('Clave no valida en "!otzar": ' + (clave || '(vacia)'));
       return;
     }
     const reg = leerRegistro();
-    reg[clave] = { id: jid, nombre: 'grupo ' + jid.slice(0, 14) + '...' };
+    let nombreGrupo = 'grupo ' + jid.slice(0, 14) + '...';
+    try { const md = await sock.groupMetadata(jid); if (md && md.subject) nombreGrupo = md.subject; } catch (e) {}
+    // === FUENTE (sep/2026): si el show anuncia en OTROS grupos (invite en
+    // anunciar) y este grupo se registra a mano, es su FUENTE de audios
+    // (escucha:<clave>); reg[clave] queda para los grupos de anuncio.
+    const _an = (CFG.anunciar || {})[clave] || {};
+    const _anuncia = Array.isArray(_an.invite) ? _an.invite.length > 0 : !!(_an.invite && String(_an.invite).startsWith('http'));
+    if ((CFG.escuchar || {})[clave] && _anuncia) {
+      reg['escucha:' + clave] = { id: jid, nombre: nombreGrupo, manual: true };
+      guardarRegistro(reg);
+      log(`REGISTRADO fuente de audios: ${clave} -> "${nombreGrupo}" ${jid}  (ya puedes borrar tu mensaje)`);
+      return;
+    }
+    reg[clave] = { id: jid, nombre: nombreGrupo };
     guardarRegistro(reg);
-    log(`REGISTRADO: ${clave} -> ${jid}  (ya puedes borrar tu mensaje)`);
+    log(`REGISTRADO: ${clave} -> "${nombreGrupo}" ${jid}  (ya puedes borrar tu mensaje)`);
     return;
   }
 
-  const escuchaGrupo = esGrupo ? grupoEscuchaDe(jid) : null;
+  let escuchaGrupo = esGrupo ? grupoEscuchaDe(jid) : null;
 
-  if (esGrupo && !escuchaGrupo) {
-    if (audioDe(m)) log(`AUDIO IGNORADO (grupo no registrado para escucha): jid=${jid}` +
-      ' -> agrega el grupo en "escuchar" del config o manda "!otzar <clave>" en ese grupo');
-    return;
+  // === FUENTE POR NOMBRE (sep/2026): si el grupo no esta registrado pero su
+  // nombre coincide con "nombre" en escuchar.<show> del config, se registra
+  // solo como fuente de ese show (por si el link de invitacion no se pudo leer).
+  if (esGrupo && !escuchaGrupo && audioDe(m)) {
+    const nombreGrupo = await nombreDeGrupo(jid);
+    const show = showPorNombre(nombreGrupo);
+    if (show) {
+      const reg = leerRegistro();
+      reg['escucha:' + show] = { id: jid, nombre: nombreGrupo, porNombre: true };
+      guardarRegistro(reg);
+      log(`FUENTE reconocida por nombre: ${show} -> "${nombreGrupo}" ${jid}`);
+      escuchaGrupo = grupoEscuchaDe(jid);
+    } else {
+      log(`AUDIO IGNORADO (grupo no registrado para escucha): "${nombreGrupo}" jid=${jid}` +
+        ' -> agrega el grupo en "escuchar" del config o manda "!otzar <clave>" en ese grupo');
+      return;
+    }
   }
+  if (esGrupo && !escuchaGrupo) return;
 
   // de aqui en adelante: o es un grupo escuchado (peretz, ofir...), o un chat directo valido
 

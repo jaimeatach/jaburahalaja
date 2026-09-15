@@ -155,3 +155,10 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    guarda en `C:\OTZAR\tefila\audios_whatsapp`, `podcast_bot.py` publica desde
    `ANUNCIAR.bat`; el grupo se registra mandando `!otzar tefila` en el grupo;
    `--tefila-spotify=LINK` activa el anuncio). `--ver` es prueba en seco.
+6. Fuentes: cada show toma audios SOLO de su grupo fuente (`escuchar.<show>`,
+   registrado como `escucha:<show>` en `grupos_registrados.json`); `reg[show]` a
+   secas es el grupo de anuncios y lo que manden ahí no se sube. El robot ubica
+   la fuente por el link de invitación al arrancar, si no por `nombre` del
+   config (`NOMBRES_FUENTE` en el instalador: tefila = "Clases Tefila Habitat"),
+   y si no, mandando `!otzar <show>` dentro del grupo. El paso [25] del
+   instalador dice de qué grupo toma audios cada show y cuál falta ubicar.

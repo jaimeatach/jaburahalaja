@@ -265,9 +265,125 @@ function armarMensaje(titulo, spotify, whatsapp, show, app) {
       : (_etq + ' ' + new Date(item.ts).toLocaleDateString('es-MX').replace(/\\//g, '-') +
          ' ' + new Date(item.ts).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }).replace(':', '.')));
 """),
+    # fuente de audios: '!otzar <show>' en un grupo la registra como fuente cuando el
+    # show anuncia en otros grupos; reconoce el grupo por 'nombre' si el link falla;
+    # dice el nombre del grupo que ignora y el show de cada GUARDADO
+    ("""    const validas = Object.keys(CFG.anunciar || {});
+    if (!clave || !validas.includes(clave)) {
+      log('Clave no valida en "!otzar": ' + (clave || '(vacia)'));
+      return;
+    }
+    const reg = leerRegistro();
+    reg[clave] = { id: jid, nombre: 'grupo ' + jid.slice(0, 14) + '...' };
+    guardarRegistro(reg);
+    log(`REGISTRADO: ${clave} -> ${jid}  (ya puedes borrar tu mensaje)`);
+    return;
+""", """    const validas = Object.keys(CFG.anunciar || {}).concat(Object.keys(CFG.escuchar || {}));
+    if (!clave || !validas.includes(clave)) {
+      log('Clave no valida en "!otzar": ' + (clave || '(vacia)'));
+      return;
+    }
+    const reg = leerRegistro();
+    let nombreGrupo = 'grupo ' + jid.slice(0, 14) + '...';
+    try { const md = await sock.groupMetadata(jid); if (md && md.subject) nombreGrupo = md.subject; } catch (e) {}
+    // === FUENTE (sep/2026): si el show anuncia en OTROS grupos (invite en
+    // anunciar) y este grupo se registra a mano, es su FUENTE de audios
+    // (escucha:<clave>); reg[clave] queda para los grupos de anuncio.
+    const _an = (CFG.anunciar || {})[clave] || {};
+    const _anuncia = Array.isArray(_an.invite) ? _an.invite.length > 0 : !!(_an.invite && String(_an.invite).startsWith('http'));
+    if ((CFG.escuchar || {})[clave] && _anuncia) {
+      reg['escucha:' + clave] = { id: jid, nombre: nombreGrupo, manual: true };
+      guardarRegistro(reg);
+      log(`REGISTRADO fuente de audios: ${clave} -> "${nombreGrupo}" ${jid}  (ya puedes borrar tu mensaje)`);
+      return;
+    }
+    reg[clave] = { id: jid, nombre: nombreGrupo };
+    guardarRegistro(reg);
+    log(`REGISTRADO: ${clave} -> "${nombreGrupo}" ${jid}  (ya puedes borrar tu mensaje)`);
+    return;
+"""),
+    ("""  const escuchaGrupo = esGrupo ? grupoEscuchaDe(jid) : null;
+
+  if (esGrupo && !escuchaGrupo) {
+    if (audioDe(m)) log(`AUDIO IGNORADO (grupo no registrado para escucha): jid=${jid}` +
+      ' -> agrega el grupo en "escuchar" del config o manda "!otzar <clave>" en ese grupo');
+    return;
+  }
+""", """  let escuchaGrupo = esGrupo ? grupoEscuchaDe(jid) : null;
+
+  // === FUENTE POR NOMBRE (sep/2026): si el grupo no esta registrado pero su
+  // nombre coincide con "nombre" en escuchar.<show> del config, se registra
+  // solo como fuente de ese show (por si el link de invitacion no se pudo leer).
+  if (esGrupo && !escuchaGrupo && audioDe(m)) {
+    const nombreGrupo = await nombreDeGrupo(jid);
+    const show = showPorNombre(nombreGrupo);
+    if (show) {
+      const reg = leerRegistro();
+      reg['escucha:' + show] = { id: jid, nombre: nombreGrupo, porNombre: true };
+      guardarRegistro(reg);
+      log(`FUENTE reconocida por nombre: ${show} -> "${nombreGrupo}" ${jid}`);
+      escuchaGrupo = grupoEscuchaDe(jid);
+    } else {
+      log(`AUDIO IGNORADO (grupo no registrado para escucha): "${nombreGrupo}" jid=${jid}` +
+        ' -> agrega el grupo en "escuchar" del config o manda "!otzar <clave>" en ese grupo');
+      return;
+    }
+  }
+  if (esGrupo && !escuchaGrupo) return;
+"""),
+    ("""async function resolverGruposEscucha() {
+""", """// nombre (subject) de un grupo, con cache; '' si no se pudo leer
+const _nombresGrupo = {};
+async function nombreDeGrupo(jid) {
+  if (_nombresGrupo[jid] !== undefined) return _nombresGrupo[jid];
+  let n = '';
+  try { const md = await sock.groupMetadata(jid); n = (md && md.subject) || ''; } catch (e) {}
+  _nombresGrupo[jid] = n;
+  return n;
+}
+// show de escuchar.<show>.nombre cuyo nombre esta contenido en el subject del grupo
+function showPorNombre(subject) {
+  const s = String(subject || '').toLowerCase().trim();
+  if (!s) return null;
+  for (const [show, datos] of Object.entries(CFG.escuchar || {})) {
+    const n = String((datos && datos.nombre) || '').toLowerCase().trim();
+    if (n && (s === n || s.includes(n) || n.includes(s))) return show;
+  }
+  return null;
+}
+
+async function resolverGruposEscucha() {
+"""),
+    ("""      const info = await sock.groupGetInviteInfo(cod);
+
+      if (!info || !info.id) { log(`  escucha ${show}: sin ID (esta el robot en el grupo?)`); continue; }
+
+      reg['escucha:' + show] = { id: info.id, nombre: info.subject || show, invite: datos.invite };
+""", """      let info = null;
+      try { info = await sock.groupGetInviteInfo(cod); }
+      catch (e) { log(`  escucha ${show}: no pude leer la invitacion (${e.message || e}); busco el grupo por nombre`); }
+      if ((!info || !info.id) && datos.nombre) {
+        // === FUENTE POR NOMBRE (sep/2026): entre los grupos del robot
+        try {
+          const todos = await sock.groupFetchAllParticipating();
+          const n = String(datos.nombre).toLowerCase().trim();
+          const hit = Object.values(todos || {}).find(g => String(g.subject || '').toLowerCase().includes(n));
+          if (hit) info = { id: hit.id, subject: hit.subject };
+        } catch (e) { log(`  escucha ${show}: no pude listar los grupos (${e.message || e})`); }
+      }
+      if (!info || !info.id) { log(`  escucha ${show}: sin ID (esta el robot en el grupo? manda "!otzar ${show}" dentro del grupo)`); continue; }
+
+      reg['escucha:' + show] = { id: info.id, nombre: info.subject || show, invite: datos.invite };
+"""),
+    ("""  log('GUARDADO: ' + nombre);
+""", """  log(`GUARDADO [${item.show || '?'}]: ${nombre}  -> ${carpeta}`);
+"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
-                "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto")
+                "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
+                "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
+                "groupFetchAllParticipating", "GUARDADO [${item.show")
+NOMBRES_FUENTE = {"tefila": "Clases Tefila Habitat", "jabura": "Mekorot"}
 TITULOS_DEFECTO = {"tefila": "Clase de Tefilá · Rab Tofi Cherem", "hilu": "Shiur · Rab Joshua Hilu"}
 FEED_JABURA = "https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/feed.xml"
 
@@ -1078,6 +1194,9 @@ def verificar():
         img = re.search(r'<itunes:image href="([^"]+)"', feed)
         print(f"   {repo}: canal '{titulos[0].strip() if titulos else '?'}' · {feed.count('<item>')} episodios · "
               f"último: '{titulos[-1].strip()[:50] if len(titulos) > 1 else '-'}' · portada: {img.group(1).split('/')[-1] if img else '?'}")
+    if shows and not any("show/" in x for x in shows):
+        aviso("--spotify-ver= necesita los links de los shows (https://open.spotify.com/show/...), separados por coma")
+        shows = []
     if shows:
         llaves = None
         for ruta in [(ROBOT or BASE) / "spotify_keys.txt", BASE / "jabura" / "spotify_keys.txt"]:
@@ -1153,6 +1272,52 @@ def titulos_defecto():
             if not VER:
                 shutil.move(str(f), str(destino))
             ok(f"{show}: '{f.name}' → '{destino.name}' (se publica en el próximo ANUNCIAR)")
+
+
+# ── 25. fuentes: de qué grupo toma audios cada show y si el robot ya lo ubicó ──
+def fuentes():
+    rw = (ROBOT or BASE) / "config_whatsapp.json"
+    if not rw.exists():
+        return
+    paso(25, "Fuentes: de qué grupo toma audios cada show (y de cuáles NO)")
+    cfg = json.loads(rw.read_text(encoding="utf-8"))
+    cambio = False
+    for show, nombre in NOMBRES_FUENTE.items():
+        esc = (cfg.get("escuchar") or {}).get(show)
+        if isinstance(esc, dict) and not esc.get("nombre"):
+            esc["nombre"] = nombre
+            cambio = True
+    if cambio:
+        respaldar(rw)
+        escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+    try:
+        r = json.loads(((ROBOT or BASE) / "grupos_registrados.json").read_text(encoding="utf-8"))
+    except Exception:
+        r = {}
+    faltan = []
+    for show, esc in sorted((cfg.get("escuchar") or {}).items()):
+        if not isinstance(esc, dict):
+            continue
+        an = (cfg.get("anunciar") or {}).get(show) or {}
+        inv = an.get("invite")
+        anuncia = bool(inv) if not isinstance(inv, list) else bool(inv)
+        g = r.get("escucha:" + show) or (None if anuncia else r.get(show))
+        an_reg = r.get(show) or {}
+        an_nombres = [x.get("nombre", "?") for x in (an_reg.get("grupos") or ([an_reg] if an_reg.get("id") else []))]
+        donde = ("anuncia en: " + " + ".join(an_nombres)) if an_nombres else "no anuncia en grupos"
+        if g and g.get("id"):
+            ok(f"{show}: toma audios de \"{g.get('nombre', g['id'])}\" · {donde}")
+        elif esc.get("invite") or esc.get("nombre"):
+            aviso(f"{show}: FUENTE SIN UBICAR (el robot ignora sus audios) · {donde}")
+            faltan.append(show)
+        else:
+            print(f"   · {show}: sin grupo fuente en el config · {donde}")
+    for e in cfg.get("escuchar_directo") or []:
+        dm = r.get("dm:" + str(e.get("show")))
+        print(f"   · {e.get('show')}: chat directo " + (f"reconocido ({dm.get('id')})" if dm else f"del número {e.get('numero', '?')} (aún no escribe)"))
+    if faltan:
+        print("   → arranca el robot; al conectar busca cada fuente por link y por nombre. Si sigue sin ubicarla,")
+        print("     manda el texto  !otzar <show>  DENTRO del grupo del Rab (p. ej. !otzar tefila) y vuelve a correr esto.")
 
 
 # ── 12. tefila: feed inicial en el repo (podcast_bot solo AGREGA; sin feed truena) ─
@@ -1353,7 +1518,7 @@ def diagnostico_jabura():
     if log_robot.exists():
         hoy = time.strftime("%-d/%-m/%Y") if os.name != "nt" else time.strftime("%#d/%#m/%Y")
         lineas = log_robot.read_text(encoding="utf-8", errors="replace").splitlines()
-        claves = ("GUARDADO", "IGNORADO", "Esperando titulo", "escucha jabura", "Mekorot", "AUDIO", "REGISTRADO", "RECUPERADOS", "ANUNCIADO")
+        claves = ("GUARDADO", "IGNORADO", "Esperando titulo", "escucha ", "Mekorot", "AUDIO", "REGISTRADO", "RECUPERADOS", "ANUNCIADO", "FUENTE")
         util = [l for l in lineas if any(k in l for k in claves) and hoy in l[:14]]
         print(f"   robot hoy ({hoy}): {len(util)} líneas de audio")
         for l in util[-15:]:
@@ -1417,6 +1582,7 @@ def tefila():
         antes = json.dumps(cfg, sort_keys=True)
         esc = cfg.setdefault("escuchar", {}).setdefault("tefila", {"invite": ""})
         esc["carpetaDestino"] = carpeta_wa
+        esc.setdefault("nombre", NOMBRES_FUENTE["tefila"])
         for k in ("carpeta", "grupos"):
             esc.pop(k, None)
         an = cfg.setdefault("anunciar", {}).setdefault("tefila", {"spotify": "PENDIENTE", "invite": ""})
@@ -1461,15 +1627,19 @@ def tefila():
         r = json.loads(reg.read_text(encoding="utf-8"))
     except Exception:
         r = {}
-    g = r.get("tefila") or r.get("escucha:tefila")
-    if grupo.startswith("http") and not (g and g.get("id")):
-        print("   → reinicia el robot: al arrancar debe decir 'OK escucha tefila -> Clases Tefila Habitat'")
-    elif g and g.get("id"):
-        ok(f"grupo registrado: {g.get('nombre', g['id'])}")
+    an_reg = r.get("tefila") or {}
+    an_nombres = [x.get("nombre", "?") for x in (an_reg.get("grupos") or ([an_reg] if an_reg.get("id") else []))]
+    if an_nombres:
+        ok("anuncia en: " + " + ".join(an_nombres))
+    g = r.get("escucha:tefila")
+    if g and g.get("id"):
+        ok(f"FUENTE de audios (donde el Rab manda): {g.get('nombre', g['id'])}")
         if "peret" in str(g.get("nombre", "")).lower():
-            aviso("¡ese grupo es de Peretz! Manda \"!otzar tefila\" en el grupo del Rab para corregirlo")
+            aviso("¡esa fuente es de Peretz! Manda \"!otzar tefila\" en el grupo del Rab para corregirlo")
     else:
-        aviso("grupo SIN registrar: con el robot prendido, manda \"!otzar tefila\" dentro de Clases Tefila Habitat")
+        aviso("FUENTE SIN registrar: el robot NO sabe cuál es Clases Tefila Habitat, por eso ignora los audios del Rab")
+        print("   → con el robot prendido (ya reiniciado), manda el texto  !otzar tefila  dentro de Clases Tefila Habitat;")
+        print("     el robot contesta en su ventana 'REGISTRADO fuente de audios: tefila'. Luego reenvía el audio del Rab ahí.")
     # ¿qué hay capturado y qué hay publicado?
     try:
         n_audios = len([f for f in (d / "audios_whatsapp").iterdir() if f.suffix.lower() in AUDIO])
@@ -1650,6 +1820,7 @@ def main():
     anunciar_tambien()
     verificar()
     titulos_defecto()
+    fuentes()
     shows_whatsapp_al_dia()
     ofir_grupo()
     sin_atrasos_config()
