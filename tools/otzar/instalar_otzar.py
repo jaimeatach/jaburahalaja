@@ -252,8 +252,24 @@ function armarMensaje(titulo, spotify, whatsapp, show, app) {
   return null;
 """),
 ]
+    # clases sin texto: título por defecto del show, y se publican
+    ("""  let base = limpiarTitulo(titulo) ||
+    (_etq + ' ' + new Date(item.ts).toLocaleDateString('es-MX').replace(/\\//g, '-') +
+     ' ' + new Date(item.ts).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }).replace(':', '.'));
+""", """  // "titulo_defecto" en escuchar -> <show>: un audio que llega sin texto se
+  // guarda como "<titulo_defecto> <fecha>" y SI se publica (el subidor solo
+  // aparta los que empiezan con "Shiur ...").
+  const _porDefecto = ((CFG.escuchar || {})[item.show] || {}).titulo_defecto;
+  let base = limpiarTitulo(titulo) ||
+    (_porDefecto
+      ? (_porDefecto + ' ' + new Date(item.ts).toLocaleDateString('es-MX').replace(/\\//g, '-'))
+      : (_etq + ' ' + new Date(item.ts).toLocaleDateString('es-MX').replace(/\\//g, '-') +
+         ' ' + new Date(item.ts).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }).replace(':', '.')));
+"""),
+]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
-                "function feedDeShow", "datos.link_audio", "const fuenteDe")
+                "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto")
+TITULOS_DEFECTO = {"tefila": "Clase de Tefilá · Rab Tofi Cherem", "hilu": "Shiur · Rab Joshua Hilu"}
 FEED_JABURA = "https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/feed.xml"
 
 
@@ -1100,6 +1116,46 @@ def verificar():
                 aviso(f"{link}: {e}")
 
 
+# ── 24. clases sin texto: título por defecto y rescate de lo apartado ───────────
+def titulos_defecto():
+    rw = (ROBOT or BASE) / "config_whatsapp.json"
+    if not rw.exists():
+        return
+    paso(24, "Audios sin título: se publican con el nombre del show y la fecha")
+    cfg = json.loads(rw.read_text(encoding="utf-8"))
+    cambio = False
+    for show, titulo in TITULOS_DEFECTO.items():
+        esc = (cfg.get("escuchar") or {}).get(show)
+        if esc is not None and not esc.get("titulo_defecto"):
+            esc["titulo_defecto"] = titulo
+            cambio = True
+    if cambio:
+        respaldar(rw)
+        escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+    ok(", ".join(f"{k}: '{v}'" for k, v in TITULOS_DEFECTO.items() if k in (cfg.get("escuchar") or {})))
+    # lo que el subidor ya apartó como "sin título" vuelve con el nombre por defecto
+    for show, titulo in TITULOS_DEFECTO.items():
+        d = BASE / show
+        c = json.loads((d / "config.json").read_text(encoding="utf-8")) if (d / "config.json").exists() else {}
+        carpeta = Path(c.get("carpeta_whatsapp") or (d / "audios_whatsapp"))
+        apart = carpeta / "_SIN_TITULO_renombrar"
+        if not apart.is_dir():
+            continue
+        for f in sorted(apart.glob("*")):
+            if not (f.is_file() and f.suffix.lower() in AUDIO):
+                continue
+            m = re.search(r"(\d{1,2}-\d{1,2}-\d{4})", f.stem)
+            nuevo = f"{titulo} {m.group(1) if m else time.strftime('%d-%m-%Y', time.localtime(f.stat().st_mtime))}"
+            destino = carpeta / (nuevo + f.suffix.lower())
+            k = 2
+            while destino.exists():
+                destino = carpeta / f"{nuevo} ({k}){f.suffix.lower()}"
+                k += 1
+            if not VER:
+                shutil.move(str(f), str(destino))
+            ok(f"{show}: '{f.name}' → '{destino.name}' (se publica en el próximo ANUNCIAR)")
+
+
 # ── 12. tefila: feed inicial en el repo (podcast_bot solo AGREGA; sin feed truena) ─
 def tefila_feed_inicial():
     d = BASE / "tefila"
@@ -1594,6 +1650,7 @@ def main():
     quitar()
     anunciar_tambien()
     verificar()
+    titulos_defecto()
     shows_whatsapp_al_dia()
     ofir_grupo()
     sin_atrasos_config()

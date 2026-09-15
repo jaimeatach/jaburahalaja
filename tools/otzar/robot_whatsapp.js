@@ -501,9 +501,15 @@ function guardarAudio(item, titulo) {
   } catch (e) {}
   const _etq = _ETIQUETAS_OTZAR[_showCarpeta] ||
     ('Shiur ' + (_showCarpeta ? _showCarpeta.charAt(0).toUpperCase() + _showCarpeta.slice(1) : 'Otzar'));
+  // "titulo_defecto" en escuchar -> <show>: un audio que llega sin texto se
+  // guarda como "<titulo_defecto> <fecha>" y SI se publica (el subidor solo
+  // aparta los que empiezan con "Shiur ...").
+  const _porDefecto = ((CFG.escuchar || {})[item.show] || {}).titulo_defecto;
   let base = limpiarTitulo(titulo) ||
-    (_etq + ' ' + new Date(item.ts).toLocaleDateString('es-MX').replace(/\//g, '-') +
-     ' ' + new Date(item.ts).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }).replace(':', '.'));
+    (_porDefecto
+      ? (_porDefecto + ' ' + new Date(item.ts).toLocaleDateString('es-MX').replace(/\//g, '-'))
+      : (_etq + ' ' + new Date(item.ts).toLocaleDateString('es-MX').replace(/\//g, '-') +
+         ' ' + new Date(item.ts).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }).replace(':', '.')));
   // === JABURA (sep/2026): los shiurim van numerados para conservar el orden ===
   // La carpeta de la jabura es la misma que lee la app: cada archivo lleva el
   // numero que sigue ("5 titulo.m4a"), contando los audios que ya hay.

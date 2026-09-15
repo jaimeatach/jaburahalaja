@@ -120,6 +120,32 @@ def alinear_y_marcar(cfgw):
             log(f"{show}: {marcados} audio(s) ya estaban en el feed, marcados")
 
 
+# ── 1b. audios apartados "sin título" de shows con titulo_defecto: vuelven con nombre
+def rescatar_sin_titulo(cfgw):
+    for show, datos in (cfgw.get("escuchar") or {}).items():
+        titulo = isinstance(datos, dict) and datos.get("titulo_defecto")
+        if not titulo:
+            continue
+        d = BASE / show
+        c = leer_json(d / "config.json")
+        carpeta = Path(c.get("carpeta_whatsapp") or (d / "audios_whatsapp"))
+        apart = carpeta / "_SIN_TITULO_renombrar"
+        if not apart.is_dir():
+            continue
+        for f in sorted(apart.glob("*")):
+            if not (f.is_file() and f.suffix.lower() in AUDIO):
+                continue
+            m = re.search(r"(\d{1,2}-\d{1,2}-\d{4})", f.stem)
+            nuevo = f"{titulo} {m.group(1) if m else time.strftime('%d-%m-%Y', time.localtime(f.stat().st_mtime))}"
+            destino = carpeta / (nuevo + f.suffix.lower())
+            k = 2
+            while destino.exists():
+                destino = carpeta / f"{nuevo} ({k}){f.suffix.lower()}"
+                k += 1
+            f.rename(destino)
+            log(f"{show}: '{f.name}' → '{destino.name}'")
+
+
 # ── 2. publicar ──────────────────────────────────────────────────────────────
 def publicar():
     jab = BASE / "jabura"
@@ -190,6 +216,7 @@ def main():
         log(f"no encuentro {ROBOT / 'config_whatsapp.json'}")
         return 1
     alinear_y_marcar(cfgw)
+    rescatar_sin_titulo(cfgw)
     publicar()
     espejo()
     sin_atrasos(cfgw)
