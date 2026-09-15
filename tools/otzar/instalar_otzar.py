@@ -251,7 +251,6 @@ function armarMensaje(titulo, spotify, whatsapp, show, app) {
   }
   return null;
 """),
-]
     # clases sin texto: título por defecto del show, y se publican
     ("""  let base = limpiarTitulo(titulo) ||
     (_etq + ' ' + new Date(item.ts).toLocaleDateString('es-MX').replace(/\\//g, '-') +
