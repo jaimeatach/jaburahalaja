@@ -15,6 +15,7 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py --portada=tefila:C:\\ruta\\img.jpg  # portada del show (va al repo, Spotify la toma del feed)
     python instalar_otzar.py --quitar=nacach:texto1|texto2   # sacar del feed lo que no era del show
     python instalar_otzar.py --vaciar-fuente=hilu             # borrar lo captado en audios_whatsapp del show
+    python instalar_otzar.py --anunciar-tambien=efshar        # ese show avisa también en los grupos generales
     python instalar_otzar.py --nuevo=hilu --nuevo-nombre="Rab Joshua Hilu" --nuevo-rss=URL --nuevo-spotify=URL [--nuevo-grupo=LINK]
     python instalar_otzar.py --nacach-spotify=LINK          # el show de Nacach en Spotify
 
@@ -765,9 +766,14 @@ def show_nuevo():
     if grupo.startswith("http"):
         esc["invite"] = grupo
     an = cfg.setdefault("anunciar", {}).setdefault(clave, {"spotify": "PENDIENTE", "invite": ""})
-    generales = (cfg.get("anunciar", {}).get("nacach") or {}).get("invite")
-    if generales and not an.get("invite"):
-        an["invite"] = generales
+    generales = (cfg.get("anunciar", {}).get("nacach") or {}).get("invite") or []
+    generales = generales if isinstance(generales, list) else [generales]
+    # el aviso va al grupo del Rab (primero, para que "Whatsapp" sea el link de SU grupo)
+    # y a los grupos generales; sin audio, porque en su grupo ya está
+    destinos = ([grupo] if grupo.startswith("http") else []) + [g for g in generales if g != grupo]
+    if destinos:
+        an["invite"] = destinos if len(destinos) > 1 else destinos[0]
+        an["sin_whatsapp"] = not grupo.startswith("http")
     if spot.startswith("http"):
         an["spotify"] = spot
     tiene = str(an.get("spotify", "")).startswith("http")
@@ -1004,6 +1010,37 @@ def quitar():
     if not VER:
         procesados.write_text("\n".join(lista) + ("\n" if lista else ""), encoding="utf-8")
     ok(f"{show}: {n} archivo(s) locales borrados y marcados")
+
+
+# ── 22. --anunciar-tambien=efshar,otro: también en los grupos generales ───────
+def anunciar_tambien():
+    arg = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--anunciar-tambien=")), "")
+    if not arg:
+        return
+    paso(22, "Anunciar también en los grupos generales")
+    rw = (ROBOT or BASE) / "config_whatsapp.json"
+    cfg = json.loads(rw.read_text(encoding="utf-8"))
+    generales = (cfg.get("anunciar", {}).get("nacach") or {}).get("invite") or []
+    generales = generales if isinstance(generales, list) else [generales]
+    if not generales:
+        aviso("nacach no tiene grupos generales configurados (--grupos-generales=L1,L2)")
+        return
+    cambio = False
+    for show in [x.strip() for x in arg.split(",") if x.strip()]:
+        an = cfg.get("anunciar", {}).get(show)
+        if not an:
+            aviso(f"{show} no está en anunciar")
+            continue
+        inv = an.get("invite") or []
+        inv = inv if isinstance(inv, list) else ([inv] if inv else [])
+        nuevos = [g for g in generales if g not in inv]
+        if nuevos:
+            an["invite"] = inv + nuevos
+            cambio = True
+        ok(f"{show}: anuncia en {len(inv) + len(nuevos)} grupos (sus {len(inv)} + {len(nuevos)} generales)")
+    if cambio:
+        respaldar(rw)
+        escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
 
 
 # ── 12. tefila: feed inicial en el repo (podcast_bot solo AGREGA; sin feed truena) ─
@@ -1498,6 +1535,7 @@ def main():
     portada()
     restaurar()
     quitar()
+    anunciar_tambien()
     shows_whatsapp_al_dia()
     ofir_grupo()
     sin_atrasos_config()
