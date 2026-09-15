@@ -804,7 +804,7 @@ def nacach_anuncio():
     if spot.startswith("http"):
         an["spotify"] = spot
     tiene = str(an.get("spotify", "")).startswith("http")
-    an.update({"sin_audio": True, "sin_whatsapp": True, "max_anuncios": 2, "en_orden": True,
+    an.update({"sin_audio": True, "sin_whatsapp": True, "max_anuncios": 4, "en_orden": True,
                "sin_spotify": not tiene, "link_audio": not tiene, "pausado": False})
     an["_nota"] = ("Solo título + link, sin audio adjunto. Con link del show en spotify va el episodio exacto; "
                    "mientras, va el link directo al mp3 (link_audio).")
@@ -827,11 +827,14 @@ def sin_atrasos_config():
     paso(16, "Sin atrasos: cada show anuncia solo sus últimos N")
     cfg = json.loads(rw.read_text(encoding="utf-8"))
     an = cfg.setdefault("anunciar", {})
-    defectos = {"nacach": 2, "peretz": 2, "ofirmalka": 2, "tefila": 2, "jabura": 3}
+    defectos = {"nacach": 2, "peretz": 2, "ofirmalka": 2, "tefila": 2, "hilu": 2, "efshar": 2, "jabura": 3}
     cambios = 0
     for show, n in defectos.items():
         if show in an and an[show].get("solo_ultimos") != n and "solo_ultimos" not in an[show]:
             an[show]["solo_ultimos"] = n
+            cambios += 1
+        if show in an and show != "jabura" and int(an[show].get("max_anuncios") or 0) < 4:
+            an[show]["max_anuncios"] = 4          # varios shiurim del mismo día salen en un solo clic
             cambios += 1
     if cambios:
         respaldar(rw)
@@ -1670,6 +1673,10 @@ def al_dia():
         guids = [g for _, g in pares]
         # los N más nuevos por fecha quedan sin memorizar para que salgan; lo ya anunciado no se toca
         ultimos = [g for _, g in sorted(pares)[-dejar:]] if dejar else []
+        # lo de los últimos 2 días sale completo (si no son más de 10)
+        recientes = [g for c, g in pares if c >= time.time() - 2 * 86400]
+        if dejar and len(recientes) <= 10:
+            ultimos = list(dict.fromkeys(ultimos + recientes))
         memorizar = [g for g in guids if g not in ultimos]
         previos = e.get(show) or []
         nuevos = [g for g in memorizar if g not in previos]

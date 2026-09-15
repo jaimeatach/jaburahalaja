@@ -200,6 +200,12 @@ def sin_atrasos(cfgw):
             continue
         guids = [g for _, g in pares]
         ultimos = [g for _, g in sorted(pares)[-n:]]     # los N más nuevos por fecha
+        # lo publicado en los últimos 2 días sale completo (varios shiurim del mismo
+        # día no son rezago); si son más de 10, se aplica el tope de siempre
+        hace2d = time.time() - 2 * 86400
+        recientes = [g for c, g in pares if c >= hace2d]
+        if len(recientes) <= 10:
+            ultimos = list(dict.fromkeys(ultimos + recientes))
         previos = e.get(show) or []
         memorizar = [g for g in guids if g not in ultimos and g not in previos]
         if memorizar or show not in e:
