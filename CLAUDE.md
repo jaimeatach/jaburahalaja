@@ -162,3 +162,14 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    config (`NOMBRES_FUENTE` en el instalador: tefila = "Clases Tefila Habitat"),
    y si no, mandando `!otzar <show>` dentro del grupo. El paso [25] del
    instalador dice de qué grupo toma audios cada show y cuál falta ubicar.
+   Nacach toma audios de su grupo "Shiurim jajam ezra nacach" (por nombre,
+   `FUENTES_NUEVAS`) además del chat directo. Los grupos de ANUNCIO cuyo link
+   da `bad-request` se ubican por nombre con `grupos_nombre` en el config
+   (`GRUPOS_NOMBRE`: "3 Solo Shiurim", "Clases Tefila Habitat").
+7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
+   `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
+   lo hace el usuario en Spotify for Creators y luego corre
+   `--redirigido=tefila,hilu` (paso [26]), que activa el link exacto.
+   Si un parche del robot no entra, el instalador reemplaza el robot entero
+   por `tools/otzar/robot_whatsapp.js` (que es el mismo robot parchado), con
+   respaldo `.bak_<fecha>`.
