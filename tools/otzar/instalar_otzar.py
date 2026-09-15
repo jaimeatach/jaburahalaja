@@ -483,8 +483,8 @@ NOMBRES_FUENTE = {"tefila": "Clases Tefila Habitat", "jabura": "Mekorot", "nacac
 FUENTES_NUEVAS = {"nacach": "Shiurim jajam ezra nacach"}
 # nombre del Rab al frente del titulo (va a grupos generales)
 PREFIJOS = {"tefila": "Rab Tofi Cherem ·"}
-# shows que NO van a cierto grupo general (tefila solo al 6, no al 3)
-SIN_GRUPO = {"tefila": ["https://chat.whatsapp.com/5xGJ6YLeGT97rL94uJnPyZo"]}
+# shows que NO van a cierto grupo general (vacío: todos van al 6 y al 3)
+SIN_GRUPO = {}
 TITULOS_DEFECTO = {"tefila": "Clase de Tefilá · Rab Tofi Cherem", "hilu": "Shiur · Rab Joshua Hilu", "nacach": "Shiur · Rab Ezra Nacach"}
 FEED_JABURA = "https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/feed.xml"
 
@@ -1792,7 +1792,7 @@ def tefila():
         if destinos:
             an["invite"] = destinos if len(destinos) > 1 else destinos[0]
             an["sin_whatsapp"] = not grupo.startswith("http")
-            ok(f"anuncios de tefila a su grupo + {len(generales)} grupo(s) generales (no al 3)")
+            ok(f"anuncios de tefila a su grupo + {len(generales)} grupo(s) generales (6 y 3)")
         esc["prefijo_titulo"] = PREFIJOS["tefila"]
         for k, v in {"idioma": "es", "max_anuncios": 2, "en_orden": True, "sin_audio": True, "sin_whatsapp": True}.items():
             an.setdefault(k, v)
