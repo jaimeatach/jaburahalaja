@@ -1301,7 +1301,8 @@ def fuentes():
         an = (cfg.get("anunciar") or {}).get(show) or {}
         inv = an.get("invite")
         anuncia = bool(inv) if not isinstance(inv, list) else bool(inv)
-        g = r.get("escucha:" + show) or (None if anuncia else r.get(show))
+        # peretz: su grupo de anuncios es también su fuente (regla fija del robot)
+        g = r.get("escucha:" + show) or (r.get(show) if (show == "peretz" or not anuncia) else None)
         an_reg = r.get(show) or {}
         an_nombres = [x.get("nombre", "?") for x in (an_reg.get("grupos") or ([an_reg] if an_reg.get("id") else []))]
         donde = ("anuncia en: " + " + ".join(an_nombres)) if an_nombres else "no anuncia en grupos"
@@ -1309,6 +1310,7 @@ def fuentes():
             ok(f"{show}: toma audios de \"{g.get('nombre', g['id'])}\" · {donde}")
         elif esc.get("invite") or esc.get("nombre"):
             aviso(f"{show}: FUENTE SIN UBICAR (el robot ignora sus audios) · {donde}")
+            print(f"     link de la fuente en el config: {esc.get('invite') or '(ninguno)'}" + (f" · nombre: {esc['nombre']}" if esc.get("nombre") else ""))
             faltan.append(show)
         else:
             print(f"   · {show}: sin grupo fuente en el config · {donde}")
@@ -1518,7 +1520,7 @@ def diagnostico_jabura():
     if log_robot.exists():
         hoy = time.strftime("%-d/%-m/%Y") if os.name != "nt" else time.strftime("%#d/%#m/%Y")
         lineas = log_robot.read_text(encoding="utf-8", errors="replace").splitlines()
-        claves = ("GUARDADO", "IGNORADO", "Esperando titulo", "escucha ", "Mekorot", "AUDIO", "REGISTRADO", "RECUPERADOS", "ANUNCIADO", "FUENTE")
+        claves = ("GUARDADO", "IGNORADO", "Esperando titulo", "escucha ", "Mekorot", "AUDIO", "REGISTRADO", "RECUPERADOS", "ANUNCIADO", "FUENTE", "invitacion", "sin ID")
         util = [l for l in lineas if any(k in l for k in claves) and hoy in l[:14]]
         print(f"   robot hoy ({hoy}): {len(util)} líneas de audio")
         for l in util[-15:]:
