@@ -1047,6 +1047,59 @@ def show_nuevo():
         print(f"   → cuando tengas el grupo del Rab: python instalar_otzar.py --sin-drive --nuevo={clave} --nuevo-grupo=LINK")
 
 
+def _gh_get(base, cab, ruta):
+    with urllib.request.urlopen(urllib.request.Request(f"{base}/contents/{ruta}", headers=cab), timeout=60) as r:
+        return json.loads(r.read().decode())
+
+
+def _gh_put(base, cab, ruta, datos, msg, sha=None):
+    cuerpo = {"message": msg, "content": base64.b64encode(datos).decode()}
+    if sha:
+        cuerpo["sha"] = sha
+    req = urllib.request.Request(f"{base}/contents/{ruta}", data=json.dumps(cuerpo).encode(), headers=cab, method="PUT")
+    with urllib.request.urlopen(req, timeout=120):
+        pass
+
+
+def portada_fechada(show, c, cab, img=None):
+    """Sube la portada como portada_<fecha>.jpg y deja el feed apuntando ahí.
+    Spotify NO vuelve a bajar una imagen si la URL es la misma: con nombre nuevo
+    la toma en la siguiente lectura del feed. Sin img, usa la portada.jpg del repo."""
+    base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}"
+    pages = f"https://{c.get('github_user', 'rabmeireliyahu')}.github.io/{c.get('github_repo', show)}"
+    try:
+        j = _gh_get(base, cab, "feed.xml")
+    except Exception as e:                                  # noqa: BLE001
+        aviso(f"{show}: no pude leer el feed ({e})")
+        return False
+    feed = base64.b64decode(j["content"]).decode("utf-8")
+    m = re.search(r'<itunes:image href="([^"]+)"', feed)
+    actual = m.group(1) if m else ""
+    if img is None:
+        if not actual.endswith("/portada.jpg"):
+            return True                                     # ya tiene nombre fechado
+        try:
+            img = base64.b64decode(_gh_get(base, cab, "portada.jpg")["content"])
+        except Exception as e:                              # noqa: BLE001
+            aviso(f"{show}: no pude leer portada.jpg del repo ({e})")
+            return False
+    nombre = "portada_" + time.strftime("%Y%m%d%H%M") + ".jpg"
+    if VER:
+        print(f"   (subiría) {nombre} y apuntaría el feed de {show} ahí")
+        return True
+    try:
+        _gh_put(base, cab, nombre, img, "portada")
+        nuevo = re.sub(r'<itunes:image href="[^"]*"', f'<itunes:image href="{pages}/{nombre}"', feed, count=1)
+        nuevo = re.sub(r"<image>\s*<url>[^<]*</url>", f"<image><url>{pages}/{nombre}</url>", nuevo, count=1)
+        if nuevo != feed:
+            _gh_put(base, cab, "feed.xml", nuevo.encode("utf-8"), f"portada {nombre}", j["sha"])
+        ok(f"{show}: portada publicada como {nombre} y el feed apunta ahí (Spotify la refresca al leer el feed)")
+        return True
+    except Exception as e:                                  # noqa: BLE001
+        aviso(f"{show}: no pude publicar la portada fechada ({e})")
+        return False
+
+
 # ── 19. --portada=show:C:\\ruta\\imagen.jpg → portada del show en su repo ────────
 def portada():
     arg = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--portada=")), "")
@@ -1116,9 +1169,11 @@ def portada():
     req = urllib.request.Request(f"{base}/contents/portada.jpg", data=json.dumps(cuerpo).encode(), headers=cab, method="PUT")
     try:
         with urllib.request.urlopen(req, timeout=120) as r:
-            ok(f"portada subida ({len(img) // 1024} KB). Spotify la toma al leer el feed (mínimo 1400x1400 px).")
+            ok(f"portada subida ({len(img) // 1024} KB, mínimo 1400x1400 px)")
     except Exception as e:                                  # noqa: BLE001
         aviso(f"no pude subir la portada: {e}")
+        return
+    portada_fechada(show, c, cab, img)
 
 
 # ── 20. --restaurar=mishnaberura,yalkutyosef: dejar el feed y las portadas como
@@ -1842,6 +1897,15 @@ def tefila():
         aviso("FUENTE SIN registrar: el robot NO sabe cuál es Clases Tefila Habitat, por eso ignora los audios del Rab")
         print("   → con el robot prendido (ya reiniciado), manda el texto  !otzar tefila  dentro de Clases Tefila Habitat;")
         print("     el robot contesta en su ventana 'REGISTRADO fuente de audios: tefila'. Luego reenvía el audio del Rab ahí.")
+    # portada: Spotify no la refresca si la URL no cambia -> nombre fechado en el feed
+    if (d / "github_token.txt").exists() and cfgp.exists():
+        try:
+            c_ = json.loads(cfgp.read_text(encoding="utf-8"))
+            cab_ = {"Authorization": "token " + (d / "github_token.txt").read_text(encoding="utf-8").strip(),
+                    "User-Agent": "instalar-otzar", "Accept": "application/vnd.github+json"}
+            portada_fechada("tefila", c_, cab_)
+        except Exception as e:                              # noqa: BLE001
+            aviso(f"portada de tefila: {e}")
     # ¿qué hay capturado y qué hay publicado?
     try:
         n_audios = len([f for f in (d / "audios_whatsapp").iterdir() if f.suffix.lower() in AUDIO])
