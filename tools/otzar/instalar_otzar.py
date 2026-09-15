@@ -1043,6 +1043,63 @@ def anunciar_tambien():
         escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
 
 
+# ── 23. --verificar=repo1,repo2 [--spotify-ver=LINK1,LINK2]: qué sirve cada feed
+#        y qué muestra cada show en Spotify, para ver cuál lee cuál ──────────────
+def verificar():
+    repos = [x.strip() for x in next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--verificar=")), "").split(",") if x.strip()]
+    shows = [x.strip() for x in next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--spotify-ver=")), "").split(",") if x.strip()]
+    if not repos and not shows:
+        return
+    paso(23, "Verificar feeds y shows")
+    for repo in repos:
+        url = FEED_JABURA if repo == "jabura" else f"https://rabmeireliyahu.github.io/{repo}/feed.xml"
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "instalar-otzar"}), timeout=30) as r:
+                feed = r.read().decode("utf-8", "replace")
+        except Exception as e:                              # noqa: BLE001
+            aviso(f"{repo}: no pude leer {url} ({e})")
+            continue
+        titulos = re.findall(r"<title>(.*?)</title>", feed, re.S)
+        img = re.search(r'<itunes:image href="([^"]+)"', feed)
+        print(f"   {repo}: canal '{titulos[0].strip() if titulos else '?'}' · {feed.count('<item>')} episodios · "
+              f"último: '{titulos[-1].strip()[:50] if len(titulos) > 1 else '-'}' · portada: {img.group(1).split('/')[-1] if img else '?'}")
+    if shows:
+        llaves = None
+        for ruta in [(ROBOT or BASE) / "spotify_keys.txt", BASE / "jabura" / "spotify_keys.txt"]:
+            try:
+                l = [x.strip() for x in ruta.read_text(encoding="utf-8").splitlines() if x.strip()]
+                if len(l) >= 2:
+                    llaves = (l[0], l[1])
+                    break
+            except Exception:
+                pass
+        if not llaves:
+            aviso("sin spotify_keys.txt; no puedo consultar Spotify")
+            return
+        try:
+            cred = base64.b64encode(f"{llaves[0]}:{llaves[1]}".encode()).decode()
+            req = urllib.request.Request("https://accounts.spotify.com/api/token", data=b"grant_type=client_credentials",
+                                         headers={"Authorization": "Basic " + cred, "Content-Type": "application/x-www-form-urlencoded"})
+            with urllib.request.urlopen(req, timeout=30) as r:
+                token = json.loads(r.read().decode())["access_token"]
+        except Exception as e:                              # noqa: BLE001
+            aviso(f"Spotify no aceptó las llaves: {e}")
+            return
+        for link in shows:
+            m = re.search(r"show/([A-Za-z0-9]+)", link)
+            if not m:
+                continue
+            try:
+                with urllib.request.urlopen(urllib.request.Request(f"https://api.spotify.com/v1/shows/{m.group(1)}?market=MX",
+                                                                   headers={"Authorization": "Bearer " + token}), timeout=30) as r:
+                    sh = json.loads(r.read().decode())
+                eps = [e for e in (sh.get("episodes") or {}).get("items") or [] if e]
+                print(f"   Spotify {m.group(1)}: '{sh.get('name')}' · {sh.get('total_episodes')} episodios · "
+                      f"más nuevo: '{eps[0]['name'][:50] if eps else '-'}' · portada: {(sh.get('images') or [{}])[0].get('url', '?')[-30:]}")
+            except Exception as e:                          # noqa: BLE001
+                aviso(f"{link}: {e}")
+
+
 # ── 12. tefila: feed inicial en el repo (podcast_bot solo AGREGA; sin feed truena) ─
 def tefila_feed_inicial():
     d = BASE / "tefila"
@@ -1536,6 +1593,7 @@ def main():
     restaurar()
     quitar()
     anunciar_tambien()
+    verificar()
     shows_whatsapp_al_dia()
     ofir_grupo()
     sin_atrasos_config()
