@@ -56,7 +56,9 @@ for flujo in (sys.stdout, sys.stderr):
     except Exception:
         pass
 
-RAW = "https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/tools/"
+# rama donde vive esta versión del instalador; "main" de respaldo
+REFS = ("claude/shiurim-halachot-shabbat-vriig5", "main")
+RAW = f"https://raw.githubusercontent.com/jaimeatach/jaburahalaja/{REFS[0]}/tools/"
 VER = "--ver" in sys.argv
 BASE = Path(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--base=")), r"C:\OTZAR"))
 
@@ -461,7 +463,7 @@ GRUPOS_NOMBRE = {"https://chat.whatsapp.com/5xGJ6YLeGT97rL94uJnPyZo": "3 Solo Sh
 NOMBRES_FUENTE = {"tefila": "Clases Tefila Habitat", "jabura": "Mekorot", "nacach": "Shiurim jajam ezra nacach"}
 # shows que toman audios de un grupo (por nombre) aunque el config solo tuviera chat directo
 FUENTES_NUEVAS = {"nacach": "Shiurim jajam ezra nacach"}
-TITULOS_DEFECTO = {"tefila": "Clase de Tefilá · Rab Tofi Cherem", "hilu": "Shiur · Rab Joshua Hilu"}
+TITULOS_DEFECTO = {"tefila": "Clase de Tefilá · Rab Tofi Cherem", "hilu": "Shiur · Rab Joshua Hilu", "nacach": "Shiur · Rab Ezra Nacach"}
 FEED_JABURA = "https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/feed.xml"
 
 
@@ -494,8 +496,10 @@ def bajar(nombre, destino):
     if VER:
         print(f"   (bajaría) {RAW + nombre}")
         return True
-    intentos = [(API_CONTENTS + nombre, {"User-Agent": "instalar-otzar", "Accept": "application/vnd.github.raw"}),
-                (RAW + nombre, {"User-Agent": "instalar-otzar"})]
+    intentos = []
+    for ref in REFS:
+        intentos.append((f"{API_CONTENTS}{nombre}?ref={ref}", {"User-Agent": "instalar-otzar", "Accept": "application/vnd.github.raw"}))
+        intentos.append((f"https://raw.githubusercontent.com/jaimeatach/jaburahalaja/{ref}/tools/{nombre}", {"User-Agent": "instalar-otzar"}))
     for url, cab in intentos:
         try:
             with urllib.request.urlopen(urllib.request.Request(url, headers=cab), timeout=60) as r:
