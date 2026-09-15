@@ -13,6 +13,8 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py --ofir-grupo=LINK              # Ofir Malka también en tu grupo
     python instalar_otzar.py --tefila-rss=URL               # rescatar lo subido a mano en Spotify (RSS del show) al feed
     python instalar_otzar.py --portada=tefila:C:\\ruta\\img.jpg  # portada del show (va al repo, Spotify la toma del feed)
+    python instalar_otzar.py --quitar=nacach:texto1|texto2   # sacar del feed lo que no era del show
+    python instalar_otzar.py --vaciar-fuente=hilu             # borrar lo captado en audios_whatsapp del show
     python instalar_otzar.py --nuevo=hilu --nuevo-nombre="Rab Joshua Hilu" --nuevo-rss=URL --nuevo-spotify=URL [--nuevo-grupo=LINK]
     python instalar_otzar.py --nacach-spotify=LINK          # el show de Nacach en Spotify
 
@@ -216,9 +218,41 @@ function armarMensaje(titulo, spotify, whatsapp, show, app) {
         if (datos.link_audio && ep.audio) texto += `\\n🎧 Audio\\n${ep.audio}`;
         if (wa && !datos.sin_whatsapp) texto += `\\nWhatsapp\\n${wa}`;
 """),
+    # un grupo de anuncios no es fuente de audios (lo que manden ahi no se sube)
+    ("""  for (const [show, datos] of Object.entries(CFG.escuchar || {})) {
+    const r = reg['escucha:' + show] || reg[show];  // acepta registro con o sin prefijo
+    if (r && r.id === jid) return { show, carpeta: datos.carpetaDestino };
+  }
+  // shows de escucha directa (!otzar <show> en un grupo = ese grupo es su buzon)
+  for (const e of (CFG.escuchar_directo || [])) {
+    const r = reg['escucha:' + e.show] || reg[e.show];
+    if (r && r.id === jid) return { show: e.show, carpeta: e.carpetaDestino };
+  }
+  return null;
+""", """  // Un grupo donde se ANUNCIA no es fuente de audios. reg[show] (sin prefijo)
+  // solo vale como fuente cuando lo registro "!otzar <show>" en ese grupo, o sea
+  // cuando el show NO tiene link de anuncio en el config; si lo tiene, reg[show]
+  // es el grupo de anuncios y lo que manden ahi no se sube.
+  const fuenteDe = show => {
+    if (reg['escucha:' + show]) return reg['escucha:' + show];
+    const an = (CFG.anunciar || {})[show] || {};
+    const conInvite = Array.isArray(an.invite) ? an.invite.length > 0 : !!(an.invite && String(an.invite).startsWith('http'));
+    return conInvite ? null : reg[show];
+  };
+  for (const [show, datos] of Object.entries(CFG.escuchar || {})) {
+    const r = fuenteDe(show);
+    if (r && r.id === jid) return { show, carpeta: datos.carpetaDestino };
+  }
+  // shows de escucha directa (!otzar <show> en un grupo = ese grupo es su buzon)
+  for (const e of (CFG.escuchar_directo || [])) {
+    const r = fuenteDe(e.show);
+    if (r && r.id === jid) return { show: e.show, carpeta: e.carpetaDestino };
+  }
+  return null;
+"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
-                "function feedDeShow", "datos.link_audio")
+                "function feedDeShow", "datos.link_audio", "const fuenteDe")
 FEED_JABURA = "https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/feed.xml"
 
 
@@ -897,6 +931,81 @@ def restaurar():
                 aviso(f"{repo}/{archivo}: {e}")
 
 
+# ── 21. --quitar=show:texto1|texto2  y  --vaciar-fuente=show ─────────────────
+#   Saca del feed (y de Spotify, que lo lee) los episodios cuyo título contenga
+#   alguno de los textos, borra sus archivos locales y los marca para que no
+#   vuelvan a entrar. --vaciar-fuente borra TODO lo que hay en audios_whatsapp
+#   del show (audios captados de donde no debían).
+def quitar():
+    arg = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--quitar=")), "")
+    vaciar = [x.strip() for x in next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--vaciar-fuente=")), "").split(",") if x.strip()]
+    if not arg and not vaciar:
+        return
+    paso(21, "Quitar lo que no era del show")
+    for show in vaciar:
+        d = BASE / show
+        c = json.loads((d / "config.json").read_text(encoding="utf-8")) if (d / "config.json").exists() else {}
+        carpeta = Path(c.get("carpeta_whatsapp") or (d / "audios_whatsapp"))
+        n = 0
+        for f in list(carpeta.glob("*")) + list((d / "episodios").glob("*.mp3")):
+            if f.is_file() and f.suffix.lower() in AUDIO:
+                if not VER:
+                    f.unlink()
+                n += 1
+        ok(f"{show}: {n} audio(s) captados borrados de la carpeta de WhatsApp y episodios")
+    if not arg or ":" not in arg:
+        return
+    show, textos = arg.split(":", 1)
+    textos = [t.strip().lower() for t in textos.split("|") if t.strip()]
+    d = BASE / show
+    c = json.loads((d / "config.json").read_text(encoding="utf-8")) if (d / "config.json").exists() else {}
+    tok = d / "github_token.txt"
+    if not tok.exists():
+        aviso("falta github_token.txt en la carpeta del show")
+        return
+    cab = {"Authorization": "token " + tok.read_text(encoding="utf-8").strip(),
+           "User-Agent": "instalar-otzar", "Accept": "application/vnd.github+json"}
+    base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}"
+    try:
+        with urllib.request.urlopen(urllib.request.Request(f"{base}/contents/feed.xml", headers=cab), timeout=60) as r:
+            j = json.loads(r.read().decode())
+        feed = base64.b64decode(j["content"]).decode("utf-8")
+    except Exception as e:                                  # noqa: BLE001
+        aviso(f"no pude leer el feed: {e}")
+        return
+    def fuera(m):
+        it = m.group(0)
+        t = re.search(r"<title>(.*?)</title>", it, re.S)
+        titulo = (t.group(1) if t else "").lower()
+        return "" if any(x in titulo for x in textos) else it
+    nuevo = re.sub(r"[ \t]*<item>[\s\S]*?</item>\n?", fuera, feed)
+    quitados = feed.count("<item>") - nuevo.count("<item>")
+    if quitados and not VER:
+        cuerpo = {"message": f"quitar {quitados} episodio(s) que no eran del show", "sha": j["sha"],
+                  "content": base64.b64encode(nuevo.encode("utf-8")).decode()}
+        req = urllib.request.Request(f"{base}/contents/feed.xml", data=json.dumps(cuerpo).encode(), headers=cab, method="PUT")
+        with urllib.request.urlopen(req, timeout=120):
+            pass
+    ok(f"{show}: {quitados} episodio(s) quitados del feed (Spotify los quita al releerlo)")
+    if show == "nacach" and quitados and not VER:
+        subprocess.run([sys.executable, "espejo_nacash.py"], cwd=str(d))
+    # archivos locales y marca de procesado, para que no vuelvan a entrar
+    carpeta = Path(c.get("carpeta_whatsapp") or (d / "audios_whatsapp"))
+    procesados = d / "procesados_whatsapp.txt"
+    lista = procesados.read_text(encoding="utf-8").splitlines() if procesados.exists() else []
+    n = 0
+    for f in list(carpeta.glob("*")) + list((d / "episodios").glob("*.mp3")):
+        if f.is_file() and any(x in f.name.lower() for x in textos):
+            if f.name not in lista:
+                lista.append(f.name)
+            if not VER:
+                f.unlink()
+            n += 1
+    if not VER:
+        procesados.write_text("\n".join(lista) + ("\n" if lista else ""), encoding="utf-8")
+    ok(f"{show}: {n} archivo(s) locales borrados y marcados")
+
+
 # ── 12. tefila: feed inicial en el repo (podcast_bot solo AGREGA; sin feed truena) ─
 def tefila_feed_inicial():
     d = BASE / "tefila"
@@ -1388,6 +1497,7 @@ def main():
     show_nuevo()
     portada()
     restaurar()
+    quitar()
     shows_whatsapp_al_dia()
     ofir_grupo()
     sin_atrasos_config()

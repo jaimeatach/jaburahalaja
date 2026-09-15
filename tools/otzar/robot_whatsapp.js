@@ -408,13 +408,23 @@ function grupoEscuchaDe(jid) {
 
   }
 
+  // Un grupo donde se ANUNCIA no es fuente de audios. reg[show] (sin prefijo)
+  // solo vale como fuente cuando lo registro "!otzar <show>" en ese grupo, o sea
+  // cuando el show NO tiene link de anuncio en el config; si lo tiene, reg[show]
+  // es el grupo de anuncios y lo que manden ahi no se sube.
+  const fuenteDe = show => {
+    if (reg['escucha:' + show]) return reg['escucha:' + show];
+    const an = (CFG.anunciar || {})[show] || {};
+    const conInvite = Array.isArray(an.invite) ? an.invite.length > 0 : !!(an.invite && String(an.invite).startsWith('http'));
+    return conInvite ? null : reg[show];
+  };
   for (const [show, datos] of Object.entries(CFG.escuchar || {})) {
-    const r = reg['escucha:' + show] || reg[show];  // acepta registro con o sin prefijo
+    const r = fuenteDe(show);
     if (r && r.id === jid) return { show, carpeta: datos.carpetaDestino };
   }
   // shows de escucha directa (!otzar <show> en un grupo = ese grupo es su buzon)
   for (const e of (CFG.escuchar_directo || [])) {
-    const r = reg['escucha:' + e.show] || reg[e.show];
+    const r = fuenteDe(e.show);
     if (r && r.id === jid) return { show: e.show, carpeta: e.carpetaDestino };
   }
   return null;
