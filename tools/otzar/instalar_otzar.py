@@ -1176,6 +1176,75 @@ def portada():
     portada_fechada(show, c, cab, img)
 
 
+# ── 27. --mismo-podcast=repo:URL_RSS_VIEJO  /  --mismo-podcast=repo:restaurar ──
+#   Spotify solo acepta "Update RSS feed" si el feed nuevo parece EL MISMO podcast
+#   que el viejo (mismo título, autor y correo del canal). Se copian esos datos del
+#   RSS viejo al feed del repo, se hace el Update en Spotify, y con :restaurar
+#   vuelven los datos de siempre (Spotify los actualiza en la siguiente lectura).
+def mismo_podcast():
+    arg = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--mismo-podcast=")), "")
+    if not arg or ":" not in arg:
+        return
+    repo, fuente = arg.split(":", 1)
+    repo, fuente = repo.strip(), fuente.strip()
+    paso(27, f"{repo}: que Spotify lo acepte como el mismo podcast")
+    tok = next((BASE / m / "github_token.txt" for m in (repo, "nacach", "peretz", "jabura") if (BASE / m / "github_token.txt").exists()), None)
+    if not tok:
+        aviso("no encuentro github_token.txt")
+        return
+    cab = {"Authorization": "token " + tok.read_text(encoding="utf-8").strip(),
+           "User-Agent": "instalar-otzar", "Accept": "application/vnd.github+json"}
+    base = f"https://api.github.com/repos/rabmeireliyahu/{repo}"
+    try:
+        j = _gh_get(base, cab, "feed.xml")
+    except Exception as e:                                  # noqa: BLE001
+        aviso(f"no pude leer el feed de {repo}: {e}")
+        return
+    feed = base64.b64decode(j["content"]).decode("utf-8")
+    canal = feed.split("<item>", 1)[0]
+    campos = {"title": r"<title>(.*?)</title>", "author": r"<itunes:author>(.*?)</itunes:author>",
+              "name": r"<itunes:name>(.*?)</itunes:name>", "email": r"<itunes:email>(.*?)</itunes:email>"}
+    guardado = BASE / repo
+    guardado.mkdir(exist_ok=True)
+    guardado = guardado / "canal_original.json"
+    if fuente.lower() == "restaurar":
+        if not guardado.exists():
+            aviso("no hay datos guardados que restaurar")
+            return
+        nuevos = json.loads(guardado.read_text(encoding="utf-8"))
+        origen = "los datos de siempre"
+    else:
+        try:
+            with urllib.request.urlopen(urllib.request.Request(fuente, headers={"User-Agent": "instalar-otzar"}), timeout=60) as r:
+                viejo = r.read().decode("utf-8", "replace").split("<item>", 1)[0]
+        except Exception as e:                              # noqa: BLE001
+            aviso(f"no pude leer el RSS viejo: {e}")
+            return
+        nuevos = {k: (re.search(p, viejo, re.S).group(1).strip() if re.search(p, viejo, re.S) else None) for k, p in campos.items()}
+        nuevos = {k: v for k, v in nuevos.items() if v}
+        if not nuevos.get("title"):
+            aviso("el RSS viejo no trae título; no hago nada")
+            return
+        if not guardado.exists():
+            actuales = {k: (re.search(p, canal, re.S).group(1).strip() if re.search(p, canal, re.S) else None) for k, p in campos.items()}
+            escribir(guardado, json.dumps({k: v for k, v in actuales.items() if v}, ensure_ascii=False, indent=2))
+        origen = "los datos del RSS viejo de Spotify"
+    canal2 = canal
+    for k, p in campos.items():
+        if nuevos.get(k) and re.search(p, canal2, re.S):
+            canal2 = re.sub(p, lambda m, k=k: m.group(0).replace(m.group(1), nuevos[k]), canal2, count=1, flags=re.S)
+    if canal2 == canal:
+        ok("el feed ya tiene esos datos")
+    elif not VER:
+        _gh_put(base, cab, "feed.xml", (canal2 + "<item>" + feed.split("<item>", 1)[1]).encode("utf-8"),
+                f"canal: {'restaurar' if fuente.lower() == 'restaurar' else 'como el RSS viejo para el Update en Spotify'}", j["sha"])
+        ok(f"feed de {repo} con {origen}: título '{nuevos.get('title')}'" + (f", autor '{nuevos['author']}'" if nuevos.get("author") else "") + (f", correo {nuevos['email']}" if nuevos.get("email") else ""))
+    if fuente.lower() != "restaurar":
+        print("   → GitHub Pages tarda 1-3 minutos en servir el feed nuevo. Luego en Spotify for Creators: Settings → Details → RSS feed → Update →")
+        print(f"     https://rabmeireliyahu.github.io/{repo}/feed.xml   y cuando lo acepte:")
+        print(f"     python instalar_otzar.py --sin-drive --mismo-podcast={repo}:restaurar")
+
+
 # ── 20. --restaurar=mishnaberura,yalkutyosef: dejar el feed y las portadas como
 #        estaban antes del 14/9 (lo cambiaron otras sesiones por PR) ────────────
 def restaurar():
@@ -2088,6 +2157,7 @@ def main():
     titulos_defecto()
     fuentes()
     spotify_redirigido()
+    mismo_podcast()
     shows_whatsapp_al_dia()
     ofir_grupo()
     sin_atrasos_config()
