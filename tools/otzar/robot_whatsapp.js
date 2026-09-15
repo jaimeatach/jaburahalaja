@@ -312,14 +312,21 @@ async function resolverGrupos() {
       if (!cod) continue;
       const previo = yaTiene.find(g => g.invite === inv);
       if (previo) { grupos.push(previo); continue; }
-      try {
-        const info = await sock.groupGetInviteInfo(cod);
-        if (!info || !info.id) { log(`  ${show}: una invitacion no trajo ID`); continue; }
-        grupos.push({ id: info.id, nombre: info.subject || show, invite: inv });
-        log(`  OK ${show} -> "${info.subject || show}"`);
-      } catch (e) {
-        log(`  ${show}: no pude leer una invitacion (${e.message || e})`);
+      let info = null;
+      try { info = await sock.groupGetInviteInfo(cod); }
+      catch (e) { log(`  ${show}: no pude leer una invitacion (${e.message || e})`); }
+      // === GRUPO POR NOMBRE (sep/2026): si el link no se puede leer, el grupo se
+      // busca por su nombre entre los grupos del robot: config "grupos_nombre"
+      // = { "<link>": "<nombre o parte del nombre>" }.
+      if (!info || !info.id) {
+        const nombreCfg = (CFG.grupos_nombre || {})[inv] || (CFG.grupos_nombre || {})[inv.split('?')[0]];
+        const hit = nombreCfg ? await grupoPorNombre(nombreCfg) : null;
+        if (hit) { info = { id: hit.id, subject: hit.subject }; log(`  OK ${show} -> "${hit.subject}" (por nombre, el link no sirve)`); }
+        else if (nombreCfg) log(`  ${show}: tampoco encontre un grupo llamado "${nombreCfg}" (esta el robot dentro?)`);
       }
+      if (!info || !info.id) { log(`  ${show}: una invitacion no trajo ID`); continue; }
+      if (!grupos.some(g => g.id === info.id)) grupos.push({ id: info.id, nombre: info.subject || show, invite: inv });
+      if (!String(info.subject || '').includes('(por nombre')) log(`  OK ${show} -> "${info.subject || show}"`);
       await new Promise(r => setTimeout(r, 2000));
     }
     if (grupos.length) {
@@ -433,6 +440,17 @@ function grupoEscuchaDe(jid) {
 
 
 
+// grupo del robot cuyo nombre contiene el texto dado (lista con cache por arranque)
+let _todosLosGrupos = null;
+async function grupoPorNombre(nombre) {
+  const n = String(nombre || '').toLowerCase().trim();
+  if (!n) return null;
+  if (!_todosLosGrupos) {
+    try { _todosLosGrupos = Object.values(await sock.groupFetchAllParticipating() || {}); }
+    catch (e) { log('no pude listar los grupos: ' + (e.message || e)); return null; }
+  }
+  return _todosLosGrupos.find(g => String(g.subject || '').toLowerCase().includes(n)) || null;
+}
 // nombre (subject) de un grupo, con cache; '' si no se pudo leer
 const _nombresGrupo = {};
 async function nombreDeGrupo(jid) {
@@ -707,7 +725,7 @@ async function procesarMensaje(m) {
       return;
     }
   }
-  if (esGrupo && !escuchaGrupo) return;
+  if (esGrupo && !escuchaGrupo) return;  // (ya se avisó arriba)
 
   // de aqui en adelante: o es un grupo escuchado (peretz, ofir...), o un chat directo valido
 

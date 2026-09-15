@@ -329,7 +329,7 @@ function armarMensaje(titulo, spotify, whatsapp, show, app) {
       return;
     }
   }
-  if (esGrupo && !escuchaGrupo) return;
+  if (esGrupo && !escuchaGrupo) return;  // (ya se avisó arriba)
 """),
     ("""async function resolverGruposEscucha() {
 """, """// nombre (subject) de un grupo, con cache; '' si no se pudo leer
@@ -378,11 +378,60 @@ async function resolverGruposEscucha() {
     ("""  log('GUARDADO: ' + nombre);
 """, """  log(`GUARDADO [${item.show || '?'}]: ${nombre}  -> ${carpeta}`);
 """),
+    # grupos de anuncio por nombre cuando el link da bad-request (config grupos_nombre)
+    ("""      try {
+        const info = await sock.groupGetInviteInfo(cod);
+        if (!info || !info.id) { log(`  ${show}: una invitacion no trajo ID`); continue; }
+        grupos.push({ id: info.id, nombre: info.subject || show, invite: inv });
+        log(`  OK ${show} -> "${info.subject || show}"`);
+      } catch (e) {
+        log(`  ${show}: no pude leer una invitacion (${e.message || e})`);
+      }
+""", """      let info = null;
+      try { info = await sock.groupGetInviteInfo(cod); }
+      catch (e) { log(`  ${show}: no pude leer una invitacion (${e.message || e})`); }
+      // === GRUPO POR NOMBRE (sep/2026): si el link no se puede leer, el grupo se
+      // busca por su nombre entre los grupos del robot: config "grupos_nombre"
+      // = { "<link>": "<nombre o parte del nombre>" }.
+      if (!info || !info.id) {
+        const nombreCfg = (CFG.grupos_nombre || {})[inv] || (CFG.grupos_nombre || {})[inv.split('?')[0]];
+        const hit = nombreCfg ? await grupoPorNombre(nombreCfg) : null;
+        if (hit) { info = { id: hit.id, subject: hit.subject }; log(`  OK ${show} -> "${hit.subject}" (por nombre, el link no sirve)`); }
+        else if (nombreCfg) log(`  ${show}: tampoco encontre un grupo llamado "${nombreCfg}" (esta el robot dentro?)`);
+      }
+      if (!info || !info.id) { log(`  ${show}: una invitacion no trajo ID`); continue; }
+      if (!grupos.some(g => g.id === info.id)) grupos.push({ id: info.id, nombre: info.subject || show, invite: inv });
+      if (!String(info.subject || '').includes('(por nombre')) log(`  OK ${show} -> "${info.subject || show}"`);
+"""),
+    ("""// nombre (subject) de un grupo, con cache; '' si no se pudo leer
+""", """// grupo del robot cuyo nombre contiene el texto dado (lista con cache por arranque)
+let _todosLosGrupos = null;
+async function grupoPorNombre(nombre) {
+  const n = String(nombre || '').toLowerCase().trim();
+  if (!n) return null;
+  if (!_todosLosGrupos) {
+    try { _todosLosGrupos = Object.values(await sock.groupFetchAllParticipating() || {}); }
+    catch (e) { log('no pude listar los grupos: ' + (e.message || e)); return null; }
+  }
+  return _todosLosGrupos.find(g => String(g.subject || '').toLowerCase().includes(n)) || null;
+}
+// nombre (subject) de un grupo, con cache; '' si no se pudo leer
+"""),
+    # si una corrida anterior duplicó el aviso de grupo no registrado, se quita
+    ("""  if (esGrupo && !escuchaGrupo) return;
+  if (esGrupo && !escuchaGrupo) {
+    if (audioDe(m)) log(`AUDIO IGNORADO (grupo no registrado para escucha): jid=${jid}` +
+      ' -> agrega el grupo en "escuchar" del config o manda "!otzar <clave>" en ese grupo');
+    return;
+  }
+""", """  if (esGrupo && !escuchaGrupo) return;  // (ya se avisó arriba)
+""", "todos"),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre")
+GRUPOS_NOMBRE = {"https://chat.whatsapp.com/5xGJ6YLeGT97rL94uJnPyZo": "3 Solo Shiurim"}
 NOMBRES_FUENTE = {"tefila": "Clases Tefila Habitat", "jabura": "Mekorot"}
 TITULOS_DEFECTO = {"tefila": "Clase de Tefilá · Rab Tofi Cherem", "hilu": "Shiur · Rab Joshua Hilu"}
 FEED_JABURA = "https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/feed.xml"
@@ -1287,6 +1336,12 @@ def fuentes():
         if isinstance(esc, dict) and not esc.get("nombre"):
             esc["nombre"] = nombre
             cambio = True
+    gn = cfg.setdefault("grupos_nombre", {})
+    for link, nombre in GRUPOS_NOMBRE.items():
+        if gn.get(link) != nombre:
+            gn[link] = nombre
+            cambio = True
+            ok(f"si el link {link.split('/')[-1]} da bad-request, el robot busca el grupo \"{nombre}\" por nombre")
     if cambio:
         respaldar(rw)
         escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
