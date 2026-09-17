@@ -843,8 +843,9 @@ def sin_atrasos_config():
         if show in an and an[show].get("solo_ultimos") != n and "solo_ultimos" not in an[show]:
             an[show]["solo_ultimos"] = n
             cambios += 1
-        if show in an and show != "jabura" and int(an[show].get("max_anuncios") or 0) < 4:
-            an[show]["max_anuncios"] = 4          # varios shiurim del mismo día salen en un solo clic
+        tope = 20 if show == "peretz" else 4       # Peretz manda muchos: salen todos los que se subieron
+        if show in an and show != "jabura" and int(an[show].get("max_anuncios") or 0) < tope:
+            an[show]["max_anuncios"] = tope        # varios shiurim del mismo día salen en un solo clic
             cambios += 1
     if cambios:
         respaldar(rw)
@@ -1822,7 +1823,7 @@ def al_dia():
         ultimos = [g for _, g in sorted(pares)[-dejar:]] if dejar else []
         # lo de los últimos 2 días sale completo (si no son más de 10)
         recientes = [g for c, g in pares if c >= time.time() - 2 * 86400]
-        if dejar and len(recientes) <= 10:
+        if dejar and len(recientes) <= 30:
             ultimos = list(dict.fromkeys(ultimos + recientes))
         memorizar = [g for g in guids if g not in ultimos]
         previos = e.get(show) or []
