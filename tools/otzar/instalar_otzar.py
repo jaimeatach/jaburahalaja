@@ -1187,6 +1187,37 @@ def portada():
     portada_fechada(show, c, cab, img)
 
 
+# ── 28. --listar=RUTA: ver qué hay en una carpeta (subcarpetas y archivos) ──────
+def listar():
+    ruta = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--listar=")), "").strip().strip('"')
+    if not ruta:
+        return
+    paso(28, f"Contenido de {ruta}")
+    base = Path(ruta)
+    if not base.is_dir():
+        aviso("no existe esa carpeta (¿está montado el Drive? ¿el nombre es exacto?)")
+        padre = base.parent
+        if padre.is_dir():
+            print("   en la carpeta de arriba hay:")
+            for x in sorted(padre.iterdir()):
+                print(f"     · {'[carpeta] ' if x.is_dir() else ''}{x.name}")
+        return
+    total = 0
+    for carpeta, subs, archivos in os.walk(base):
+        rel = os.path.relpath(carpeta, base)
+        print(f"   [{'.' if rel == '.' else rel}]  ({len(archivos)} archivos)")
+        for f in sorted(archivos):
+            p = Path(carpeta) / f
+            try:
+                kb = p.stat().st_size // 1024
+                cuando = time.strftime("%d/%m/%Y %H:%M", time.localtime(p.stat().st_mtime))
+            except Exception:
+                kb, cuando = 0, "?"
+            print(f"     · {f}  ({kb} KB, {cuando})")
+            total += 1
+    print(f"   total: {total} archivos")
+
+
 # ── 27. --mismo-podcast=repo:URL_RSS_VIEJO  /  --mismo-podcast=repo:restaurar ──
 #   Spotify solo acepta "Update RSS feed" si el feed nuevo parece EL MISMO podcast
 #   que el viejo (mismo título, autor y correo del canal). Se copian esos datos del
@@ -2182,6 +2213,7 @@ def main():
     fuentes()
     spotify_redirigido()
     mismo_podcast()
+    listar()
     shows_whatsapp_al_dia()
     ofir_grupo()
     sin_atrasos_config()
