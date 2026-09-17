@@ -525,16 +525,17 @@ MUKZE = [
 # el mismo הקדמה sin número (grabación de 2024): no se sube dos veces
 MUKZE_IGNORAR = ["הקדמה ביאור באופנים המחולקים של מוקצה.m4a"]
 GRUPOS_NOMBRE = {"https://chat.whatsapp.com/5xGJ6YLeGT97rL94uJnPyZo": "3 Solo Shiurim",
-                 "https://chat.whatsapp.com/BjgiQwlndcK6hyzFPuP7Vn": "Clases Tefila Habitat"}
-NOMBRES_FUENTE = {"tefila": "Clases Tefila Habitat", "jabura": "Mekorot", "nacach": "Shiurim jajam ezra nacach"}
+                 "https://chat.whatsapp.com/BjgiQwlndcK6hyzFPuP7Vn": "Clases Tefila Habitat",
+                 "https://chat.whatsapp.com/KpJ10DwoMVv7Te7ZWknDF7": "Halajot Generales"}
+NOMBRES_FUENTE = {"tefila": "Clases Tefila Habitat", "jabura": "Mekorot", "nacach": "Shiurim jajam ezra nacach", "credi": "Halajot Generales"}
 # shows que toman audios de un grupo (por nombre) aunque el config solo tuviera chat directo
 FUENTES_NUEVAS = {"nacach": "Shiurim jajam ezra nacach"}
 # nombre del Rab al frente del titulo (va a grupos generales)
-PREFIJOS = {"tefila": "Rab Tofi Cherem ·", "nacach": "Rab Ezra Nacach ·", "efshar": "Rab Igal Snertz ·"}
+PREFIJOS = {"tefila": "Rab Tofi Cherem ·", "nacach": "Rab Ezra Nacach ·", "efshar": "Rab Igal Snertz ·", "credi": "David Credi ·"}
 # shows que NO van a cierto grupo general (vacío: todos van al 6 y al 3)
 SIN_GRUPO = {}
 TITULOS_DEFECTO = {"tefila": "Clase de Tefilá · Rab Tofi Cherem", "hilu": "Shiur · Rab Joshua Hilu", "nacach": "Shiur · Rab Ezra Nacach",
-                   "efshar": "Shiur · Rab Igal Snertz", "ofirmalka": "הרב אופיר מלכא · שיעור"}
+                   "efshar": "Shiur · Rab Igal Snertz", "ofirmalka": "הרב אופיר מלכא · שיעור", "credi": "Shiur · David Credi"}
 FEED_JABURA = "https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/feed.xml"
 
 
@@ -876,7 +877,7 @@ def sin_atrasos_config():
     paso(16, "Sin atrasos: cada show anuncia solo sus últimos N")
     cfg = json.loads(rw.read_text(encoding="utf-8"))
     an = cfg.setdefault("anunciar", {})
-    defectos = {"nacach": 2, "peretz": 2, "ofirmalka": 2, "tefila": 2, "hilu": 2, "efshar": 2, "jabura": 3}
+    defectos = {"nacach": 2, "peretz": 2, "ofirmalka": 2, "tefila": 2, "hilu": 2, "efshar": 2, "credi": 2, "jabura": 3}
     cambios = 0
     for show, n in defectos.items():
         if show in an and an[show].get("solo_ultimos") != n and "solo_ultimos" not in an[show]:
@@ -969,9 +970,24 @@ def show_nuevo():
     c = json.loads(cfgp.read_text(encoding="utf-8")) if cfgp.exists() else {}
     base_cfg = json.loads((modelo / "config.json").read_text(encoding="utf-8"))
     antes = json.dumps(c, sort_keys=True)
-    c.setdefault("titulo", nombre)
-    c.setdefault("descripcion", f"Shiurim de {nombre}. Otzar HaTorah - אוצר התורה")
-    c.setdefault("autor", nombre)
+    canal = {}
+    if rss:
+        # el show ya existe en Spotify: se conservan su nombre, descripción y autor
+        try:
+            with urllib.request.urlopen(urllib.request.Request(rss, headers={"User-Agent": "Mozilla/5.0"}), timeout=40) as r:
+                cab_xml = r.read().decode("utf-8", "replace").split("<item>", 1)[0]
+            for k, pat in (("titulo", r"<title>(.*?)</title>"), ("descripcion", r"<description>(.*?)</description>"),
+                           ("autor", r"<itunes:author>(.*?)</itunes:author>")):
+                m = re.search(pat, cab_xml, re.S)
+                if m:
+                    canal[k] = re.sub(r"^<!\[CDATA\[|\]\]>$", "", m.group(1).strip()).strip()
+            if canal.get("titulo"):
+                ok(f"show en Spotify: '{canal['titulo']}' (se conserva el nombre y la portada)")
+        except Exception as e:                              # noqa: BLE001
+            aviso(f"no pude leer el RSS del show ({e}); uso el nombre dado")
+    c.setdefault("titulo", canal.get("titulo") or nombre)
+    c.setdefault("descripcion", canal.get("descripcion") or f"Shiurim de {nombre}. Otzar HaTorah - אוצר התורה")
+    c.setdefault("autor", canal.get("autor") or nombre)
     c.setdefault("email", base_cfg.get("email", "rabmeireliyahu@gmail.com"))
     c.setdefault("idioma", "es")
     c["modo_whatsapp"] = True
@@ -1738,7 +1754,7 @@ def fuentes():
 #   Mientras el show siga alojado en Spotify (sin redirect), los episodios nuevos
 #   no existen ahí y el robot se quedaría esperando el link exacto para siempre.
 #   Hasta entonces: link del show + audio directo. --redirigido=tefila,hilu lo cambia.
-SHOWS_REDIRECT = ("tefila", "hilu")
+SHOWS_REDIRECT = ("tefila", "hilu", "credi")
 def spotify_redirigido():
     rw = (ROBOT or BASE) / "config_whatsapp.json"
     if not rw.exists():

@@ -176,6 +176,14 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    `FUENTES_NUEVAS`) además del chat directo. Los grupos de ANUNCIO cuyo link
    da `bad-request` se ubican por nombre con `grupos_nombre` en el config
    (`GRUPOS_NOMBRE`: "3 Solo Shiurim", "Clases Tefila Habitat").
+8. Shows nuevos: `--nuevo=clave --nuevo-nombre --nuevo-rss --nuevo-spotify
+   --nuevo-grupo` (paso [18]) arma carpeta, repo + Pages, portada y canal del
+   show que ya existe en Spotify (RSS de anchor), rescata sus episodios y
+   configura el robot: fuente = grupo del Rab, anuncia en su grupo (con link
+   del grupo) + los generales, sin audio. Así entraron hilu y credi (David
+   Credi, "Halajot Generales"). El nombre del Rab al frente del título va en
+   `PREFIJOS`; el título por defecto en `TITULOS_DEFECTO`; `SHOWS_REDIRECT`
+   lista los que esperan el redirect.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre
