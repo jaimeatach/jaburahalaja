@@ -561,7 +561,8 @@ function guardarAudio(item, titulo) {
   // "titulo_defecto" en escuchar -> <show>: un audio que llega sin texto se
   // guarda como "<titulo_defecto> <fecha>" y SI se publica (el subidor solo
   // aparta los que empiezan con "Shiur ...").
-  const _porDefecto = ((CFG.escuchar || {})[item.show] || {}).titulo_defecto;
+  const _porDefecto = ((CFG.escuchar || {})[item.show] || {}).titulo_defecto ||
+    (((CFG.escuchar_directo || []).find(e => e && e.show === item.show) || {}).titulo_defecto);
   let base = limpiarTitulo(titulo) ||
     (_porDefecto
       ? (_porDefecto + ' ' + new Date(item.ts).toLocaleDateString('es-MX').replace(/\//g, '-'))
@@ -569,7 +570,8 @@ function guardarAudio(item, titulo) {
          ' ' + new Date(item.ts).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }).replace(':', '.')));
   // "prefijo_titulo" en escuchar -> <show>: el nombre del Rab al frente del titulo
   // (va a grupos generales), salvo que el titulo ya lo traiga.
-  const _pref = String(((CFG.escuchar || {})[item.show] || {}).prefijo_titulo || '').trim();
+  const _deDirecto = k => (((CFG.escuchar_directo || []).find(e => e && e.show === item.show) || {})[k]);
+  const _pref = String(((CFG.escuchar || {})[item.show] || {}).prefijo_titulo || _deDirecto('prefijo_titulo') || '').trim();
   if (_pref && !base.toLowerCase().includes(_pref.replace(/[·:\-–]+$/, '').trim().toLowerCase())) base = _pref + ' ' + base;
   // === JABURA (sep/2026): los shiurim van numerados para conservar el orden ===
   // La carpeta de la jabura es la misma que lee la app: cada archivo lleva el

@@ -471,21 +471,31 @@ async function grupoPorNombre(nombre) {
       else delete reg[show];
     }
 """),
+    # prefijo y titulo por defecto tambien para shows de chat directo
+    ("""  const _pref = String(((CFG.escuchar || {})[item.show] || {}).prefijo_titulo || '').trim();
+""", """  const _deDirecto = k => (((CFG.escuchar_directo || []).find(e => e && e.show === item.show) || {})[k]);
+  const _pref = String(((CFG.escuchar || {})[item.show] || {}).prefijo_titulo || _deDirecto('prefijo_titulo') || '').trim();
+""", "todos"),
+    ("""  const _porDefecto = ((CFG.escuchar || {})[item.show] || {}).titulo_defecto;
+""", """  const _porDefecto = ((CFG.escuchar || {})[item.show] || {}).titulo_defecto ||
+    (((CFG.escuchar_directo || []).find(e => e && e.show === item.show) || {}).titulo_defecto);
+""", "todos"),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto")
 GRUPOS_NOMBRE = {"https://chat.whatsapp.com/5xGJ6YLeGT97rL94uJnPyZo": "3 Solo Shiurim",
                  "https://chat.whatsapp.com/BjgiQwlndcK6hyzFPuP7Vn": "Clases Tefila Habitat"}
 NOMBRES_FUENTE = {"tefila": "Clases Tefila Habitat", "jabura": "Mekorot", "nacach": "Shiurim jajam ezra nacach"}
 # shows que toman audios de un grupo (por nombre) aunque el config solo tuviera chat directo
 FUENTES_NUEVAS = {"nacach": "Shiurim jajam ezra nacach"}
 # nombre del Rab al frente del titulo (va a grupos generales)
-PREFIJOS = {"tefila": "Rab Tofi Cherem ·"}
+PREFIJOS = {"tefila": "Rab Tofi Cherem ·", "nacach": "Rab Ezra Nacach ·", "efshar": "Rab Igal Snertz ·"}
 # shows que NO van a cierto grupo general (vacío: todos van al 6 y al 3)
 SIN_GRUPO = {}
-TITULOS_DEFECTO = {"tefila": "Clase de Tefilá · Rab Tofi Cherem", "hilu": "Shiur · Rab Joshua Hilu", "nacach": "Shiur · Rab Ezra Nacach"}
+TITULOS_DEFECTO = {"tefila": "Clase de Tefilá · Rab Tofi Cherem", "hilu": "Shiur · Rab Joshua Hilu", "nacach": "Shiur · Rab Ezra Nacach",
+                   "efshar": "Shiur · Rab Igal Snertz", "ofirmalka": "הרב אופיר מלכא · שיעור"}
 FEED_JABURA = "https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/feed.xml"
 
 
@@ -1487,17 +1497,30 @@ def titulos_defecto():
     paso(24, "Audios sin título: se publican con el nombre del show y la fecha")
     cfg = json.loads(rw.read_text(encoding="utf-8"))
     cambio = False
+    def entradas(show):
+        # donde se configura el show: escuchar.<show> y/o sus entradas de escuchar_directo
+        lista = []
+        esc = (cfg.get("escuchar") or {}).get(show)
+        if isinstance(esc, dict):
+            lista.append(esc)
+        lista += [e for e in (cfg.get("escuchar_directo") or []) if isinstance(e, dict) and e.get("show") == show]
+        return lista
     for show, titulo in TITULOS_DEFECTO.items():
-        esc = (cfg.get("escuchar") or {}).get(show)
-        if esc is not None and not esc.get("titulo_defecto"):
-            esc["titulo_defecto"] = titulo
-            cambio = True
+        for esc in entradas(show):
+            if not esc.get("titulo_defecto"):
+                esc["titulo_defecto"] = titulo
+                cambio = True
     for show, pref in PREFIJOS.items():
-        esc = (cfg.get("escuchar") or {}).get(show)
-        if esc is not None and esc.get("prefijo_titulo") != pref:
-            esc["prefijo_titulo"] = pref
-            cambio = True
+        puesto = False
+        for esc in entradas(show):
+            if esc.get("prefijo_titulo") != pref:
+                esc["prefijo_titulo"] = pref
+                cambio = True
+                puesto = True
+        if puesto:
             ok(f"{show}: los títulos llevan \"{pref}\" al frente")
+        elif not entradas(show):
+            aviso(f"{show}: no está en escuchar ni en escuchar_directo del robot; no sé de dónde toma audios")
     if cambio:
         respaldar(rw)
         escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
