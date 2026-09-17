@@ -130,6 +130,26 @@ def subir_nuevos(cfg, archivos, ver):
 
 
 # ── 2. el feed: todos los audios del ítem, en orden ──────────────────────────
+# Títulos curados: titulos.json junto al config, { "<ruta remota>": {"t": título, "s": siman} }.
+# Los escribe el instalador (los mismos que el catálogo de la app), para que en el
+# feed, en Spotify y en la app el shiur se llame igual aunque el archivo no.
+TITULOS = {}
+try:
+    TITULOS = json.loads(Path("titulos.json").read_text(encoding="utf-8"))
+except Exception:
+    TITULOS = {}
+
+
+def curado(remoto):
+    """(título, siman) curados para esta ruta remota, o (None, 0)."""
+    d = TITULOS.get(remoto) or TITULOS.get(remoto.split("/")[-1])
+    if isinstance(d, dict):
+        return d.get("t"), int(d.get("s") or 0)
+    if isinstance(d, str):
+        return d, 0
+    return None, 0
+
+
 def titulo_de(remoto):
     """'שיעורים בהלכה/בורר/05. הקדמה.m4a' → 'בורר · הקדמה'. El módulo (la carpeta)
     va adelante salvo que el nombre ya lo diga, para que en Spotify se entienda
@@ -138,6 +158,9 @@ def titulo_de(remoto):
     base = re.sub(r"\.[^.]+$", "", partes[-1])
     base = re.sub(r"^\s*\[?\d{1,3}\]?[.\-_\s]*", "", base)     # "05. titulo" → "titulo"
     base = re.sub(r"\s+", " ", base).strip() or Path(remoto).stem
+    t_curado, _ = curado(remoto)
+    if t_curado:
+        base = t_curado
     modulo = partes[-2] if len(partes) >= 2 else ""
     if modulo in ("שיעורים", "audios", "audio"):                 # subcarpeta genérica
         modulo = partes[-3] if len(partes) >= 3 else ""
@@ -156,7 +179,7 @@ MIME = {".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".mp4": "audio/mp4", ".aac": 
 # orden. Una carpeta nueva que nombre su siman ("סימן שמא") se ubica por el número.
 ORDEN = [
     ("שאול לניאדו", 0), ("רב יהודה חאסקי שליט א", 1), ("שיחות מוסר", 2), ("חגים", 3),
-    ("מוקצה", 308), ("סימן שי ג בונה וסותר", 313), ("סימן שי ד בנין וסתירה בכלים", 314),
+    ("מוקצה", 308), ("הלכות מוקצה", 308.5), ("סימן שי ג בונה וסותר", 313), ("סימן שי ד בנין וסתירה בכלים", 314),
     ("סימן שט ו אוהל", 315), ("צידה", 316), ("קושר", 317), ("בורר", 319),
     ("מלאכת סחיטה - דש", 320), ("מלאכת מעבד", 321.0), ("טוחן", 321.1), ("לש", 321.2),
     ("גוזז", 340.0), ("כותב ומוחק", 340.1),
@@ -199,6 +222,8 @@ def rango(remoto):
             mod = float(hit)
             break
     m = re.match(r"^\s*\[?(\d{1,3})\]?", base)
+    if not m:
+        m = re.search(r"\s(\d{1,3})\s*\.[^.]+$", base)          # "… 15.m4a": numerado al final
     num = int(m.group(1)) if m else 900
     return (mod, num, norm(base))
 
@@ -234,6 +259,16 @@ def fechas_del_feed(entradas, cfg=None):
             fechas = {}
     ahora = time.time()
     nuevos = [e for e in entradas if e["guid"] not in fechas]
+    # "al_fondo": carpetas cuyo contenido es un tema ANTERIOR: sus episodios nuevos
+    # toman fechas anteriores a todo lo publicado, en su orden, para que en
+    # Spotify queden hasta abajo y el robot no los anuncie como nuevos
+    fondo = {norm(c) for c in ((cfg or {}).get("al_fondo") or [])}
+    de_fondo = [e for e in nuevos if norm(e["guid"].split("/")[0]) in fondo]
+    nuevos = [e for e in nuevos if e not in de_fondo]
+    if de_fondo:
+        piso = min(fechas.values(), default=ahora)
+        for i, e in enumerate(de_fondo):
+            fechas[e["guid"]] = piso - (len(de_fondo) - i) * 12 * 3600
     if not fechas and nuevos:                           # primera vez: todos hacia atrás
         for i, e in enumerate(nuevos):
             fechas[e["guid"]] = ahora - (len(nuevos) - 1 - i) * 12 * 3600
@@ -276,7 +311,10 @@ def armar_feed(cfg, archivos, remotos_en_archive):
         # link directo al shiur dentro de la app: #/s/<siman>/<título>; el robot
         # lo pone en el anuncio del grupo. Musar y חגים van a su pestaña.
         mod = e["orden"][0]
-        if mod >= 100:
+        _, s_curado = curado(remoto)
+        if s_curado:
+            link = f"{app}/#/s/{s_curado}/{quote(titulo_de(remoto).split(' · ', 1)[-1])}"
+        elif mod >= 100:
             link = f"{app}/#/s/{int(mod)}/{quote(titulo_de(remoto).split(' · ', 1)[-1])}"
         else:
             link = f"{app}/#/musar"
@@ -480,6 +518,28 @@ def main():
     archivos, dudosos = SA.listar(carpeta)
     if dudosos:
         log(f"OJO: {len(dudosos)} archivos sin extensión que no identifiqué; se saltean.")
+    # "ignorar_carpetas": subcarpetas del Drive que ya no van (la מוקצה vieja de 3
+    # shiurim quedó dentro de la carpeta completa); "ignorar": nombres de archivo
+    ign_carp = {norm(c) for c in (cfg.get("ignorar_carpetas") or [])}
+    ign_arch = {norm(a) for a in (cfg.get("ignorar") or [])}
+    if ign_carp:
+        archivos = [(l, r) for l, r in archivos if not any(norm(d) in ign_carp for d in r.split("/")[:-1])]
+    # "carpetas_extra": otras carpetas del Drive (p. ej. la de מוקצה que comparte
+    # Saúl aparte), cada una entra como el módulo "como"
+    for extra in cfg.get("carpetas_extra") or []:
+        ruta, como = extra.get("ruta", ""), extra.get("como", "")
+        if not (ruta and como and os.path.isdir(ruta)):
+            log(f"carpeta extra no encontrada, la salto: {ruta}")
+            continue
+        lista, dud = SA.listar(ruta)
+        archivos += [(l, f"{como}/{r}") for l, r in lista]
+        log(f"Carpeta extra «{como}»: {len(lista)} archivos" + (f" ({len(dud)} sin identificar)" if dud else ""))
+    if ign_arch:
+        antes = len(archivos)
+        archivos = [(l, r) for l, r in archivos if norm(r.split("/")[-1]) not in ign_arch]
+        if antes != len(archivos):
+            log(f"Ignorados por config: {antes - len(archivos)} archivo(s).")
+    archivos.sort(key=lambda x: x[1])
     archivos = convertir_a_mp3(archivos, ver)
     arriba = subir_nuevos(cfg, archivos, ver)
     xml, n = armar_feed(cfg, archivos, arriba)

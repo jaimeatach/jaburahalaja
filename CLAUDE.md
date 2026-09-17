@@ -88,6 +88,16 @@ El contenido de la jabura vive en un ítem de archive.org, no en Supabase Storag
   quedan en el primer saif por no tratar de un saif concreto.
 - Los módulos que comparten siman se unen: מעבד·טוחן·לש en שכ״א y
   גוזז·כותב ומוחק en ש״מ, cada uno con `groups` para resolver la numeración.
+- `הלכות מוקצה`: la carpeta "שיעורים מוקצה" que Saúl comparte aparte (31
+  shiurim numerados al FINAL del nombre, `tail:true`). Sus ítems son objetos
+  `{ t, s, saif }`: cada uno va a su propio siman (רע״ט, ש״ח–שי״ב) y a su saif
+  (`catItemDestino`). Reemplaza al módulo viejo `מוקצה` de 3 shiurim, cuyos
+  archivos se retiran al importar (`CAT_RETIRADOS`). En el publicador entra por
+  `carpetas_extra` (config de la jabura), con `titulos.json` (los mismos títulos
+  y simanim, los escribe el instalador en el paso [29]), `ignorar_carpetas`
+  (la מוקצה vieja), `ignorar` (el הקדמה duplicado de 2024) y `al_fondo`: sus
+  episodios toman fechas anteriores a todo, así en Spotify quedan hasta abajo y
+  el robot no los anuncia como nuevos.
 
 ## WhatsApp → archive.org → Spotify (el flujo de Otzar, para la jabura)
 

@@ -485,6 +485,45 @@ MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAud
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
                 "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto")
+# הלכות מוקצה: la carpeta "שיעורים מוקצה" que comparte Saúl aparte (31 shiurim
+# numerados al FINAL del nombre). Mismos títulos y simanim que el catálogo de la app.
+MUKZE_CARPETA = r"G:\.shortcut-targets-by-id\1OcakbiF7zD5biDpWYElkB-DoIlidbTlT\שיעורים מוקצה"
+MUKZE_COMO = "הלכות מוקצה"
+MUKZE = [
+    ("חריות של דקל- סעיף כ-עד סעיף כד 01.m4a", "חריות של דקל · סעיף כ עד כד", 308),
+    ("לילד אבן או דבר מוקצה לטילטול 02.m4a", "ליקח ילד אבן או דבר מוקצה", 308),
+    ("גרעינים וקליפות סעיף כז-עט 03.m4a", "גרעינים וקליפות · סעיף כז עד כט", 308),
+    ("פירורים-עצמות-וקליפים 04.m4a", "פירורים · עצמות · וקליפים", 308),
+    ("כללים-בקליפות וגרעינים 05.m4a", "כללים בקליפות וגרעינים", 308),
+    ("קליפות בענין מוקצה 06.m4a", "קליפות בענין מוקצה", 308),
+    ("גרף של רעי - מכניס אדם מלא קופתו עפר 07.m4a", "גרף של רעי · מכניס אדם מלא קופתו עפר", 308),
+    ("טלטול כדור בשבת, וטלטול בהימות 08.m4a", "טלטול כדור בשבת · וטלטול בהמות", 308),
+    ("סימן ש״ח סעיף מו עד סוף הסימן 09.m4a", "סימן ש״ח · סעיף מו עד נב", 308),
+    ("סעיף א סימן שט 10.m4a", "סימן ש״ט · סעיף א", 309),
+    ("יסוד של בסיס לדבר האסור 11.m4a", "יסוד של בסיס לדבר האסור", 310),
+    ("בסיס לדבר אסור. - וטלטול מן הצד לצורך דבר המותר. 12.m4a", "בסיס לדבר האסור · וטלטול מן הצד לצורך דבר המותר", 310),
+    ("ביאור במחלוקת ר׳ שמעון ור׳ יהודה 13.m4a", "ביאור במחלוקת ר׳ שמעון ור׳ יהודה", 310),
+    ("מגן דאיתקצאי לבין השמשות 14.m4a", "מיגו דאיתקצאי לבין השמשות", 310),
+    ("בטל כלי מהכינו 15.m4a", "ביטול כלי מהיכנו", 310),
+    ("מעות שעל הכיס 16.m4a", "מעות שעל הכיס", 310),
+    ("שולחן שיש בה מגירה עם מעות 17.m4a", "שולחן שיש בו מגירה עם מעות", 310),
+    ("טלטול מן הצד 18.m4a", "טלטול מן הצד", 311),
+    ("טלטול מן הצד - וטלטול המת בשבת 19.m4a", "טלטול מן הצד · וטלטול המת בשבת", 311),
+    ("טלטול בגופו 20.m4a", "טלטול בגופו", 311),
+    ("גדול כבוד הבריות שדוחה ל״ת 21.m4a", "גדול כבוד הבריות שדוחה לא תעשה", 312),
+    ("מוקצה על ידי גוי 22.m4a", "מוקצה על ידי גוי", 308),
+    ("כלי שמלאכתו לאיסור-ומוקצה מחמת חיסרון כיס 23.m4a", "כלי שמלאכתו לאיסור · ומוקצה מחמת חסרון כיס", 308),
+    ("סימן ש״י סעיף ז 24.m4a", "סימן ש״י · סעיף ז", 310),
+    ("מוקצה מחמת חיסרון כיס וכלי גדול וכבד 25.m4a", "מוקצה מחמת חסרון כיס · וכלי גדול וכבד", 308),
+    ("ציורים של כלי שמלאכתו לאיסור 26.m4a", "ציורים של כלי שמלאכתו לאיסור", 308),
+    ("כלי חדש שמלאכתו לאיסור- וכלי שמלאכתו לאיסור שאין בו צד היתר 27.m4a", "כלי חדש שמלאכתו לאיסור · וכלי שמלאכתו לאיסור שאין בו צד היתר", 308),
+    ("כלי שמשמש לאיסור 28.m4a", "כלי שמשמש לאיסור", 308),
+    ("כללים בהליכות מוקצה 29.m4a", "כללים בהליכות מוקצה", 308),
+    ("טלטול הנר - סימן רע״ט 30.m4a", "טלטול הנר · סימן רע״ט", 279),
+    ("הקדמה ביאור באופנים המחולקים של מוקצה 31.m4a", "הקדמה · ביאור באופנים המחולקים של מוקצה", 308),
+]
+# el mismo הקדמה sin número (grabación de 2024): no se sube dos veces
+MUKZE_IGNORAR = ["הקדמה ביאור באופנים המחולקים של מוקצה.m4a"]
 GRUPOS_NOMBRE = {"https://chat.whatsapp.com/5xGJ6YLeGT97rL94uJnPyZo": "3 Solo Shiurim",
                  "https://chat.whatsapp.com/BjgiQwlndcK6hyzFPuP7Vn": "Clases Tefila Habitat"}
 NOMBRES_FUENTE = {"tefila": "Clases Tefila Habitat", "jabura": "Mekorot", "nacach": "Shiurim jajam ezra nacach"}
@@ -1185,6 +1224,52 @@ def portada():
         aviso(f"no pude subir la portada: {e}")
         return
     portada_fechada(show, c, cab, img)
+
+
+# ── 29. הלכות מוקצה: la carpeta aparte de Saúl entra al feed, a Spotify (hasta
+#        abajo, es el tema anterior) y a la app, con títulos curados ────────────
+def mukze():
+    d = BASE / "jabura"
+    cfgp = d / "config.json"
+    if not cfgp.exists():
+        return
+    paso(29, "הלכות מוקצה: la carpeta aparte de Saúl, con títulos curados y hasta abajo en Spotify")
+    try:
+        c = json.loads(cfgp.read_text(encoding="utf-8"))
+    except Exception as e:                                  # noqa: BLE001
+        aviso(f"no pude leer jabura\\config.json: {e}")
+        return
+    antes = json.dumps(c, sort_keys=True)
+    extras = [x for x in (c.get("carpetas_extra") or []) if isinstance(x, dict)]
+    if not any(x.get("como") == MUKZE_COMO for x in extras):
+        extras.append({"ruta": MUKZE_CARPETA, "como": MUKZE_COMO})
+    c["carpetas_extra"] = extras
+    c["ignorar_carpetas"] = sorted(set(c.get("ignorar_carpetas") or []) | {"מוקצה"})
+    c["ignorar"] = sorted(set(c.get("ignorar") or []) | set(MUKZE_IGNORAR))
+    c["al_fondo"] = sorted(set(c.get("al_fondo") or []) | {MUKZE_COMO})
+    if json.dumps(c, sort_keys=True) != antes:
+        respaldar(cfgp)
+        escribir(cfgp, json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+        ok("config.json: carpeta extra, la מוקצה vieja de 3 shiurim fuera, fechas al fondo")
+    titulos = {}
+    tj = d / "titulos.json"
+    try:
+        titulos = json.loads(tj.read_text(encoding="utf-8"))
+    except Exception:
+        titulos = {}
+    cambio = False
+    for archivo, t, s in MUKZE:
+        if titulos.get(archivo) != {"t": t, "s": s}:
+            titulos[archivo] = {"t": t, "s": s}
+            cambio = True
+    if cambio:
+        escribir(tj, json.dumps(titulos, ensure_ascii=False, indent=1) + "\n")
+        ok(f"titulos.json: {len(MUKZE)} títulos de מוקצה (feed, Spotify y app se llaman igual)")
+    if Path(MUKZE_CARPETA).is_dir():
+        n_ = len([f for f in Path(MUKZE_CARPETA).iterdir() if f.suffix.lower() in AUDIO])
+        ok(f"carpeta encontrada: {n_} audios · se suben y entran al feed con ANUNCIAR")
+    else:
+        aviso("no veo la carpeta de מוקצה en el Drive (¿está montado G:?); ANUNCIAR la busca de nuevo")
 
 
 # ── 28. --listar=RUTA: ver qué hay en una carpeta (subcarpetas y archivos) ──────
@@ -2213,6 +2298,7 @@ def main():
     fuentes()
     spotify_redirigido()
     mismo_podcast()
+    mukze()
     listar()
     shows_whatsapp_al_dia()
     ofir_grupo()

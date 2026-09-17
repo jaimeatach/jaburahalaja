@@ -365,7 +365,7 @@ const SUPABASE_URL = "https://enkofkroxudsblewxxos.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_nAsf0qU7fPUOZ5K7OgqwYw_hUPgzOrZ";
 const BUCKET = "jabura";
 const APP_NAME = "חבורת הלכה";
-const BUILD = "2026-09-14 · iphone";
+const BUILD = "2026-09-17 · מוקצה";
 
 const $ = id => document.getElementById(id);
 const app = $('app');
@@ -1348,10 +1348,41 @@ const CATALOG = [
     'צביעה באוכלים ובמשקים',
     'סיכום על סימן ש״כ'
   ]},
-            { sec:'shiurim', kind:'shiur', folder:'מוקצה', siman:308, items:[
-    'חריות של דקל · סעיף כ עד כד',
-    'ליקח ילד אבן או דבר מוקצה',
-    'גרעינים וקליפות · סעיף כ״ז'
+  /* הלכות מוקצה: la carpeta "שיעורים מוקצה" de Saúl, 31 shiurim numerados al
+     FINAL del nombre (tail). Cada uno dice su siman (s) y, si el título no lo
+     dice, su saif. Va antes que todo lo demás: es el tema anterior. */
+  { sec:'shiurim', kind:'shiur', folder:'הלכות מוקצה', siman:308, tail:true, items:[
+    { t:'חריות של דקל · סעיף כ עד כד', s:308 },
+    { t:'ליקח ילד אבן או דבר מוקצה', s:308, saif:[35,36,37,38,39,40,41,42] },
+    { t:'גרעינים וקליפות · סעיף כז עד כט', s:308 },
+    { t:'פירורים · עצמות · וקליפים', s:308, saif:[27,28,29] },
+    { t:'כללים בקליפות וגרעינים', s:308, saif:[27] },
+    { t:'קליפות בענין מוקצה', s:308, saif:[27,28,29] },
+    { t:'גרף של רעי · מכניס אדם מלא קופתו עפר', s:308, saif:[34,35,38] },
+    { t:'טלטול כדור בשבת · וטלטול בהמות', s:308, saif:[39,40,45] },
+    { t:'סימן ש״ח · סעיף מו עד נב', s:308 },
+    { t:'סימן ש״ט · סעיף א', s:309 },
+    { t:'יסוד של בסיס לדבר האסור', s:310, saif:[7] },
+    { t:'בסיס לדבר האסור · וטלטול מן הצד לצורך דבר המותר', s:310, saif:[7] },
+    { t:'ביאור במחלוקת ר׳ שמעון ור׳ יהודה', s:310, saif:[2] },
+    { t:'מיגו דאיתקצאי לבין השמשות', s:310, saif:[3] },
+    { t:'ביטול כלי מהיכנו', s:310, saif:[6] },
+    { t:'מעות שעל הכיס', s:310, saif:[7] },
+    { t:'שולחן שיש בו מגירה עם מעות', s:310, saif:[7] },
+    { t:'טלטול מן הצד', s:311, saif:[8] },
+    { t:'טלטול מן הצד · וטלטול המת בשבת', s:311, saif:[1,8] },
+    { t:'טלטול בגופו', s:311, saif:[8] },
+    { t:'גדול כבוד הבריות שדוחה לא תעשה', s:312, saif:[1] },
+    { t:'מוקצה על ידי גוי', s:308, saif:[1] },
+    { t:'כלי שמלאכתו לאיסור · ומוקצה מחמת חסרון כיס', s:308, saif:[1] },
+    { t:'סימן ש״י · סעיף ז', s:310 },
+    { t:'מוקצה מחמת חסרון כיס · וכלי גדול וכבד', s:308, saif:[1,2] },
+    { t:'ציורים של כלי שמלאכתו לאיסור', s:308, saif:[3] },
+    { t:'כלי חדש שמלאכתו לאיסור · וכלי שמלאכתו לאיסור שאין בו צד היתר', s:308, saif:[3,4] },
+    { t:'כלי שמשמש לאיסור', s:308, saif:[3] },
+    { t:'כללים בהליכות מוקצה', s:308, saif:[1] },
+    { t:'טלטול הנר · סימן רע״ט', s:279, saif:[1] },
+    { t:'הקדמה · ביאור באופנים המחולקים של מוקצה', s:308, saif:[1] }
   ]},
   { sec:'shiurim', kind:'shiur', folder:'חגים', siman:429, items:[
     'הלכות פסח תשפ״ג',
@@ -1457,14 +1488,47 @@ async function catEnsureSiman(num){
   await loadSimanim();
   return data;
 }
+/* Un ítem del catálogo es un texto (el título) o un objeto { t, s, saif }:
+   t = título, s = siman propio (cuando el módulo junta varios), saif = saifim
+   fijos cuando el título no los dice. */
+const catItemT = it => (it && typeof it === 'object') ? it.t : String(it || '');
+/* A qué siman y saifim va el ítem n (1..N) del módulo; crea el siman si falta */
+async function catItemDestino(mod, n){
+  const it = mod.items[n - 1];
+  const title = catItemT(it);
+  const s = (it && typeof it === 'object' && it.s) ? await catEnsureSiman(it.s) : catSiman(mod);
+  const saifim = (it && typeof it === 'object' && it.saif && it.saif.length) ? it.saif : catSaifDeShiur(title);
+  return { title, s, saifim };
+}
+/* Archivos de módulos que se reemplazaron por otra carpeta (la de מוקצה vieja,
+   con 3 shiurim, quedó dentro de "הלכות מוקצה"): al importar se retiran de la app */
+const CAT_RETIRADOS = [
+  '[03] גרעינים וקליפות סעיף כז.m4a', 'חריות של דקל סעיף כ עד כד[01].m4a', 'ליקח ילד אם אבן או דבר מוקצה [02].m4a'
+];
+async function catRetirar(){
+  for (const fileName of CAT_RETIRADOS){
+    const { data } = await sb.from(T.shiurim).select('id').eq('fileName', fileName);
+    for (const x of (data || [])){
+      try { await sb.from(T.marks).delete().eq('shiurId', x.id); } catch(e){}
+      await sb.from(T.shiurim).delete().eq('id', x.id);
+    }
+  }
+}
 /* Une el módulo del catálogo con el siman ya creado en la base */
 function catSiman(mod){
   if (mod.musar) return SIMANIM.find(s => (s.title || '').trim() === mod.folder) || null;
   return SIMANIM.find(s => s.number === mod.siman && !isMusar(s)) || null;
 }
 /* Nº de saif (1..N) al que corresponde un archivo, o 0 si no hay match */
-function catMatchFile(fileName, items){
+function catMatchFile(fileName, items, numeradoAlFinal){
+  items = (items || []).map(catItemT);
   const f = catNorm(fileName);
+  /* Módulo numerado al final ("בטל כלי מהכינו 15"): el número es el orden */
+  if (numeradoAlFinal){
+    const tn = f.match(/(\d{1,3})\s*$/);
+    const n = tn ? parseInt(tn[1], 10) : 0;
+    if (n >= 1 && n <= items.length) return n;
+  }
   const lead = f.match(/^(\d{1,3})\b/);
   if (lead){
     const n = parseInt(lead[1], 10);
@@ -1582,12 +1646,12 @@ function catPreview(i){
   const el = $('cat-rows'); if (!el) return;
   el.innerHTML = files.length ? `<div class="field"><label>${t('catFileCol')} → ${t('catTargetCol')}</label>` +
     files.map((f, k) => {
-      const match = catMatchFile(f.name, mod.items);
+      const match = catMatchFile(f.name, mod.items, mod.tail);
       return `<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
         <div style="flex:1;min-width:0;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(f.name)}">${esc(f.name)}</div>
         <select id="cat-t-${k}" style="flex:1;min-width:0">
           <option value="0">${t('catSkip')}</option>
-          ${mod.items.map((it, n) => `<option value="${n+1}" ${match === n+1 ? 'selected' : ''}>${gem(n+1)} · ${esc(it)}</option>`).join('')}
+          ${mod.items.map((it, n) => `<option value="${n+1}" ${match === n+1 ? 'selected' : ''}>${gem(n+1)} · ${esc(catItemT(it))}</option>`).join('')}
         </select>
       </div>`;
     }).join('') + `</div>` : '';
@@ -1611,8 +1675,9 @@ async function catDoUpload(i){
       const path = tbl + '/' + Date.now() + '_' + k + '_' + (f.name || 'archivo').replace(/[^\w.\-]+/g, '_');
       await uploadWithProgress(path, f, `(${k+1}/${files.length}) `);
       const url = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+      const dest = await catItemDestino(mod, n);
       const { error } = await sb.from(tbl).insert({
-        simanId: s.id, saifim: [n], title: mod.items[n-1],
+        simanId: (dest.s || s).id, saifim: dest.saifim, title: dest.title,
         url, fileName: f.name, size: f.size, storagePath: path, uploadedBy: ME.name
       });
       fail(error);
@@ -1721,15 +1786,20 @@ async function arcImportPlan(plan, silent){
   const seen = new Set([...(shs.data||[]), ...(mts.data||[])].map(r => r.simanId + '|' + r.fileName));
   /* Solo se crean módulos si traen algo nuevo: así la importación automática
      no rearma un módulo que se borró a propósito */
+  const vistos = new Set([...seen].map(k => k.split('|').slice(1).join('|')));
   const nuevos = plan.filter(p => {
     if (p.sefer) return true;
-    const s = p.mi >= 0 ? catSiman(CATALOG[p.mi]) : SIMANIM.find(x => x.number === p.siman && !isMusar(x));
+    const mod = p.mi >= 0 ? CATALOG[p.mi] : null;
+    const it = (mod && p.n) ? mod.items[p.n - 1] : null;
+    if (it && typeof it === 'object' && it.s) return !vistos.has(p.f.name);   /* siman propio */
+    const s = mod ? catSiman(mod) : SIMANIM.find(x => x.number === p.siman && !isMusar(x));
     return !s || !seen.has(s.id + '|' + p.f.name);
   });
   if (!nuevos.length) return { ok, dup: plan.length };
   for (const mi of [...new Set(nuevos.filter(p => p.mi >= 0).map(p => p.mi))]){
     if (!catSiman(CATALOG[mi])) await catCreateModule(mi, true);
   }
+  try { await catRetirar(); } catch(e){ console.warn('catRetirar', e); }
   /* Los sefarim van al final: así alcanzan también a los simanim recién creados */
   const orden = [...plan.filter(p => !p.sefer), ...plan.filter(p => p.sefer)];
   for (const { f, mi, kind, n, sefer, siman } of orden){
@@ -1740,15 +1810,16 @@ async function arcImportPlan(plan, silent){
       continue;
     }
     const mod = mi >= 0 ? CATALOG[mi] : null;
-    const s = mod ? catSiman(mod) : await catEnsureSiman(siman);
+    const dest = (mod && n) ? await catItemDestino(mod, n) : null;
+    const s = dest ? dest.s : (mod ? catSiman(mod) : await catEnsureSiman(siman));
     if (!s) continue;
     if (seen.has(s.id + '|' + f.name)){ dup++; continue; }
     const tbl = kind === 'shiur' ? T.shiurim : T.materials;
-    const title = n ? mod.items[n-1] : catTituloLibre(f.name);
+    const title = dest ? dest.title : catTituloLibre(f.name);
     /* Sin storagePath: el archivo no es nuestro, vive en archive.org */
     const meta = { url: f._arc, fileName: f.name, size: f.size };
     const { error } = await sb.from(tbl).insert({
-      simanId: s.id, saifim: catSaifDeShiur(title), title, ...meta, uploadedBy: ME.name
+      simanId: s.id, saifim: dest ? dest.saifim : catSaifDeShiur(title), title, ...meta, uploadedBy: ME.name
     });
     fail(error);
     seen.add(s.id + '|' + f.name);
@@ -1893,7 +1964,7 @@ function spotifyDe(t){
         if (i >= 0){
           /* De ida y vuelta: el episodio también tiene que preferir este título,
              si no "הקדמה לש" se cuelga de cualquier "הקדמה …" */
-          if (!CAT_TITULOS) CAT_TITULOS = CATALOG.flatMap(m => m.items);
+          if (!CAT_TITULOS) CAT_TITULOS = CATALOG.flatMap(m => m.items.map(catItemT));
           const j = spotifyMejor(SPOTIFY_EPS[i].nombre, CAT_TITULOS);
           if (j < 0 || CAT_TITULOS[j] === t) ep = SPOTIFY_EPS[i];
         }
@@ -2187,7 +2258,7 @@ function catOpenJelek(){
    dejó las sijot de מוסר fuera de su pestaña. Esto borra lo que vino del
    catálogo y lo vuelve a armar bien; el audio no se toca, vive en archive.org. */
 const CAT_LEGACY = [
-  'לש', 'טוחן', 'מלאכת מעבד', 'גוזז', 'כותב ומוחק',
+  'לש', 'טוחן', 'מלאכת מעבד', 'גוזז', 'כותב ומוחק', 'מוקצה',
   'ספרים · טור ושולחן ערוך', 'ספרים · משנה ברורה מתיבתא', 'ספרים · כף החיים',
   'ספרים · חזון עובדיה', 'ספרים · מנוחת אהבה', 'ספרים · אגרות משה',
   'ספרים · שלמי יהונתן', 'ספרים · שולחן מבואר'
@@ -2381,7 +2452,7 @@ function catPlan(files){
     /* Solo tomamos el título del catálogo si el tipo de archivo coincide con el
        del módulo: un PDF dentro de un módulo de shiurim conserva su propio nombre */
     const tramo = catTramo(mod, f);
-    const hallado = kind === mod.kind ? catMatchFile(f.name, tramo.items) : 0;
+    const hallado = kind === mod.kind ? catMatchFile(f.name, tramo.items, mod.tail) : 0;
     return { f, mi, kind, n: hallado ? hallado + tramo.off : 0 };
   });
 }
@@ -2446,18 +2517,19 @@ async function catDirUpload(){
     for (let k = 0; k < plan.length; k++){
       const { f, mi, kind, n, siman } = plan[k];
       const mod = mi >= 0 ? CATALOG[mi] : null;
-      const s = mod ? catSiman(mod) : await catEnsureSiman(siman);
+      const dest = (mod && n) ? await catItemDestino(mod, n) : null;
+      const s = dest ? dest.s : (mod ? catSiman(mod) : await catEnsureSiman(siman));
       if (!s) continue;
       if (seen.has(s.id + '|' + f.name)){ dup++; continue; }
       const tbl = kind === 'shiur' ? T.shiurim : T.materials;
-      const title = n ? mod.items[n-1] : catTituloLibre(f.name);
+      const title = dest ? dest.title : catTituloLibre(f.name);
       const path = tbl + '/' + Date.now() + '_' + k + '_' + (f.name || 'archivo').replace(/[^\w.\-]+/g, '_');
       try {
         await uploadWithProgress(path, f, `(${k+1}/${plan.length}) `);
         const url = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
         const meta = { url, fileName: f.name, size: f.size, storagePath: path };
         const { error } = await sb.from(tbl).insert({
-          simanId: s.id, saifim: catSaifDeShiur(title), title, ...meta, uploadedBy: ME.name
+          simanId: s.id, saifim: dest ? dest.saifim : catSaifDeShiur(title), title, ...meta, uploadedBy: ME.name
         });
         fail(error);
         seen.add(s.id + '|' + f.name);
