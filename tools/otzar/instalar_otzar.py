@@ -877,9 +877,11 @@ def sin_atrasos_config():
     paso(16, "Sin atrasos: cada show anuncia solo sus últimos N")
     cfg = json.loads(rw.read_text(encoding="utf-8"))
     an = cfg.setdefault("anunciar", {})
-    defectos = {"nacach": 2, "peretz": 2, "ofirmalka": 2, "tefila": 2, "hilu": 2, "efshar": 2, "credi": 2, "jabura": 3}
+    defectos = {"nacach": 2, "peretz": 2, "ofirmalka": 2, "tefila": 2, "hilu": 2, "credi": 2, "jabura": 3}
     cambios = 0
     for show, n in defectos.items():
+        if show in an and (an[show].get("sin_filtro_fecha") or an[show].get("curso")):
+            continue                               # curso en orden: ni tope ni memorizar
         if show in an and an[show].get("solo_ultimos") != n and "solo_ultimos" not in an[show]:
             an[show]["solo_ultimos"] = n
             cambios += 1
@@ -1286,6 +1288,71 @@ def mukze():
         ok(f"carpeta encontrada: {n_} audios · se suben y entran al feed con ANUNCIAR")
     else:
         aviso("no veo la carpeta de מוקצה en el Drive (¿está montado G:?); ANUNCIAR la busca de nuevo")
+
+
+# ── 30. --curso=show:N[:porclic]: el show sale EN ORDEN desde el episodio 1 ─────
+#   N = cuántos ya salieron (0 = empezar desde el primero); porclic = cuántos
+#   manda cada ANUNCIAR (1 por defecto). Quita solo_ultimos y deja el estado
+#   exactamente con los N primeros (por fecha), ni uno más.
+def curso():
+    arg = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--curso=")), "")
+    if not arg or ":" not in arg:
+        return
+    partes = arg.split(":")
+    show, cuantos = partes[0].strip(), int(partes[1] or 0)
+    porclic = int(partes[2]) if len(partes) > 2 and partes[2] else 1
+    paso(30, f"{show}: curso en orden, ya salieron {cuantos}, {porclic} por clic")
+    rw = (ROBOT or BASE) / "config_whatsapp.json"
+    cfg = json.loads(rw.read_text(encoding="utf-8"))
+    an = (cfg.get("anunciar") or {}).get(show)
+    if not isinstance(an, dict):
+        aviso(f"{show} no está en anunciar del robot")
+        return
+    an.update({"en_orden": True, "sin_filtro_fecha": True, "curso": True, "max_anuncios": porclic})
+    an.pop("solo_ultimos", None)
+    an.pop("uno_por_dia", None)
+    respaldar(rw)
+    escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+    ok(f"config: en orden, sin filtro de fecha, {porclic} por clic, sin 'solo últimos'")
+    c = {}
+    try:
+        c = json.loads((BASE / show / "config.json").read_text(encoding="utf-8"))
+    except Exception:
+        pass
+    url = an.get("feed") if str(an.get("feed", "")).startswith("http") else \
+        f"https://{c.get('github_user', 'rabmeireliyahu')}.github.io/{c.get('github_repo', show)}/feed.xml"
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "instalar-otzar"}), timeout=60) as r:
+            feed = r.read().decode("utf-8", "replace")
+    except Exception as e:                                  # noqa: BLE001
+        aviso(f"no pude leer el feed {url}: {e}")
+        return
+    from email.utils import parsedate_to_datetime
+    eps = []
+    for it in re.findall(r"<item>([\s\S]*?)</item>", feed):
+        g = re.search(r"<guid[^>]*>(.*?)</guid>", it)
+        t = re.search(r"<title>(.*?)</title>", it, re.S)
+        d = re.search(r"<pubDate>(.*?)</pubDate>", it)
+        if not g:
+            continue
+        try:
+            cuando = parsedate_to_datetime(d.group(1).strip()).timestamp() if d else 0
+        except Exception:
+            cuando = 0
+        eps.append((cuando, g.group(1).replace("&amp;", "&"), (t.group(1) if t else "").strip()))
+    eps.sort()
+    estado_p = (ROBOT or BASE) / "estado_anuncios.json"
+    try:
+        e = json.loads(estado_p.read_text(encoding="utf-8"))
+    except Exception:
+        e = {}
+    e[show] = [g for _, g, _ in eps[:cuantos]]
+    respaldar(estado_p)
+    escribir(estado_p, json.dumps(e, ensure_ascii=False, indent=2))
+    ok(f"estado: {len(e[show])} marcados como ya salidos de {len(eps)}")
+    if len(eps) > cuantos:
+        print(f"   → el próximo ANUNCIAR manda: {eps[cuantos][2][:70]}")
+    print("   → reinicia el robot para que tome el config nuevo")
 
 
 # ── 28. --listar=RUTA: ver qué hay en una carpeta (subcarpetas y archivos) ──────
@@ -2315,6 +2382,7 @@ def main():
     spotify_redirigido()
     mismo_podcast()
     mukze()
+    curso()
     listar()
     shows_whatsapp_al_dia()
     ofir_grupo()

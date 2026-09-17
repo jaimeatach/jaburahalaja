@@ -181,6 +181,8 @@ def sin_atrasos(cfgw):
         n = datos.get("solo_ultimos")
         if not isinstance(n, int) or n < 1 or datos.get("pausado"):
             continue
+        if datos.get("sin_filtro_fecha") or datos.get("curso"):
+            continue                      # curso en orden desde el 1: NUNCA se memoriza nada
         feed = bajar(feed_de(show, datos, leer_json(BASE / show / "config.json")))
         if not feed:
             continue
@@ -213,6 +215,10 @@ def sin_atrasos(cfgw):
             cambio = True
             log(f"{show}: {len(memorizar)} viejo(s) memorizados sin anunciar; quedan por salir solo los últimos {n}")
     if cambio:
+        try:
+            estado_p.with_name(estado_p.name + ".bak_" + time.strftime("%Y%m%d%H%M%S")).write_bytes(estado_p.read_bytes())
+        except Exception:
+            pass
         estado_p.write_text(json.dumps(e, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
