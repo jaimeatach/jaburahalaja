@@ -147,6 +147,52 @@ def rescatar_sin_titulo(cfgw):
 
 
 # ── 2. publicar ──────────────────────────────────────────────────────────────
+# ── 2b. "mp3" que en realidad son video (mp4/mov) o vienen en otro contenedor: archive.org
+#        los rechaza ("video file has improper extension"). Se les saca el audio con
+#        ffmpeg y quedan como mp3 de verdad, con el mismo nombre. ──────────────────────
+def es_mp3_de_verdad(ruta):
+    try:
+        cab = ruta.read_bytes()[:16]
+    except OSError:
+        return True
+    if cab[:3] == b"ID3" or (len(cab) > 1 and cab[0] == 0xFF and (cab[1] & 0xE0) == 0xE0):
+        return True
+    return False
+
+
+def arreglar_mp3_falsos(show):
+    carpetas = [show / "episodios", show / "audios_whatsapp", show / "convertidos"]
+    c = leer_json(show / "config.json")
+    if c.get("carpeta_whatsapp"):
+        carpetas.append(Path(c["carpeta_whatsapp"]))
+    for carpeta in carpetas:
+        if not carpeta.is_dir():
+            continue
+        for f in sorted(carpeta.glob("*.mp3")):
+            if es_mp3_de_verdad(f):
+                continue
+            tmp = f.with_name(f.stem + ".__real.mp3")
+            try:
+                r = subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(f), "-vn",
+                                    "-codec:a", "libmp3lame", "-b:a", "96k", str(tmp)])
+                ok_ = r.returncode == 0
+            except OSError:
+                ok_ = False
+            if ok_ and tmp.exists() and tmp.stat().st_size > 1000:
+                try:
+                    f.unlink()
+                    tmp.rename(f)
+                    log(f"{show.name}: '{f.name}' era video/otro formato; ya es mp3 de verdad")
+                except OSError as e:
+                    log(f"{show.name}: no pude reemplazar {f.name}: {e}")
+            else:
+                try:
+                    tmp.unlink()
+                except OSError:
+                    pass
+                log(f"{show.name}: no pude convertir {f.name} (¿ffmpeg?)")
+
+
 def publicar():
     jab = BASE / "jabura"
     if (jab / "jabura_publicar.py").exists():
@@ -162,6 +208,7 @@ def publicar():
         if (show / "PAUSADO.txt").exists() or (show / "PAUSADOS.txt").exists():
             continue
         log(f"--- {show.name}: publicando lo que dejó el robot ---")
+        arreglar_mp3_falsos(show)
         subprocess.run([sys.executable, "podcast_bot.py"], cwd=str(show))
 
 
