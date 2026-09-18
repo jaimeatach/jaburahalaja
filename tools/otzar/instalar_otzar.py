@@ -480,11 +480,50 @@ async function grupoPorNombre(nombre) {
 """, """  const _porDefecto = ((CFG.escuchar || {})[item.show] || {}).titulo_defecto ||
     (((CFG.escuchar_directo || []).find(e => e && e.show === item.show) || {}).titulo_defecto);
 """, "todos"),
+    # el titulo puede venir con un link pegado (soundcloud): se quita el link
+    ("""function esTituloValido(t) {
+  if (!t) return false;
+""", """// El rab a veces pega un link (soundcloud, drive) junto al titulo: fuera el link,
+// el resto es el titulo. Si no queda nada, no era titulo.
+function sinLinks(t) {
+  return String(t || '').replace(/https?:\\/\\/\\S+/gi, ' ').replace(/\\bwww\\.\\S+/gi, ' ')
+    .replace(/[ \\t]+/g, ' ').replace(/\\s*\\n\\s*/g, '\\n').trim();
+}
+function esTituloValido(t) {
+  if (!t) return false;
+"""),
+    ("""    const captura = textoDe(m);
+    if (captura && esTituloValido(captura)) { guardarAudio(item, captura); return; }
+""", """    const captura = sinLinks(textoDe(m));
+    if (captura && esTituloValido(captura)) { guardarAudio(item, captura); return; }
+"""),
+    ("""  // ---- TEXTO (posible titulo) ----
+  if (cuerpo && esTituloValido(cuerpo)) {
+    const i = audiosPendientes.findIndex(a => a.autor === autor);
+    if (i >= 0) {
+      const a = audiosPendientes.splice(i, 1)[0];
+      clearTimeout(a.timer);
+      guardarAudio(a, cuerpo);
+      return;
+    }
+    const t = { texto: cuerpo, ts: Date.now(), autor };
+""", """  // ---- TEXTO (posible titulo) ----
+  const cuerpoTitulo = sinLinks(cuerpo);
+  if (cuerpoTitulo && esTituloValido(cuerpoTitulo)) {
+    const i = audiosPendientes.findIndex(a => a.autor === autor);
+    if (i >= 0) {
+      const a = audiosPendientes.splice(i, 1)[0];
+      clearTimeout(a.timer);
+      guardarAudio(a, cuerpoTitulo);
+      return;
+    }
+    const t = { texto: cuerpoTitulo, ts: Date.now(), autor };
+"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks")
 # הלכות מוקצה: la carpeta "שיעורים מוקצה" que comparte Saúl aparte (31 shiurim
 # numerados al FINAL del nombre). Mismos títulos y simanim que el catálogo de la app.
 MUKZE_CARPETA = r"G:\.shortcut-targets-by-id\1OcakbiF7zD5biDpWYElkB-DoIlidbTlT\שיעורים מוקצה"
@@ -612,6 +651,11 @@ def parchar_robot():
     for i, h in enumerate(HUNKS):
         viejo, nuevo, todos = h[0], h[1], len(h) > 2
         if nuevo in plano and (todos and viejo not in plano or not todos):
+            aplicados += 1
+            continue
+        # ya aplicado y luego retocado por un parche posterior (su "viejo" vive dentro
+        # de este "nuevo" y su "nuevo" ya está): no se vuelve a meter
+        if any(h2[0] in nuevo and h2[1] in plano for h2 in HUNKS[i + 1:]):
             aplicados += 1
             continue
         if todos and viejo in plano:
@@ -1354,6 +1398,51 @@ def curso():
     if len(eps) > cuantos:
         print(f"   → el próximo ANUNCIAR manda: {eps[cuantos][2][:70]}")
     print("   → reinicia el robot para que tome el config nuevo")
+
+
+# ── 31. --retitular=show:texto_viejo|titulo_nuevo: renombrar un episodio del feed ─
+#   Cambia <title> y <description> del primer episodio cuyo título contenga el
+#   texto viejo. Sirve cuando un audio se publicó con el título por defecto.
+def retitular():
+    arg = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--retitular=")), "").strip().strip('"')
+    if not arg or ":" not in arg or "|" not in arg:
+        return
+    show, resto = arg.split(":", 1)
+    viejo, nuevo = [x.strip() for x in resto.split("|", 1)]
+    paso(31, f"{show}: retitular '{viejo[:40]}' → '{nuevo[:60]}'")
+    d = BASE / show
+    c = json.loads((d / "config.json").read_text(encoding="utf-8")) if (d / "config.json").exists() else {}
+    tok = next((p for p in (d / "github_token.txt", BASE / "nacach" / "github_token.txt", BASE / "jabura" / "github_token.txt") if p.exists()), None)
+    if not tok:
+        aviso("falta github_token.txt")
+        return
+    cab = {"Authorization": "token " + tok.read_text(encoding="utf-8").strip(),
+           "User-Agent": "instalar-otzar", "Accept": "application/vnd.github+json"}
+    base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}"
+    try:
+        j = _gh_get(base, cab, "feed.xml")
+    except Exception as e:                                  # noqa: BLE001
+        aviso(f"no pude leer el feed: {e}")
+        return
+    feed = base64.b64decode(j["content"]).decode("utf-8")
+    from xml.sax.saxutils import escape, unescape
+    hecho = [False]
+    def cambiar(m):
+        it = m.group(0)
+        t = re.search(r"<title>(.*?)</title>", it, re.S)
+        if hecho[0] or not t or viejo.lower() not in unescape(t.group(1)).lower():
+            return it
+        hecho[0] = True
+        it = it.replace(t.group(0), f"<title>{escape(nuevo)}</title>", 1)
+        it = re.sub(r"<description>.*?</description>", f"<description>{escape(nuevo)}</description>", it, count=1, flags=re.S)
+        return it
+    nuevo_feed = re.sub(r"<item>[\s\S]*?</item>", cambiar, feed)
+    if not hecho[0]:
+        aviso("no encontré un episodio con ese texto en el título")
+        return
+    if not VER:
+        _gh_put(base, cab, "feed.xml", nuevo_feed.encode("utf-8"), f"retitular: {nuevo[:50]}", j["sha"])
+    ok("feed actualizado; Spotify toma el título nuevo al leer el feed y el robot lo anuncia con ese nombre")
 
 
 # ── 28. --listar=RUTA: ver qué hay en una carpeta (subcarpetas y archivos) ──────
@@ -2384,6 +2473,7 @@ def main():
     mismo_podcast()
     mukze()
     curso()
+    retitular()
     listar()
     shows_whatsapp_al_dia()
     ofir_grupo()

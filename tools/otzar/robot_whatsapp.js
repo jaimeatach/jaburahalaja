@@ -109,6 +109,12 @@ function limpiarTitulo(t) {
   let s = (t || '').replace(/[\\/:*?"<>|\r\n\t]/g, ' ').replace(/\s+/g, ' ').trim();
   return s.length > 140 ? s.slice(0, 140).trim() : s;
 }
+// El rab a veces pega un link (soundcloud, drive) junto al titulo: fuera el link,
+// el resto es el titulo. Si no queda nada, no era titulo.
+function sinLinks(t) {
+  return String(t || '').replace(/https?:\/\/\S+/gi, ' ').replace(/\bwww\.\S+/gi, ' ')
+    .replace(/[ \t]+/g, ' ').replace(/\s*\n\s*/g, '\n').trim();
+}
 function esTituloValido(t) {
   if (!t) return false;
   const s = t.trim();
@@ -780,7 +786,7 @@ async function procesarMensaje(m) {
     } catch (e) { log('aviso: no pude respaldar el audio en disco (' + (e.message || e) + ')'); }
 
     // si el archivo vino CON texto adjunto, ese texto es el titulo (sin esperar)
-    const captura = textoDe(m);
+    const captura = sinLinks(textoDe(m));
     if (captura && esTituloValido(captura)) { guardarAudio(item, captura); return; }
 
     const i = titulosPendientes.findIndex(t =>
@@ -797,15 +803,16 @@ async function procesarMensaje(m) {
   }
 
   // ---- TEXTO (posible titulo) ----
-  if (cuerpo && esTituloValido(cuerpo)) {
+  const cuerpoTitulo = sinLinks(cuerpo);
+  if (cuerpoTitulo && esTituloValido(cuerpoTitulo)) {
     const i = audiosPendientes.findIndex(a => a.autor === autor);
     if (i >= 0) {
       const a = audiosPendientes.splice(i, 1)[0];
       clearTimeout(a.timer);
-      guardarAudio(a, cuerpo);
+      guardarAudio(a, cuerpoTitulo);
       return;
     }
-    const t = { texto: cuerpo, ts: Date.now(), autor };
+    const t = { texto: cuerpoTitulo, ts: Date.now(), autor };
     titulosPendientes.push(t);
     setTimeout(() => {
       const j = titulosPendientes.indexOf(t);
