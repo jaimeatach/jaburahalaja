@@ -531,7 +531,8 @@ NOMBRES_FUENTE = {"tefila": "Clases Tefila Habitat", "jabura": "Mekorot", "nacac
 # shows que toman audios de un grupo (por nombre) aunque el config solo tuviera chat directo
 FUENTES_NUEVAS = {"nacach": "Shiurim jajam ezra nacach"}
 # nombre del Rab al frente del titulo (va a grupos generales)
-PREFIJOS = {"tefila": "Rab Tofi Cherem ·", "nacach": "Rab Ezra Nacach ·", "efshar": "Rab Igal Snertz ·", "credi": "David Credi ·"}
+PREFIJOS = {"tefila": "Rab Tofi Cherem ·", "nacach": "Rab Ezra Nacach ·", "efshar": "Rab Igal Snertz ·", "credi": "David Credi ·",
+            "hilu": "Rab Joshua Hilu ·"}
 # shows que NO van a cierto grupo general (vacío: todos van al 6 y al 3)
 SIN_GRUPO = {}
 TITULOS_DEFECTO = {"tefila": "Clase de Tefilá · Rab Tofi Cherem", "hilu": "Shiur · Rab Joshua Hilu", "nacach": "Shiur · Rab Ezra Nacach",
@@ -1843,7 +1844,7 @@ def spotify_redirigido():
             an["link_audio"] = not tiene
             cambio = True
         if tiene:
-            ok(f"{show}: link EXACTO del episodio en Spotify")
+            ok(f"{show}: link EXACTO del episodio en Spotify, sin link al audio")
         else:
             print(f"   · {show}: link del show en Spotify + audio directo (el show aún no lee "
                   f"https://rabmeireliyahu.github.io/{show}/feed.xml)")
