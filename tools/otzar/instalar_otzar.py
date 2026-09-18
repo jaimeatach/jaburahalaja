@@ -571,7 +571,7 @@ NOMBRES_FUENTE = {"tefila": "Clases Tefila Habitat", "jabura": "Mekorot", "nacac
 FUENTES_NUEVAS = {"nacach": "Shiurim jajam ezra nacach"}
 # nombre del Rab al frente del titulo (va a grupos generales)
 PREFIJOS = {"tefila": "Rab Tofi Cherem ·", "nacach": "Rab Ezra Nacach ·", "efshar": "Rab Igal Snertz ·", "credi": "David Credi ·",
-            "hilu": "Rab Joshua Hilu ·"}
+            "hilu": "Rab Joshua Hilu ·", "ofirmalka": "הרב אופיר מלכא ·"}
 # shows que NO van a cierto grupo general (vacío: todos van al 6 y al 3)
 SIN_GRUPO = {}
 TITULOS_DEFECTO = {"tefila": "Clase de Tefilá · Rab Tofi Cherem", "hilu": "Shiur · Rab Joshua Hilu", "nacach": "Shiur · Rab Ezra Nacach",
@@ -900,7 +900,7 @@ def nacach_anuncio():
         an["spotify"] = spot
     tiene = str(an.get("spotify", "")).startswith("http")
     an.update({"sin_audio": True, "sin_whatsapp": True, "max_anuncios": 4, "en_orden": True,
-               "sin_spotify": not tiene, "link_audio": not tiene, "pausado": False})
+               "sin_spotify": not tiene, "link_audio": False, "pausado": False})
     an["_nota"] = ("Solo título + link, sin audio adjunto. Con link del show en spotify va el episodio exacto; "
                    "mientras, va el link directo al mp3 (link_audio).")
     if json.dumps(an, sort_keys=True) != antes:
@@ -1139,7 +1139,7 @@ def show_nuevo():
     for k, v in {"idioma": "es", "max_anuncios": 2, "en_orden": True, "sin_audio": True, "sin_whatsapp": True, "solo_ultimos": 2}.items():
         an.setdefault(k, v)
     an["sin_spotify"] = not tiene
-    an["link_audio"] = not tiene
+    an["link_audio"] = False          # nunca link al audio: título + Spotify + WhatsApp
     an["pausado"] = not bool(an.get("invite"))
     if json.dumps(cfg, sort_keys=True) != antes:
         respaldar(rw)
@@ -1928,15 +1928,23 @@ def spotify_redirigido():
             an["redirigido"] = True
             cambio = True
         tiene = str(an.get("spotify", "")).startswith("http") and bool(an.get("redirigido"))
-        if an.get("sin_spotify") != (not tiene) or an.get("link_audio") != (not tiene):
+        if an.get("sin_spotify") != (not tiene) or an.get("link_audio"):
             an["sin_spotify"] = not tiene
-            an["link_audio"] = not tiene
+            an["link_audio"] = False
             cambio = True
         if tiene:
-            ok(f"{show}: link EXACTO del episodio en Spotify, sin link al audio")
+            ok(f"{show}: link EXACTO del episodio en Spotify")
         else:
-            print(f"   · {show}: link del show en Spotify + audio directo (el show aún no lee "
+            print(f"   · {show}: link del SHOW en Spotify (aún no lee "
                   f"https://rabmeireliyahu.github.io/{show}/feed.xml)")
+    quitados = []
+    for show, an in (cfg.get("anunciar") or {}).items():
+        if isinstance(an, dict) and an.get("link_audio"):
+            an["link_audio"] = False
+            cambio = True
+            quitados.append(show)
+    if quitados:
+        ok("sin link al audio en: " + ", ".join(quitados) + " (solo título, Spotify y WhatsApp)")
     if cambio:
         respaldar(rw)
         escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
@@ -2244,7 +2252,7 @@ def tefila():
             an["spotify"] = spot
         tiene_spotify = str(an.get("spotify", "")).startswith("http") and bool(an.get("redirigido"))
         an["sin_spotify"] = not tiene_spotify
-        an["link_audio"] = not tiene_spotify
+        an["link_audio"] = False
         tiene_grupos = bool(an.get("invite"))
         an["pausado"] = not tiene_grupos
         an["_nota"] = ("Titulo + link (sin audio) a los grupos generales. Sin show en Spotify va el link directo al mp3; "
