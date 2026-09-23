@@ -336,7 +336,7 @@
  const MB_COMO_AUDIO = 16;
  const MB_MAXIMO = 100;
  const CARPETA_TEMP = path.join(__dirname, 'audio_temp');
-@@ -1240,9 +1381,17 @@
+@@ -1240,9 +1381,28 @@
    return DIFUNDE[i] ? i : 'he';
  }
  
@@ -349,6 +349,17 @@
 +  const d = (CFG.anunciar || {})[show] || {};
 +  return (d.feed && String(d.feed).startsWith('http')) ? d.feed : `https://rabmeireliyahu.github.io/${show}/feed.xml`;
 +}
++// "prefijo_anuncio" / "sufijo_anuncio" en anunciar -> <show>: el nombre del Rab
++// en el mensaje (p. ej. "Titulo · Rab Igal Snertz") cuando el feed no lo trae.
++// Solo cambia el texto del anuncio; el link exacto se busca con el titulo original.
++function tituloAnuncio(show, tit) {
++  const d = (CFG.anunciar || {})[show] || {};
++  let t = String(tit || '');
++  const limpio = x => String(x || '').replace(/[·:\-–]+$|^[·:\-–]+/g, '').trim().toLowerCase();
++  if (d.prefijo_anuncio && !t.toLowerCase().includes(limpio(d.prefijo_anuncio))) t = String(d.prefijo_anuncio).trim() + ' ' + t;
++  if (d.sufijo_anuncio && !t.toLowerCase().includes(limpio(d.sufijo_anuncio))) t = t + ' ' + String(d.sufijo_anuncio).trim();
++  return t;
++}
 +function armarMensaje(titulo, spotify, whatsapp, show, app) {
 +  // "app": link directo al shiur en la app del show (viene del <link> del feed)
 +  let t = app ? `🎧 *${titulo}*` : `*${titulo}*`;
@@ -357,7 +368,7 @@
    if (whatsapp) t += `\nWhatsapp\n${whatsapp}`;
    if (show) t += `\n\n${DIFUNDE[idiomaDeShow(show)]}`;
    return t;
-@@ -1294,7 +1443,7 @@
+@@ -1294,7 +1454,7 @@
    if (!datos) { log(`PRUEBA: no existe el show "${show}" en el config`); return; }
    if (!reg[show]) { log(`PRUEBA: el show "${show}" no tiene grupo registrado`); return; }
    let xml;
@@ -366,7 +377,7 @@
    catch (e) { log(`PRUEBA: no pude leer el feed de ${show}`); return; }
    // agarrar el item MAS NUEVO por fecha (lo nuevo a veces cae hasta abajo del feed)
    const items = xml.match(/<item>[\s\S]*?<\/item>/g) || [];
-@@ -1336,7 +1485,7 @@
+@@ -1336,7 +1496,7 @@
    log(`PRUEBA enviada a "${reg[show].nombre}" (id de mensaje: ${(enviado && enviado.key && enviado.key.id) || '?'}): ${tit}`);
    const audioUrl = (it.match(/<enclosure[^>]*url\s*=\s*"([^"]+)"/) || [])[1] || '';
    const audioPeso = parseInt((it.match(/<enclosure[^>]*length\s*=\s*"(\d+)"/) || [])[1] || '0', 10);
@@ -375,7 +386,7 @@
    else await mandarAudio(reg[show].id, audioUrl, tit, audioPeso);
  }
  
-@@ -1403,7 +1552,7 @@
+@@ -1403,7 +1563,7 @@
      if (!reg[show]) continue;
  
      let xml;
@@ -384,7 +395,7 @@
      catch (e) { log(`${show}: no pude leer el feed`); continue; }
  
      const items = xml.match(/<item>[\s\S]*?<\/item>/g) || [];
-@@ -1446,7 +1595,8 @@
+@@ -1446,7 +1606,8 @@
      // config del show. Entonces se anuncia del MAS VIEJO al mas nuevo.
      const enOrden = !!((CFG.anunciar && CFG.anunciar[show] || {}).en_orden);
      let nuevos = items
@@ -394,7 +405,16 @@
        .filter(ep => !vistos.has(ep.guid))
        .sort((a, b) => enOrden ? (a.fecha - b.fecha) : (b.fecha - a.fecha));
  
-@@ -1538,7 +1688,7 @@
+@@ -1528,7 +1689,7 @@
+         continue;
+       }
+ 
+-      let texto = listos.map(x => `*${x.ep.tit}*\n${x.epLink}`).join('\n\n');
++      let texto = listos.map(x => `*${tituloAnuncio(show, x.ep.tit)}*\n${x.epLink}`).join('\n\n');
+       if (wa) texto += `\n\nWhatsapp\n${wa}`;
+       texto += `\n\n${DIFUNDE[idiomaDeShow(show)]}`;
+ 
+@@ -1538,7 +1699,7 @@
          log(`ANUNCIADOS JUNTOS en "${g.nombre}": ${listos.length} shiurim`);
          await new Promise(r => setTimeout(r, 1500));
        }
@@ -403,7 +423,7 @@
        else for (const x of listos) {
          await mandarAudioAVarios(grupos, x.ep.audio, x.ep.tit, x.ep.peso);
          await new Promise(r => setTimeout(r, 3000));
-@@ -1568,9 +1718,15 @@
+@@ -1568,9 +1729,15 @@
  
        if (!epLink && sinSpot) {
          if (yaAnunciado(show, ep.guid)) { log(`${show}: "${ep.tit.slice(0,40)}" ya se anuncio; lo salto.`); continue; }
@@ -413,7 +433,7 @@
 +        // "app": link directo al shiur en la app (el <link> del feed, o el de la app);
 +        // "sin_whatsapp": no repetir el link del grupo cuando se anuncia en el mismo grupo
 +        const appLink = datos.app ? (ep.link || datos.app) : '';
-+        let texto = appLink ? `🎧 *${ep.tit}*` : `*${ep.tit}*`;
++        let texto = appLink ? `🎧 *${tituloAnuncio(show, ep.tit)}*` : `*${tituloAnuncio(show, ep.tit)}*`;
 +        if (appLink) texto += `\n📲 App\n${appLink}`;
 +        if (spotShow) texto += appLink ? `\n🎵 Spotify\n${spotShow}` : `\n${spotShow}`;
 +        // "link_audio": el link directo al mp3 (archive.org) mientras no haya Spotify
@@ -422,7 +442,7 @@
          texto += `\n\n${DIFUNDE[idiomaDeShow(show)]}`;
          const grupos = gruposDeShow(reg, show);
          for (const g of grupos) {
-@@ -1578,7 +1734,7 @@
+@@ -1578,7 +1745,7 @@
            log(`ANUNCIADO en "${g.nombre}": ${ep.tit}   (link del show, no del episodio)`);
            await new Promise(r => setTimeout(r, 1500));
          }
@@ -431,16 +451,16 @@
          else await mandarAudioAVarios(grupos, ep.audio, ep.tit, ep.peso);
          marcarAnunciado(show, ep.guid);
          estado[show].push(ep.guid);
-@@ -1597,7 +1753,7 @@
+@@ -1597,7 +1764,7 @@
          log(`   (lo mas parecido que tiene Spotify: ${diag.masParecidos.join('  |  ')})`);
          continue; // NO se marca: el proximo ANUNCIAR lo reintenta
        }
 -      const texto = armarMensaje(ep.tit, epLink, wa, show);
-+      const texto = armarMensaje(ep.tit, epLink, wa, show, datos.app ? (ep.link || datos.app) : '');
++      const texto = armarMensaje(tituloAnuncio(show, ep.tit), epLink, wa, show, datos.app ? (ep.link || datos.app) : '');
        // ultima revision antes de mandar: si otra corrida ya lo anuncio, lo salto
        if (yaAnunciado(show, ep.guid)) { log(`${show}: "${ep.tit.slice(0,40)}" ya se anuncio; lo salto.`); continue; }
        const grupos = gruposDeShow(reg, show);
-@@ -1606,7 +1762,7 @@
+@@ -1606,7 +1773,7 @@
          log(`ANUNCIADO en "${g.nombre}": ${ep.tit}`);
          await new Promise(r => setTimeout(r, 1500));
        }

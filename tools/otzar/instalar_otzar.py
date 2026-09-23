@@ -519,11 +519,35 @@ function esTituloValido(t) {
     }
     const t = { texto: cuerpoTitulo, ts: Date.now(), autor };
 """),
+    # nombre del Rab en el mensaje del anuncio (prefijo_anuncio / sufijo_anuncio)
+    ("""function armarMensaje(titulo, spotify, whatsapp, show, app) {
+""", """// "prefijo_anuncio" / "sufijo_anuncio" en anunciar -> <show>: el nombre del Rab
+// en el mensaje (p. ej. "Titulo · Rab Igal Snertz") cuando el feed no lo trae.
+// Solo cambia el texto del anuncio; el link exacto se busca con el titulo original.
+function tituloAnuncio(show, tit) {
+  const d = (CFG.anunciar || {})[show] || {};
+  let t = String(tit || '');
+  const limpio = x => String(x || '').replace(/[·:\\-–]+$|^[·:\\-–]+/g, '').trim().toLowerCase();
+  if (d.prefijo_anuncio && !t.toLowerCase().includes(limpio(d.prefijo_anuncio))) t = String(d.prefijo_anuncio).trim() + ' ' + t;
+  if (d.sufijo_anuncio && !t.toLowerCase().includes(limpio(d.sufijo_anuncio))) t = t + ' ' + String(d.sufijo_anuncio).trim();
+  return t;
+}
+function armarMensaje(titulo, spotify, whatsapp, show, app) {
+"""),
+    ("""      let texto = listos.map(x => `*${x.ep.tit}*\\n${x.epLink}`).join('\\n\\n');
+""", """      let texto = listos.map(x => `*${tituloAnuncio(show, x.ep.tit)}*\\n${x.epLink}`).join('\\n\\n');
+"""),
+    ("""        let texto = appLink ? `🎧 *${ep.tit}*` : `*${ep.tit}*`;
+""", """        let texto = appLink ? `🎧 *${tituloAnuncio(show, ep.tit)}*` : `*${tituloAnuncio(show, ep.tit)}*`;
+"""),
+    ("""      const texto = armarMensaje(ep.tit, epLink, wa, show, datos.app ? (ep.link || datos.app) : '');
+""", """      const texto = armarMensaje(tituloAnuncio(show, ep.tit), epLink, wa, show, datos.app ? (ep.link || datos.app) : '');
+"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio")
 # הלכות מוקצה: la carpeta "שיעורים מוקצה" que comparte Saúl aparte (31 shiurim
 # numerados al FINAL del nombre). Mismos títulos y simanim que el catálogo de la app.
 MUKZE_CARPETA = r"G:\.shortcut-targets-by-id\1OcakbiF7zD5biDpWYElkB-DoIlidbTlT\שיעורים מוקצה"
@@ -569,6 +593,8 @@ GRUPOS_NOMBRE = {"https://chat.whatsapp.com/5xGJ6YLeGT97rL94uJnPyZo": "3 Solo Sh
 NOMBRES_FUENTE = {"tefila": "Clases Tefila Habitat", "jabura": "Mekorot", "nacach": "Shiurim jajam ezra nacach", "credi": "Halajot Generales"}
 # shows que toman audios de un grupo (por nombre) aunque el config solo tuviera chat directo
 FUENTES_NUEVAS = {"nacach": "Shiurim jajam ezra nacach"}
+# nombre del Rab en el MENSAJE del anuncio, para shows cuyo feed no lo trae (van a grupos generales)
+SUFIJOS_ANUNCIO = {"efshar": "· Rab Igal Snertz"}
 # nombre del Rab al frente del titulo (va a grupos generales)
 PREFIJOS = {"tefila": "Rab Tofi Cherem ·", "nacach": "Rab Ezra Nacach ·", "efshar": "Rab Igal Snertz ·", "credi": "David Credi ·",
             "hilu": "Rab Joshua Hilu ·", "ofirmalka": "הרב אופיר מלכא ·"}
@@ -1809,8 +1835,14 @@ def titulos_defecto():
                 puesto = True
         if puesto:
             ok(f"{show}: los títulos llevan \"{pref}\" al frente")
-        elif not entradas(show):
+        elif not entradas(show) and show not in SUFIJOS_ANUNCIO:
             aviso(f"{show}: no está en escuchar ni en escuchar_directo del robot; no sé de dónde toma audios")
+    for show, suf in SUFIJOS_ANUNCIO.items():
+        an = (cfg.get("anunciar") or {}).get(show)
+        if isinstance(an, dict) and an.get("sufijo_anuncio") != suf:
+            an["sufijo_anuncio"] = suf
+            cambio = True
+            ok(f"{show}: el anuncio dice el título y luego \"{suf}\"")
     if cambio:
         respaldar(rw)
         escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")

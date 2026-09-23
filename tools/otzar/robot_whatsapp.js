@@ -1387,6 +1387,17 @@ function feedDeShow(show) {
   const d = (CFG.anunciar || {})[show] || {};
   return (d.feed && String(d.feed).startsWith('http')) ? d.feed : `https://rabmeireliyahu.github.io/${show}/feed.xml`;
 }
+// "prefijo_anuncio" / "sufijo_anuncio" en anunciar -> <show>: el nombre del Rab
+// en el mensaje (p. ej. "Titulo · Rab Igal Snertz") cuando el feed no lo trae.
+// Solo cambia el texto del anuncio; el link exacto se busca con el titulo original.
+function tituloAnuncio(show, tit) {
+  const d = (CFG.anunciar || {})[show] || {};
+  let t = String(tit || '');
+  const limpio = x => String(x || '').replace(/[·:\-–]+$|^[·:\-–]+/g, '').trim().toLowerCase();
+  if (d.prefijo_anuncio && !t.toLowerCase().includes(limpio(d.prefijo_anuncio))) t = String(d.prefijo_anuncio).trim() + ' ' + t;
+  if (d.sufijo_anuncio && !t.toLowerCase().includes(limpio(d.sufijo_anuncio))) t = t + ' ' + String(d.sufijo_anuncio).trim();
+  return t;
+}
 function armarMensaje(titulo, spotify, whatsapp, show, app) {
   // "app": link directo al shiur en la app del show (viene del <link> del feed)
   let t = app ? `🎧 *${titulo}*` : `*${titulo}*`;
@@ -1678,7 +1689,7 @@ async function anunciarInterno(esVigilante) {
         continue;
       }
 
-      let texto = listos.map(x => `*${x.ep.tit}*\n${x.epLink}`).join('\n\n');
+      let texto = listos.map(x => `*${tituloAnuncio(show, x.ep.tit)}*\n${x.epLink}`).join('\n\n');
       if (wa) texto += `\n\nWhatsapp\n${wa}`;
       texto += `\n\n${DIFUNDE[idiomaDeShow(show)]}`;
 
@@ -1721,7 +1732,7 @@ async function anunciarInterno(esVigilante) {
         // "app": link directo al shiur en la app (el <link> del feed, o el de la app);
         // "sin_whatsapp": no repetir el link del grupo cuando se anuncia en el mismo grupo
         const appLink = datos.app ? (ep.link || datos.app) : '';
-        let texto = appLink ? `🎧 *${ep.tit}*` : `*${ep.tit}*`;
+        let texto = appLink ? `🎧 *${tituloAnuncio(show, ep.tit)}*` : `*${tituloAnuncio(show, ep.tit)}*`;
         if (appLink) texto += `\n📲 App\n${appLink}`;
         if (spotShow) texto += appLink ? `\n🎵 Spotify\n${spotShow}` : `\n${spotShow}`;
         // "link_audio": el link directo al mp3 (archive.org) mientras no haya Spotify
@@ -1753,7 +1764,7 @@ async function anunciarInterno(esVigilante) {
         log(`   (lo mas parecido que tiene Spotify: ${diag.masParecidos.join('  |  ')})`);
         continue; // NO se marca: el proximo ANUNCIAR lo reintenta
       }
-      const texto = armarMensaje(ep.tit, epLink, wa, show, datos.app ? (ep.link || datos.app) : '');
+      const texto = armarMensaje(tituloAnuncio(show, ep.tit), epLink, wa, show, datos.app ? (ep.link || datos.app) : '');
       // ultima revision antes de mandar: si otra corrida ya lo anuncio, lo salto
       if (yaAnunciado(show, ep.guid)) { log(`${show}: "${ep.tit.slice(0,40)}" ya se anuncio; lo salto.`); continue; }
       const grupos = gruposDeShow(reg, show);
