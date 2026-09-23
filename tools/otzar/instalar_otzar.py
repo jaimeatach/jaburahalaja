@@ -594,7 +594,7 @@ NOMBRES_FUENTE = {"tefila": "Clases Tefila Habitat", "jabura": "Mekorot", "nacac
 # shows que toman audios de un grupo (por nombre) aunque el config solo tuviera chat directo
 FUENTES_NUEVAS = {"nacach": "Shiurim jajam ezra nacach"}
 # nombre del Rab en el MENSAJE del anuncio, para shows cuyo feed no lo trae (van a grupos generales)
-SUFIJOS_ANUNCIO = {"efshar": "· Rab Igal Snertz"}
+SUFIJOS_ANUNCIO = {"efshar": "· Rab Igal Snertz", "mishlei": "· Rab Igal Snertz"}
 # nombre del Rab al frente del titulo (va a grupos generales)
 PREFIJOS = {"tefila": "Rab Tofi Cherem ·", "nacach": "Rab Ezra Nacach ·", "efshar": "Rab Igal Snertz ·", "credi": "David Credi ·",
             "hilu": "Rab Joshua Hilu ·", "ofirmalka": "הרב אופיר מלכא ·"}
