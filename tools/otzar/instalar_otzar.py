@@ -1471,6 +1471,39 @@ def retitular():
     ok("feed actualizado; Spotify toma el título nuevo al leer el feed y el robot lo anuncia con ese nombre")
 
 
+# ── 32. --shows: qué shows hay en C:\OTZAR, a qué Spotify van y cómo reciben audios ─
+def shows():
+    if "--shows" not in sys.argv:
+        return
+    paso(32, f"Shows en {BASE}")
+    rw = (ROBOT or BASE) / "config_whatsapp.json"
+    try:
+        cfgw = json.loads(rw.read_text(encoding="utf-8"))
+    except Exception:
+        cfgw = {}
+    for d in sorted(BASE.iterdir()):
+        cfgp = d / "config.json"
+        if not (d.is_dir() and cfgp.exists()):
+            continue
+        try:
+            c = json.loads(cfgp.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        an = (cfgw.get("anunciar") or {}).get(d.name) or {}
+        spot = an.get("spotify") if str(an.get("spotify", "")).startswith("http") else (c.get("spotify") or "(sin link en el robot)")
+        modo = "WhatsApp → " + str(c.get("carpeta_whatsapp") or (d / "audios_whatsapp")) if c.get("modo_whatsapp") else \
+            ("RSS de otro lado" if c.get("rss_original") and not c.get("modo_whatsapp") else "carpeta local / manual")
+        try:
+            n_eps = len(list((d / "episodios").glob("*.mp3")))
+        except Exception:
+            n_eps = 0
+        print(f"   · {d.name}: '{c.get('titulo', '?')}'")
+        print(f"       Spotify: {spot}")
+        print(f"       entrada: {modo} · episodios locales: {n_eps}" + (" · PAUSADO" if c.get("pausado") or (d / "PAUSADO.txt").exists() else ""))
+    print("   → para publicar audios sueltos en un show: cópialos a su carpeta de WhatsApp con el título como nombre")
+    print("     (p. ej. 'Sucot · Rab Fulano.mp3') y aprieta ANUNCIAR")
+
+
 # ── 28. --listar=RUTA: ver qué hay en una carpeta (subcarpetas y archivos) ──────
 def listar():
     ruta = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--listar=")), "").strip().strip('"')
@@ -2514,6 +2547,7 @@ def main():
     mukze()
     curso()
     retitular()
+    shows()
     listar()
     shows_whatsapp_al_dia()
     ofir_grupo()
