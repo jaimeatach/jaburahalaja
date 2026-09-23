@@ -183,7 +183,13 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    del grupo) + los generales, sin audio. Así entraron hilu y credi (David
    Credi, "Halajot Generales"). El nombre del Rab al frente del título va en
    `PREFIJOS`; el título por defecto en `TITULOS_DEFECTO`; `SHOWS_REDIRECT`
-   lista los que esperan el redirect.
+   lista los que esperan el redirect. Shows sin fuente de WhatsApp (efshar,
+   mishlei) llevan el nombre en el MENSAJE (`SUFIJOS_ANUNCIO` →
+   `sufijo_anuncio`, `tituloAnuncio()` en el robot). `REGLAS_TITULO`
+   (`quitar_lineas`, `unir_lineas`, `sufijo_titulo` en `escuchar.<show>`)
+   arma el título al guardar: Isaac Credi manda "1151 Siman 639" + tema en
+   1-2 líneas y sale "tema1, tema2 - Sr. Isaac Credi". Nunca se manda el
+   link al mp3 (`link_audio` siempre False).
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre

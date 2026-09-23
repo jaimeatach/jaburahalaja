@@ -543,11 +543,39 @@ function armarMensaje(titulo, spotify, whatsapp, show, app) {
     ("""      const texto = armarMensaje(ep.tit, epLink, wa, show, datos.app ? (ep.link || datos.app) : '');
 """, """      const texto = armarMensaje(tituloAnuncio(show, ep.tit), epLink, wa, show, datos.app ? (ep.link || datos.app) : '');
 """),
+    # reglas de titulo por show: quitar lineas, unir lineas, sufijo (Isaac Credi)
+    ("""  const _porDefecto = ((CFG.escuchar || {})[item.show] || {}).titulo_defecto ||
+    (((CFG.escuchar_directo || []).find(e => e && e.show === item.show) || {}).titulo_defecto);
+  let base = limpiarTitulo(titulo) ||
+""", """  const _porDefecto = ((CFG.escuchar || {})[item.show] || {}).titulo_defecto ||
+    (((CFG.escuchar_directo || []).find(e => e && e.show === item.show) || {}).titulo_defecto);
+  // === REGLAS DE TITULO por show (sep/2026), en escuchar -> <show>:
+  //   "quitar_lineas": regex; las lineas del mensaje que casan se tiran
+  //                    (p. ej. "1151 Siman 639" al frente de cada halaja)
+  //   "unir_lineas":   con que se unen las lineas que quedan (", ")
+  //   "sufijo_titulo": lo que va al final ("- Sr. Isaac Credi"), si no lo trae ya
+  const _regla = ((CFG.escuchar || {})[item.show] || {});
+  const _reglaDm = ((CFG.escuchar_directo || []).find(e => e && e.show === item.show) || {});
+  const _r = k => _regla[k] || _reglaDm[k];
+  if (titulo && (_r('quitar_lineas') || _r('unir_lineas'))) {
+    let lineas = String(titulo).split(/\\r?\\n/).map(l => l.trim()).filter(Boolean);
+    if (_r('quitar_lineas')) {
+      try { const re = new RegExp(_r('quitar_lineas'), 'i'); const q = lineas.filter(l => !re.test(l)); if (q.length) lineas = q; } catch (e) {}
+    }
+    titulo = lineas.join(_r('unir_lineas') || ' ');
+  }
+  let base = limpiarTitulo(titulo) ||
+"""),
+    ("""  if (_pref && !base.toLowerCase().includes(_pref.replace(/[·:\\-–]+$/, '').trim().toLowerCase())) base = _pref + ' ' + base;
+""", """  if (_pref && !base.toLowerCase().includes(_pref.replace(/[·:\\-–]+$/, '').trim().toLowerCase())) base = _pref + ' ' + base;
+  const _suf = String(_r('sufijo_titulo') || '').trim();
+  if (_suf && !base.toLowerCase().includes(_suf.replace(/^[·:\\-–]+/, '').trim().toLowerCase())) base = base + ' ' + _suf;
+"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas")
 # הלכות מוקצה: la carpeta "שיעורים מוקצה" que comparte Saúl aparte (31 shiurim
 # numerados al FINAL del nombre). Mismos títulos y simanim que el catálogo de la app.
 MUKZE_CARPETA = r"G:\.shortcut-targets-by-id\1OcakbiF7zD5biDpWYElkB-DoIlidbTlT\שיעורים מוקצה"
@@ -595,13 +623,18 @@ NOMBRES_FUENTE = {"tefila": "Clases Tefila Habitat", "jabura": "Mekorot", "nacac
 FUENTES_NUEVAS = {"nacach": "Shiurim jajam ezra nacach"}
 # nombre del Rab en el MENSAJE del anuncio, para shows cuyo feed no lo trae (van a grupos generales)
 SUFIJOS_ANUNCIO = {"efshar": "· Rab Igal Snertz", "mishlei": "· Rab Igal Snertz"}
+# reglas de título al guardar (escuchar.<show>): Isaac Credi manda "1151 Siman 639" en la
+# primera línea y luego el tema en 1-2 líneas; sale "tema1, tema2 - Sr. Isaac Credi"
+REGLAS_TITULO = {"isaaccredi": {"quitar_lineas": r"^\s*\d+\s*(siman|סימן|halaja|halajot)?\s*\d*\s*$",
+                               "unir_lineas": ", ", "sufijo_titulo": "- Sr. Isaac Credi"}}
 # nombre del Rab al frente del titulo (va a grupos generales)
 PREFIJOS = {"tefila": "Rab Tofi Cherem ·", "nacach": "Rab Ezra Nacach ·", "efshar": "Rab Igal Snertz ·", "credi": "David Credi ·",
             "hilu": "Rab Joshua Hilu ·", "ofirmalka": "הרב אופיר מלכא ·"}
 # shows que NO van a cierto grupo general (vacío: todos van al 6 y al 3)
 SIN_GRUPO = {}
 TITULOS_DEFECTO = {"tefila": "Clase de Tefilá · Rab Tofi Cherem", "hilu": "Shiur · Rab Joshua Hilu", "nacach": "Shiur · Rab Ezra Nacach",
-                   "efshar": "Shiur · Rab Igal Snertz", "ofirmalka": "הרב אופיר מלכא · שיעור", "credi": "Shiur · David Credi"}
+                   "efshar": "Shiur · Rab Igal Snertz", "ofirmalka": "הרב אופיר מלכא · שיעור", "credi": "Shiur · David Credi",
+                   "isaaccredi": "Halajot Yalkut Yosef - Sr. Isaac Credi"}
 FEED_JABURA = "https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/feed.xml"
 
 
@@ -948,7 +981,7 @@ def sin_atrasos_config():
     paso(16, "Sin atrasos: cada show anuncia solo sus últimos N")
     cfg = json.loads(rw.read_text(encoding="utf-8"))
     an = cfg.setdefault("anunciar", {})
-    defectos = {"nacach": 2, "peretz": 2, "ofirmalka": 2, "tefila": 2, "hilu": 2, "credi": 2, "jabura": 3}
+    defectos = {"nacach": 2, "peretz": 2, "ofirmalka": 2, "tefila": 2, "hilu": 2, "credi": 2, "isaaccredi": 2, "jabura": 3}
     cambios = 0
     for show, n in defectos.items():
         if show in an and (an[show].get("sin_filtro_fecha") or an[show].get("curso")):
@@ -1870,6 +1903,14 @@ def titulos_defecto():
             ok(f"{show}: los títulos llevan \"{pref}\" al frente")
         elif not entradas(show) and show not in SUFIJOS_ANUNCIO:
             aviso(f"{show}: no está en escuchar ni en escuchar_directo del robot; no sé de dónde toma audios")
+    for show, reglas in REGLAS_TITULO.items():
+        for esc in entradas(show):
+            for k, val in reglas.items():
+                if esc.get(k) != val:
+                    esc[k] = val
+                    cambio = True
+        if entradas(show):
+            ok(f"{show}: título = líneas del mensaje sin el número de siman, unidas con ', ' y \"{reglas.get('sufijo_titulo', '')}\" al final")
     for show, suf in SUFIJOS_ANUNCIO.items():
         an = (cfg.get("anunciar") or {}).get(show)
         if isinstance(an, dict) and an.get("sufijo_anuncio") != suf:
@@ -1976,7 +2017,7 @@ def fuentes():
 #   Mientras el show siga alojado en Spotify (sin redirect), los episodios nuevos
 #   no existen ahí y el robot se quedaría esperando el link exacto para siempre.
 #   Hasta entonces: link del show + audio directo. --redirigido=tefila,hilu lo cambia.
-SHOWS_REDIRECT = ("tefila", "hilu", "credi")
+SHOWS_REDIRECT = ("tefila", "hilu", "credi", "isaaccredi")
 def spotify_redirigido():
     rw = (ROBOT or BASE) / "config_whatsapp.json"
     if not rw.exists():

@@ -569,6 +569,21 @@ function guardarAudio(item, titulo) {
   // aparta los que empiezan con "Shiur ...").
   const _porDefecto = ((CFG.escuchar || {})[item.show] || {}).titulo_defecto ||
     (((CFG.escuchar_directo || []).find(e => e && e.show === item.show) || {}).titulo_defecto);
+  // === REGLAS DE TITULO por show (sep/2026), en escuchar -> <show>:
+  //   "quitar_lineas": regex; las lineas del mensaje que casan se tiran
+  //                    (p. ej. "1151 Siman 639" al frente de cada halaja)
+  //   "unir_lineas":   con que se unen las lineas que quedan (", ")
+  //   "sufijo_titulo": lo que va al final ("- Sr. Isaac Credi"), si no lo trae ya
+  const _regla = ((CFG.escuchar || {})[item.show] || {});
+  const _reglaDm = ((CFG.escuchar_directo || []).find(e => e && e.show === item.show) || {});
+  const _r = k => _regla[k] || _reglaDm[k];
+  if (titulo && (_r('quitar_lineas') || _r('unir_lineas'))) {
+    let lineas = String(titulo).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (_r('quitar_lineas')) {
+      try { const re = new RegExp(_r('quitar_lineas'), 'i'); const q = lineas.filter(l => !re.test(l)); if (q.length) lineas = q; } catch (e) {}
+    }
+    titulo = lineas.join(_r('unir_lineas') || ' ');
+  }
   let base = limpiarTitulo(titulo) ||
     (_porDefecto
       ? (_porDefecto + ' ' + new Date(item.ts).toLocaleDateString('es-MX').replace(/\//g, '-'))
@@ -579,6 +594,8 @@ function guardarAudio(item, titulo) {
   const _deDirecto = k => (((CFG.escuchar_directo || []).find(e => e && e.show === item.show) || {})[k]);
   const _pref = String(((CFG.escuchar || {})[item.show] || {}).prefijo_titulo || _deDirecto('prefijo_titulo') || '').trim();
   if (_pref && !base.toLowerCase().includes(_pref.replace(/[·:\-–]+$/, '').trim().toLowerCase())) base = _pref + ' ' + base;
+  const _suf = String(_r('sufijo_titulo') || '').trim();
+  if (_suf && !base.toLowerCase().includes(_suf.replace(/^[·:\-–]+/, '').trim().toLowerCase())) base = base + ' ' + _suf;
   // === JABURA (sep/2026): los shiurim van numerados para conservar el orden ===
   // La carpeta de la jabura es la misma que lee la app: cada archivo lleva el
   // numero que sigue ("5 titulo.m4a"), contando los audios que ya hay.
