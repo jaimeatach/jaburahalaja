@@ -199,6 +199,12 @@ def apartar_no_fiesta(f, palabras, shows):
         clave = _norm(tit)[:35].strip()
         for mp3 in epi.glob("*.mp3"):
             if clave and _norm(mp3.stem).startswith(clave):
+                # candado: solo lo bajado en estos dias (nunca un archivo viejo del show)
+                try:
+                    if time.time() - mp3.stat().st_mtime > 10 * 86400:
+                        continue
+                except OSError:
+                    continue
                 try:
                     mp3.unlink()
                     movidos += 1
