@@ -13,6 +13,9 @@
 #    python robot_fiestas.py probar          (fiesta mas cercana, no marca)
 #    python robot_fiestas.py roshhashana2026 (fuerza esa fiesta y marca)
 #    python robot_fiestas.py sukot2026 5     (fuerza, 5 por canal)
+#    ... --subir          NO busca: solo sube y publica lo que ya esta bajado
+#    ... --saltar=musar   se salta esos shows (coma para varios)
+#    ... --solo=golan     solo esos shows
 # ================================================================
 import json, os, re, subprocess, sys, time
 from datetime import date
@@ -26,6 +29,9 @@ DIAS_ANTES = 4
 POR_CANAL = 2
 if len(sys.argv) > 2 and sys.argv[2].isdigit():
     POR_CANAL = max(1, int(sys.argv[2]))
+SOLO_SUBIR = "--subir" in sys.argv
+SALTAR = [x.strip().lower() for a in sys.argv if a.startswith("--saltar=") for x in a.split("=", 1)[1].split(",") if x.strip()]
+SOLO = [x.strip().lower() for a in sys.argv if a.startswith("--solo=") for x in a.split("=", 1)[1].split(",") if x.strip()]
 CANDIDATOS = max(6, POR_CANAL * 2)
 MIN_SEG = 600
 YT_CLIENT = ["--extractor-args", "youtube:player_client=web_embedded"]
@@ -305,10 +311,18 @@ def main():
         if not canales: continue
         shows.append((carpeta, cfg, canales))
 
+    if SOLO:
+        shows = [x for x in shows if x[0].name.lower() in SOLO]
+    if SALTAR:
+        log("Me salto: %s" % ", ".join(SALTAR))
     log("Shows a revisar: %d" % len(shows))
     apartar_no_fiesta(f, todas, shows)
     con_nuevos = []
+    if SOLO_SUBIR:
+        log("--subir: no busco nada nuevo, solo subo y publico lo que ya esta bajado.")
     for carpeta, cfg, canales in shows:
+        if SOLO_SUBIR or carpeta.name.lower() in SALTAR:
+            continue
         idioma = (cfg.get("idioma") or "he")[:2]
         # primero los nombres del idioma del show, luego todos los demas
         palabras = (f["kw"].get(idioma) or []) + [k for k in todas if k not in (f["kw"].get(idioma) or [])]
