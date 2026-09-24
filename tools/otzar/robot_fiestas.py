@@ -241,6 +241,8 @@ def apartar_no_fiesta(f, palabras, shows):
             for mp3 in epi.glob("*.mp3"):
                 if not _norm(mp3.stem).startswith(clave):
                     continue
+                if es_de_fiesta(mp3.stem, palabras):
+                    continue   # el log corta el titulo; el nombre completo SI nombra la fiesta
                 try:
                     if _creado(mp3) < desde:
                         continue   # existia antes de la corrida: no se toca
@@ -343,7 +345,7 @@ def main():
         epi = carpeta / "episodios"
         antes = len(list(epi.glob("*.mp3"))) if epi.exists() else 0
         for views, vid, tit in elegidos[:POR_CANAL * max(1, len(canales))]:
-            log("    bajando (%s vistas): %s" % (format(views, ","), tit[:60]))
+            log("    bajando (%s vistas): %s" % (format(views, ","), tit[:140]))
             bajar(carpeta, vid)
         despues = len(list(epi.glob("*.mp3"))) if epi.exists() else 0
         if despues > antes:
