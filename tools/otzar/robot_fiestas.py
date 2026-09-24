@@ -48,9 +48,9 @@ FIESTAS = [
         "en":["Yom Kippur","Yom Kipur","Day of Atonement","Neilah","Aseret Yemei Teshuva","Kol Nidre","viduy"],
         "es":["Yom Kipur","Kipur","Kippur","Dia del Perdon","Día del Perdón","Neila","Kol Nidrei","kaparot"]}},
  {"clave":"sukot2026","nombre":"Sukot","fecha":date(2026,9,26),
-  "kw":{"he":["סוכות","חג הסוכות","ארבעת המינים","לולב","אתרוג","סוכה","הושענא רבה","אושפיזין"],
-        "en":["Sukkot","Sukot","Succos","Sukkos","Succot","Sukkah","Four Species","lulav","etrog","sukkah","Hoshana Rabba","ushpizin","Simchat Beit Hashoeva"],
-        "es":["Sucot","Sukot","arba minim","lulav","etrog","suka","Hoshana Raba","ushpizin"]}},
+  "kw":{"he":["סוכות","חג הסוכות","ארבעת המינים","לולב","אתרוג","סוכה","הושענא רבה","אושפיזין","חול המועד","שמחת בית השואבה","הדס","ערבה","סכך"],
+        "en":["Sukkot","Sukot","Succos","Sukkos","Succot","Sukkah","Four Species","lulav","esrog","etrog","sukkah","Hoshana Rabba","Hoshana Raba","ushpizin","Simchat Beit Hashoeva","Chol Hamoed","Chol Hamoed","arba minim","arbaat haminim","hadas","schach"],
+        "es":["Sucot","Sukot","arba minim","arbaat haminim","cuatro especies","lulav","etrog","suka","sucá","Hoshana Raba","ushpizin","Jol Hamoed","Jol Amoed","simjat bet hashoeva"]}},
  {"clave":"simjatora2026","nombre":"Simjat Tora","fecha":date(2026,10,3),
   "kw":{"he":["שמחת תורה","שמיני עצרת","הקפות"],"en":["Simchat Torah","Shemini Atzeret","hakafot"],"es":["Simjat Tora","Simjat Torá","Shemini Atzeret","hakafot"]}},
  {"clave":"januca2026","nombre":"Januca","fecha":date(2026,12,5),
@@ -170,7 +170,7 @@ def bajar(carpeta, vid):
 def apartar_no_fiesta(f, palabras, shows):
     """Una corrida anterior (sin el filtro de titulo) pudo bajar videos que no son de
     la fiesta. Se leen sus lineas 'bajando (...): titulo' del log y, si el titulo no
-    nombra la fiesta, el mp3 se mueve a episodios/_no_es_fiesta/ para que no se suba."""
+    nombra la fiesta, el mp3 se borra para que no se suba."""
     try:
         lineas = LOG.read_text(encoding="utf-8", errors="replace").splitlines()
     except Exception:
@@ -199,16 +199,14 @@ def apartar_no_fiesta(f, palabras, shows):
         clave = _norm(tit)[:35].strip()
         for mp3 in epi.glob("*.mp3"):
             if clave and _norm(mp3.stem).startswith(clave):
-                dest = epi / "_no_es_fiesta"
-                dest.mkdir(exist_ok=True)
                 try:
-                    mp3.rename(dest / mp3.name)
+                    mp3.unlink()
                     movidos += 1
-                    log("    apartado (no es de %s): [%s] %s" % (f["nombre"], show, mp3.name[:60]))
+                    log("    borrado (no es de %s): [%s] %s" % (f["nombre"], show, mp3.name[:60]))
                 except Exception as ex:
-                    log("    no pude apartar %s: %s" % (mp3.name[:50], ex))
+                    log("    no pude borrar %s: %s" % (mp3.name[:50], ex))
     if movidos:
-        log("Apartados %d archivo(s) que no eran de la fiesta (en episodios\\_no_es_fiesta)." % movidos)
+        log("Borrados %d archivo(s) que no eran de la fiesta." % movidos)
 
 def correr_bot(carpeta, comando):
     return subprocess.run([sys.executable, "podcast_bot.py", comando], cwd=str(carpeta)).returncode
