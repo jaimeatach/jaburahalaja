@@ -109,11 +109,21 @@ def _norm(t):
     t = re.sub(r"[\u0591-\u05C7]", "", str(t or "")).lower()
     return re.sub(r"[^\w\u05D0-\u05EA ]+", " ", t)
 
+# nombra la fiesta pero NO es un shiur: recetas, canciones, conciertos, programas infantiles
+NO_SHIUR = ["מתכון", "מתכונים", "פרגיות", "במטבח", "בישול", "אפייה", "שיר ", "שירים", "קליפ", "זמר",
+            "הופעה", "תזמורת", "לילדים", "ילדים", "recipe", "cooking", "kitchen", "song", "songs",
+            "singing", "singer", "concert", "kids", "children", "uncle moishy", "music video", "dance",
+            "receta", "cocina", "cancion", "canción", "niños"]
+
 def es_de_fiesta(titulo, palabras):
-    """True si el titulo del video nombra la fiesta (cualquier idioma). YouTube
-    devuelve cualquier cosa cuando un canal tiene poco: sin esto entraban Pesaj
-    y programas infantiles como 'shiurim de Sukot'."""
+    """True si el titulo del video nombra la fiesta (cualquier idioma) y no es
+    receta/cancion/programa infantil. YouTube devuelve cualquier cosa cuando un
+    canal tiene poco: sin esto entraban Pesaj, 'Uncle Moishy' y pollo relleno."""
     t = _norm(titulo)
+    for malo in NO_SHIUR:
+        m = _norm(malo).strip()
+        if m and (" " + m + " ") in (" " + t.strip() + " "):
+            return False
     for kw in palabras:
         k = _norm(kw).strip()
         if len(k) >= 3 and k in t:
