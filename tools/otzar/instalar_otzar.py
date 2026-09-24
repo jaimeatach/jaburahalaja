@@ -1214,6 +1214,24 @@ def show_nuevo():
                 aviso(f"podcast_bot.py {cmd} terminó con error")
                 return
         ok("episodios rescatados y publicados en el feed nuevo")
+        # lo rescatado YA estaba en Spotify: se marca como anunciado para que el robot
+        # no lo mande a los grupos como si fuera nuevo (solo sale lo que llegue de aquí en adelante)
+        try:
+            j = _gh_get(f"https://api.github.com/repos/{c['github_user']}/{c['github_repo']}", cab, "feed.xml")
+            feed = base64.b64decode(j["content"]).decode("utf-8")
+            guids = [g.replace("&amp;", "&") for g in re.findall(r"<guid[^>]*>(.*?)</guid>", feed)]
+            estado_p = (ROBOT or BASE) / "estado_anuncios.json"
+            try:
+                e = json.loads(estado_p.read_text(encoding="utf-8"))
+            except Exception:
+                e = {}
+            previos = e.get(clave) or []
+            e[clave] = (previos + [g for g in guids if g not in previos])[-2000:]
+            respaldar(estado_p)
+            escribir(estado_p, json.dumps(e, ensure_ascii=False, indent=2))
+            ok(f"{len(guids)} episodio(s) rescatados marcados como ya anunciados (no se mandan a los grupos)")
+        except Exception as e_:                             # noqa: BLE001
+            aviso(f"no pude marcar lo rescatado como anunciado: {e_}")
         print(f"   → en Spotify for Creators, redirect del show a https://{c['github_user']}.github.io/{c['github_repo']}/feed.xml")
     if not grupo.startswith("http") and not esc.get("invite"):
         print(f"   → cuando tengas el grupo del Rab: python instalar_otzar.py --sin-drive --nuevo={clave} --nuevo-grupo=LINK")
