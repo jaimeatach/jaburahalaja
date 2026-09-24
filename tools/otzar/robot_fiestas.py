@@ -162,15 +162,42 @@ def buscar_en_canal(url_canal, palabras):
 def bajar(carpeta, vid):
     subprocess.run([sys.executable, "-m", "yt_dlp",
         "-x", "--audio-format", "mp3", "--audio-quality", "128K",
-        "--embed-metadata", "--windows-filenames",
+        "--embed-metadata", "--windows-filenames", "--no-mtime",
         "--download-archive", "ya_descargados.txt", "--ignore-errors"] + YT_CLIENT + [
         "-o", "episodios/%(title)s.%(ext)s",
         "https://www.youtube.com/watch?v=%s" % vid], cwd=str(carpeta))
 
+def _hora_log(linea):
+    """Convierte el '[dd/mm HH:MM]' de una linea del log a segundos (anio actual)."""
+    m = re.search(r"\[(\d\d)/(\d\d) (\d\d):(\d\d)\]", linea)
+    if not m:
+        return None
+    d, mo, h, mi = (int(x) for x in m.groups())
+    ahora = time.localtime()
+    for anio in (ahora.tm_year, ahora.tm_year - 1):
+        try:
+            t = time.mktime((anio, mo, d, h, mi, 0, 0, 0, -1))
+        except (OverflowError, ValueError):
+            continue
+        if t <= time.time() + 3600:
+            return t
+    return None
+
+def _creado(mp3):
+    """Cuando se creo el archivo. En Windows st_ctime es la fecha de creacion y no
+    la cambia yt-dlp (que puede poner al mp3 la fecha del video en mtime)."""
+    st = mp3.stat()
+    return max(getattr(st, "st_birthtime", 0) or 0, st.st_ctime, st.st_mtime)
+
 def apartar_no_fiesta(f, palabras, shows):
-    """Una corrida anterior (sin el filtro de titulo) pudo bajar videos que no son de
-    la fiesta. Se leen sus lineas 'bajando (...): titulo' del log y, si el titulo no
-    nombra la fiesta, el mp3 se borra para que no se suba."""
+    """Las corridas de ESTA fiesta (antes del filtro de titulo) pudieron bajar videos
+    que no son de la fiesta. Se leen sus lineas 'bajando (...): titulo' del log y, si
+    el titulo no nombra la fiesta, se borra el mp3 para que no se suba.
+    Candados para no tocar NADA anterior:
+      - solo bloques del log a partir de la primera corrida de esta fiesta;
+      - un show que termino en '(ya los tenia todos)' no bajo nada: se salta entero;
+      - el archivo tiene que haberse CREADO despues de que arranco esa corrida
+        (un archivo de antes, aunque el log lo nombre, se queda)."""
     try:
         lineas = LOG.read_text(encoding="utf-8", errors="replace").splitlines()
     except Exception:
@@ -178,41 +205,63 @@ def apartar_no_fiesta(f, palabras, shows):
     inicio = None
     for i, l in enumerate(lineas):
         if "FIESTA: %s" % f["nombre"] in l:
-            inicio = i
+            inicio = i; break
     if inicio is None:
         return
-    show = None
-    movidos = 0
-    for l in lineas[inicio:]:
-        m = re.search(r"\] \[([^\]]+)\] buscando", l)
-        if m:
-            show = m.group(1); continue
-        m = re.search(r"bajando \([^)]*\): (.+)$", l)
-        if not (m and show):
-            continue
-        tit = m.group(1).strip()
-        if es_de_fiesta(tit, palabras):
-            continue
+    borrados = [0]
+
+    def procesar(show, desde, pendientes):
+        if not (show and desde and pendientes):
+            return
         epi = BASE / show / "episodios"
         if not epi.is_dir():
-            continue
-        clave = _norm(tit)[:35].strip()
-        for mp3 in epi.glob("*.mp3"):
-            if clave and _norm(mp3.stem).startswith(clave):
-                # candado: solo lo bajado en estos dias (nunca un archivo viejo del show)
+            return
+        for tit in pendientes:
+            if es_de_fiesta(tit, palabras):
+                continue
+            clave = _norm(tit)[:35].strip()
+            if not clave:
+                continue
+            for mp3 in epi.glob("*.mp3"):
+                if not _norm(mp3.stem).startswith(clave):
+                    continue
                 try:
-                    if time.time() - mp3.stat().st_mtime > 10 * 86400:
-                        continue
+                    if _creado(mp3) < desde:
+                        continue   # existia antes de la corrida: no se toca
                 except OSError:
                     continue
                 try:
                     mp3.unlink()
-                    movidos += 1
-                    log("    borrado (no es de %s): [%s] %s" % (f["nombre"], show, mp3.name[:60]))
+                    borrados[0] += 1
+                    log("    borrado (lo bajo esta corrida y no es de %s): [%s] %s" % (f["nombre"], show, mp3.name[:60]))
                 except Exception as ex:
                     log("    no pude borrar %s: %s" % (mp3.name[:50], ex))
-    if movidos:
-        log("Borrados %d archivo(s) que no eran de la fiesta." % movidos)
+
+    show = None; desde = None; pendientes = []
+    for l in lineas[inicio:]:
+        if "FIESTA: %s" % f["nombre"] in l:
+            procesar(show, desde, pendientes)
+            show = None; pendientes = []
+            desde = _hora_log(l)
+            continue
+        if "====== FIESTA:" in l:          # empezo otra fiesta: lo de esta ya termino
+            procesar(show, desde, pendientes)
+            show = None; desde = None; pendientes = []
+            continue
+        m = re.search(r"\] \[([^\]]+)\] buscando", l)
+        if m:
+            procesar(show, desde, pendientes)
+            show = m.group(1); pendientes = []
+            continue
+        if "(ya los tenia todos)" in l:   # no bajo nada en este show
+            pendientes = []
+            continue
+        m = re.search(r"bajando \([^)]*\): (.+)$", l)
+        if m and show and desde:
+            pendientes.append(m.group(1).strip())
+    procesar(show, desde, pendientes)
+    if borrados[0]:
+        log("Borrados %d archivo(s) que bajo la corrida de %s y no eran de la fiesta." % (borrados[0], f["nombre"]))
 
 def correr_bot(carpeta, comando):
     return subprocess.run([sys.executable, "podcast_bot.py", comando], cwd=str(carpeta)).returncode
