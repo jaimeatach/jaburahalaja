@@ -49,7 +49,7 @@ FIESTAS = [
         "es":["Yom Kipur","Kipur","Kippur","Dia del Perdon","Día del Perdón","Neila","Kol Nidrei","kaparot"]}},
  {"clave":"sukot2026","nombre":"Sukot","fecha":date(2026,9,26),
   "kw":{"he":["סוכות","חג הסוכות","ארבעת המינים","לולב","אתרוג","סוכה","הושענא רבה","אושפיזין"],
-        "en":["Sukkot","Sukot","Succos","Four Species","lulav","etrog","sukkah","Hoshana Rabba","ushpizin"],
+        "en":["Sukkot","Sukot","Succos","Sukkos","Succot","Sukkah","Four Species","lulav","etrog","sukkah","Hoshana Rabba","ushpizin","Simchat Beit Hashoeva"],
         "es":["Sucot","Sukot","arba minim","lulav","etrog","suka","Hoshana Raba","ushpizin"]}},
  {"clave":"simjatora2026","nombre":"Simjat Tora","fecha":date(2026,10,3),
   "kw":{"he":["שמחת תורה","שמיני עצרת","הקפות"],"en":["Simchat Torah","Shemini Atzeret","hakafot"],"es":["Simjat Tora","Simjat Torá","Shemini Atzeret","hakafot"]}},
@@ -105,6 +105,21 @@ def ytj(args, timeout=120):
 class SinInternet(Exception):
     pass
 
+def _norm(t):
+    t = re.sub(r"[\u0591-\u05C7]", "", str(t or "")).lower()
+    return re.sub(r"[^\w\u05D0-\u05EA ]+", " ", t)
+
+def es_de_fiesta(titulo, palabras):
+    """True si el titulo del video nombra la fiesta (cualquier idioma). YouTube
+    devuelve cualquier cosa cuando un canal tiene poco: sin esto entraban Pesaj
+    y programas infantiles como 'shiurim de Sukot'."""
+    t = _norm(titulo)
+    for kw in palabras:
+        k = _norm(kw).strip()
+        if len(k) >= 3 and k in t:
+            return True
+    return False
+
 def buscar_en_canal(url_canal, palabras):
     base = re.sub(r"/(videos|shorts|streams|live)/?$", "", url_canal.rstrip("/"))
     if "playlist?list=" in base:
@@ -130,9 +145,13 @@ def buscar_en_canal(url_canal, palabras):
     resultado = []
     for vid in list(encontrados.keys())[:CANDIDATOS * 2]:
         try:
+            if not es_de_fiesta(encontrados.get(vid) or "", palabras):
+                continue                                  # no habla de la fiesta
             m = ytj(["https://www.youtube.com/watch?v=%s" % vid], timeout=90)
             dur = m.get("duration") or 0
             if dur < MIN_SEG: continue
+            if not es_de_fiesta(m.get("title") or "", palabras):
+                continue
             resultado.append((m.get("view_count") or 0, dur, vid, m.get("title") or ""))
         except Exception:
             continue
@@ -147,6 +166,49 @@ def bajar(carpeta, vid):
         "--download-archive", "ya_descargados.txt", "--ignore-errors"] + YT_CLIENT + [
         "-o", "episodios/%(title)s.%(ext)s",
         "https://www.youtube.com/watch?v=%s" % vid], cwd=str(carpeta))
+
+def apartar_no_fiesta(f, palabras, shows):
+    """Una corrida anterior (sin el filtro de titulo) pudo bajar videos que no son de
+    la fiesta. Se leen sus lineas 'bajando (...): titulo' del log y, si el titulo no
+    nombra la fiesta, el mp3 se mueve a episodios/_no_es_fiesta/ para que no se suba."""
+    try:
+        lineas = LOG.read_text(encoding="utf-8", errors="replace").splitlines()
+    except Exception:
+        return
+    inicio = None
+    for i, l in enumerate(lineas):
+        if "FIESTA: %s" % f["nombre"] in l:
+            inicio = i
+    if inicio is None:
+        return
+    show = None
+    movidos = 0
+    for l in lineas[inicio:]:
+        m = re.search(r"\] \[([^\]]+)\] buscando", l)
+        if m:
+            show = m.group(1); continue
+        m = re.search(r"bajando \([^)]*\): (.+)$", l)
+        if not (m and show):
+            continue
+        tit = m.group(1).strip()
+        if es_de_fiesta(tit, palabras):
+            continue
+        epi = BASE / show / "episodios"
+        if not epi.is_dir():
+            continue
+        clave = _norm(tit)[:35].strip()
+        for mp3 in epi.glob("*.mp3"):
+            if clave and _norm(mp3.stem).startswith(clave):
+                dest = epi / "_no_es_fiesta"
+                dest.mkdir(exist_ok=True)
+                try:
+                    mp3.rename(dest / mp3.name)
+                    movidos += 1
+                    log("    apartado (no es de %s): [%s] %s" % (f["nombre"], show, mp3.name[:60]))
+                except Exception as ex:
+                    log("    no pude apartar %s: %s" % (mp3.name[:50], ex))
+    if movidos:
+        log("Apartados %d archivo(s) que no eran de la fiesta (en episodios\\_no_es_fiesta)." % movidos)
 
 def correr_bot(carpeta, comando):
     return subprocess.run([sys.executable, "podcast_bot.py", comando], cwd=str(carpeta)).returncode
@@ -181,6 +243,7 @@ def main():
         shows.append((carpeta, cfg, canales))
 
     log("Shows a revisar: %d" % len(shows))
+    apartar_no_fiesta(f, todas, shows)
     con_nuevos = []
     for carpeta, cfg, canales in shows:
         idioma = (cfg.get("idioma") or "he")[:2]
@@ -213,6 +276,11 @@ def main():
             log("    (ya los tenia todos)")
 
     ok = 0
+    # se sube lo pendiente de TODOS los shows revisados: si una corrida anterior se
+    # corto a la mitad, lo que bajo quedo en episodios/ sin subir
+    for carpeta, _cfg, _c in shows:
+        if carpeta not in con_nuevos:
+            con_nuevos.append(carpeta)
     for carpeta in con_nuevos:
         log("[%s] subiendo a Archive y publicando feed..." % carpeta.name)
         correr_bot(carpeta, "apartar")
