@@ -17,7 +17,7 @@ Qué hace por show, una vez por semana:
     config.json) videos cuyo título nombre ESA parasha, con cualquier grafía
     (Ki Tavo / Ki Savo / כי תבוא): primero entre los últimos subidos (el shiur de
     esta semana) y, si no alcanza, buscando en el canal (otros años).
- 3. Baja los mejores (parasha_max, 2 por defecto; mínimo parasha_min_minutos, 5)
+ 3. Baja los mejores (parasha_max, 2 por defecto; mínimo parasha_min_minutos, 2: los de "Chazaq on the Parsha" duran 3)
     a episodios/, los sube a archive.org y publica el feed con podcast_bot.py.
     Spotify lee el feed y el robot los anuncia en el grupo del show en ese mismo
     ANUNCIAR (título + link exacto de Spotify + link del grupo, como siempre).
@@ -341,7 +341,7 @@ def procesar_show(carpeta, cfg, p):
         return
 
     maximo = int(cfg.get("parasha_max") or 2)
-    min_seg = int(cfg.get("parasha_min_minutos") or 5) * 60
+    min_seg = int(cfg.get("parasha_min_minutos") or 2) * 60
     revisar = int(cfg.get("parasha_revisar") or 40)
     canales = canales_de(cfg)
     if not canales:

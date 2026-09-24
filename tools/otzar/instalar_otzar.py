@@ -1590,7 +1590,7 @@ def parasha():
             aviso(f"{show}: no tiene canales_youtube en config.json; no sé de dónde bajar")
         c["parasha_semanal"] = True
         c.setdefault("parasha_max", 2)
-        c.setdefault("parasha_min_minutos", 5)
+        c["parasha_min_minutos"] = min(int(c.get("parasha_min_minutos") or 2), 2)
         c["_parasha_nota"] = ("cada ANUNCIAR busca en el canal el shiur de la parasha de la semana (hasta parasha_max, "
                               "mínimo parasha_min_minutos), lo publica y el robot lo anuncia; candado parasha_ultimo.json")
         escribir(cfgp, json.dumps(c, ensure_ascii=False, indent=2))
