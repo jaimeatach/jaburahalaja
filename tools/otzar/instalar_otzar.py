@@ -18,6 +18,7 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py --anunciar-tambien=efshar        # ese show avisa también en los grupos generales
     python instalar_otzar.py --nuevo=hilu --nuevo-nombre="Rab Joshua Hilu" --nuevo-rss=URL --nuevo-spotify=URL [--nuevo-grupo=LINK]
     python instalar_otzar.py --nacach-spotify=LINK          # el show de Nacach en Spotify
+    python instalar_otzar.py --parasha=chazaq             # cada semana: el shiur de la parasha del canal de YouTube del show
 
 Los shows (nacach, peretz…) viven en C:\\OTZAR; el robot en C:\\robotwhats. Los busca solo.
 
@@ -1555,6 +1556,62 @@ def shows():
     print("     (p. ej. 'Sucot · Rab Fulano.mp3') y aprieta ANUNCIAR")
 
 
+# ── 33. --parasha=show1,show2: la parasha de la semana desde YouTube, cada semana ──
+#   Marca "parasha_semanal": true en el config.json del show (chazaq): en cada
+#   ANUNCIAR, mantenimiento.py corre jabura\parasha_youtube.py, que busca en el
+#   canal del show el shiur de la parasha que viene, lo publica y el robot lo
+#   anuncia. También deja "parasha": {"auto": true} en el robot para que la
+#   parasha de Rav Asher Weiss (parasha_semanal.js) salga sola jueves/viernes.
+#   --sin-parasha=show lo quita.
+def parasha():
+    poner = [x.strip().lower() for x in next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--parasha=")), "").split(",") if x.strip()]
+    quitar_ = [x.strip().lower() for x in next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--sin-parasha=")), "").split(",") if x.strip()]
+    if not poner and not quitar_:
+        return
+    paso(33, "Parasha semanal desde YouTube: " + ", ".join(poner + ["sin " + q for q in quitar_]))
+    if not VER:
+        bajar("otzar/parasha_youtube.py", BASE / "jabura" / "parasha_youtube.py")
+    for show in poner + quitar_:
+        cfgp = BASE / show / "config.json"
+        if not cfgp.exists():
+            aviso(f"no existe {cfgp}")
+            continue
+        try:
+            c = json.loads(cfgp.read_text(encoding="utf-8"))
+        except Exception as ex:
+            aviso(f"{show}: config.json ilegible ({ex})")
+            continue
+        if show in quitar_:
+            c.pop("parasha_semanal", None)
+            escribir(cfgp, json.dumps(c, ensure_ascii=False, indent=2))
+            ok(f"{show}: ya no busca la parasha")
+            continue
+        if not (c.get("canales_youtube") or c.get("canal_youtube")):
+            aviso(f"{show}: no tiene canales_youtube en config.json; no sé de dónde bajar")
+        c["parasha_semanal"] = True
+        c.setdefault("parasha_max", 2)
+        c.setdefault("parasha_min_minutos", 5)
+        c["_parasha_nota"] = ("cada ANUNCIAR busca en el canal el shiur de la parasha de la semana (hasta parasha_max, "
+                              "mínimo parasha_min_minutos), lo publica y el robot lo anuncia; candado parasha_ultimo.json")
+        escribir(cfgp, json.dumps(c, ensure_ascii=False, indent=2))
+        ok(f"{show}: parasha_semanal activada (hasta {c['parasha_max']} shiurim por semana)")
+    rw = (ROBOT or BASE) / "config_whatsapp.json"
+    if poner and rw.exists():
+        try:
+            cfgw = json.loads(rw.read_text(encoding="utf-8"))
+        except Exception:
+            cfgw = None
+        if cfgw is not None and not (cfgw.get("parasha") or {}).get("auto"):
+            cfgw.setdefault("parasha", {})
+            cfgw["parasha"]["auto"] = True
+            cfgw["parasha"]["_nota"] = "jueves y viernes ANUNCIAR deja parasha.ahora: el módulo parasha_semanal.js manda la parasha de Rav Asher Weiss una vez por semana"
+            respaldar(rw)
+            escribir(rw, json.dumps(cfgw, ensure_ascii=False, indent=2))
+            ok("robot: la parasha de Rav Asher Weiss sale sola jueves/viernes con ANUNCIAR (parasha.auto)")
+    print(f"   → probar sin bajar nada: python {BASE / 'jabura' / 'parasha_youtube.py'} {' '.join(poner)} --ver")
+    print("   → esta semana y la que viene son jag (Sukot, Sheminí Atzeret): el primer shiur sale para Bereshit")
+
+
 # ── 28. --listar=RUTA: ver qué hay en una carpeta (subcarpetas y archivos) ──────
 def listar():
     ruta = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--listar=")), "").strip().strip('"')
@@ -2444,6 +2501,7 @@ def instalar_anunciar():
     ruta = ROBOT / "ANUNCIAR.bat"
     if not VER:
         bajar("otzar/mantenimiento.py", BASE / "jabura" / "mantenimiento.py")
+        bajar("otzar/parasha_youtube.py", BASE / "jabura" / "parasha_youtube.py")
     if ruta.exists() and "mantenimiento.py" in ruta.read_text(encoding="utf-8", errors="replace"):
         ok("ya llama al mantenimiento (jabura, shows de WhatsApp, espejo, sin atrasos)")
         return
@@ -2606,6 +2664,7 @@ def main():
     mukze()
     curso()
     retitular()
+    parasha()
     shows()
     listar()
     shows_whatsapp_al_dia()

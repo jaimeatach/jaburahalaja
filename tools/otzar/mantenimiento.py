@@ -269,6 +269,29 @@ def sin_atrasos(cfgw):
         estado_p.write_text(json.dumps(e, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+# ── 4. parasha semanal ───────────────────────────────────────────────────────
+def parasha_semanal(cfgw):
+    """a) shows con "parasha_semanal": true en su config.json (p. ej. chazaq): baja
+    de su canal de YouTube el shiur de la parasha de la semana y lo publica; el
+    robot lo anuncia en este mismo ANUNCIAR. Candado semanal por show.
+    b) Rav Asher Weiss (módulo parasha_semanal.js del robot): si el robot tiene
+    "parasha": {"auto": true}, jueves y viernes se deja la orden parasha.ahora;
+    el módulo tiene su propio candado semanal, así que no repite."""
+    script = BASE / "jabura" / "parasha_youtube.py"
+    if script.exists():
+        log("--- parasha de la semana: shows de YouTube (parasha_semanal) ---")
+        subprocess.run([sys.executable, str(script), f"--base={BASE}", f"--robot={ROBOT}"])
+    auto = (cfgw.get("parasha") or {}).get("auto")
+    if auto and time.localtime().tm_wday in (3, 4) and (ROBOT / "parasha_semanal.js").exists():
+        flag = ROBOT / "parasha.ahora"
+        if not flag.exists():
+            try:
+                flag.write_text("ahora", encoding="utf-8")
+                log("parasha de Rav Asher Weiss: orden dejada al robot (parasha.ahora); si ya salió esta semana, el módulo no repite")
+            except Exception as ex:
+                log(f"no pude dejar parasha.ahora: {ex}")
+
+
 def main():
     cfgw = leer_json(ROBOT / "config_whatsapp.json")
     if not cfgw:
@@ -278,6 +301,7 @@ def main():
     rescatar_sin_titulo(cfgw)
     publicar()
     espejo()
+    parasha_semanal(cfgw)
     sin_atrasos(cfgw)
     log("mantenimiento listo; ahora el robot anuncia.")
     return 0

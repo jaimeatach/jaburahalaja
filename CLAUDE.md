@@ -190,6 +190,26 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    arma el título al guardar: Isaac Credi manda "1151 Siman 639" + tema en
    1-2 líneas y sale "tema1, tema2 - Sr. Isaac Credi". Nunca se manda el
    link al mp3 (`link_audio` siempre False).
+9. Parashá semanal: `tools/otzar/parasha_youtube.py` (el instalador lo deja en
+   `C:\OTZAR\jabura\`, junto a `mantenimiento.py`, que lo corre en cada ANUNCIAR).
+   Para los shows con `"parasha_semanal": true` en su `config.json`
+   (`--parasha=chazaq`, paso [33]) calcula la parashá del Shabat que viene
+   (diáspora, con `@hebcal/core` del robot vía `node`; si no, pyluach o la API de
+   hebcal), busca en el canal de YouTube del show un video que la nombre con
+   cualquier grafía (`PARASHIOT`: Ki Tavo/Ki Savo/כי תבוא), primero entre los
+   últimos subidos y si no entre los más vistos de otros años, baja hasta
+   `parasha_max` (2) de mínimo `parasha_min_minutos` (5), y publica con
+   `podcast_bot.py apartar/subir/feed`; el robot lo anuncia en ese mismo
+   ANUNCIAR. Candado semanal `parasha_ultimo.json` en la carpeta del show; sin
+   resultados reintenta en el próximo ANUNCIAR (3 h de calma). En semana de jag
+   no hace nada. El mismo paso pone `"parasha": {"auto": true}` en el robot:
+   jueves y viernes `mantenimiento.py` deja `parasha.ahora` y el módulo
+   `parasha_semanal.js` del usuario (Rav Asher Weiss, con su propio candado)
+   manda la parashá sin apretar PARASHA_SEMANAL.bat.
+   Robot de fiestas (`robot_fiestas.py`, `FIESTA_*.bat`): `apartar_no_fiesta`
+   solo borra mp3 que bajaron las corridas de ESA fiesta (fecha de creación
+   posterior al arranque de la corrida, leído de `fiestas.log`; los shows que
+   terminaron en "(ya los tenia todos)" se saltan). Nunca toca material anterior.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre
