@@ -202,10 +202,11 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    `podcast_bot.py apartar/subir/feed`; el robot lo anuncia en ese mismo
    ANUNCIAR. Candado semanal `parasha_ultimo.json` en la carpeta del show; sin
    resultados reintenta en el próximo ANUNCIAR (3 h de calma). En semana de jag
-   no hace nada. El mismo paso pone `"parasha": {"auto": true}` en el robot:
-   jueves y viernes `mantenimiento.py` deja `parasha.ahora` y el módulo
-   `parasha_semanal.js` del usuario (Rav Asher Weiss, con su propio candado)
-   manda la parashá sin apretar PARASHA_SEMANAL.bat.
+   no hace nada. El mismo paso pone `"parasha": {"auto": true, "dia": 0}` en el robot:
+   las dos parashot salen con el ANUNCIAR del lunes (`dia` 0; si no se aprieta,
+   con el primero de la semana hasta el viernes, nunca sábado ni domingo):
+   `mantenimiento.py` corre el script y deja `parasha.ahora` para el módulo
+   `parasha_semanal.js` del usuario (Rav Asher Weiss, con su propio candado).
    Robot de fiestas (`robot_fiestas.py`, `FIESTA_*.bat`): `apartar_no_fiesta`
    solo borra mp3 que bajaron las corridas de ESA fiesta (fecha de creación
    posterior al arranque de la corrida, leído de `fiestas.log`; los shows que

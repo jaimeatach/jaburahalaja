@@ -270,19 +270,32 @@ def sin_atrasos(cfgw):
 
 
 # ── 4. parasha semanal ───────────────────────────────────────────────────────
+DIAS = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
+
+
 def parasha_semanal(cfgw):
-    """a) shows con "parasha_semanal": true en su config.json (p. ej. chazaq): baja
-    de su canal de YouTube el shiur de la parasha de la semana y lo publica; el
-    robot lo anuncia en este mismo ANUNCIAR. Candado semanal por show.
-    b) Rav Asher Weiss (módulo parasha_semanal.js del robot): si el robot tiene
-    "parasha": {"auto": true}, jueves y viernes se deja la orden parasha.ahora;
-    el módulo tiene su propio candado semanal, así que no repite."""
+    """Los dos salen con el ANUNCIAR del lunes ("parasha": {"dia": 0} en el robot;
+    si ese día no se aprieta, con el primer ANUNCIAR de la semana hasta el viernes;
+    nunca sábado ni domingo, que ya cuentan para la parashá siguiente):
+    a) shows con "parasha_semanal": true en su config.json (chazaq): baja de su
+       canal de YouTube el shiur de la parasha de la semana y lo publica; el robot
+       lo anuncia en este mismo ANUNCIAR. Candado semanal por show.
+    b) Rav Asher Weiss (módulo parasha_semanal.js del robot, "parasha": {"auto": true}):
+       se deja la orden parasha.ahora; el módulo tiene su candado semanal, no repite."""
+    pc = cfgw.get("parasha") or {}
+    try:
+        dia = int(pc.get("dia", 0))
+    except (TypeError, ValueError):
+        dia = 0
+    hoy = time.localtime().tm_wday
+    if not (dia <= hoy <= 4):
+        log(f"parasha de la semana: sale con el ANUNCIAR del {DIAS[dia]} (hoy es {DIAS[hoy]}); hoy no")
+        return
     script = BASE / "jabura" / "parasha_youtube.py"
     if script.exists():
         log("--- parasha de la semana: shows de YouTube (parasha_semanal) ---")
         subprocess.run([sys.executable, str(script), f"--base={BASE}", f"--robot={ROBOT}"])
-    auto = (cfgw.get("parasha") or {}).get("auto")
-    if auto and time.localtime().tm_wday in (3, 4) and (ROBOT / "parasha_semanal.js").exists():
+    if pc.get("auto") and (ROBOT / "parasha_semanal.js").exists():
         flag = ROBOT / "parasha.ahora"
         if not flag.exists():
             try:

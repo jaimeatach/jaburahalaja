@@ -1560,8 +1560,8 @@ def shows():
 #   Marca "parasha_semanal": true en el config.json del show (chazaq): en cada
 #   ANUNCIAR, mantenimiento.py corre jabura\parasha_youtube.py, que busca en el
 #   canal del show el shiur de la parasha que viene, lo publica y el robot lo
-#   anuncia. También deja "parasha": {"auto": true} en el robot para que la
-#   parasha de Rav Asher Weiss (parasha_semanal.js) salga sola jueves/viernes.
+#   anuncia. También deja "parasha": {"auto": true, "dia": 0} en el robot: las dos
+#   (Rav Asher Weiss con parasha_semanal.js y chazaq) salen con el ANUNCIAR del lunes.
 #   --sin-parasha=show lo quita.
 def parasha():
     poner = [x.strip().lower() for x in next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--parasha=")), "").split(",") if x.strip()]
@@ -1601,13 +1601,15 @@ def parasha():
             cfgw = json.loads(rw.read_text(encoding="utf-8"))
         except Exception:
             cfgw = None
-        if cfgw is not None and not (cfgw.get("parasha") or {}).get("auto"):
+        if cfgw is not None and not ((cfgw.get("parasha") or {}).get("auto") and "dia" in (cfgw.get("parasha") or {})):
             cfgw.setdefault("parasha", {})
             cfgw["parasha"]["auto"] = True
-            cfgw["parasha"]["_nota"] = "jueves y viernes ANUNCIAR deja parasha.ahora: el módulo parasha_semanal.js manda la parasha de Rav Asher Weiss una vez por semana"
+            cfgw["parasha"].setdefault("dia", 0)
+            cfgw["parasha"]["_nota"] = ("dia 0 = lunes: con el ANUNCIAR de ese día (o el primero de la semana hasta el viernes) "
+                                        "salen la parasha de Rav Asher Weiss (parasha_semanal.js) y la de los shows con parasha_semanal")
             respaldar(rw)
             escribir(rw, json.dumps(cfgw, ensure_ascii=False, indent=2))
-            ok("robot: la parasha de Rav Asher Weiss sale sola jueves/viernes con ANUNCIAR (parasha.auto)")
+            ok("robot: las parashot salen con el ANUNCIAR del lunes (parasha.auto, parasha.dia = 0)")
     print(f"   → probar sin bajar nada: python {BASE / 'jabura' / 'parasha_youtube.py'} {' '.join(poner)} --ver")
     print("   → esta semana y la que viene son jag (Sukot, Sheminí Atzeret): el primer shiur sale para Bereshit")
 
