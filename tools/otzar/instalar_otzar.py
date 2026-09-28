@@ -20,6 +20,7 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py --nacach-spotify=LINK          # el show de Nacach en Spotify
     python instalar_otzar.py --parasha=chazaq             # cada semana: el shiur de la parasha del canal de YouTube del show
     python instalar_otzar.py --correo=taamim:buzon@dominio:remitente@gmail.com --correo-clave=XXXX   # audios que llegan por mail
+    python instalar_otzar.py --correo-carpeta=taamim:"G:\Mi unidad\OTZAR\taamim"   # lo mismo vía Drive (script de Google) cuando el filtro no deja entrar a Gmail
     python instalar_otzar.py --nuevo=taamim ... --nuevo-sin-grupos   # show solo para Spotify, sin anunciar en grupos
 
 Los shows (nacach, peretz…) viven en C:\\OTZAR; el robot en C:\\robotwhats. Los busca solo.
@@ -1569,6 +1570,29 @@ def shows():
 #   Ester) y los deja en audios_whatsapp; podcast_bot los publica en ese orden.
 def correo():
     arg = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--correo=")), "").strip().strip('"')
+    carp = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--correo-carpeta=")), "").strip().strip('"')
+    if carp:
+        # modo carpeta: el script de Google (apps_script_correo.gs) deja los audios en Drive
+        show, _, ruta = carp.partition(":")
+        show, ruta = show.strip().lower(), ruta.strip().strip('"')
+        paso(34, f"{show}: audios por correo vía Drive → {ruta}")
+        cfgp = BASE / show / "config.json"
+        if not cfgp.exists():
+            aviso(f"no existe {cfgp}; primero crea el show con --nuevo={show} ...")
+            return
+        if not VER:
+            bajar("otzar/correo_shiurim.py", BASE / "jabura" / "correo_shiurim.py")
+            bajar("otzar/apps_script_correo.gs", BASE / "jabura" / "apps_script_correo.gs")
+        c = json.loads(cfgp.read_text(encoding="utf-8"))
+        c["correo"] = {"carpeta": ruta,
+                       "_nota": "el script de Google (jabura\\apps_script_correo.gs) guarda en esa carpeta de Drive los audios que llegan por correo; cada ANUNCIAR los toma de ahí en orden parashá, Tehilim, Rut, Ester"}
+        escribir(cfgp, json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+        ok(f"config.json: los audios se toman de {ruta}")
+        if not Path(ruta).is_dir():
+            aviso("esa carpeta todavía no existe en esta PC: el script de Google la crea en Drive y Drive la baja (Mi unidad\\OTZAR\\taamim)")
+        print(f"   → el script para pegar en script.google.com: {BASE / 'jabura' / 'apps_script_correo.gs'}")
+        print(f"   → probar: python {BASE / 'jabura' / 'correo_shiurim.py'} {show} --ver")
+        return
     if not arg:
         return
     partes = arg.split(":")

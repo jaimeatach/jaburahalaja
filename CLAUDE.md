@@ -218,6 +218,13 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    seguidas después de lo último del feed; `podcast_bot.py` los publica en ese
    orden. Candado `correo_procesados.json`. Así entró `taamim` (טעמי המקרא, חכם
    יצחק בטיש; show creado con `--nuevo ... --nuevo-sin-grupos`: solo Spotify).
+   La PC de Otzar tiene el filtro Techloq, que intercepta imap.gmail.com y no
+   deja entrar por IMAP: por eso `taamim` usa el MODO CARPETA
+   (`--correo-carpeta=show:RUTA`): `tools/otzar/apps_script_correo.gs` (Apps
+   Script en la cuenta del buzón, disparador cada 10 min) guarda los adjuntos y
+   links de Drive del remitente en `Mi unidad\OTZAR\taamim`, Drive lo baja a la
+   PC y `correo_shiurim.py` los toma de ahí (mismo orden, mismos candados;
+   `clave_titulo` iguala "פרשת בשלח" con "בשלח" al descartar repetidos).
    Robot de fiestas (`robot_fiestas.py`, `FIESTA_*.bat`): `apartar_no_fiesta`
    solo borra mp3 que bajaron las corridas de ESA fiesta (fecha de creación
    posterior al arranque de la corrida, leído de `fiestas.log`; los shows que

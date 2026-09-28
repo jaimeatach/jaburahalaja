@@ -23,6 +23,12 @@ config.json del show:
 La clave (contraseña de aplicación, no la normal) va en correo_clave.txt en la
 carpeta del show (o en C:\\OTZAR\\correo_clave.txt para todos). Nunca en el config.
 
+MODO CARPETA (cuando la PC no llega a Gmail, p. ej. con el filtro Techloq):
+    "correo": {"carpeta": "G:\\Mi unidad\\OTZAR\\taamim"}
+Un script de Google (apps_script_correo.gs, en la cuenta del buzón) guarda los
+adjuntos de esos remitentes en esa carpeta de Drive; Drive la baja a la PC y de
+ahí se toman, con el mismo orden y los mismos candados. Nada de contraseñas.
+
 Orden: dentro de cada tanda, primero las parashiot en el orden de la Torá (en
 cualquier grafía: פרשת בראשית, Bereshit, Bereishis…), luego Tehilim por capítulo
 (תהלים כ״ג / Tehilim 23), luego Rut, luego Ester, y al final lo demás. Las fechas
@@ -106,6 +112,14 @@ def _numero(texto):
     if m:
         return sum(GEMATRIA.get(c, 0) for c in m.group(1))
     return 0
+
+
+def clave_titulo(t):
+    """para comparar con el feed: 'פרשת בשלח' y 'בשלח' son el mismo shiur."""
+    k = _norm(t)
+    for pal in ("פרשת", "פרשה", "parashat", "parashas", "parshat", "parshas", "parasha", "parsha"):
+        k = k.replace(" " + pal + " ", " ")
+    return re.sub(r"\s+", " ", k).strip()
 
 
 def clasificar(titulo):
@@ -244,7 +258,7 @@ def titulos_del_feed(cfgshow):
         url = "https://%s.github.io/%s/feed.xml" % (cfgshow.get("github_user", "rabmeireliyahu"), cfgshow.get("github_repo"))
         with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "otzar-correo"}), timeout=40) as r:
             xml = r.read().decode("utf-8", "replace")
-        return set(_norm(re.sub(r"<!\[CDATA\[|\]\]>", "", t)).strip() for t in re.findall(r"<title>(.*?)</title>", xml, re.S)), xml
+        return set(clave_titulo(re.sub(r"<!\[CDATA\[|\]\]>", "", t)) for t in re.findall(r"<title>(.*?)</title>", xml, re.S)), xml
     except Exception as ex:
         log("no pude leer el feed del show (%s); no descarto repetidos" % str(ex)[:80])
         return set(), ""
@@ -260,33 +274,22 @@ def fecha_max_feed(xml):
     return mx
 
 
-def procesar_show(carpeta, cfgshow):
-    cfg = cfgshow.get("correo") or {}
-    if not cfg.get("usuario"):
-        return
+def recolectar_correo(carpeta, cfg, proc):
+    """Entra al buzón por IMAP. → lista de [cat, idx, titulo, ext, bytes, fid, msgid] (o None si no pudo)."""
     clave = leer_clave(carpeta)
     if not clave:
         log("[%s] falta correo_clave.txt (contraseña de aplicación del buzón %s)" % (carpeta.name, cfg["usuario"]))
-        return
-    destino = Path(cfgshow.get("carpeta_whatsapp") or (carpeta / "audios_whatsapp"))
-    destino.mkdir(parents=True, exist_ok=True)
-    proc_p = carpeta / "correo_procesados.json"
-    try:
-        proc = json.loads(proc_p.read_text(encoding="utf-8"))
-    except Exception:
-        proc = {}
+        return None
     try:
         m, host = conectar(cfg, clave)
     except Exception as ex:
         log("[%s] no pude entrar al buzón %s (%s)" % (carpeta.name, cfg["usuario"], ex))
         log("    si es Gmail/Google Workspace: contraseña de aplicación (Cuenta Google → Seguridad → Verificación en 2 pasos → Contraseñas de aplicaciones)")
-        return
+        return None
     log("[%s] buzón %s en %s" % (carpeta.name, cfg["usuario"], host))
     ids = buscar_ids(m, cfg)
     log("    %d correo(s) de %s" % (len(ids), ", ".join(cfg.get("de") if isinstance(cfg.get("de"), list) else [cfg.get("de") or "cualquiera"])))
-    ya_feed, xml = titulos_del_feed(cfgshow)
-    ya_carpeta = set(_norm(p.stem).strip() for p in destino.iterdir() if p.is_file())
-    nuevos = []           # (cat, idx, titulo, ext, bytes | None, fid | None, msgid)
+    nuevos = []
     for i in ids:
         tip, datos = m.fetch(i, "(RFC822)")
         if tip != "OK" or not datos or not datos[0]:
@@ -326,13 +329,12 @@ def procesar_show(carpeta, cfgshow):
             n += 1
             nuevos.append([4, 0, asunto + (" %d" % n if varios else ""), ".mp3", None, fid, msgid])
     m.logout()
-
     # links de Drive: hay que bajarlos para saber el nombre real
     for it in nuevos:
         if it[5]:
             try:
                 log("    bajando de Drive: %s" % it[2][:50])
-                nombre, datos = bajar_drive(it[5], destino)
+                nombre, datos = bajar_drive(it[5], None)
                 if nombre:
                     stem, ext = Path(nombre).stem, Path(nombre).suffix.lower()
                     if ext in AUDIO:
@@ -344,11 +346,58 @@ def procesar_show(carpeta, cfgshow):
             except Exception as ex:
                 log("    Drive falló (%s); lo reintento en el próximo ANUNCIAR" % str(ex)[:100])
                 it[4] = None
-    nuevos = [it for it in nuevos if it[4]]
+    return [it for it in nuevos if it[4]]
+
+
+def recolectar_carpeta(carpeta, cfg, proc):
+    """Modo carpeta: los audios ya están en una carpeta (Drive sincronizado en la PC)."""
+    origen = Path(cfg["carpeta"])
+    if not origen.is_dir():
+        log("[%s] no veo la carpeta %s (¿está montado el Drive?)" % (carpeta.name, origen))
+        return None
+    archivos = [p for p in sorted(origen.iterdir()) if p.is_file() and p.suffix.lower() in AUDIO]
+    log("[%s] carpeta %s: %d audio(s)" % (carpeta.name, origen, len(archivos)))
+    nuevos = []
+    for p in archivos:
+        try:
+            st = p.stat()
+        except OSError:
+            continue
+        clave = "%s|%d" % (p.name, st.st_size)
+        if clave in proc and not TODOS:
+            continue
+        if st.st_size < 20000 or time.time() - st.st_mtime < 120:
+            continue                      # todavía bajando / sincronizando
+        titulo = limpiar_titulo(p.stem) or ("Shiur " + time.strftime("%Y-%m-%d"))
+        try:
+            datos = p.read_bytes()
+        except OSError as ex:
+            log("    no pude leer %s (%s); a la próxima" % (p.name[:50], str(ex)[:60]))
+            continue
+        nuevos.append([*clasificar(titulo), titulo, p.suffix.lower(), datos, None, clave])
+    return nuevos
+
+
+def procesar_show(carpeta, cfgshow):
+    cfg = cfgshow.get("correo") or {}
+    if not (cfg.get("usuario") or cfg.get("carpeta")):
+        return
+    destino = Path(cfgshow.get("carpeta_whatsapp") or (carpeta / "audios_whatsapp"))
+    destino.mkdir(parents=True, exist_ok=True)
+    proc_p = carpeta / "correo_procesados.json"
+    try:
+        proc = json.loads(proc_p.read_text(encoding="utf-8"))
+    except Exception:
+        proc = {}
+    nuevos = recolectar_carpeta(carpeta, cfg, proc) if cfg.get("carpeta") else recolectar_correo(carpeta, cfg, proc)
+    if nuevos is None:
+        return
+    ya_feed, xml = titulos_del_feed(cfgshow)
+    ya_carpeta = set(clave_titulo(p.stem) for p in destino.iterdir() if p.is_file())
     # repetidos: ya en el feed o ya en la carpeta
     listos = []
     for it in nuevos:
-        k = _norm(it[2]).strip()
+        k = clave_titulo(it[2])
         if k in ya_feed:
             log("    ya está en Spotify, no lo repito: %s" % it[2][:60])
         elif k in ya_carpeta:
