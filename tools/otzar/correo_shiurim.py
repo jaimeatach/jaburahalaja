@@ -164,8 +164,8 @@ def decodificar(s):
 
 def limpiar_titulo(s):
     s = re.sub(r"^\s*((fwd?|re|rv|fw)\s*:\s*)+", "", s, flags=re.I)
-    s = re.sub(r"^\s*00\s+", "", s)                      # "00 46 EKEV" → "46 EKEV"
     s = s.replace("_", " ")
+    s = re.sub(r"^\s*0+\s+", "", s)                      # "00 46 EKEV" / "00_46 EKEV" → "46 EKEV"
     # "Perek 023" a secas → "Tehilim Perek 023" (en Spotify se entiende de qué es)
     if re.fullmatch(r"\s*(perek|pérek)\s*\d{1,3}\s*", s, re.I):
         s = "Tehilim " + s.strip()
