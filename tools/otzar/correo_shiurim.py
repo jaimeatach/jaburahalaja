@@ -74,24 +74,24 @@ def log(m):
 # ─────────── orden: parashá → Tehilim → Rut → Ester ───────────
 PARASHIOT = [
     ("בראשית", ["Bereshit", "Bereishit", "Bereishis", "Beraishis", "Bereshis", "Breishit"]),
-    ("נח", ["Noach", "Noaj"]), ("לך לך", ["Lech Lecha", "Lech-Lecha"]), ("וירא", ["Vayera", "Vayeira"]),
+    ("נח", ["Noach", "Noaj"]), ("לך לך", ["Lech Lecha", "Lech-Lecha", "Lej Leja"]), ("וירא", ["Vayera", "Vayeira"]),
     ("חיי שרה", ["Chayei Sara", "Chayei Sarah", "Chaye Sara"]), ("תולדות", ["Toldot", "Toldos", "Toledot"]),
     ("ויצא", ["Vayetzei", "Vayeitzei", "Vayetze"]), ("וישלח", ["Vayishlach", "Vayishlaj"]),
     ("וישב", ["Vayeshev", "Vayeishev"]), ("מקץ", ["Miketz", "Mikeitz"]), ("ויגש", ["Vayigash"]),
     ("ויחי", ["Vayechi", "Vayeji"]), ("שמות", ["Shemot", "Shemos", "Shmot"]), ("וארא", ["Vaera", "Va'era", "Vaeira"]),
-    ("בא", ["Bo"]), ("בשלח", ["Beshalach", "Beshalaj"]), ("יתרו", ["Yitro", "Yisro"]), ("משפטים", ["Mishpatim"]),
+    ("בא", ["Bo"]), ("בשלח", ["Beshalach", "Beshalaj"]), ("יתרו", ["Yitro", "Yisro", "Itro", "Jetro"]), ("משפטים", ["Mishpatim"]),
     ("תרומה", ["Terumah", "Teruma"]), ("תצוה", ["Tetzaveh", "Tetzave"]), ("כי תשא", ["Ki Tisa", "Ki Sisa"]),
-    ("ויקהל", ["Vayakhel"]), ("פקודי", ["Pekudei", "Pekude"]), ("ויקרא", ["Vayikra"]), ("צו", ["Tzav"]),
+    ("ויקהל", ["Vayakhel"]), ("פקודי", ["Pekudei", "Pekude"]), ("ויקרא", ["Vayikra", "Vaikra", "Vayicra"]), ("צו", ["Tzav"]),
     ("שמיני", ["Shmini", "Shemini"]), ("תזריע", ["Tazria"]), ("מצורע", ["Metzora"]),
-    ("אחרי מות", ["Achrei Mot", "Acharei Mot", "Acharei Mos", "Ajarei Mot"]), ("קדושים", ["Kedoshim"]),
-    ("אמור", ["Emor"]), ("בהר", ["Behar"]), ("בחוקותי", ["Bechukotai", "Bechukosai", "Bejukotai"]),
-    ("במדבר", ["Bamidbar"]), ("נשא", ["Nasso", "Naso"]), ("בהעלותך", ["Beha'alotcha", "Behaalotcha", "Behaaloscha", "Behaalotja"]),
-    ("שלח", ["Sh'lach", "Shlach", "Shelach", "Shelaj"]), ("קרח", ["Korach", "Koraj"]), ("חוקת", ["Chukat", "Chukas", "Jukat"]),
-    ("בלק", ["Balak"]), ("פנחס", ["Pinchas", "Pinjas"]), ("מטות", ["Matot", "Mattos", "Matos"]), ("מסעי", ["Masei", "Massei"]),
+    ("אחרי מות", ["Achrei Mot", "Acharei Mot", "Acharei Mos", "Ajarei Mot", "Ajare Mot", "Ajare"]), ("קדושים", ["Kedoshim"]),
+    ("אמור", ["Emor"]), ("בהר", ["Behar"]), ("בחוקותי", ["Bechukotai", "Bechukosai", "Bejukotai", "Bejukotay", "Bejucotai"]),
+    ("במדבר", ["Bamidbar"]), ("נשא", ["Nasso", "Naso"]), ("בהעלותך", ["Beha'alotcha", "Behaalotcha", "Behaaloscha", "Behaalotja", "Behaaloteja", "Beaaloteja"]),
+    ("שלח", ["Sh'lach", "Shlach", "Shelach", "Shelaj", "Shelaj Leja"]), ("קרח", ["Korach", "Koraj", "Kóraj"]), ("חוקת", ["Chukat", "Chukas", "Jukat"]),
+    ("בלק", ["Balak"]), ("פנחס", ["Pinchas", "Pinjas", "Pinejas"]), ("מטות", ["Matot", "Mattos", "Matos"]), ("מסעי", ["Masei", "Massei", "Mase", "Masé"]),
     ("דברים", ["Devarim"]), ("ואתחנן", ["Vaetchanan", "Va'etchanan", "Vaetjanan"]), ("עקב", ["Eikev", "Ekev"]),
-    ("ראה", ["Re'eh", "Reeh"]), ("שופטים", ["Shoftim"]), ("כי תצא", ["Ki Teitzei", "Ki Seitzei", "Ki Tetze", "Ki Tetzé"]),
-    ("כי תבוא", ["Ki Tavo", "Ki Savo"]), ("נצבים", ["Nitzavim"]), ("וילך", ["Vayeilech", "Vayelech", "Vayelej"]),
-    ("האזינו", ["Ha'azinu", "Haazinu"]), ("וזאת הברכה", ["Vezot Haberakhah", "V'zot Habracha", "Vezot Habracha", "Zot Habracha"]),
+    ("ראה", ["Re'eh", "Reeh", "Ree", "Reé"]), ("שופטים", ["Shoftim", "Shofetim"]), ("כי תצא", ["Ki Teitzei", "Ki Seitzei", "Ki Tetze", "Ki Tetzé"]),
+    ("כי תבוא", ["Ki Tavo", "Ki Savo", "Ki Tabo", "Ki Tavó"]), ("נצבים", ["Nitzavim"]), ("וילך", ["Vayeilech", "Vayelech", "Vayelej"]),
+    ("האזינו", ["Ha'azinu", "Haazinu"]), ("וזאת הברכה", ["Vezot Haberakhah", "V'zot Habracha", "Vezot Habracha", "Zot Habracha", "Bezot Haberaja", "Vezot Haberaja", "Vezot Haberajá", "Zot Haberaja"]),
 ]
 GEMATRIA = {"א": 1, "ב": 2, "ג": 3, "ד": 4, "ה": 5, "ו": 6, "ז": 7, "ח": 8, "ט": 9, "י": 10, "כ": 20, "ך": 20,
             "ל": 30, "מ": 40, "ם": 40, "נ": 50, "ן": 50, "ס": 60, "ע": 70, "פ": 80, "ף": 80, "צ": 90, "ץ": 90,
@@ -108,9 +108,10 @@ def _numero(texto):
     m = re.search(r"(\d{1,3})", texto)
     if m:
         return int(m.group(1))
-    m = re.search(r"(?:פרק|מזמור|תהלים|תהילים)\s*([\u05D0-\u05EA]{1,4})\b", texto)
-    if m:
-        return sum(GEMATRIA.get(c, 0) for c in m.group(1))
+    for pat in (r"(?:פרק|מזמור)\s*([\u05D0-\u05EA]{1,4})\b", r"(?:תהלים|תהילים)\s*([\u05D0-\u05EA]{1,4})\b"):
+        m = re.search(pat, texto)
+        if m and m.group(1) not in ("פרק", "מזמור"):
+            return sum(GEMATRIA.get(c, 0) for c in m.group(1))
     return 0
 
 
@@ -125,12 +126,18 @@ def clave_titulo(t):
 def clasificar(titulo):
     """→ (categoria, indice): 0 parashá, 1 Tehilim, 2 Rut, 3 Ester, 4 otro."""
     t = _norm(titulo)
+    # "18 MISHPATIM", "46 EKEV": el número de adelante es el orden de la parashá (1..54)
+    m = re.match(r"^\s*(\d{1,2})\s+\S", titulo)
+    num = int(m.group(1)) if m else 0
     for i, (heb, grafias) in enumerate(PARASHIOT):
         for g in [heb] + grafias:
             g = _norm(g).strip()
             if (" " + g + " ") in t:
-                return 0, i + 1
+                return 0, (num if 1 <= num <= 54 else i + 1)
     if re.search(r"תהל?ים|tehil+im|salmo|psalm|מזמור", titulo, re.I):
+        return 1, _numero(titulo)
+    # "Perek 023" / "פרק כג" a secas: Tehilim
+    if re.fullmatch(r"\s*(perek|pérek|פרק)\s*[\d\u05D0-\u05EA]{1,4}\s*", titulo, re.I):
         return 1, _numero(titulo)
     if re.search(r"\bרות\b|\bruth?\b", titulo, re.I):
         return 2, _numero(titulo)
@@ -156,7 +163,13 @@ def decodificar(s):
 
 def limpiar_titulo(s):
     s = re.sub(r"^\s*((fwd?|re|rv|fw)\s*:\s*)+", "", s, flags=re.I)
+    s = re.sub(r"^\s*00\s+", "", s)                      # "00 46 EKEV" → "46 EKEV"
     s = s.replace("_", " ")
+    # "Perek 023" a secas → "Tehilim Perek 023" (en Spotify se entiende de qué es)
+    if re.fullmatch(r"\s*(perek|pérek)\s*\d{1,3}\s*", s, re.I):
+        s = "Tehilim " + s.strip()
+    elif re.fullmatch(r"\s*פרק\s*[\u05D0-\u05EA]{1,4}\s*", s):
+        s = "תהלים " + s.strip()
     s = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "", s)
     return re.sub(r"\s+", " ", s).strip()[:120]
 
