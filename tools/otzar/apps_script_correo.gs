@@ -7,7 +7,7 @@
 //  manden los REMITENTES: adjuntos y links de Drive. Drive los baja a la PC
 //  y correo_shiurim.py los toma de esa carpeta en cada ANUNCIAR.
 // ============================================================
-var REMITENTES = ['credi71@gmail.com'];
+var REMITENTES = ['credi71@gmail.com', 'albertoamiga1@gmail.com'];   // el Rab y los reenviados desde el otro correo de Beto
 var CARPETA = 'OTZAR/taamim';          // dentro de Mi unidad
 var ETIQUETA = 'otzar-guardado';       // se pone al hilo cuando ya se guardó
 var AUDIO = /\.(mp3|m4a|wav|ogg|opus|aac|wma|amr|flac)$/i;
