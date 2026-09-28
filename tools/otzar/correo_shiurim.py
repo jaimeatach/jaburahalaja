@@ -166,11 +166,16 @@ def conectar(cfg, clave):
     ultimo = None
     for host in dict.fromkeys(c for c in candidatos if c):
         try:
-            m = imaplib.IMAP4_SSL(host, 993, ssl_context=ssl.create_default_context(), timeout=30)
+            m = imaplib.IMAP4_SSL(host, 993, ssl_context=ssl.create_default_context(), timeout=15)
+        except (socket.error, ssl.SSLError, OSError) as ex:
+            ultimo = "%s: %s" % (host, str(ex)[:120])
+            continue                                   # ese servidor no existe: probar otro
+        try:
             m.login(usuario, clave)
             return m, host
-        except (imaplib.IMAP4.error, socket.error, ssl.SSLError, OSError) as ex:
-            ultimo = "%s: %s" % (host, str(ex)[:120])
+        except imaplib.IMAP4.error as ex:
+            # el servidor sí es, pero rechazó la contraseña: no tiene caso seguir probando
+            raise Exception("%s rechazó la contraseña de %s (%s). Tiene que ser una contraseña de APLICACIÓN." % (host, usuario, str(ex)[:100]))
     raise Exception(ultimo or "sin servidor")
 
 

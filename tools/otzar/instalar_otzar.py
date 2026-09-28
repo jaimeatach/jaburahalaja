@@ -1588,6 +1588,7 @@ def correo():
     co = c.setdefault("correo", {})
     co["usuario"] = buzon
     co["de"] = remitentes
+    co.setdefault("servidor", "imap.gmail.com")        # Gmail / Google Workspace
     co.setdefault("desde", time.strftime("%Y-%m-01"))
     co["_nota"] = "cada ANUNCIAR baja los audios (adjuntos o links de Drive) de esos remitentes y los publica en orden: parashá, Tehilim, Rut, Ester"
     escribir(cfgp, json.dumps(c, ensure_ascii=False, indent=2) + "\n")
