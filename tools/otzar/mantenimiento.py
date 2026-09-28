@@ -193,6 +193,22 @@ def arreglar_mp3_falsos(show):
                 log(f"{show.name}: no pude convertir {f.name} (¿ffmpeg?)")
 
 
+def correo():
+    """shows con "correo" en su config.json (taamim): baja los audios que llegaron
+    por correo a su carpeta de WhatsApp, ordenados; luego publicar() los sube."""
+    script = BASE / "jabura" / "correo_shiurim.py"
+    if not script.exists():
+        return
+    hay = False
+    for show in sorted(BASE.iterdir()):
+        c = leer_json(show / "config.json") if show.is_dir() else {}
+        if c.get("correo"):
+            hay = True
+    if hay:
+        log("--- correo: audios que llegaron por mail ---")
+        subprocess.run([sys.executable, str(script), f"--base={BASE}"])
+
+
 def publicar():
     jab = BASE / "jabura"
     if (jab / "jabura_publicar.py").exists():
@@ -312,6 +328,7 @@ def main():
         return 1
     alinear_y_marcar(cfgw)
     rescatar_sin_titulo(cfgw)
+    correo()
     publicar()
     espejo()
     parasha_semanal(cfgw)

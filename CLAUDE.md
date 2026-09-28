@@ -207,6 +207,17 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    con el primero de la semana hasta el viernes, nunca sábado ni domingo):
    `mantenimiento.py` corre el script y deja `parasha.ahora` para el módulo
    `parasha_semanal.js` del usuario (Rav Asher Weiss, con su propio candado).
+   Audios por correo: `tools/otzar/correo_shiurim.py` (también en
+   `C:\OTZAR\jabura\`, lo corre `mantenimiento.py` antes de publicar). Para los
+   shows con `"correo"` en su `config.json` (`--correo=show:buzón:remitente`,
+   paso [34]; contraseña de aplicación en `<show>\correo_clave.txt`, nunca en el
+   repo) entra por IMAP al buzón, toma adjuntos de audio y links de Google Drive
+   de esos remitentes, pone título (nombre del archivo, o el asunto si el nombre
+   es genérico), descarta lo que ya está en el feed, ordena parashá → Tehilim →
+   Rut → Ester → resto (`clasificar`) y los deja en `audios_whatsapp` con fechas
+   seguidas después de lo último del feed; `podcast_bot.py` los publica en ese
+   orden. Candado `correo_procesados.json`. Así entró `taamim` (טעמי המקרא, חכם
+   יצחק בטיש; show creado con `--nuevo ... --nuevo-sin-grupos`: solo Spotify).
    Robot de fiestas (`robot_fiestas.py`, `FIESTA_*.bat`): `apartar_no_fiesta`
    solo borra mp3 que bajaron las corridas de ESA fiesta (fecha de creación
    posterior al arranque de la corrida, leído de `fiestas.log`; los shows que

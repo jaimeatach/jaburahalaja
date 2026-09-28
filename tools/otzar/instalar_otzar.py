@@ -19,6 +19,8 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py --nuevo=hilu --nuevo-nombre="Rab Joshua Hilu" --nuevo-rss=URL --nuevo-spotify=URL [--nuevo-grupo=LINK]
     python instalar_otzar.py --nacach-spotify=LINK          # el show de Nacach en Spotify
     python instalar_otzar.py --parasha=chazaq             # cada semana: el shiur de la parasha del canal de YouTube del show
+    python instalar_otzar.py --correo=taamim:buzon@dominio:remitente@gmail.com --correo-clave=XXXX   # audios que llegan por mail
+    python instalar_otzar.py --nuevo=taamim ... --nuevo-sin-grupos   # show solo para Spotify, sin anunciar en grupos
 
 Los shows (nacach, peretz…) viven en C:\\OTZAR; el robot en C:\\robotwhats. Los busca solo.
 
@@ -1190,6 +1192,9 @@ def show_nuevo():
     # el aviso va al grupo del Rab (primero, para que "Whatsapp" sea el link de SU grupo)
     # y a los grupos generales; sin audio, porque en su grupo ya está
     destinos = ([grupo] if grupo.startswith("http") else []) + [g for g in generales if g != grupo]
+    if "--nuevo-sin-grupos" in sys.argv:
+        destinos = []                 # solo Spotify: no se anuncia en ningún grupo
+        an["invite"] = ""
     if destinos:
         an["invite"] = destinos if len(destinos) > 1 else destinos[0]
         an["sin_whatsapp"] = not grupo.startswith("http")
@@ -1554,6 +1559,52 @@ def shows():
         print(f"       entrada: {modo} · episodios locales: {n_eps}" + (" · PAUSADO" if c.get("pausado") or (d / "PAUSADO.txt").exists() else ""))
     print("   → para publicar audios sueltos en un show: cópialos a su carpeta de WhatsApp con el título como nombre")
     print("     (p. ej. 'Sucot · Rab Fulano.mp3') y aprieta ANUNCIAR")
+
+
+# ── 34. --correo=show:buzon:remitente[,remitente]: los audios llegan por mail ──
+#   Deja "correo" en el config.json del show y la contraseña de aplicación en
+#   <show>\correo_clave.txt (--correo-clave=XXXX o el archivo a mano). En cada
+#   ANUNCIAR, mantenimiento.py corre jabura\correo_shiurim.py: baja adjuntos y
+#   links de Drive de esos remitentes, los ordena (parashá → Tehilim → Rut →
+#   Ester) y los deja en audios_whatsapp; podcast_bot los publica en ese orden.
+def correo():
+    arg = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--correo=")), "").strip().strip('"')
+    if not arg:
+        return
+    partes = arg.split(":")
+    if len(partes) < 3:
+        aviso("uso: --correo=show:buzon@dominio:remitente@dominio[,otro@dominio]")
+        return
+    show, buzon, remitentes = partes[0].strip().lower(), partes[1].strip(), [x.strip() for x in partes[2].split(",") if x.strip()]
+    paso(34, f"{show}: audios por correo de {', '.join(remitentes)} al buzón {buzon}")
+    d = BASE / show
+    cfgp = d / "config.json"
+    if not cfgp.exists():
+        aviso(f"no existe {cfgp}; primero crea el show con --nuevo={show} ...")
+        return
+    if not VER:
+        bajar("otzar/correo_shiurim.py", BASE / "jabura" / "correo_shiurim.py")
+    c = json.loads(cfgp.read_text(encoding="utf-8"))
+    co = c.setdefault("correo", {})
+    co["usuario"] = buzon
+    co["de"] = remitentes
+    co.setdefault("desde", time.strftime("%Y-%m-01"))
+    co["_nota"] = "cada ANUNCIAR baja los audios (adjuntos o links de Drive) de esos remitentes y los publica en orden: parashá, Tehilim, Rut, Ester"
+    escribir(cfgp, json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+    ok(f"config.json: correo {buzon} · remitentes {', '.join(remitentes)} · desde {co['desde']}")
+    clave = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--correo-clave=")), "").strip().strip('"')
+    cp = d / "correo_clave.txt"
+    if clave:
+        escribir(cp, clave.replace(" ", "") + "\n")
+        ok("contraseña guardada en " + str(cp))
+    elif cp.exists() or (BASE / "correo_clave.txt").exists():
+        ok("ya había contraseña (correo_clave.txt)")
+    else:
+        aviso(f"falta la contraseña: python instalar_otzar.py --correo={arg} --correo-clave=XXXX")
+        print("     (Gmail / Google Workspace: contraseña de APLICACIÓN, no la normal:")
+        print("      Cuenta Google → Seguridad → Verificación en 2 pasos → Contraseñas de aplicaciones)")
+    print(f"   → probar sin guardar nada: python {BASE / 'jabura' / 'correo_shiurim.py'} {show} --ver")
+    print("   → luego cada ANUNCIAR los baja, los publica en orden y Spotify los lee")
 
 
 # ── 33. --parasha=show1,show2: la parasha de la semana desde YouTube, cada semana ──
@@ -2504,6 +2555,7 @@ def instalar_anunciar():
     if not VER:
         bajar("otzar/mantenimiento.py", BASE / "jabura" / "mantenimiento.py")
         bajar("otzar/parasha_youtube.py", BASE / "jabura" / "parasha_youtube.py")
+        bajar("otzar/correo_shiurim.py", BASE / "jabura" / "correo_shiurim.py")
     if ruta.exists() and "mantenimiento.py" in ruta.read_text(encoding="utf-8", errors="replace"):
         ok("ya llama al mantenimiento (jabura, shows de WhatsApp, espejo, sin atrasos)")
         return
@@ -2667,6 +2719,7 @@ def main():
     curso()
     retitular()
     parasha()
+    correo()
     shows()
     listar()
     shows_whatsapp_al_dia()
