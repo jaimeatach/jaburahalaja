@@ -1,21 +1,34 @@
 // ============================================================
 //  OTZAR · correo → Drive   (Google Apps Script)
-//  Pegar TODO esto en https://script.google.com (con la cuenta del buzón,
-//  bamiga@autentafoods.com), guardar, elegir la función "instalar" y
-//  apretar Ejecutar UNA vez (pide permisos: aceptar). Desde ahí, cada
-//  10 minutos guarda en Drive (Mi unidad\OTZAR\taamim) los audios que
-//  manden los REMITENTES: adjuntos y links de Drive. Drive los baja a la PC
-//  y correo_shiurim.py los toma de esa carpeta en cada ANUNCIAR.
+//  Pegar TODO esto en https://script.google.com con la cuenta donde LLEGAN los
+//  correos (albertoamiga1@gmail.com), guardar, elegir la función "instalar" y
+//  apretar Ejecutar UNA vez (pide permisos: aceptar). Desde ahí, cada 10 minutos
+//  guarda en Drive (Mi unidad\OTZAR\taamim) los audios que manden los
+//  REMITENTES (adjuntos y links de Drive) y comparte esa carpeta con
+//  COMPARTIR_CON (la cuenta cuyo Drive está montado en la PC de Otzar).
+//  En esa cuenta: Compartido conmigo → taamim → Organizar → Agregar acceso
+//  directo a Mi unidad. Drive la baja a la PC como
+//  G:\.shortcut-targets-by-id\<ID>\taamim (el registro dice el ID) y
+//  correo_shiurim.py la toma de ahí en cada ANUNCIAR.
 // ============================================================
-var REMITENTES = ['credi71@gmail.com', 'albertoamiga1@gmail.com'];   // el Rab y los reenviados desde el otro correo de Beto
-var CARPETA = 'OTZAR/taamim';          // dentro de Mi unidad
-var ETIQUETA = 'otzar-guardado';       // se pone al hilo cuando ya se guardó
+var REMITENTES = ['credi71@gmail.com'];
+var CARPETA = 'OTZAR/taamim';                  // dentro de Mi unidad de esta cuenta
+var COMPARTIR_CON = 'bamiga@autentafoods.com'; // el Drive que está en la PC (G:)
+var ETIQUETA = 'otzar-guardado';               // se pone al hilo cuando ya se guardó
 var AUDIO = /\.(mp3|m4a|wav|ogg|opus|aac|wma|amr|flac)$/i;
 
 function instalar() {
   ScriptApp.getProjectTriggers().forEach(function (t) { ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger('guardar').timeBased().everyMinutes(10).create();
+  var f = carpeta();
+  if (COMPARTIR_CON) {
+    try { f.addEditor(COMPARTIR_CON); } catch (e) { Logger.log('no pude compartir con ' + COMPARTIR_CON + ': ' + e); }
+  }
   guardar();
+  Logger.log('CARPETA ID: ' + f.getId());
+  Logger.log('En la PC de Otzar (tras el acceso directo en Mi unidad de ' + COMPARTIR_CON + '):');
+  Logger.log('  G:\\.shortcut-targets-by-id\\' + f.getId() + '\\' + f.getName());
+  Logger.log('  python instalar_otzar.py --correo-carpeta=taamim:"G:\\.shortcut-targets-by-id\\' + f.getId() + '\\' + f.getName() + '"');
 }
 
 function carpeta() {
