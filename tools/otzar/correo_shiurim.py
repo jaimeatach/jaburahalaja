@@ -350,21 +350,22 @@ def recolectar_correo(carpeta, cfg, proc):
 
 
 def nombre_zip(info):
-    """Nombres hebreos dentro de un zip hecho en Windows: zipfile los lee como cp437; se recuperan."""
+    """Nombres hebreos dentro de un zip: si vienen bien (UTF-8) se dejan; si vienen
+    en cp862/cp1255 (zips viejos de Windows) o como basura tipo 'Üäîëì' se recuperan."""
     n = info.filename
-    if info.flag_bits & 0x800:
-        return n                              # ya venía en UTF-8
+    if re.search(r"[\u05D0-\u05EA]", n) or re.fullmatch(r"[\x00-\x7f]*", n):
+        return n                              # hebreo legible o puro ASCII
     try:
         crudo = n.encode("cp437")
     except UnicodeEncodeError:
         return n
-    for cod in ("cp862", "cp1255", "utf-8"):
+    for cod in ("cp862", "cp1255"):
         try:
             t = crudo.decode(cod)
-            if re.search(r"[\u05D0-\u05EA]", t) or cod == "utf-8":
-                return t
         except UnicodeDecodeError:
             continue
+        if re.search(r"[\u05D0-\u05EA]", t):
+            return t
     return n
 
 
