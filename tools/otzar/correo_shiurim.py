@@ -105,6 +105,7 @@ def _norm(t):
 
 def _numero(texto):
     """'23', 'כג', 'ק״נ' → número (después de la palabra Tehilim/perek)."""
+    texto = texto.replace("״", "").replace("׳", "").replace("'", "").replace('"', "")
     m = re.search(r"(\d{1,3})", texto)
     if m:
         return int(m.group(1))
