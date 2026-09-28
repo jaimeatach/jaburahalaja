@@ -36,7 +36,7 @@ se asignan seguidas después de lo último que ya tiene el feed, así en Spotify
 quedan en ese orden y siempre arriba de lo anterior. Lo que ya está en el feed
 (por título) no se vuelve a subir. Candado: correo_procesados.json.
 """
-import email, email.header, email.utils, imaplib, json, os, re, socket, ssl, sys, time, urllib.parse, urllib.request
+import email, email.header, email.utils, imaplib, json, os, re, socket, ssl, sys, time, urllib.parse, urllib.request, zipfile
 from datetime import datetime
 from pathlib import Path
 
@@ -349,25 +349,62 @@ def recolectar_correo(carpeta, cfg, proc):
     return [it for it in nuevos if it[4]]
 
 
+def nombre_zip(info):
+    """Nombres hebreos dentro de un zip hecho en Windows: zipfile los lee como cp437; se recuperan."""
+    n = info.filename
+    if info.flag_bits & 0x800:
+        return n                              # ya venía en UTF-8
+    try:
+        crudo = n.encode("cp437")
+    except UnicodeEncodeError:
+        return n
+    for cod in ("cp862", "cp1255", "utf-8"):
+        try:
+            t = crudo.decode(cod)
+            if re.search(r"[\u05D0-\u05EA]", t) or cod == "utf-8":
+                return t
+        except UnicodeDecodeError:
+            continue
+    return n
+
+
 def recolectar_carpeta(carpeta, cfg, proc):
-    """Modo carpeta: los audios ya están en una carpeta (Drive sincronizado en la PC)."""
+    """Modo carpeta: los audios ya están en una carpeta (Drive sincronizado, o una carpeta
+    donde Beto los descargó). Entra también a los .zip y a las subcarpetas."""
     origen = Path(cfg["carpeta"])
     if not origen.is_dir():
         log("[%s] no veo la carpeta %s (¿está montado el Drive?)" % (carpeta.name, origen))
         return None
-    archivos = [p for p in sorted(origen.iterdir()) if p.is_file() and p.suffix.lower() in AUDIO]
-    log("[%s] carpeta %s: %d audio(s)" % (carpeta.name, origen, len(archivos)))
+    archivos = [p for p in sorted(origen.rglob("*")) if p.is_file() and p.suffix.lower() in AUDIO + (".zip",)]
+    log("[%s] carpeta %s: %d archivo(s) de audio o zip" % (carpeta.name, origen, len(archivos)))
     nuevos = []
     for p in archivos:
         try:
             st = p.stat()
         except OSError:
             continue
+        if time.time() - st.st_mtime < 120:
+            continue                      # todavía bajando / sincronizando
+        if p.suffix.lower() == ".zip":
+            try:
+                with zipfile.ZipFile(p) as z:
+                    for info in z.infolist():
+                        nombre = nombre_zip(info)
+                        if info.is_dir() or Path(nombre).suffix.lower() not in AUDIO or info.file_size < 20000:
+                            continue
+                        clave = "%s|%s|%d" % (p.name, nombre, info.file_size)
+                        if clave in proc and not TODOS:
+                            continue
+                        titulo = limpiar_titulo(Path(nombre).stem) or ("Shiur " + time.strftime("%Y-%m-%d"))
+                        nuevos.append([*clasificar(titulo), titulo, Path(nombre).suffix.lower(), z.read(info), None, clave])
+            except (zipfile.BadZipFile, OSError) as ex:
+                log("    zip ilegible %s (%s)" % (p.name[:50], str(ex)[:60]))
+            continue
         clave = "%s|%d" % (p.name, st.st_size)
         if clave in proc and not TODOS:
             continue
-        if st.st_size < 20000 or time.time() - st.st_mtime < 120:
-            continue                      # todavía bajando / sincronizando
+        if st.st_size < 20000:
+            continue
         titulo = limpiar_titulo(p.stem) or ("Shiur " + time.strftime("%Y-%m-%d"))
         try:
             datos = p.read_bytes()
