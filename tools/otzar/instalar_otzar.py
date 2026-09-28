@@ -20,7 +20,7 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py --nacach-spotify=LINK          # el show de Nacach en Spotify
     python instalar_otzar.py --parasha=chazaq             # cada semana: el shiur de la parasha del canal de YouTube del show
     python instalar_otzar.py --correo=taamim:buzon@dominio:remitente@gmail.com --correo-clave=XXXX   # audios que llegan por mail
-    python instalar_otzar.py --correo-carpeta=taamim:"G:\Mi unidad\OTZAR\taamim"   # lo mismo vía Drive (script de Google) cuando el filtro no deja entrar a Gmail
+    python instalar_otzar.py --correo-carpeta=taamim:"G:\\Mi unidad\\OTZAR\\taamim"   # lo mismo vía Drive (script de Google) cuando el filtro no deja entrar a Gmail
     python instalar_otzar.py --nuevo=taamim ... --nuevo-sin-grupos   # show solo para Spotify, sin anunciar en grupos
 
 Los shows (nacach, peretz…) viven en C:\\OTZAR; el robot en C:\\robotwhats. Los busca solo.
