@@ -1566,9 +1566,10 @@ def shows():
 #   Archive dice "reduce your request rate" y NO vuelve a subir lo que ya está en el
 #   ítem (checksum). Antes, 185 audios de golpe tronaban a la mitad y el siguiente
 #   ANUNCIAR volvía a empezar desde cero.
-MARCA_CALMA = "# === archive con calma (otzar) ==="
+MARCA_CALMA = "# === archive con calma v2 (otzar) ==="
+MARCA_CALMA_VIEJA = "# === archive con calma (otzar) ==="
 CUERPO_CALMA = '''    log(f"Subiendo {len(archivos)} archivo(s) a Archive.org...")
-    # === archive con calma (otzar) ===
+    # === archive con calma v2 (otzar) ===
     # por tandas, sin repetir lo ya subido (checksum) y esperando si Archive pide calma
     rutas = [str(a) for a in archivos]
     lote = 25
@@ -1586,6 +1587,11 @@ CUERPO_CALMA = '''    log(f"Subiendo {len(archivos)} archivo(s) a Archive.org...
                 if "reduce your request rate" in txt or "rationed" in txt or "exceeds" in txt:
                     log(f"Archive pide calma ({i + len(parte)}/{len(rutas)}); espero 5 min y sigo...")
                     time.sleep(300)
+                    continue
+                if ("Connection aborted" in txt or "ConnectionReset" in txt or "10054" in txt or "timed out" in txt
+                        or "Max retries" in txt or "RemoteDisconnected" in txt or "503" in txt or "SlowDown" in txt):
+                    log(f"Archive corto la conexion ({i + len(parte)}/{len(rutas)}); espero {2 + intento} min y reintento...")
+                    time.sleep(60 * (2 + intento))
                     continue
                 log(f"ERROR subiendo a Archive: {e}")
                 return False
@@ -1609,6 +1615,20 @@ def archive_calma():
             continue
         s = bot.read_text(encoding="utf-8", errors="replace")
         if MARCA_CALMA in s:
+            continue
+        if MARCA_CALMA_VIEJA in s:
+            # versión anterior del parche: se reemplaza el cuerpo completo
+            a = s.index('    log(f"Subiendo {len(archivos)} archivo(s) a Archive.org...")\n')
+            b = s.index('    log("Subida a Archive: OK")\n    return True\n', a) + len('    log("Subida a Archive: OK")\n    return True\n')
+            nuevo = s[:a] + CUERPO_CALMA + s[b:]
+            try:
+                compile(nuevo, str(bot), "exec")
+            except SyntaxError as ex:
+                aviso(f"{d.name}: el parche v2 no compila ({ex}); no lo toco")
+                continue
+            respaldar(bot)
+            escribir(bot, nuevo)
+            n += 1
             continue
         m = re.search(r'\n    log\(f"Subiendo \{len\(archivos\)\} archivo\(s\) a Archive\.org\.\.\."\)\n', s)
         if not m:
