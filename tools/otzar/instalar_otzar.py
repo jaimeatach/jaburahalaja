@@ -22,6 +22,8 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py --correo=taamim:buzon@dominio:remitente@gmail.com --correo-clave=XXXX   # audios que llegan por mail
     python instalar_otzar.py --correo-carpeta=taamim:"G:\\Mi unidad\\OTZAR\\taamim"   # lo mismo vía Drive (script de Google) cuando el filtro no deja entrar a Gmail
     python instalar_otzar.py --nuevo=taamim ... --nuevo-sin-grupos   # show solo para Spotify, sin anunciar en grupos
+    python instalar_otzar.py --reordenar=taamim                  # feed en orden de Tanaj (parashá, Tehilim, Rut, Ester)
+    python instalar_otzar.py --nombres=musar --excluir="musar:שער הבי?טחון"   # nombre del Rab en el título; series que no se bajan
 
 Los shows (nacach, peretz…) viven en C:\\OTZAR; el robot en C:\\robotwhats. Los busca solo.
 
@@ -40,7 +42,7 @@ Qué hace, con copia de respaldo de cada archivo que toca:
      2, Rosh Hashana q se junta) en todas las carpetas del robot, los deja en la
      carpeta de WhatsApp de nacach y corre podcast_bot.py ahí.
 """
-import base64
+import base64, importlib.util
 import hashlib
 import json
 import os
@@ -1652,6 +1654,205 @@ def archive_calma():
     ok(f"{n} podcast_bot.py parchados" if n else "todos ya suben con calma")
 
 
+# ── 36. --reordenar=show: el feed en orden de Tanaj (parashá 1..54 → Tehilim → Rut →
+#   Ester → resto), con fechas seguidas. Primero mete al feed los mp3 locales que
+#   falten (podcast_bot.py feed). Sirve cuando un episodio se quedó fuera o con fecha
+#   de otro día (taamim: los 16 rescatados de Spotify).
+def reordenar():
+    show = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--reordenar=")), "").strip().lower()
+    if not show:
+        return
+    paso(36, f"{show}: feed en orden de Tanaj con fechas seguidas")
+    d = BASE / show
+    c = json.loads((d / "config.json").read_text(encoding="utf-8")) if (d / "config.json").exists() else {}
+    tok = next((p for p in (d / "github_token.txt", BASE / "jabura" / "github_token.txt") if p.exists()), None)
+    if not tok:
+        aviso("falta github_token.txt")
+        return
+    if (d / "podcast_bot.py").exists() and not VER:
+        print("   --- podcast_bot.py feed (mete los mp3 locales que falten) ---")
+        subprocess.run([sys.executable, "podcast_bot.py", "feed"], cwd=str(d))
+    spec = importlib.util.spec_from_file_location("correo_shiurim", BASE / "jabura" / "correo_shiurim.py")
+    try:
+        co = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(co)
+    except Exception as ex:
+        aviso(f"no pude cargar jabura\\correo_shiurim.py ({ex}); corre el instalador sin argumentos primero")
+        return
+    cab = {"Authorization": "token " + tok.read_text(encoding="utf-8").strip(),
+           "User-Agent": "instalar-otzar", "Accept": "application/vnd.github+json"}
+    base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}"
+    try:
+        j = _gh_get(base, cab, "feed.xml")
+    except Exception as e:                                  # noqa: BLE001
+        aviso(f"no pude leer el feed: {e}")
+        return
+    feed = base64.b64decode(j["content"]).decode("utf-8")
+    from email.utils import parsedate_to_datetime, format_datetime
+    from datetime import datetime
+    items = re.findall(r"[ \t]*<item>[\s\S]*?</item>\n?", feed)
+    if not items:
+        aviso("el feed no tiene episodios")
+        return
+    filas = []
+    vistos = set()
+    for k, it in enumerate(items):
+        t = re.search(r"<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</title>", it, re.S)
+        titulo = (t.group(1) if t else "").replace("&amp;", "&").strip()
+        g = re.search(r"<guid[^>]*>(.*?)</guid>", it)
+        clave = (g.group(1) if g else titulo).strip()
+        if clave in vistos:
+            print(f"   (repetido, se quita) {titulo[:60]}")
+            continue                                          # GitHub Pages a veces sirve un feed viejo y el bot duplica
+        vistos.add(clave)
+        m = re.search(r"<pubDate>(.*?)</pubDate>", it)
+        try:
+            viejo = parsedate_to_datetime(m.group(1).strip()).timestamp() if m else 0
+        except Exception:
+            viejo = 0
+        cat, idx = co.clasificar(co.limpiar_titulo(titulo))
+        filas.append((cat, idx, viejo, k, titulo, it))
+    filas.sort(key=lambda f: f[:4])
+    n = len(filas)
+    inicio = time.time() - (n + 2) * 60 - 3600           # todas en el pasado, una por minuto
+    primero = min(f[2] for f in filas if f[2]) if any(f[2] for f in filas) else 0
+    if primero and primero + n * 60 < time.time() - 60:
+        inicio = primero                                  # se respeta la fecha más vieja que ya tenía el feed
+    nuevos = []
+    for k, (cat, idx, viejo, _k, titulo, it) in enumerate(filas):
+        fecha = format_datetime(datetime.fromtimestamp(inicio + k * 60).astimezone())
+        it2 = re.sub(r"<pubDate>.*?</pubDate>", "<pubDate>%s</pubDate>" % fecha, it, count=1)
+        if "<pubDate>" not in it2:
+            it2 = it2.replace("</title>", "</title>\n      <pubDate>%s</pubDate>" % fecha, 1)
+        nuevos.append(it2)
+        print(f"   {k + 1:3d}. [{['parashá', 'Tehilim', 'Rut', 'Ester', 'otro'][cat]} {idx}] {titulo[:60]}")
+    ini = feed.find(items[0])
+    fin = feed.rfind("</item>") + len("</item>")
+    nuevo = feed[:ini] + "".join(x if x.endswith("\n") else x + "\n" for x in nuevos) + feed[fin:].lstrip("\n")
+    if VER:
+        print(f"   (reordenaría {n} episodios)")
+        return
+    _gh_put(base, cab, "feed.xml", nuevo.encode("utf-8"), f"feed en orden de Tanaj ({n} episodios)", j["sha"])
+    ok(f"{n} episodios en orden; Spotify toma el orden nuevo cuando relea el feed")
+
+
+# ── 37. podcast_bot: nombre del Rab en el título (canales con "prefijo") y
+#   "excluir_titulo" (regex) para saltar series enteras. Se aplica a todos los shows.
+MARCA_NOMBRES = "# === nombre del rab y exclusiones (otzar) ==="
+
+
+def bots_nombres():
+    paso(37, "podcast_bot: nombre del Rab en el título y series excluidas")
+    n = 0
+    for d in sorted(BASE.iterdir()):
+        bot = d / "podcast_bot.py"
+        if not (d.is_dir() and bot.exists()):
+            continue
+        s = bot.read_text(encoding="utf-8", errors="replace")
+        if MARCA_NOMBRES in s:
+            continue
+        a1 = "def _lista_plana(url, n, filtro):"
+        a2 = '        if filtro and not re.search(filtro, tit, re.I): continue\n        out.append((vid, tit))'
+        a3 = '"-o", str(CARPETA / "%(title)s.%(ext)s"), url]'
+        a4 = "def bajar_nuevos():\n"
+        if not all(x in s for x in (a1, a2, a3, a4)):
+            aviso(f"{d.name}: podcast_bot.py distinto, no lo toco")
+            continue
+        s = s.replace(a1, MARCA_NOMBRES + '''
+_EXCLUIR = CFG.get("excluir_titulo") or ""     # regex: titulos que NO se bajan (p. ej. una serie)
+_PREFIJO = ""                                    # nombre del Rab del canal en turno
+
+def _nombra(titulo, prefijo):
+    # True si el titulo ya trae el nombre (todas las palabras del prefijo salvo 'הרב'/'Rab')
+    palabras = [p for p in re.split(r"\\s+", prefijo) if p and p not in ("הרב", 'הרה"ג', "הגאון", "רבי", "Rab", "Rav", "Rabbi", "Sr.")]
+    return bool(palabras) and all(p in titulo for p in palabras)
+
+''' + a1, 1)
+        s = s.replace(a2, '        if filtro and not re.search(filtro, tit, re.I): continue\n'
+                          '        if _EXCLUIR and re.search(_EXCLUIR, tit, re.I): continue   # excluir_titulo\n'
+                          '        out.append((vid, tit))', 1)
+        s = s.replace(a3, '"-o", str(CARPETA / (((_PREFIJO + " · ") if _PREFIJO and not _nombra(titulo, _PREFIJO) else "") + "%(title)s.%(ext)s")), url]', 1)
+        s = s.replace(a4, a4 + "    global _EXCLUIR, _PREFIJO   # === otzar ===\n", 1)
+        # por canal: prefijo y exclusión propios
+        a5 = '            u = ch; n = cuantos_global; filtro = CFG.get("filtro_titulo"); nombre = u\n'
+        if a5 in s:
+            s = s.replace(a5, a5 + '        _EXCLUIR = (ch.get("excluir_titulo") if isinstance(ch, dict) else None) or CFG.get("excluir_titulo") or ""\n'
+                                   '        _PREFIJO = (ch.get("prefijo") if isinstance(ch, dict) else None) or ""\n', 1)
+        else:
+            aviso(f"{d.name}: sin el bloque por canal; solo prefijo/exclusión globales")
+        try:
+            compile(s, str(bot), "exec")
+        except SyntaxError as ex:
+            aviso(f"{d.name}: el parche no compila ({ex}); no lo toco")
+            continue
+        respaldar(bot)
+        escribir(bot, s)
+        n += 1
+    ok(f"{n} podcast_bot.py parchados" if n else "todos ya lo tenían")
+
+
+# ── 38. --nombres=show: prefijo (nombre del Rab en hebreo) para cada canal del show;
+#   --excluir=show:regex: series que no se bajan más (p. ej. שער הביטחון en musar).
+PREFIJOS_CANAL = {
+    "biderman": "הרב אלימלך בידרמן", "ben porat": "הרב יוסף בן פורת", "rosenblum": "הרב ברוך רוזנבלום",
+    "amrami": "הרב אייל עמרמי", "gueta": "הרב שניר גואטה", "zamir cohen": "הרב זמיר כהן",
+    "yigal cohen": "הרב יגאל כהן", "shalom arush": "הרב שלום ארוש", "panger": "הרב יצחק פנגר",
+    "lasri": "הרב מיכאל לסרי", "levinstein": "הרב שלמה לוינשטיין", "shaulov": "הרב רונן שאולוב",
+    "alonimail": "",                                     # agregador: sus títulos ya traen el nombre
+}
+
+
+def nombres():
+    show = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--nombres=")), "").strip().lower()
+    exc = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--excluir=")), "").strip().strip('"')
+    if not show and not exc:
+        return
+    if exc and ":" in exc:
+        s_, _, rx = exc.partition(":")
+        cfgp = BASE / s_.strip().lower() / "config.json"
+        if cfgp.exists():
+            paso(38, f"{s_}: no bajar más lo que diga /{rx}/")
+            c = json.loads(cfgp.read_text(encoding="utf-8"))
+            try:
+                re.compile(rx)
+            except re.error as ex:
+                aviso(f"regex inválida: {ex}")
+                return
+            c["excluir_titulo"] = rx
+            escribir(cfgp, json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+            ok(f"excluir_titulo = {rx} (aplica a todos los canales del show)")
+            print(f"   → para sacar del feed lo ya subido: python instalar_otzar.py --quitar=\"{s_}:TEXTO\"")
+        else:
+            aviso(f"no existe {cfgp}")
+    if show:
+        cfgp = BASE / show / "config.json"
+        if not cfgp.exists():
+            aviso(f"no existe {cfgp}")
+            return
+        paso(38, f"{show}: nombre del Rab al frente del título, por canal")
+        c = json.loads(cfgp.read_text(encoding="utf-8"))
+        canales = c.get("canales_youtube") or []
+        puestos = []
+        for k, ch in enumerate(canales):
+            if not isinstance(ch, dict):
+                canales[k] = ch = {"url": ch}
+            nombre = (ch.get("nombre") or "").lower()
+            if ch.get("prefijo") is not None:
+                continue
+            pref = next((v for clave, v in PREFIJOS_CANAL.items() if clave in nombre), None)
+            if pref is None:
+                aviso(f"canal '{ch.get('nombre') or ch.get('url')}': no sé el nombre en hebreo; ponle \"prefijo\" a mano en config.json")
+                continue
+            ch["prefijo"] = pref
+            if pref:
+                puestos.append(f"{ch.get('nombre')} → {pref}")
+        c["canales_youtube"] = canales
+        escribir(cfgp, json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+        for p in puestos:
+            print("   · " + p)
+        ok(f"{len(puestos)} canal(es) con nombre; el título queda 'הרב X · título' cuando el video no lo trae")
+
+
 # ── 34. --correo=show:buzon:remitente[,remitente]: los audios llegan por mail ──
 #   Deja "correo" en el config.json del show y la contraseña de aplicación en
 #   <show>\correo_clave.txt (--correo-clave=XXXX o el archivo a mano). En cada
@@ -2836,6 +3037,9 @@ def main():
     parasha()
     correo()
     archive_calma()
+    bots_nombres()
+    reordenar()
+    nombres()
     shows()
     listar()
     shows_whatsapp_al_dia()
