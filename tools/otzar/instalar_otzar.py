@@ -1562,6 +1562,76 @@ def shows():
     print("     (p. ej. 'Sucot · Rab Fulano.mp3') y aprieta ANUNCIAR")
 
 
+# ── 35. Archive con calma: cada podcast_bot.py sube por tandas de 25, espera cuando
+#   Archive dice "reduce your request rate" y NO vuelve a subir lo que ya está en el
+#   ítem (checksum). Antes, 185 audios de golpe tronaban a la mitad y el siguiente
+#   ANUNCIAR volvía a empezar desde cero.
+MARCA_CALMA = "# === archive con calma (otzar) ==="
+CUERPO_CALMA = '''    log(f"Subiendo {len(archivos)} archivo(s) a Archive.org...")
+    # === archive con calma (otzar) ===
+    # por tandas, sin repetir lo ya subido (checksum) y esperando si Archive pide calma
+    rutas = [str(a) for a in archivos]
+    lote = 25
+    for i in range(0, len(rutas), lote):
+        parte = rutas[i:i + lote]
+        for intento in range(8):
+            try:
+                upload(CFG["archive_id"], files=parte,
+                       metadata={"title": CFG["titulo"], "mediatype": "audio",
+                                 "collection": "opensource_audio"},
+                       retries=10, retries_sleep=30, checksum=True)
+                break
+            except Exception as e:
+                txt = str(e)
+                if "reduce your request rate" in txt or "rationed" in txt or "exceeds" in txt:
+                    log(f"Archive pide calma ({i + len(parte)}/{len(rutas)}); espero 5 min y sigo...")
+                    time.sleep(300)
+                    continue
+                log(f"ERROR subiendo a Archive: {e}")
+                return False
+        else:
+            log("Archive sigue pidiendo calma; lo reintento en el proximo ANUNCIAR.")
+            return False
+        if i + lote < len(rutas):
+            log(f"  {i + len(parte)}/{len(rutas)} subidos...")
+            time.sleep(20)
+    log("Subida a Archive: OK")
+    return True
+'''
+
+
+def archive_calma():
+    paso(35, "Archive.org con calma: subir por tandas y no repetir lo ya subido")
+    n = 0
+    for d in sorted(BASE.iterdir()):
+        bot = d / "podcast_bot.py"
+        if not (d.is_dir() and bot.exists()):
+            continue
+        s = bot.read_text(encoding="utf-8", errors="replace")
+        if MARCA_CALMA in s:
+            continue
+        m = re.search(r'\n    log\(f"Subiendo \{len\(archivos\)\} archivo\(s\) a Archive\.org\.\.\."\)\n', s)
+        if not m:
+            aviso(f"{d.name}: podcast_bot.py distinto, no lo toco")
+            continue
+        fin = re.search(r"\n(?=def |\S)", s[m.end():])     # hasta la siguiente cosa de primer nivel
+        if not fin:
+            aviso(f"{d.name}: no encontré el final de subir_nuevos_a_archive")
+            continue
+        nuevo = s[:m.start() + 1] + CUERPO_CALMA + "\n" + s[m.end() + fin.start() + 1:]
+        if "import time" not in nuevo and "time.time()" not in nuevo:
+            nuevo = nuevo.replace("import ", "import time, ", 1)
+        try:
+            compile(nuevo, str(bot), "exec")
+        except SyntaxError as ex:
+            aviso(f"{d.name}: el parche no compila ({ex}); no lo toco")
+            continue
+        respaldar(bot)
+        escribir(bot, nuevo)
+        n += 1
+    ok(f"{n} podcast_bot.py parchados" if n else "todos ya suben con calma")
+
+
 # ── 34. --correo=show:buzon:remitente[,remitente]: los audios llegan por mail ──
 #   Deja "correo" en el config.json del show y la contraseña de aplicación en
 #   <show>\correo_clave.txt (--correo-clave=XXXX o el archivo a mano). En cada
@@ -2745,6 +2815,7 @@ def main():
     retitular()
     parasha()
     correo()
+    archive_calma()
     shows()
     listar()
     shows_whatsapp_al_dia()
