@@ -23,6 +23,7 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py --correo-carpeta=taamim:"G:\\Mi unidad\\OTZAR\\taamim"   # lo mismo vía Drive (script de Google) cuando el filtro no deja entrar a Gmail
     python instalar_otzar.py --nuevo=taamim ... --nuevo-sin-grupos   # show solo para Spotify, sin anunciar en grupos
     python instalar_otzar.py --reordenar=taamim                  # feed en orden de Tanaj (parashá, Tehilim, Rut, Ester)
+    python instalar_otzar.py --compactar=musar                   # feed hinchado de espacios (GitHub 422): compactarlo ya
     python instalar_otzar.py --nombres=musar --excluir="musar:שער הבי?טחון"   # nombre del Rab en el título; series que no se bajan
 
 Los shows (nacach, peretz…) viven en C:\\OTZAR; el robot en C:\\robotwhats. Los busca solo.
@@ -1251,6 +1252,30 @@ def _gh_get(base, cab, ruta):
         return json.loads(r.read().decode())
 
 
+def _gh_texto(base, cab, ruta):
+    """(texto, sha) de un archivo del repo; para los que pesan más de 1 MB la API no
+    manda el contenido en el JSON y hay que pedirlo en crudo."""
+    j = _gh_get(base, cab, ruta)
+    if j.get("content"):
+        return base64.b64decode(j["content"]).decode("utf-8"), j["sha"]
+    cab2 = dict(cab)
+    cab2["Accept"] = "application/vnd.github.raw"
+    with urllib.request.urlopen(urllib.request.Request(f"{base}/contents/{ruta}", headers=cab2), timeout=180) as r:
+        return r.read().decode("utf-8", "replace"), j["sha"]
+
+
+def _compactar_feed(s):
+    """Quita el espacio acumulado (líneas en blanco, colas de espacios, sangrías enormes).
+    El feed de musar llegó a 40 MB de puro espacio y GitHub lo rechazaba (422)."""
+    out = []
+    for ln in s.splitlines():
+        ln = ln.rstrip()
+        if not ln.strip():
+            continue
+        out.append(re.sub(r"^[ \t]{7,}", "      ", ln))
+    return "\n".join(out) + "\n"
+
+
 def _gh_put(base, cab, ruta, datos, msg, sha=None):
     cuerpo = {"message": msg, "content": base64.b64encode(datos).decode()}
     if sha:
@@ -1683,11 +1708,12 @@ def reordenar():
            "User-Agent": "instalar-otzar", "Accept": "application/vnd.github+json"}
     base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}"
     try:
-        j = _gh_get(base, cab, "feed.xml")
+        feed, sha_feed = _gh_texto(base, cab, "feed.xml")
+        j = {"sha": sha_feed}
     except Exception as e:                                  # noqa: BLE001
         aviso(f"no pude leer el feed: {e}")
         return
-    feed = base64.b64decode(j["content"]).decode("utf-8")
+    feed = _compactar_feed(feed)
     from email.utils import parsedate_to_datetime, format_datetime
     from datetime import datetime
     items = re.findall(r"[ \t]*<item>[\s\S]*?</item>\n?", feed)
@@ -1789,6 +1815,87 @@ def _nombra(titulo, prefijo):
         escribir(bot, s)
         n += 1
     ok(f"{n} podcast_bot.py parchados" if n else "todos ya lo tenían")
+
+
+# ── 39. Feed compacto: cada podcast_bot.py compacta el feed antes de subirlo a GitHub
+#   (el de musar creció a 40 MB de espacios y GitHub lo rechazaba con 422: nada se
+#   publicaba desde el 29/09). --compactar=show lo arregla ya, sin esperar a ACTUALIZAR.
+MARCA_COMPACTO = "# === feed compacto (otzar) ==="
+
+
+def bots_compacto():
+    paso(39, "podcast_bot: feed compacto antes de subirlo a GitHub")
+    n = 0
+    for d in sorted(BASE.iterdir()):
+        bot = d / "podcast_bot.py"
+        if not (d.is_dir() and bot.exists()):
+            continue
+        s = bot.read_text(encoding="utf-8", errors="replace")
+        if MARCA_COMPACTO in s:
+            continue
+        a1 = "def subir_feed_a_github():"
+        a2 = '"content": base64.b64encode(Path(FEED).read_bytes()).decode()}'
+        if a1 not in s or a2 not in s:
+            aviso(f"{d.name}: podcast_bot.py distinto, no lo toco")
+            continue
+        s = s.replace(a1, MARCA_COMPACTO + '''
+def _compacto(s):
+    # quita espacio acumulado (lineas en blanco, colas, sangrias enormes): el feed crecia sin fin
+    out = []
+    for ln in s.splitlines():
+        ln = ln.rstrip()
+        if not ln.strip():
+            continue
+        out.append(re.sub(r"^[ \\t]{7,}", "      ", ln))
+    return "\\n".join(out) + "\\n"
+
+
+''' + a1, 1)
+        s = s.replace(a2, '"content": base64.b64encode(_feed_compacto_bytes()).decode()}', 1)
+        s = s.replace(a1, '''def _feed_compacto_bytes():
+    texto = _compacto(Path(FEED).read_text(encoding="utf-8", errors="replace"))
+    Path(FEED).write_text(texto, encoding="utf-8")
+    return texto.encode("utf-8")
+
+
+''' + a1, 1)
+        try:
+            compile(s, str(bot), "exec")
+        except SyntaxError as ex:
+            aviso(f"{d.name}: el parche no compila ({ex}); no lo toco")
+            continue
+        respaldar(bot)
+        escribir(bot, s)
+        n += 1
+    ok(f"{n} podcast_bot.py parchados" if n else "todos ya lo tenían")
+
+
+def compactar():
+    show = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--compactar=")), "").strip().lower()
+    if not show:
+        return
+    paso(40, f"{show}: compactar el feed en GitHub")
+    d = BASE / show
+    c = json.loads((d / "config.json").read_text(encoding="utf-8")) if (d / "config.json").exists() else {}
+    tok = next((p for p in (d / "github_token.txt", BASE / "jabura" / "github_token.txt") if p.exists()), None)
+    if not tok:
+        aviso("falta github_token.txt")
+        return
+    cab = {"Authorization": "token " + tok.read_text(encoding="utf-8").strip(),
+           "User-Agent": "instalar-otzar", "Accept": "application/vnd.github+json"}
+    base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}"
+    try:
+        feed, sha = _gh_texto(base, cab, "feed.xml")
+    except Exception as e:                                  # noqa: BLE001
+        aviso(f"no pude leer el feed: {e}")
+        return
+    nuevo = _compactar_feed(feed)
+    print(f"   antes: {len(feed.encode('utf-8')) // 1024} KB · después: {len(nuevo.encode('utf-8')) // 1024} KB · episodios: {nuevo.count('<item>')}")
+    if VER or len(nuevo) >= len(feed):
+        ok("nada que compactar" if len(nuevo) >= len(feed) else "(prueba en seco)")
+        return
+    _gh_put(base, cab, "feed.xml", nuevo.encode("utf-8"), "feed compacto", sha)
+    ok("feed compacto subido; el próximo ACTUALIZAR ya publica")
 
 
 # ── 38. --nombres=show: prefijo (nombre del Rab en hebreo) para cada canal del show;
@@ -2179,12 +2286,12 @@ def quitar():
            "User-Agent": "instalar-otzar", "Accept": "application/vnd.github+json"}
     base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}"
     try:
-        with urllib.request.urlopen(urllib.request.Request(f"{base}/contents/feed.xml", headers=cab), timeout=60) as r:
-            j = json.loads(r.read().decode())
-        feed = base64.b64decode(j["content"]).decode("utf-8")
+        feed, sha_feed = _gh_texto(base, cab, "feed.xml")
+        j = {"sha": sha_feed}
     except Exception as e:                                  # noqa: BLE001
         aviso(f"no pude leer el feed: {e}")
         return
+    feed = _compactar_feed(feed)
     def fuera(m):
         it = m.group(0)
         t = re.search(r"<title>(.*?)</title>", it, re.S)
@@ -3038,6 +3145,8 @@ def main():
     correo()
     archive_calma()
     bots_nombres()
+    bots_compacto()
+    compactar()
     reordenar()
     nombres()
     shows()
