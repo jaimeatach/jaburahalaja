@@ -260,11 +260,14 @@ def fiestas_pasadas(cfgw):
         if fin < hoy <= fin + timedelta(days=45):
             vencidas.append((f, f["kw"]["he"] + f["kw"]["en"] + f["kw"]["es"]))
     if not vencidas:
+        log("fiestas pasadas: ninguna fiesta terminó en los últimos 45 días; nada que marcar.")
         return
+    log("fiestas pasadas: " + ", ".join(f["nombre"] for f, _ in vencidas) + " ya terminaron; sus shiurim no se anuncian.")
     estado_p = ROBOT / "estado_anuncios.json"
     e = leer_json(estado_p)
     cambio = False
     hace45 = time.time() - 45 * 86400
+    total = 0
     for show, datos in (cfgw.get("anunciar") or {}).items():
         if datos.get("pausado") or show == "jabura":
             continue
@@ -296,6 +299,7 @@ def fiestas_pasadas(cfgw):
         if marcar:
             e[show] = (previos + [g for g, _, _ in marcar])[-2000:]
             cambio = True
+            total += len(marcar)
             for g, nombre, titulo in marcar:
                 log(f"{show}: ya pasó {nombre}, no se anuncia: {titulo[:60]}")
     if cambio:
@@ -304,6 +308,7 @@ def fiestas_pasadas(cfgw):
         except Exception:
             pass
         estado_p.write_text(json.dumps(e, ensure_ascii=False, indent=2), encoding="utf-8")
+    log(f"fiestas pasadas: {total} shiur(im) marcados como ya anunciados.")
 
 
 # ── 4. sin atrasos ───────────────────────────────────────────────────────────
@@ -397,6 +402,9 @@ def main():
     if not cfgw:
         log(f"no encuentro {ROBOT / 'config_whatsapp.json'}")
         return 1
+    if "--fiestas" in sys.argv:          # solo marcar las fiestas pasadas, sin publicar nada
+        fiestas_pasadas(cfgw)
+        return 0
     alinear_y_marcar(cfgw)
     rescatar_sin_titulo(cfgw)
     correo()
