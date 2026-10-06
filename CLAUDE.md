@@ -229,6 +229,11 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    solo borra mp3 que bajaron las corridas de ESA fiesta (fecha de creación
    posterior al arranque de la corrida, leído de `fiestas.log`; los shows que
    terminaron en "(ya los tenia todos)" se saltan). Nunca toca material anterior.
+   Cada fiesta en `FIESTAS` lleva `dias` (cuánto dura). `mantenimiento.py`
+   (`fiestas_pasadas`) marca en `estado_anuncios.json` como ya anunciados los
+   episodios de los últimos 45 días cuyo título nombra una fiesta que ya
+   terminó: así un shiur de Sukot que Spotify tardó en tomar no sale cuando
+   Sukot ya pasó.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre

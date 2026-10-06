@@ -235,6 +235,77 @@ def espejo():
         subprocess.run([sys.executable, "espejo_nacash.py"], cwd=str(nac))
 
 
+# ── 4b. fiestas pasadas ──────────────────────────────────────────────────────
+def fiestas_pasadas(cfgw):
+    """Un shiur de Sukot que Spotify tardó en tomar no se manda cuando Sukot ya pasó.
+    Lee las fiestas de C:\\OTZAR\\robot_fiestas.py (fecha + dias) y, para cada show, marca
+    como ya anunciados los episodios de los últimos 45 días cuyo título nombra una
+    fiesta que ya terminó."""
+    rf_p = BASE / "robot_fiestas.py"
+    if not rf_p.exists():
+        return
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("robot_fiestas", rf_p)
+        rf = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(rf)
+    except Exception as ex:
+        log(f"fiestas pasadas: no pude leer robot_fiestas.py ({ex})")
+        return
+    from datetime import date, timedelta
+    hoy = date.today()
+    vencidas = []
+    for f in rf.FIESTAS:
+        fin = f["fecha"] + timedelta(days=int(f.get("dias", 1)))
+        if fin < hoy <= fin + timedelta(days=45):
+            vencidas.append((f, f["kw"]["he"] + f["kw"]["en"] + f["kw"]["es"]))
+    if not vencidas:
+        return
+    estado_p = ROBOT / "estado_anuncios.json"
+    e = leer_json(estado_p)
+    cambio = False
+    hace45 = time.time() - 45 * 86400
+    for show, datos in (cfgw.get("anunciar") or {}).items():
+        if datos.get("pausado") or show == "jabura":
+            continue
+        feed = bajar(feed_de(show, datos, leer_json(BASE / show / "config.json")))
+        if not feed:
+            continue
+        previos = e.get(show) or []
+        marcar = []
+        for it in re.findall(r"<item>([\s\S]*?)</item>", feed):
+            g = re.search(r"<guid[^>]*>(.*?)</guid>", it)
+            tt = re.search(r"<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</title>", it, re.S)
+            d = re.search(r"<pubDate>(.*?)</pubDate>", it)
+            if not g or not tt:
+                continue
+            guid = g.group(1).replace("&amp;", "&")
+            if guid in previos:
+                continue
+            try:
+                cuando = parsedate_to_datetime(d.group(1).strip()).timestamp() if d else 0
+            except Exception:
+                cuando = 0
+            if cuando < hace45:
+                continue
+            titulo = tt.group(1).replace("&amp;", "&")
+            for f, palabras in vencidas:
+                if rf.es_de_fiesta(titulo, palabras):
+                    marcar.append((guid, f["nombre"], titulo))
+                    break
+        if marcar:
+            e[show] = (previos + [g for g, _, _ in marcar])[-2000:]
+            cambio = True
+            for g, nombre, titulo in marcar:
+                log(f"{show}: ya pasó {nombre}, no se anuncia: {titulo[:60]}")
+    if cambio:
+        try:
+            estado_p.with_name(estado_p.name + ".bak_" + time.strftime("%Y%m%d%H%M%S")).write_bytes(estado_p.read_bytes())
+        except Exception:
+            pass
+        estado_p.write_text(json.dumps(e, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 # ── 4. sin atrasos ───────────────────────────────────────────────────────────
 def sin_atrasos(cfgw):
     estado_p = ROBOT / "estado_anuncios.json"
@@ -332,6 +403,7 @@ def main():
     publicar()
     espejo()
     parasha_semanal(cfgw)
+    fiestas_pasadas(cfgw)
     sin_atrasos(cfgw)
     log("mantenimiento listo; ahora el robot anuncia.")
     return 0
