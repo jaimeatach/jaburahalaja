@@ -402,6 +402,16 @@ def main():
     if not cfgw:
         log(f"no encuentro {ROBOT / 'config_whatsapp.json'}")
         return 1
+    if "--fiestas-rehacer" in sys.argv:  # deshace la última pasada (vuelve al respaldo) y la repite
+        estado_p = ROBOT / "estado_anuncios.json"
+        baks = sorted(ROBOT.glob("estado_anuncios.json.bak_*"))
+        if not baks:
+            log("fiestas pasadas: no hay respaldo que restaurar")
+            return 1
+        estado_p.write_bytes(baks[-1].read_bytes())
+        log(f"fiestas pasadas: restaurado {baks[-1].name}; vuelvo a marcar con el filtro corregido")
+        fiestas_pasadas(cfgw)
+        return 0
     if "--fiestas" in sys.argv:          # solo marcar las fiestas pasadas, sin publicar nada
         fiestas_pasadas(cfgw)
         return 0

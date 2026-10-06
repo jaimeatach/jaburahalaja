@@ -47,16 +47,16 @@ def log(m):
 # dias = cuanto dura la fiesta (Sukot hasta Simjat Tora); pasado eso, mantenimiento.py ya no anuncia sus shiurim
 FIESTAS = [
  {"clave":"roshhashana2026","dias":2,"nombre":"Rosh HaShana","fecha":date(2026,9,12),
-  "kw":{"he":["ראש השנה","ר\"ה","אלול","הכנה לראש השנה","ימים נוראים","תשובה","סליחות","שופר","מלכויות"],
-        "en":["Rosh Hashanah","Rosh Hashana","Yamim Noraim","High Holidays","Days of Awe","teshuva","shofar","Elul","selichot","Roch Hachana","Roch Hachanah","Selihot","Seli'hot","Eloul","Chofar"],
-        "es":["Rosh Hashana","Rosh Hashaná","Año Nuevo judio","teshuva","teshuvá","shofar","Elul","selijot","dias temibles"]}},
+  "kw":{"he":["ראש השנה","ר\"ה","אלול","הכנה לראש השנה","ימים נוראים","סליחות","שופר","מלכויות"],
+        "en":["Rosh Hashanah","Rosh Hashana","Yamim Noraim","High Holidays","Days of Awe","shofar","Elul","selichot","Roch Hachana","Roch Hachanah","Selihot","Seli'hot","Eloul","Chofar"],
+        "es":["Rosh Hashana","Rosh Hashaná","Año Nuevo judio","shofar","Elul","selijot","dias temibles"]}},
  {"clave":"yomkipur2026","dias":1,"nombre":"Yom Kipur","fecha":date(2026,9,21),
   "kw":{"he":["יום כיפור","יום הכיפורים","יוה\"כ","כיפור","נעילה","וידוי","עשרת ימי תשובה","כפרות"],
         "en":["Yom Kippur","Yom Kipur","Day of Atonement","Neilah","Aseret Yemei Teshuva","Kol Nidre","viduy","Kippour","Yom Kippour","Kipour","Neila"],
         "es":["Yom Kipur","Kipur","Kippur","Dia del Perdon","Día del Perdón","Neila","Kol Nidrei","kaparot"]}},
  {"clave":"sukot2026","dias":9,"nombre":"Sukot","fecha":date(2026,9,26),
-  "kw":{"he":["סוכות","חג הסוכות","ארבעת המינים","לולב","אתרוג","סוכה","הושענא רבה","אושפיזין","חול המועד","שמחת בית השואבה","הדס","ערבה","סכך"],
-        "en":["Sukkot","Sukot","Succos","Sukkos","Succot","Sukkah","Four Species","lulav","esrog","etrog","sukkah","Hoshana Rabba","Hoshana Raba","ushpizin","Simchat Beit Hashoeva","Chol Hamoed","Chol Hamoed","arba minim","arbaat haminim","hadas","schach","Souccot","Soucot","Succoth","Soukot","Souccoth","Loulav","Simha Beit Hachoeva","Simha Beit Hachoéva","Hochana Rabba"],
+  "kw":{"he":["סוכות","חג הסוכות","ארבעת המינים","לולב","אתרוג","סוכה","הושענא רבה","אושפיזין","חול המועד","שמחת בית השואבה","סכך"],
+        "en":["Sukkot","Sukot","Succos","Sukkos","Succot","Sukkah","Four Species","lulav","esrog","etrog","sukkah","Hoshana Rabba","Hoshana Raba","ushpizin","Simchat Beit Hashoeva","Chol Hamoed","Chol Hamoed","arba minim","arbaat haminim","schach","Souccot","Soucot","Succoth","Soukot","Souccoth","Loulav","Simha Beit Hachoeva","Simha Beit Hachoéva","Hochana Rabba"],
         "es":["Sucot","Sukot","arba minim","arbaat haminim","cuatro especies","lulav","etrog","suka","sucá","Hoshana Raba","ushpizin","Jol Hamoed","Jol Amoed","simjat bet hashoeva"]}},
  {"clave":"simjatora2026","dias":1,"nombre":"Simjat Tora","fecha":date(2026,10,3),
   "kw":{"he":["שמחת תורה","שמיני עצרת","הקפות"],"en":["Simchat Torah","Shemini Atzeret","hakafot","Simhat Torah","Sim'hat Torah","Chemini Atseret","Hakafot"],"es":["Simjat Tora","Simjat Torá","Shemini Atzeret","hakafot"]}},
@@ -65,13 +65,13 @@ FIESTAS = [
  {"clave":"tubishvat2027","dias":1,"nombre":"Tu BiShvat","fecha":date(2027,1,22),
   "kw":{"he":["טו בשבט","ט\"ו בשבט","ראש השנה לאילנות"],"en":["Tu BiShvat","Tu B'Shvat","new year trees"],"es":["Tu BiShvat","Tu Bishvat","año nuevo de los arboles"]}},
  {"clave":"purim2027","dias":2,"nombre":"Purim","fecha":date(2027,3,23),
-  "kw":{"he":["פורים","מגילת אסתר","מרדכי","המן","משלוח מנות"],"en":["Purim","Megillah","Esther","Mordechai","Haman","Pourim","Meguila"],"es":["Purim","Meguila","Ester","Mordejai","Haman"]}},
+  "kw":{"he":["פורים","מגילת אסתר","משלוח מנות","תענית אסתר"],"en":["Purim","Megillah","Megillat Esther","Pourim","Meguila"],"es":["Purim","Meguila","Meguilat Ester","Meguila de Ester"]}},
  {"clave":"pesaj2027","dias":8,"nombre":"Pesaj","fecha":date(2027,4,22),
-  "kw":{"he":["פסח","ליל הסדר","הגדה של פסח","יציאת מצרים","חמץ","מצה"],"en":["Pesach","Passover","Seder","Haggadah","chametz","matzah","Pessah","Pessa'h","Hamets","Matsa"],"es":["Pesaj","Pésaj","Seder","Hagada","jametz","matza"]}},
+  "kw":{"he":["פסח","ליל הסדר","הגדה של פסח","יציאת מצרים","חמץ","מצה"],"en":["Pesach","Passover","Pesach Seder","Seder Night","Leil HaSeder","Haggadah","chametz","matzah","Pessah","Pessa'h","Hamets","Matsa"],"es":["Pesaj","Pésaj","Noche del Seder","Leil Haseder","Hagada","jametz","matza"]}},
  {"clave":"lagbaomer2027","dias":1,"nombre":"Lag BaOmer","fecha":date(2027,5,25),
   "kw":{"he":["לג בעומר","ל\"ג בעומר","רבי שמעון בר יוחאי","רשב\"י","מירון"],"en":["Lag BaOmer","Lag B'Omer","Rashbi","Meron"],"es":["Lag BaOmer","Lag Baomer","Rashbi","Meron"]}},
  {"clave":"shavuot2027","dias":2,"nombre":"Shavuot","fecha":date(2027,6,11),
-  "kw":{"he":["שבועות","חג השבועות","מתן תורה","מגילת רות"],"en":["Shavuos","Shavuot","Matan Torah","Ruth","Chavouot","Chavouoth"],"es":["Shavuot","Shabuot","Matan Tora","Rut"]}},
+  "kw":{"he":["שבועות","חג השבועות","מתן תורה","מגילת רות"],"en":["Shavuos","Shavuot","Matan Torah","Megillat Ruth","Chavouot","Chavouoth"],"es":["Shavuot","Shabuot","Matan Tora","Meguilat Rut","Libro de Rut"]}},
  {"clave":"tishabeav2027","dias":1,"nombre":"Tisha BeAv","fecha":date(2027,8,12),
   "kw":{"he":["תשעה באב","ט' באב","ט׳ באב","חורבן","בין המצרים","בית המקדש"],"en":["Tisha B'Av","Tisha BAv","9th of Av","Three Weeks","Churban","Ticha Beav","Ticha BeAv","Tisha Beav"],"es":["Tisha BeAv","9 de Av","destruccion del Templo","Bet Hamikdash"]}},
 ]
@@ -113,7 +113,9 @@ class SinInternet(Exception):
     pass
 
 def _norm(t):
-    t = re.sub(r"[\u0591-\u05C7]", "", str(t or "")).lower()
+    # las comillas y los gershayim se QUITAN (no se vuelven espacio): así ר"ה queda "רה"
+    # y no "ר ה", que pegaba en cualquier título con "...ר ה..." (מו"ר הרב...)
+    t = re.sub(r"[\u0591-\u05C7\u05F3\u05F4\"'\u201c\u201d\u2018\u2019\uff02\u2033]", "", str(t or "")).lower()
     return re.sub(r"[^\w\u05D0-\u05EA ]+", " ", t)
 
 # nombra la fiesta pero NO es un shiur: recetas, canciones, conciertos, programas infantiles
@@ -133,8 +135,13 @@ def es_de_fiesta(titulo, palabras):
             return False
     for kw in palabras:
         k = _norm(kw).strip()
-        if len(k) >= 3 and k in t:
-            return True
+        if len(k) < 3:
+            continue
+        if re.search(r"[\u05D0-\u05EA]", k):
+            if k in t:                      # hebreo: con prefijos (הסוכות, לסוכות, בסוכה)
+                return True
+        elif re.search(r"(?<![a-z0-9])" + re.escape(k) + r"(?:s|es|im|ot)?(?![a-z0-9])", t):
+            return True                     # latino: palabra entera ("Rut" no pega en "rutina")
     return False
 
 def buscar_en_canal(url_canal, palabras):

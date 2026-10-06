@@ -233,7 +233,13 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    (`fiestas_pasadas`) marca en `estado_anuncios.json` como ya anunciados los
    episodios de los últimos 45 días cuyo título nombra una fiesta que ya
    terminó: así un shiur de Sukot que Spotify tardó en tomar no sale cuando
-   Sukot ya pasó.
+   Sukot ya pasó. `--fiestas` lo corre solo; `--fiestas-rehacer` vuelve al
+   respaldo y repite. Las palabras latinas se comparan como palabra entera y
+   las comillas se quitan (ר״ה no pega en "מו״ר הרב").
+   No repetir: el robot guarda en `estado_titulos.json` los títulos ya vistos
+   de cada show (los aprende del propio feed) y no manda un shiur cuyo título
+   ya salió aunque vuelva con otro guid; `permitir_repetidos: true` por show
+   lo apaga. Parche del instalador (`normTitulo`, `titulosVistos`).
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre

@@ -60,6 +60,23 @@ function nube() {
   return _NUBE;
 }
 const ESTADO_FILE   = path.join(__dirname, 'estado_anuncios.json');
+// === NO REPETIR (otzar): memoria de titulos ya anunciados, por show ===
+// Un shiur que ya salio no se vuelve a mandar aunque reaparezca en el feed con
+// otro guid (re-subida, cambio de url, el mismo video en dos canales).
+const TITULOS_FILE  = path.join(__dirname, 'estado_titulos.json');
+function normTitulo(t) {
+  return String(t || '').toLowerCase().replace(/[\u0591-\u05C7]/g, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ').trim().replace(/\s+/g, ' ');
+}
+function titulosVistos(show, titulosDelFeed) {
+  let e = {};
+  try { e = JSON.parse(fs.readFileSync(TITULOS_FILE, 'utf8')); } catch (err) { e = {}; }
+  const s = new Set(e[show] || []);
+  for (const t of titulosDelFeed) { const k = normTitulo(t); if (k) s.add(k); }
+  e[show] = Array.from(s).slice(-3000);
+  try { fs.writeFileSync(TITULOS_FILE, JSON.stringify(e, null, 1)); } catch (err) {}
+  return s;
+}
 const REGISTRO_FILE = path.join(__dirname, 'grupos_registrados.json');
 const COMANDO_FILE  = path.join(__dirname, 'comando.txt');
 const LOG_FILE      = path.join(__dirname, 'robot_whatsapp.log');
@@ -1628,6 +1645,23 @@ async function anunciarInterno(esVigilante) {
       .filter(ep => !vistos.has(ep.guid))
       .sort((a, b) => enOrden ? (a.fecha - b.fecha) : (b.fecha - a.fecha));
 
+    // NO REPETIR: los titulos de lo ya visto se aprenden del propio feed en cada corrida
+    if (!(CFG.anunciar[show] || {}).permitir_repetidos) {
+      const _titVistos = titulosVistos(show, items.filter(it => vistos.has(sacaGuid(it))).map(sacaTitulo));
+      const _repetidos = [];
+      const _enEstaCorrida = new Set();
+      nuevos = nuevos.filter(ep => {
+        const k = normTitulo(ep.tit);
+        if (!k) return true;
+        if (_titVistos.has(k) || _enEstaCorrida.has(k)) { _repetidos.push(ep); return false; }
+        _enEstaCorrida.add(k);
+        return true;
+      });
+      if (_repetidos.length) {
+        log(`${show}: ${_repetidos.length} repetido(s) (mismo titulo ya anunciado), no se mandan: ` + _repetidos.map(e => e.tit.slice(0, 50)).join(' | '));
+        for (const ep of _repetidos) { marcarAnunciado(show, ep.guid); estado[show].push(ep.guid); }
+      }
+    }
     if (!nuevos.length) { log(`${show}: nada nuevo.`); continue; }
 
     // los VIEJOS (mas de DIAS_FRESCO dias, o sin fecha) NO se anuncian nunca:
