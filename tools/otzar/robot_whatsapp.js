@@ -1356,7 +1356,51 @@ function elegirEpisodio(candidatos, objetivo, diag, tituloOriginal) {
                            .sort((a,b) => b.p - a.p).slice(0,3);
     diag.masParecidos = rank.map(x => `${x.p.toFixed(2)} "${(x.n||'').slice(0,45)}"`);
   }
-  return punt >= 0.90 ? mejor : null;   // menos de 90% de parecido: NO se manda
+  if (punt >= 0.90) return mejor;
+  // (oct/2026) segunda mirada, por PALABRAS: Spotify a veces le pone otro titulo al
+  // mismo shiur ("Rab Joshua Hilu - No intentes cambiarla" vs "Parashat bereshit -
+  // No intentes cambiarla Rab Joshua Hilu"). Se comparan solo las palabras que dicen
+  // de que trata, sin el nombre del Rab ni las que se repiten en todo el show.
+  const _pp = elegirPorPalabras(candidatos, tituloOriginal || objetivo, marcaObjetivo);
+  if (_pp) { if (diag) diag.porPalabras = _pp.name; return _pp; }
+  return null;   // no se parece lo suficiente: NO se manda
+}
+
+// Palabras que no dicen de que trata el shiur
+const _PALABRAS_RELLENO = new Set(('de del la las el los en y o a al con por para que un una su sus es se lo le ' +
+  'the of and to in on for with a an is by from ' +
+  'rab rav rabbi harav hagaon jajam hacham sr shlita shlit שליטא הרב הגאון רבי מרן ' +
+  'parashat parasha parsha perasha parashá perashat פרשת שיעור shiur clase class soundcloud spotify podcast').split(/\s+/));
+function _palabrasClave(t) {
+  return String(t || '').normalize('NFD').replace(/[̀-֑ͯ-ׇ]/g, '').toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ').trim().split(/\s+/)
+    .filter(w => w.length >= 3 && !/^\d+$/.test(w) && !_PALABRAS_RELLENO.has(w));
+}
+function elegirPorPalabras(candidatos, titulo, marcaObjetivo) {
+  if (!candidatos.length) return null;
+  // las palabras que salen en muchos episodios del show (el nombre del Rab, la serie) no cuentan
+  const freq = new Map();
+  for (const e of candidatos) for (const w of new Set(_palabrasClave(e.name))) freq.set(w, (freq.get(w) || 0) + 1);
+  const comun = w => candidatos.length >= 5 && (freq.get(w) || 0) / candidatos.length > 0.3;
+  const nucleo = arr => [...new Set(arr.filter(w => !comun(w)))];
+  const objetivo = nucleo(_palabrasClave(titulo));
+  if (objetivo.length < 2) return null;
+  const puntos = [];
+  for (const e of candidatos) {
+    if (marcadores(e.name) !== marcaObjetivo) continue;          // "(5)" nunca es "(6)"
+    const suyo = nucleo(_palabrasClave(e.name));
+    if (suyo.length < 2) continue;
+    const comunes = suyo.filter(w => objetivo.includes(w)).length;
+    const menor = Math.min(suyo.length, objetivo.length);
+    const ok = menor <= 2 ? comunes === menor : (comunes >= 3 && comunes / menor >= 0.8);
+    if (ok) puntos.push({ e, comunes, cubre: comunes / Math.max(suyo.length, objetivo.length) });
+  }
+  if (!puntos.length) return null;
+  puntos.sort((a, b) => b.comunes - a.comunes || b.cubre - a.cubre);
+  // si dos episodios distintos empatan, no se adivina
+  if (puntos.length > 1 && puntos[1].comunes === puntos[0].comunes && puntos[1].cubre === puntos[0].cubre &&
+      puntos[1].e.id !== puntos[0].e.id) return null;
+  return puntos[0].e;
 }
 
 // ---- LLAVES OFICIALES (spotify_keys.txt: linea1=ID, linea2=secret) ----

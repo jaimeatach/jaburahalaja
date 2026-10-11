@@ -298,6 +298,10 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    (nombre de archivo → {"t": título}); `mantenimiento.py` (`titulos_jabura`) lo
    suma a `jabura\titulos.json` (el publicador cambia el título en el feed sin
    cambiar el guid) y la app (`arcTitulosCurados`, admin) corrige el shiur ya importado.
+   Emparejar con Spotify: si el parecido de letras no llega a 0.90, `elegirPorPalabras`
+   compara solo las palabras que dicen de qué trata (sin relleno, sin nombre del Rab
+   y sin las que salen en >30% de los episodios del show), con el mismo candado de
+   números de serie, y no adivina si dos empatan.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre
