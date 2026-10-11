@@ -270,8 +270,8 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    {spotify} {apple} {amazon} {soundcloud} {whatsapp} {dedicatoria}; el bloque
    cuyo dato falta no sale. `esperar_fecha`: no se anuncia antes de su pubDate.
 10. Rab Yosef Tawil (`--tawil`, paso [42]): Yehuda Avi Ezri manda cada semana los
-   audios con "Dia 21. Domingo". El robot los toma del chat directo `tawil`
-   (`escuchar_directo`, registrado con "!otzar tawil" o `--tawil-numero`), con
+   audios con "Dia 21. Domingo" al grupo fuente (`escuchar.tawil`, link
+   KE2AgbfPaGaElrVS8kwdJt; el robot tiene que ser miembro). Con
    `temas: true` el título sale del tema de la semana ("#21 Encendido de Velas (1)")
    y la fecha del archivo es la de ese día de la semana. Temas en
    `tools/otzar/temas/tawil.json` (los actualizo yo cuando el usuario avisa el

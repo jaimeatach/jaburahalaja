@@ -3627,9 +3627,8 @@ def rescatar():
 
 # ── 42. Rab Yosef Tawil ───────────────────────────────────────────────────────
 #   --tawil [--tawil-rss=RSS_DEL_SHOW_EN_SPOTIFY] [--tawil-numero=TELEFONO]
-#   Yehuda Avi Ezri manda cada semana los audios con "Dia 21. Domingo"; el robot los
-#   toma del chat directo (registrado con "!otzar tawil" desde ese chat, o por
-#   número), les pone el tema de la semana ("#21 Encendido de Velas (1)", temas en
+#   Yehuda Avi Ezri manda cada semana los audios con "Dia 21. Domingo" al grupo
+#   fuente (TAWIL["fuente"]); el robot los toma de ahí, les pone el tema de la semana ("#21 Encendido de Velas (1)", temas en
 #   tools/otzar/temas/tawil.json o "!tema tawil 27 Tema" por WhatsApp), les da la
 #   fecha de su día y los publica (archive.org + feed → Spotify, Apple, Amazon).
 #   Cada uno se anuncia SU día en los dos grupos de Tawil y en los generales (3 y 6)
@@ -3640,6 +3639,7 @@ TAWIL = {
     "grupos": ["https://chat.whatsapp.com/EeNJLWF5dbE3VqCX5WUCU2",
                "https://chat.whatsapp.com/JQRxF5FJDN05aI9otVcLE8"],
     "whatsapp_link": "https://chat.whatsapp.com/JQRxF5FJDN05aI9otVcLE8",
+    "fuente": "https://chat.whatsapp.com/KE2AgbfPaGaElrVS8kwdJt",       # donde Yehuda manda los audios
     "dedicatoria": 'L"N\nMoshe Ben Sara\nMiriam Bat Lea Luisa',
     "plantilla": ["{fecha_hebrea}\n{fecha}", "*{titulo}*", "*Spotify*\n{spotify}", "*Apple Podcasts*\n{apple}",
                   "*Amazon Music*\n{amazon}", "*SoundCloud*\n{soundcloud}", "{dedicatoria}",
@@ -3660,23 +3660,25 @@ def tawil():
         show_nuevo()
     finally:
         sys.argv = viejo
-    paso(42, "Rab Yosef Tawil: audios del chat directo, título por tema, anuncio en su día")
+    paso(42, "Rab Yosef Tawil: audios del grupo fuente, título por tema, anuncio en su día")
     if not ROBOT:
         aviso("sin carpeta del robot no puedo configurar el anuncio")
         return
     rw = ROBOT / "config_whatsapp.json"
     cfg = json.loads(rw.read_text(encoding="utf-8"))
     antes = json.dumps(cfg, sort_keys=True)
-    (cfg.get("escuchar") or {}).pop("tawil", None)          # no hay grupo fuente: es chat directo
-    dm = cfg.setdefault("escuchar_directo", [])
-    e = next((x for x in dm if isinstance(x, dict) and x.get("show") == "tawil"), None)
-    if e is None:
-        e = {"show": "tawil"}
-        dm.append(e)
-    e["carpetaDestino"] = str(BASE / "tawil" / "audios_whatsapp")
-    e["temas"] = True
-    if numero:
-        e["numero"] = numero
+    # fuente: el grupo donde Yehuda manda los audios ("Dia 21. Domingo" + audio)
+    esc = cfg.setdefault("escuchar", {}).setdefault("tawil", {})
+    esc["invite"] = TAWIL["fuente"]
+    esc["carpetaDestino"] = str(BASE / "tawil" / "audios_whatsapp")
+    esc["temas"] = True
+    if numero:                                               # además, por chat directo
+        dm = cfg.setdefault("escuchar_directo", [])
+        e = next((x for x in dm if isinstance(x, dict) and x.get("show") == "tawil"), None)
+        if e is None:
+            e = {"show": "tawil"}
+            dm.append(e)
+        e.update({"carpetaDestino": esc["carpetaDestino"], "temas": True, "numero": numero})
     an = cfg.setdefault("anunciar", {}).setdefault("tawil", {})
     generales = (cfg.get("anunciar", {}).get("nacach") or {}).get("invite") or []
     generales = generales if isinstance(generales, list) else [generales]
@@ -3692,16 +3694,17 @@ def tawil():
         respaldar(rw)
         if not VER:
             escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
-    ok(f"robot: toma los audios del chat directo 'tawil'{' (número ' + numero + ')' if numero else ''} y les pone el tema de la semana")
+    ok("robot: toma los audios del grupo fuente de Tawil (link KE2Agbf…) y les pone el tema de la semana")
     ok(f"anuncia cada shiur SU día en {len(an['invite'])} grupos (los 2 de Tawil + generales) con fecha hebrea, L\"N y link del grupo")
     try:
         temas = json.loads(bajar_texto("otzar/temas/tawil.json"))
         ok("temas: " + ", ".join(f"desde el {t['desde']}: {t['tema']}" for t in temas))
     except Exception:
         pass
-    print("   → 1) agrega al robot (2205947115) a los dos grupos de Tawil (si son de solo admins, hazlo admin)")
-    print("   → 2) que Yehuda Avi Ezri reenvíe los audios TAMBIÉN al robot, o reenvíalos tú; desde ese chat")
-    print("        manda una vez:  !otzar tawil   (así el robot sabe de quién tomar los audios)")
+    print("   → 1) agrega al robot (2205947115) a los TRES grupos: el de los audios (KE2Agbf…) y los dos de Tawil")
+    print("        (en los de anuncio, si solo los admins escriben, hazlo admin). Luego reinicia el robot:")
+    print("        al arrancar dice 'escucha tawil: ...' y 'tawil: ...' con los nombres de los grupos")
+    print("   → 2) si 'escucha tawil' no aparece, manda dentro del grupo de los audios:  !otzar tawil")
     print("   → 3) tema nuevo: dímelo y lo pongo, o manda al robot:  !tema tawil 27 Nombre del tema")
     if not rss:
         print("   → 4) para que Spotify tome los episodios de aquí (sin perder #1-#26): en Spotify for Creators →")
