@@ -249,6 +249,13 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    que llega en ese rato se pierde (así se perdió una clase de Hilu el viernes
    9/10). `robot.lock` (PID, refrescado cada 30 s) hace que una segunda
    ventana no se conecte (`otroRobotVivo`).
+   Rescate: `--rescatar=hilu,jabura[:días]` (paso [41]) deja `rescatar.json`
+   en el robot; éste le pide a WhatsApp los últimos mensajes del grupo fuente
+   (`fetchMessageHistory`, anclado al último mensaje visto en ese grupo, que
+   guarda en `anclas.json`) y procesa en `messaging-history.set` los audios
+   posteriores al último audio de la carpeta del show (nunca duplica). Un audio
+   que esperaba título y sobrevivía a un reinicio caía en la carpeta de Peretz;
+   ahora va a la de su show.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre

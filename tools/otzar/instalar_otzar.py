@@ -25,6 +25,7 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py --reordenar=taamim                  # feed en orden de Tanaj (parashá, Tehilim, Rut, Ester)
     python instalar_otzar.py --compactar=musar                   # feed hinchado de espacios (GitHub 422): compactarlo ya
     python instalar_otzar.py --nombres=musar --excluir="musar:שער הבי?טחון"   # nombre del Rab en el título; series que no se bajan
+    python instalar_otzar.py --rescatar=hilu,jabura:5          # el robot pide a WhatsApp los audios que se perdieron
 
 Los shows (nacach, peretz…) viven en C:\\OTZAR; el robot en C:\\robotwhats. Los busca solo.
 
@@ -666,11 +667,157 @@ if (_otro) {
   conectar();
 }
 """),
+    ("""        for (const e of (CFG.escuchar_directo || [])) {
+          if (e.show === showPrefijo) carpeta = e.carpetaDestino;
+        }
+        guardarAudio({ archivoTemp: p, ext: path.extname(f) || '.ogg', ts: st.mtimeMs, carpeta }, null);
+""", """        for (const e of (CFG.escuchar_directo || [])) {
+          if (e.show === showPrefijo) carpeta = e.carpetaDestino;
+        }
+        // (oct/2026) un audio de hilu/jabura/credi... que quedo esperando titulo va a SU
+        // carpeta: antes caia en la de Peretz y alli se apartaba como "Shiur Familia Perets".
+        if (!carpeta && CFG.escuchar && CFG.escuchar[showPrefijo] && CFG.escuchar[showPrefijo].carpetaDestino)
+          carpeta = CFG.escuchar[showPrefijo].carpetaDestino;
+        guardarAudio({ archivoTemp: p, ext: path.extname(f) || '.ogg', ts: st.mtimeMs, carpeta, show: showPrefijo }, null);
+"""),
+    ("""  sock.ev.on('messages.upsert', async ({ messages, type }) => {
+    if (type !== 'notify' && type !== 'append') return;
+    for (const m of messages) {
+""", """  // === RESCATE (oct/2026): lo que pide revisarRescate() llega aqui como historial ===
+  sock.ev.on('messaging-history.set', async ({ messages }) => {
+    try { await rescatarDeHistorial(messages || []); }
+    catch (e) { log('RESCATE error: ' + (e.stack || e.message || e)); }
+  });
+
+  sock.ev.on('messages.upsert', async ({ messages, type }) => {
+    if (type !== 'notify' && type !== 'append') return;
+    for (const m of messages) anclar(m);
+    for (const m of messages) {
+"""),
+    ("""async function procesarMensaje(m) {
+""", """// === RESCATE (oct/2026) ===
+// Si un audio se perdio (dos ventanas del robot peleandose la sesion, PC apagada
+// mucho tiempo...), rescatar.json dice que shows rescatar y desde que fecha:
+//   { "hilu": { "desde": "2026-10-06" }, "jabura": { "desde": "2026-10-06" } }
+// El robot le pide a WhatsApp los ultimos mensajes del grupo fuente
+// (fetchMessageHistory, anclado al ultimo mensaje visto en ese grupo) y procesa
+// los audios que llegaron DESPUES del ultimo audio guardado en su carpeta (asi
+// nunca duplica lo que ya estaba). Lo escribe instalar_otzar.py --rescatar=...
+const ANCLAS_FILE  = path.join(__dirname, 'anclas.json');
+const RESCATE_FILE = path.join(__dirname, 'rescatar.json');
+let _anclas = null, _anclasSucio = false;
+const _rescateVistos = new Set();
+function _leerAnclas() {
+  if (!_anclas) { try { _anclas = JSON.parse(fs.readFileSync(ANCLAS_FILE, 'utf8')); } catch (e) { _anclas = {}; } }
+  return _anclas;
+}
+function anclar(m) {
+  try {
+    const k = m && m.key; const jid = k && k.remoteJid;
+    if (!jid || !jid.endsWith('@g.us') || !k.id) return;
+    const ts = Number(m.messageTimestamp) || 0;
+    const a = _leerAnclas(); const prev = a[jid];
+    if (prev && prev.ts >= ts) return;
+    a[jid] = { key: { remoteJid: jid, id: k.id, fromMe: !!k.fromMe, participant: k.participant || undefined }, ts };
+    _anclasSucio = true;
+  } catch (e) {}
+}
+setInterval(() => {
+  if (!_anclasSucio) return;
+  _anclasSucio = false;
+  try { fs.writeFileSync(ANCLAS_FILE, JSON.stringify(_anclas)); } catch (e) {}
+}, 15000);
+function _leerRescate() { try { return JSON.parse(fs.readFileSync(RESCATE_FILE, 'utf8')); } catch (e) { return null; } }
+function _guardarRescate(r) { try { fs.writeFileSync(RESCATE_FILE, JSON.stringify(r, null, 2)); } catch (e) {} }
+function _fuenteDe(show, reg) {
+  return reg['escucha:' + show] || (show === 'peretz' ? reg.peretz : null);
+}
+function _carpetaDe(show) {
+  const e = (CFG.escuchar || {})[show];
+  if (e && e.carpetaDestino) return e.carpetaDestino;
+  const d = (CFG.escuchar_directo || []).find(x => x && x.show === show);
+  return d ? d.carpetaDestino : null;
+}
+// el ultimo audio guardado en la carpeta del show: lo anterior ya esta, no se repite
+function _ultimoAudioMs(carpeta) {
+  let max = 0;
+  try {
+    for (const f of fs.readdirSync(carpeta)) {
+      if (!/\\.(m4a|mp3|ogg|opus|aac|wav|amr)$/i.test(f)) continue;
+      try { const t = fs.statSync(path.join(carpeta, f)).mtimeMs; if (t > max) max = t; } catch (e) {}
+    }
+  } catch (e) {}
+  return max;
+}
+async function revisarRescate() {
+  if (!listo || !sock) return;
+  const pend = _leerRescate();
+  if (!pend) return;
+  const reg = leerRegistro();
+  let cambio = false;
+  for (const [show, r] of Object.entries(pend)) {
+    if (!r || r.hecho || r.rendido) continue;
+    const fuente = _fuenteDe(show, reg);
+    if (!fuente || !fuente.id) {
+      if (!r.avisado) { log(`RESCATE ${show}: no se cual es su grupo fuente; no puedo rescatar.`); r.avisado = true; cambio = true; }
+      continue;
+    }
+    const ahora = Date.now();
+    if (r.pedido && ahora - r.pedido < 10 * 60000) continue;   // esperar la respuesta
+    if ((r.intentos || 0) >= 24) {
+      log(`RESCATE ${show}: WhatsApp no mando el historial de "${fuente.nombre}" tras 24 intentos (4 horas). Guarda el audio a mano en su carpeta.`);
+      r.rendido = true; cambio = true; continue;
+    }
+    const a = _leerAnclas()[fuente.id];
+    const key = a ? a.key : { remoteJid: fuente.id, fromMe: false,
+      id: '3EB0' + Array.from({ length: 16 }, () => '0123456789ABCDEF'[Math.floor(Math.random() * 16)]).join('') };
+    const tsMs = a ? a.ts * 1000 : ahora;
+    try {
+      await sock.fetchMessageHistory(r.cuantos || 50, key, tsMs);
+      r.pedido = ahora; r.intentos = (r.intentos || 0) + 1; cambio = true;
+      log(`RESCATE ${show}: pedi a WhatsApp los ultimos mensajes de "${fuente.nombre}" ` +
+          `(${a ? 'desde el ultimo mensaje visto' : 'sin mensaje de referencia todavia'}), intento ${r.intentos}.`);
+    } catch (e) { log(`RESCATE ${show}: no pude pedir el historial (${e.message || e})`); }
+  }
+  if (cambio) _guardarRescate(pend);
+}
+setInterval(() => { revisarRescate().catch(e => log('RESCATE error: ' + (e.message || e))); }, 20000);
+async function rescatarDeHistorial(messages) {
+  for (const m of messages) anclar(m);
+  const pend = _leerRescate();
+  if (!pend) return;
+  const reg = leerRegistro();
+  let cambio = false;
+  for (const [show, r] of Object.entries(pend)) {
+    if (!r || r.hecho) continue;
+    const fuente = _fuenteDe(show, reg);
+    if (!fuente || !fuente.id) continue;
+    const delGrupo = messages.filter(m => m && m.key && m.key.remoteJid === fuente.id)
+      .sort((x, y) => Number(x.messageTimestamp) - Number(y.messageTimestamp));
+    if (!delGrupo.length) continue;
+    const carpeta = _carpetaDe(show);
+    const desde = Math.max(Date.parse(r.desde || 0) || 0, (carpeta ? _ultimoAudioMs(carpeta) : 0) + 60000);
+    const nuevos = delGrupo.filter(m => Number(m.messageTimestamp) * 1000 > desde && !_rescateVistos.has(m.key.id));
+    const audios = nuevos.filter(m => audioDe(m));
+    log(`RESCATE ${show}: llegaron ${delGrupo.length} mensajes de "${fuente.nombre}"; ` +
+        `${audios.length} audio(s) sin guardar desde ${new Date(desde).toLocaleString('es-MX')}.`);
+    for (const m of nuevos) {
+      _rescateVistos.add(m.key.id);
+      try { await procesarMensaje(m); } catch (e) { log('RESCATE mensaje: ' + (e.message || e)); }
+    }
+    r.hecho = true; r.audios = (r.audios || 0) + audios.length; r.cuando = new Date().toISOString();
+    cambio = true;
+  }
+  if (cambio) _guardarRescate(pend);
+}
+
+async function procesarMensaje(m) {
+"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo")
 # הלכות מוקצה: la carpeta "שיעורים מוקצה" que comparte Saúl aparte (31 shiurim
 # numerados al FINAL del nombre). Mismos títulos y simanim que el catálogo de la app.
 MUKZE_CARPETA = r"G:\.shortcut-targets-by-id\1OcakbiF7zD5biDpWYElkB-DoIlidbTlT\שיעורים מוקצה"
@@ -3199,6 +3346,78 @@ def espejo_nacach():
     subprocess.run([sys.executable, "espejo_nacash.py"], cwd=str(nac))
 
 
+# ── 41. rescatar audios perdidos ──────────────────────────────────────────────
+#   --rescatar=hilu,jabura[:dias]  (5 días por defecto)
+#   Deja C:\robotwhats\rescatar.json: al arrancar, el robot le pide a WhatsApp los
+#   últimos mensajes del grupo fuente de cada show y guarda los audios que llegaron
+#   después del último que ya está en su carpeta (nunca duplica). Además busca si
+#   el audio quedó mal guardado (antes, uno que esperaba título y sobrevivía a un
+#   reinicio caía en la carpeta de Peretz).
+def rescatar():
+    arg = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--rescatar=")), "")
+    if not arg:
+        return
+    dias = 5
+    if ":" in arg:
+        arg, d = arg.rsplit(":", 1)
+        dias = int(d) if d.strip().isdigit() else 5
+    shows_ = [x.strip().lower() for x in arg.split(",") if x.strip()]
+    paso(41, "Rescatar audios perdidos: " + ", ".join(shows_) + f" (últimos {dias} días)")
+    if not ROBOT:
+        aviso("sin carpeta del robot no puedo rescatar")
+        return
+    cfgw = json.loads((ROBOT / "config_whatsapp.json").read_text(encoding="utf-8"))
+    try:
+        reg = json.loads((ROBOT / "grupos_registrados.json").read_text(encoding="utf-8"))
+    except Exception:
+        reg = {}
+    from datetime import datetime, timedelta
+    desde = (datetime.now() - timedelta(days=dias)).strftime("%Y-%m-%dT00:00:00")
+    rp = ROBOT / "rescatar.json"
+    try:
+        pend = json.loads(rp.read_text(encoding="utf-8"))
+    except Exception:
+        pend = {}
+    for show in shows_:
+        fuente = (reg.get("escucha:" + show) or (reg.get("peretz") if show == "peretz" else None) or {})
+        if not fuente.get("id"):
+            aviso(f"{show}: no tiene grupo fuente registrado; no se puede rescatar")
+            continue
+        pend[show] = {"desde": desde}
+        ok(f"{show}: el robot pedirá a WhatsApp los mensajes de \"{fuente.get('nombre', '?')}\" desde {desde[:10]}")
+    if not VER:
+        rp.write_text(json.dumps(pend, ensure_ascii=False, indent=2), encoding="utf-8")
+    # ¿quedó guardado en otra carpeta?
+    limite = time.time() - dias * 86400
+    peretz = ((cfgw.get("escuchar") or {}).get("peretz") or {}).get("carpetaDestino")
+    vistos = []
+    for raiz in [peretz, str(ROBOT / "audios_esperando_titulo")]:
+        if not raiz or not Path(raiz).exists():
+            continue
+        for f in Path(raiz).rglob("*"):
+            try:
+                if f.is_file() and f.suffix.lower() in (".m4a", ".mp3", ".ogg", ".opus", ".aac", ".wav", ".amr") \
+                        and f.stat().st_mtime >= limite and (raiz != peretz or f.name.lower().startswith("shiur ")):
+                    vistos.append(f)
+            except Exception:
+                pass
+    try:
+        log_lineas = (ROBOT / "robot_whatsapp.log").read_text(encoding="utf-8", errors="replace").splitlines()
+    except Exception:
+        log_lineas = []
+    raros = [l for l in log_lineas[-20000:] if ("GUARDADO [?]" in l or "RECUPERADOS" in l)]
+    if vistos or raros:
+        print("   · audios que pudieron quedar en otra carpeta (revísalos):")
+        for f in vistos[:15]:
+            print("     ", time.strftime("%d/%m %H:%M", time.localtime(f.stat().st_mtime)), f)
+        for l in raros[-10:]:
+            print("     ", l[:200])
+    else:
+        ok("ningún audio quedó mal guardado")
+    print("   → cierra TODAS las ventanas del robot y abre una sola: en 1-2 minutos el log dice")
+    print("     \"RESCATE <show>: llegaron N mensajes...\" y \"GUARDADO [<show>]\". Luego aprieta ANUNCIAR.")
+
+
 def main():
     print("=== Instalador Otzar · jabura + nacach ===")
     print("Base:", BASE, "(prueba en seco)" if VER else "")
@@ -3245,6 +3464,7 @@ def main():
     ofir_grupo()
     sin_atrasos_config()
     al_dia()
+    rescatar()
     print("\nListo." if not VER else "\nPrueba en seco terminada: no se cambió nada.")
 
 
