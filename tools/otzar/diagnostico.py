@@ -44,7 +44,8 @@ def main():
         d = date.today() - timedelta(days=i)
         fechas.append(f"[{d.day}/{d.month}/{d.year},")
     claves = [show, "SIN AUDIO", "IGNORADO", "Audio recibido", "No pude", "descarga intento",
-              "ERROR mensaje", "Reconectando", "ROBOT LISTO", "rechazo la sesion"]
+              "ERROR mensaje", "Reconectando", "ROBOT LISTO", "rechazo la sesion",
+              "Conexion cerrada", "OTRA VENTANA", "OTRO ROBOT"]
     if fuente:
         claves.append(fuente[:20])
     print(f"\n--- log del robot, últimos {dias} días ---")

@@ -632,11 +632,45 @@ function titulosVistos(show, titulosDelFeed) {
 
   // ---- TEXTO (posible titulo) ----
 """),
+    ("""}
+
+conectar();
+""", """}
+
+// === UNA SOLA VENTANA (oct/2026) ===
+// Dos ventanas del robot abiertas se roban la sesion de WhatsApp una a otra
+// cada pocos segundos (codigo 440) y los audios que llegan en ese rato se
+// pierden. robot.lock guarda el proceso que manda; se refresca cada 30 s.
+// Si otra ventana viva lo refresco hace menos de 90 s, esta NO se conecta.
+const LOCK_FILE = path.join(__dirname, 'robot.lock');
+function otroRobotVivo() {
+  try {
+    const st = fs.statSync(LOCK_FILE);
+    const pid = parseInt(fs.readFileSync(LOCK_FILE, 'utf8'), 10);
+    if (!pid || pid === process.pid || Date.now() - st.mtimeMs > 90000) return 0;
+    try { process.kill(pid, 0); return pid; } catch (e) { return e.code === 'EPERM' ? pid : 0; }
+  } catch (e) { return 0; }
+}
+const _otro = otroRobotVivo();
+if (_otro) {
+  log(`*** YA HAY OTRO ROBOT ABIERTO (proceso ${_otro}). Esta ventana NO se conecta, para no pelearse la sesion.`);
+  log('*** Deja abierta solo una ventana del robot. Esta se cierra en 15 segundos.');
+  setTimeout(() => process.exit(0), 15000);
+} else {
+  const _lock = () => { try { fs.writeFileSync(LOCK_FILE, String(process.pid)); } catch (e) {} };
+  _lock();
+  setInterval(_lock, 30000);
+  process.on('exit', () => {
+    try { if (parseInt(fs.readFileSync(LOCK_FILE, 'utf8'), 10) === process.pid) fs.unlinkSync(LOCK_FILE); } catch (e) {}
+  });
+  conectar();
+}
+"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo")
 # הלכות מוקצה: la carpeta "שיעורים מוקצה" que comparte Saúl aparte (31 shiurim
 # numerados al FINAL del nombre). Mismos títulos y simanim que el catálogo de la app.
 MUKZE_CARPETA = r"G:\.shortcut-targets-by-id\1OcakbiF7zD5biDpWYElkB-DoIlidbTlT\שיעורים מוקצה"

@@ -245,6 +245,10 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    <show>") en lugar de callarse. `tools/otzar/diagnostico.py <show> [días]`
    (en `C:\OTZAR\jabura\`) junta lo que vio el robot de ese show, su carpeta,
    lo que espera título y lo último del feed, sin tocar nada.
+   Una sola ventana: dos robots abiertos se roban la sesión (código 440) y lo
+   que llega en ese rato se pierde (así se perdió una clase de Hilu el viernes
+   9/10). `robot.lock` (PID, refrescado cada 30 s) hace que una segunda
+   ventana no se conecte (`otroRobotVivo`).
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre
