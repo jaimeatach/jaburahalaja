@@ -1405,6 +1405,9 @@ def armar_jabura():
                 faltan = {"spotify_show": SPOTIFY_JABURA, "robot": str(ROBOT or r"C:\robotwhats"),
                           "link": "https://jaburahalajasaul.netlify.app"}
                 nuevas = {k: v for k, v in faltan.items() if not viejo.get(k)}
+                # el correo del dueño va en el feed: Apple, Amazon y Spotify mandan ahí el código
+                if "CAMBIAR" in str(viejo.get("email", "CAMBIAR")):
+                    nuevas["email"] = "rabmeireliyahu@gmail.com"
                 if nuevas and not VER:
                     viejo.update(nuevas)
                     dest.write_text(json.dumps(viejo, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
