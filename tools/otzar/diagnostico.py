@@ -45,7 +45,8 @@ def main():
         fechas.append(f"[{d.day}/{d.month}/{d.year},")
     claves = [show, "SIN AUDIO", "IGNORADO", "Audio recibido", "No pude", "descarga intento",
               "ERROR mensaje", "Reconectando", "ROBOT LISTO", "rechazo la sesion",
-              "Conexion cerrada", "OTRA VENTANA", "OTRO ROBOT"]
+              "Conexion cerrada", "OTRA VENTANA", "OTRO ROBOT",
+              "Error guardando", "No pude guardar", "no pude respaldar"]
     if fuente:
         claves.append(fuente[:20])
     print(f"\n--- log del robot, últimos {dias} días ---")
@@ -56,7 +57,18 @@ def main():
         print(f"no pude leer el log: {ex}")
     vistas = [l for l in lineas if l.startswith(tuple(fechas)) and any(c in l for c in claves)
               and "ya identificado" not in l]
-    for l in vistas[-80:]:
+    salida, repetidas = [], 0
+    for l in vistas:
+        if "ROBOT LISTO" in l and salida and "ROBOT LISTO" in salida[-1]:
+            repetidas += 1
+            continue
+        if repetidas:
+            salida.append(f"   (... y {repetidas} arranques más seguidos: ¿dos ventanas del robot?)")
+            repetidas = 0
+        salida.append(l)
+    if repetidas:
+        salida.append(f"   (... y {repetidas} arranques más seguidos: ¿dos ventanas del robot?)")
+    for l in salida[-120:]:
         print(l[:220])
     if not vistas:
         print("(nada)")
