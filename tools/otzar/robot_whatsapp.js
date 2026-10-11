@@ -719,7 +719,14 @@ async function bloquePlataformas(show, titulo) {
   const apple = await linkApple(show, titulo);
   if (apple) out.push(['Apple Podcasts', apple]);
   if (pl.amazon) out.push(['Amazon Music', pl.amazon]);
-  if (pl.soundcloud) out.push(['SoundCloud', pl.soundcloud]);
+  // (oct/2026) el link del EPISODIO en SoundCloud (lo deja jabura\\soundcloud_subir.py); si no, el del perfil
+  let _sc = pl.soundcloud;
+  try {
+    const _m = JSON.parse(fs.readFileSync(path.join(__dirname, 'soundcloud_episodios.json'), 'utf8'))[show] || {};
+    const _k = normTitulo(titulo);
+    for (const [t, u] of Object.entries(_m)) if (u && normTitulo(t) === _k) { _sc = u; break; }
+  } catch (e) {}
+  if (_sc) out.push(['SoundCloud', _sc]);
   return out;
 }
 function conPlataformas(texto, lista) {

@@ -1121,11 +1121,21 @@ function elegirPorPalabras(candidatos, titulo, marcaObjetivo) {
 
 // ---- LLAVES OFICIALES (spotify_keys.txt: linea1=ID, linea2=secret) ----
 """),
+    ("""  if (pl.soundcloud) out.push(['SoundCloud', pl.soundcloud]);
+""", """  // (oct/2026) el link del EPISODIO en SoundCloud (lo deja jabura\\\\soundcloud_subir.py); si no, el del perfil
+  let _sc = pl.soundcloud;
+  try {
+    const _m = JSON.parse(fs.readFileSync(path.join(__dirname, 'soundcloud_episodios.json'), 'utf8'))[show] || {};
+    const _k = normTitulo(titulo);
+    for (const [t, u] of Object.entries(_m)) if (u && normTitulo(t) === _k) { _sc = u; break; }
+  } catch (e) {}
+  if (_sc) out.push(['SoundCloud', _sc]);
+"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json")
 # הלכות מוקצה: la carpeta "שיעורים מוקצה" que comparte Saúl aparte (31 shiurim
 # numerados al FINAL del nombre). Mismos títulos y simanim que el catálogo de la app.
 MUKZE_CARPETA = r"G:\.shortcut-targets-by-id\1OcakbiF7zD5biDpWYElkB-DoIlidbTlT\שיעורים מוקצה"
@@ -3527,7 +3537,8 @@ def instalar_anunciar():
         bajar("otzar/correo_shiurim.py", BASE / "jabura" / "correo_shiurim.py")
         bajar("otzar/robot_fiestas.py", BASE / "robot_fiestas.py")   # fiestas pasadas (mantenimiento lo lee)
         bajar("otzar/diagnostico.py", BASE / "jabura" / "diagnostico.py")
-        bajar("otzar/plataformas.py", BASE / "jabura" / "plataformas.py")    # Apple/Amazon/Spotify por show (una vez al día)   # "por qué no salió": python diagnostico.py <show>
+        bajar("otzar/plataformas.py", BASE / "jabura" / "plataformas.py")    # Apple/Amazon/Spotify por show (una vez al día)
+        bajar("otzar/soundcloud_subir.py", BASE / "jabura" / "soundcloud_subir.py")   # SoundCloud automático (si hay llaves)   # "por qué no salió": python diagnostico.py <show>
     if ruta.exists() and "mantenimiento.py" in ruta.read_text(encoding="utf-8", errors="replace"):
         ok("ya llama al mantenimiento (jabura, shows de WhatsApp, espejo, sin atrasos)")
         return

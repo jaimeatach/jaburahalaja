@@ -473,6 +473,19 @@ def titulos_jabura():
         log(f"jabura: título corregido · {k[:40]} → {nuevos[k].get('t') if isinstance(nuevos[k], dict) else nuevos[k]}")
 
 
+def soundcloud():
+    """Shows autorizados en SoundCloud (soundcloud_token.json en su carpeta): sube lo
+    nuevo del feed y deja el link de cada episodio para el anuncio. Sin llaves
+    (jabura\\soundcloud_app.txt) no hace nada."""
+    script = BASE / "jabura" / "soundcloud_subir.py"
+    if not script.exists() or not (BASE / "jabura" / "soundcloud_app.txt").exists():
+        return
+    try:
+        subprocess.run([sys.executable, str(script), "subir"], timeout=1800)
+    except Exception as ex:
+        log(f"soundcloud: {ex}")
+
+
 def plataformas():
     """Una vez al día: en qué plataformas está cada show (Apple Podcasts por la API
     pública de iTunes). Deja C:\\robotwhats\\plataformas.json para que el robot ponga
@@ -517,6 +530,7 @@ def main():
     espejo()
     parasha_semanal(cfgw)
     ids_spotify(cfgw)
+    soundcloud()
     plataformas()
     fiestas_pasadas(cfgw)
     sin_atrasos(cfgw)

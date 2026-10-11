@@ -263,7 +263,13 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    `--revisar` en el instalador da el reporte completo) busca cada show en Apple,
    dice cuál no tiene grupo o lleva >14 días sin nada y deja `plataformas.json`.
    Amazon y SoundCloud no tienen API: `--amazon=show:LINK`, `--soundcloud=show:LINK`.
-   Subir a SoundCloud no se puede automatizar (su API no admite apps nuevas).
+   SoundCloud no lee RSS: `tools/otzar/soundcloud_subir.py` sube cada audio con la
+   API oficial (llaves de una app registrada en `C:\OTZAR\jabura\soundcloud_app.txt`,
+   nunca en el repo; `autorizar <show>` hace OAuth con PKCE y deja
+   `<show>\soundcloud_token.json`). `mantenimiento.py` (`soundcloud`) corre `subir` en
+   cada ANUNCIAR: la primera vez memoriza lo existente, luego sube lo nuevo (4 por vez)
+   y deja `soundcloud_episodios.json` en el robot, que pone el link del episodio.
+   Guía para el usuario: `tools/otzar/GUIA_PLATAFORMAS.pdf`.
    `spotify_espera_horas` (`--spotify-espera=show:H`): si Spotify no toma el
    episodio en H horas sale con el link del show (TorahAnytime se trababa).
    `plantilla` en anunciar.<show>: bloques con {fecha_hebrea} {fecha} {titulo}
