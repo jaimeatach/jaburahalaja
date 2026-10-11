@@ -61,7 +61,7 @@ def escribir_json(p, d):
 
 def llaves():
     try:
-        l = [x.strip() for x in APP.read_text(encoding="utf-8").splitlines() if x.strip()]
+        l = [x.strip() for x in APP.read_text(encoding="utf-8-sig").splitlines() if x.strip()]   # -sig: el Bloc de notas puede poner BOM
         return l[0], l[1]
     except Exception:
         return None, None
