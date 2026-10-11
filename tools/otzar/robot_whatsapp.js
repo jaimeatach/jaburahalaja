@@ -836,6 +836,17 @@ async function procesarMensaje(m) {
     return;
   }
 
+  // ---- AVISO (oct/2026): en un grupo FUENTE llego algo que NO es audio ----
+  // (video, documento, link de SoundCloud/Drive/YouTube): no se sube, pero queda
+  // escrito en el log para saber por que un shiur "no se mando".
+  if (esGrupo && destinoAudio && destinoAudio.show) {
+    const _c = contenido(m);
+    const _tipo = _c.videoMessage ? 'un VIDEO'
+      : _c.documentMessage ? ('un DOCUMENTO ' + (_c.documentMessage.fileName || ''))
+      : /https?:\/\/\S*(soundcloud|drive\.google|youtu|spotify|dropbox|mega\.nz)/i.test(cuerpo) ? 'un LINK' : '';
+    if (_tipo) log(`SIN AUDIO en la fuente de ${destinoAudio.show}: llego ${_tipo} (${String(cuerpo || '').replace(/\s+/g, ' ').slice(0, 90)}) -> no se sube; si es un shiur, que lo manden como audio`);
+  }
+
   // ---- TEXTO (posible titulo) ----
   const cuerpoTitulo = sinLinks(cuerpo);
   if (cuerpoTitulo && esTituloValido(cuerpoTitulo)) {

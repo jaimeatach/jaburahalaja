@@ -618,11 +618,25 @@ function titulosVistos(show, titulosDelFeed) {
     }
     if (!nuevos.length) { log(`${show}: nada nuevo.`); continue; }
 """),
+    ("""  // ---- TEXTO (posible titulo) ----
+""", """  // ---- AVISO (oct/2026): en un grupo FUENTE llego algo que NO es audio ----
+  // (video, documento, link de SoundCloud/Drive/YouTube): no se sube, pero queda
+  // escrito en el log para saber por que un shiur "no se mando".
+  if (esGrupo && destinoAudio && destinoAudio.show) {
+    const _c = contenido(m);
+    const _tipo = _c.videoMessage ? 'un VIDEO'
+      : _c.documentMessage ? ('un DOCUMENTO ' + (_c.documentMessage.fileName || ''))
+      : /https?:\\/\\/\\S*(soundcloud|drive\\.google|youtu|spotify|dropbox|mega\\.nz)/i.test(cuerpo) ? 'un LINK' : '';
+    if (_tipo) log(`SIN AUDIO en la fuente de ${destinoAudio.show}: llego ${_tipo} (${String(cuerpo || '').replace(/\\s+/g, ' ').slice(0, 90)}) -> no se sube; si es un shiur, que lo manden como audio`);
+  }
+
+  // ---- TEXTO (posible titulo) ----
+"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente")
 # הלכות מוקצה: la carpeta "שיעורים מוקצה" que comparte Saúl aparte (31 shiurim
 # numerados al FINAL del nombre). Mismos títulos y simanim que el catálogo de la app.
 MUKZE_CARPETA = r"G:\.shortcut-targets-by-id\1OcakbiF7zD5biDpWYElkB-DoIlidbTlT\שיעורים מוקצה"
@@ -3020,6 +3034,7 @@ def instalar_anunciar():
         bajar("otzar/parasha_youtube.py", BASE / "jabura" / "parasha_youtube.py")
         bajar("otzar/correo_shiurim.py", BASE / "jabura" / "correo_shiurim.py")
         bajar("otzar/robot_fiestas.py", BASE / "robot_fiestas.py")   # fiestas pasadas (mantenimiento lo lee)
+        bajar("otzar/diagnostico.py", BASE / "jabura" / "diagnostico.py")   # "por qué no salió": python diagnostico.py <show>
     if ruta.exists() and "mantenimiento.py" in ruta.read_text(encoding="utf-8", errors="replace"):
         ok("ya llama al mantenimiento (jabura, shows de WhatsApp, espejo, sin atrasos)")
         return

@@ -240,6 +240,11 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    de cada show (los aprende del propio feed) y no manda un shiur cuyo título
    ya salió aunque vuelva con otro guid; `permitir_repetidos: true` por show
    lo apaga. Parche del instalador (`normTitulo`, `titulosVistos`).
+   Si en un grupo fuente llega un video, documento o link (SoundCloud, Drive…)
+   en vez de audio, el robot lo escribe en el log ("SIN AUDIO en la fuente de
+   <show>") en lugar de callarse. `tools/otzar/diagnostico.py <show> [días]`
+   (en `C:\OTZAR\jabura\`) junta lo que vio el robot de ese show, su carpeta,
+   lo que espera título y lo último del feed, sin tocar nada.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre
