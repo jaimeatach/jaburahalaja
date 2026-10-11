@@ -397,6 +397,19 @@ def parasha_semanal(cfgw):
                 log(f"no pude dejar parasha.ahora: {ex}")
 
 
+def plataformas():
+    """Una vez al día: en qué plataformas está cada show (Apple Podcasts por la API
+    pública de iTunes). Deja C:\\robotwhats\\plataformas.json para que el robot ponga
+    el link del episodio en Apple en cada anuncio."""
+    script = BASE / "jabura" / "plataformas.py"
+    if not script.exists():
+        return
+    try:
+        subprocess.run([sys.executable, str(script), "--rapido"], timeout=300)
+    except Exception as ex:
+        log(f"plataformas: {ex}")
+
+
 def main():
     cfgw = leer_json(ROBOT / "config_whatsapp.json")
     if not cfgw:
@@ -426,6 +439,7 @@ def main():
     publicar()
     espejo()
     parasha_semanal(cfgw)
+    plataformas()
     fiestas_pasadas(cfgw)
     sin_atrasos(cfgw)
     log("mantenimiento listo; ahora el robot anuncia.")

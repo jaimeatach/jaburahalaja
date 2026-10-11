@@ -601,6 +601,11 @@ function guardarAudio(item, titulo) {
   const _regla = ((CFG.escuchar || {})[item.show] || {});
   const _reglaDm = ((CFG.escuchar_directo || []).find(e => e && e.show === item.show) || {});
   const _r = k => _regla[k] || _reglaDm[k];
+  // === TEMAS (oct/2026): "Dia 21. Domingo" -> "#21 Encendido de Velas (1)", con fecha de ese dia ===
+  if (_r('temas')) {
+    const _t = tituloPorTema(item.show, String(titulo || ''), carpeta);
+    if (_t) { titulo = _t.titulo; if (_t.fecha) item._fecha = _t.fecha; }
+  }
   if (titulo && (_r('quitar_lineas') || _r('unir_lineas'))) {
     let lineas = String(titulo).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
     if (_r('quitar_lineas')) {
@@ -641,6 +646,7 @@ function guardarAudio(item, titulo) {
       return;
     }
   } catch (e) { log('Error guardando audio: ' + (e.message || e)); return; }
+  if (item._fecha) { try { fs.utimesSync(destino, item._fecha / 1000, item._fecha / 1000); } catch (e) {} }   // fecha del episodio = su dia
   log(`GUARDADO [${item.show || '?'}]: ${nombre}  -> ${carpeta}`);
 }
 
@@ -673,6 +679,138 @@ function recuperarAudiosPendientes() {
     }
     if (n) log(`RECUPERADOS ${n} audio(s) que se quedaron sin titulo por un reinicio.`);
   } catch (e) { log('recuperar audios: ' + (e.message || e)); }
+}
+
+// === PLATAFORMAS, PLANTILLA Y TEMAS (oct/2026) ===
+// Cada anuncio lleva, ademas de Spotify, el link del episodio en Apple Podcasts
+// (API publica de iTunes, sin llaves) y el del show en Amazon Music / SoundCloud.
+// plataformas.json lo escribe jabura\plataformas.py (una vez al dia, desde ANUNCIAR);
+// "apple" / "amazon" / "soundcloud" en anunciar.<show> lo pisan.
+const PLATAFORMAS_FILE = path.join(__dirname, 'plataformas.json');
+function _plataformasDe(show) {
+  let p = {};
+  try { p = (JSON.parse(fs.readFileSync(PLATAFORMAS_FILE, 'utf8')) || {})[show] || {}; } catch (e) {}
+  const d = (CFG.anunciar || {})[show] || {};
+  const apple = String(d.apple || p.apple || '');
+  const id = String(p.apple_id || (apple.match(/id(\d{5,})/) || [])[1] || '');
+  return { apple, apple_id: id, amazon: String(d.amazon || p.amazon || ''), soundcloud: String(d.soundcloud || p.soundcloud || '') };
+}
+const _appleCache = {};
+async function linkApple(show, titulo) {
+  const pl = _plataformasDe(show);
+  if (!pl.apple_id) return pl.apple;
+  try {
+    let c = _appleCache[pl.apple_id];
+    if (!c || Date.now() - c.t > 10 * 60000) {
+      const j = JSON.parse(await fetchTexto(`https://itunes.apple.com/lookup?id=${pl.apple_id}&entity=podcastEpisode&limit=200`));
+      c = _appleCache[pl.apple_id] = { t: Date.now(), lista: (j.results || []).filter(r => r.wrapperType === 'podcastEpisode') };
+      if (!pl.apple) { const sh = (j.results || []).find(r => r.wrapperType === 'track'); if (sh && sh.collectionViewUrl) pl.apple = sh.collectionViewUrl.split('?')[0]; }
+    }
+    const k = normTitulo(titulo);
+    const ep = c.lista.find(r => normTitulo(r.trackName) === k) ||
+      c.lista.find(r => { const n = normTitulo(r.trackName); return n && k && Math.min(n.length, k.length) > 12 && (n.includes(k) || k.includes(n)); });
+    if (ep && ep.trackViewUrl) return ep.trackViewUrl.replace(/&uo=\d+$/, '');
+  } catch (e) {}
+  return pl.apple;   // el episodio aun no aparece en Apple: el link del show
+}
+async function bloquePlataformas(show, titulo) {
+  const pl = _plataformasDe(show);
+  const out = [];
+  const apple = await linkApple(show, titulo);
+  if (apple) out.push(['Apple Podcasts', apple]);
+  if (pl.amazon) out.push(['Amazon Music', pl.amazon]);
+  if (pl.soundcloud) out.push(['SoundCloud', pl.soundcloud]);
+  return out;
+}
+function conPlataformas(texto, lista) {
+  if (!lista || !lista.length) return texto;
+  const extra = lista.map(([n, l]) => `${n}\n${l}`).join('\n');
+  const i = texto.lastIndexOf('\n\n📢');
+  return i >= 0 ? texto.slice(0, i) + '\n' + extra + texto.slice(i) : texto + '\n' + extra;
+}
+// "plantilla" en anunciar.<show>: lista de bloques con {fecha_hebrea} {fecha} {titulo}
+// {spotify} {apple} {amazon} {soundcloud} {whatsapp} {dedicatoria}; un bloque cuyo
+// dato falta no sale. Los bloques van separados por una linea en blanco.
+const _MESES_HE = { Tishri: 'Tishre', Heshvan: 'Jeshvan', Cheshvan: 'Jeshvan' };
+function fechaHebrea(ms) {
+  try {
+    const p = new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).formatToParts(new Date(ms));
+    const dia = (p.find(x => x.type === 'day') || {}).value, mes = (p.find(x => x.type === 'month') || {}).value;
+    return dia && mes ? `${dia} de ${_MESES_HE[mes] || mes}` : '';
+  } catch (e) { return ''; }
+}
+function fechaCivil(ms) {
+  return new Date(ms).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })
+    .replace(/de (\p{L})/u, (a, b) => 'de ' + b.toUpperCase());
+}
+function armarPlantilla(datos, v) {
+  const pl = Object.fromEntries((v.plataformas || []).map(([n, l]) => [n, l]));
+  const val = { fecha_hebrea: fechaHebrea(v.fecha), fecha: fechaCivil(v.fecha), titulo: v.titulo || '',
+    spotify: v.spotify || '', apple: pl['Apple Podcasts'] || '', amazon: pl['Amazon Music'] || '',
+    soundcloud: pl['SoundCloud'] || '', whatsapp: v.whatsapp || '', dedicatoria: datos.dedicatoria || '' };
+  const bloques = Array.isArray(datos.plantilla) ? datos.plantilla : String(datos.plantilla || '').split(/\n\s*\n/);
+  return bloques.map(b => {
+    let falta = false;
+    const t = String(b).replace(/\{(\w+)\}/g, (a, k) => { if (!val[k]) falta = true; return val[k] || ''; });
+    return falta ? '' : t.trim();
+  }).filter(Boolean).join('\n\n');
+}
+// "temas": true en escuchar / escuchar_directo -> <show>. El que manda pone solo
+// "Dia 21. Domingo"; el titulo sale del tema de la semana: "#21 Encendido de Velas (1)".
+// Los temas vienen de tools/otzar/temas/<show>.json en GitHub (se actualizan sin
+// tocar la PC) y de <show>\temas.json en la PC ("!tema <show> <dia> <tema>" por
+// WhatsApp lo escribe); el de la PC manda. El dia de la semana fija la fecha del
+// episodio y, con "esperar_fecha" en anunciar, el anuncio sale ese dia.
+const _temasRemotos = {};
+async function cargarTemasRemotos() {
+  const shows = new Set([
+    ...Object.entries(CFG.escuchar || {}).filter(([, v]) => v && v.temas).map(([k]) => k),
+    ...(CFG.escuchar_directo || []).filter(e => e && e.temas).map(e => e.show)]);
+  for (const sh of shows) {
+    try {
+      const j = JSON.parse(await fetchTexto(`https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/tools/otzar/temas/${sh}.json`));
+      if (Array.isArray(j)) _temasRemotos[sh] = j;
+    } catch (e) {}
+  }
+}
+setTimeout(() => { cargarTemasRemotos().catch(() => {}); }, 5000);
+setInterval(() => { cargarTemasRemotos().catch(() => {}); }, 30 * 60000);
+function _archivoTemas(show) { const c = _carpetaDe(show); return c ? path.join(path.dirname(c), 'temas.json') : null; }
+function temasDe(show) {
+  let local = [];
+  try { local = JSON.parse(fs.readFileSync(_archivoTemas(show), 'utf8')); } catch (e) {}
+  const por = {};
+  for (const t of [].concat(_temasRemotos[show] || [], Array.isArray(local) ? local : []))
+    if (t && Number(t.desde) && t.tema) por[Number(t.desde)] = String(t.tema).trim();
+  return Object.keys(por).map(Number).sort((a, b) => a - b).map(d => ({ desde: d, tema: por[d] }));
+}
+const _DIAS_SEMANA = { domingo: 0, lunes: 1, martes: 2, miercoles: 3, jueves: 4, viernes: 5, sabado: 6 };
+function tituloPorTema(show, texto, carpeta) {
+  const plano = String(texto || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  let n = Number((plano.match(/dia\s*#?\s*(\d{1,4})/) || plano.match(/#\s*(\d{1,4})/) || plano.match(/\b(\d{1,4})\b/) || [])[1] || 0);
+  if (!n) {   // sin numero: el que sigue al ultimo guardado
+    let max = 0;
+    try { for (const f of fs.readdirSync(carpeta)) { const mm = f.match(/^#\s*(\d+)/); if (mm) max = Math.max(max, +mm[1]); } } catch (e) {}
+    if (!max) return null;
+    n = max + 1;
+  }
+  const lista = temasDe(show).filter(t => t.desde <= n);
+  const t = lista[lista.length - 1];
+  if (!t) log(`TEMAS ${show}: no hay tema para el dia ${n}; se guarda como "#${n}". Avisa el tema de la semana.`);
+  const titulo = t ? `#${n} ${t.tema} (${n - t.desde + 1})` : `#${n}`;
+  let fecha = 0;
+  const dm = plano.match(/\b(domingo|lunes|martes|miercoles|jueves|viernes|sabado)\b/);
+  if (dm) {
+    const hoy = new Date(); hoy.setHours(6, 0, 0, 0);
+    fecha = hoy.getTime() + ((_DIAS_SEMANA[dm[1]] - hoy.getDay() + 7) % 7) * 86400000;
+    // en orden: un dia mayor nunca cae antes que uno menor ya guardado
+    const ef = path.join(__dirname, 'temas_estado.json');
+    let st = {}; try { st = JSON.parse(fs.readFileSync(ef, 'utf8')); } catch (e) {}
+    const u = st[show];
+    if (u && n > u.n) while (fecha <= u.fecha) fecha += 7 * 86400000;
+    if (!u || n >= u.n) { st[show] = { n, fecha }; try { fs.writeFileSync(ef, JSON.stringify(st)); } catch (e) {} }
+  }
+  return { titulo, fecha };
 }
 
 // === RESCATE (oct/2026) ===
@@ -826,6 +964,22 @@ async function procesarMensaje(m) {
     return null;
   }
   const directo = chatDirecto();
+
+  // === "!tema <show> <dia> <tema>" (oct/2026), en chat privado con el robot ===
+  if (!esGrupo) {
+    const _mt = /^!tema\s+(\w+)\s+(\d{1,4})\s+([\s\S]+)$/i.exec(String(textoDe(m) || '').trim());
+    if (_mt) {
+      const show = _mt[1].toLowerCase(), desde = Number(_mt[2]), tema = _mt[3].replace(/\s+/g, ' ').trim();
+      const f = _archivoTemas(show);
+      if (!f) { log(`TEMAS: "${show}" no tiene carpeta; ignoro "!tema"`); return; }
+      let l = []; try { l = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) {}
+      l = (Array.isArray(l) ? l : []).filter(t => Number(t.desde) !== desde).concat([{ desde, tema }]).sort((a, b) => a.desde - b.desde);
+      try { fs.writeFileSync(f, JSON.stringify(l, null, 2)); } catch (e) {}
+      log(`TEMAS ${show}: desde el dia ${desde} el tema es "${tema}"`);
+      try { await sock.sendMessage(jid, { text: `✅ ${show}: desde el día ${desde} el tema es "${tema}"\n#${desde} ${tema} (1), #${desde + 1} ${tema} (2)...` }); } catch (e) {}
+      return;
+    }
+  }
 
   // ===== NUBE DE TORA: solo privados que NO son chat directo =====
   // Todo va dentro de try/catch: si truena, el robot ni se entera.
@@ -1781,6 +1935,7 @@ async function anunciarInterno(esVigilante) {
       .map(it => ({ tit: sacaTitulo(it), guid: sacaGuid(it), audio: sacaAudio(it), peso: sacaPeso(it), fecha: sacaFecha(it),
                     link: ((it.match(/<link>([\s\S]*?)<\/link>/) || [])[1] || '').trim() }))
       .filter(ep => !vistos.has(ep.guid))
+      .filter(ep => !((CFG.anunciar[show] || {}).esperar_fecha && ep.fecha > Date.now()))   // (oct/2026) sale en su dia
       .sort((a, b) => enOrden ? (a.fecha - b.fecha) : (b.fecha - a.fecha));
 
     // NO REPETIR: los titulos de lo ya visto se aprenden del propio feed en cada corrida
@@ -1912,7 +2067,7 @@ async function anunciarInterno(esVigilante) {
     for (const ep of deHoy) {
       // buscar el link EXACTO del episodio en Spotify
       const diag = {};
-      const epLink = (spotShow && !sinSpot)
+      let epLink = (spotShow && !sinSpot)
         ? await linkEpisodio(spotShow, ep.tit, diag, sinFiltro ? 8 : 1, (CFG.anunciar[show]||{}).market)
         : null;
 
@@ -1928,6 +2083,12 @@ async function anunciarInterno(esVigilante) {
         if (datos.link_audio && ep.audio) texto += `\n🎧 Audio\n${ep.audio}`;
         if (wa && !datos.sin_whatsapp) texto += `\nWhatsapp\n${wa}`;
         texto += `\n\n${DIFUNDE[idiomaDeShow(show)]}`;
+        {
+          const _plat = await bloquePlataformas(show, ep.tit);
+          texto = datos.plantilla
+            ? armarPlantilla(datos, { titulo: tituloAnuncio(show, ep.tit), spotify: spotShow, whatsapp: datos.whatsapp_link || wa, fecha: ep.fecha || Date.now(), plataformas: _plat })
+            : conPlataformas(texto, _plat);
+        }
         const grupos = gruposDeShow(reg, show);
         for (const g of grupos) {
           await sock.sendMessage(g.id, { text: texto });
@@ -1944,6 +2105,14 @@ async function anunciarInterno(esVigilante) {
         continue;
       }
 
+      // (oct/2026) "spotify_espera_horas": N en anunciar.<show>: si Spotify no toma el
+      // episodio en N horas, sale con el link del SHOW en vez de esperar para siempre
+      // (asi se quedaba trabado TorahAnytime).
+      const _espera = Number(datos.spotify_espera_horas || 0);
+      if (!epLink && spotShow && !sinSpot && _espera > 0 && ep.fecha && Date.now() - ep.fecha > _espera * 3600000) {
+        log(`${show}: "${ep.tit.slice(0, 45)}" Spotify no lo tomo en ${_espera} h; sale con el link del show.`);
+        epLink = spotShow;
+      }
       // BLINDAJE: sin link exacto NO se anuncia (ni con link del show, ni solo whatsapp)
       if (!epLink) {
         pendientes++;
@@ -1953,7 +2122,10 @@ async function anunciarInterno(esVigilante) {
         log(`   (lo mas parecido que tiene Spotify: ${diag.masParecidos.join('  |  ')})`);
         continue; // NO se marca: el proximo ANUNCIAR lo reintenta
       }
-      const texto = armarMensaje(tituloAnuncio(show, ep.tit), epLink, wa, show, datos.app ? (ep.link || datos.app) : '');
+      const _plat = await bloquePlataformas(show, ep.tit);
+      const texto = datos.plantilla
+        ? armarPlantilla(datos, { titulo: tituloAnuncio(show, ep.tit), spotify: epLink, whatsapp: datos.whatsapp_link || wa, fecha: ep.fecha || Date.now(), plataformas: _plat })
+        : conPlataformas(armarMensaje(tituloAnuncio(show, ep.tit), epLink, wa, show, datos.app ? (ep.link || datos.app) : ''), _plat);
       // ultima revision antes de mandar: si otra corrida ya lo anuncio, lo salto
       if (yaAnunciado(show, ep.guid)) { log(`${show}: "${ep.tit.slice(0,40)}" ya se anuncio; lo salto.`); continue; }
       const grupos = gruposDeShow(reg, show);

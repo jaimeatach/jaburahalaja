@@ -256,6 +256,32 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    posteriores al último audio de la carpeta del show (nunca duplica). Un audio
    que esperaba título y sobrevivía a un reinicio caía en la carpeta de Peretz;
    ahora va a la de su show.
+   Plataformas: cada anuncio lleva, además de Spotify, el link del episodio en
+   Apple Podcasts (API pública de iTunes por `apple_id`; si el episodio aún no
+   aparece, el del show) y el del show en Amazon Music / SoundCloud.
+   `tools/otzar/plataformas.py` (lo corre `mantenimiento.py` una vez al día;
+   `--revisar` en el instalador da el reporte completo) busca cada show en Apple,
+   dice cuál no tiene grupo o lleva >14 días sin nada y deja `plataformas.json`.
+   Amazon y SoundCloud no tienen API: `--amazon=show:LINK`, `--soundcloud=show:LINK`.
+   Subir a SoundCloud no se puede automatizar (su API no admite apps nuevas).
+   `spotify_espera_horas` (`--spotify-espera=show:H`): si Spotify no toma el
+   episodio en H horas sale con el link del show (TorahAnytime se trababa).
+   `plantilla` en anunciar.<show>: bloques con {fecha_hebrea} {fecha} {titulo}
+   {spotify} {apple} {amazon} {soundcloud} {whatsapp} {dedicatoria}; el bloque
+   cuyo dato falta no sale. `esperar_fecha`: no se anuncia antes de su pubDate.
+10. Rab Yosef Tawil (`--tawil`, paso [42]): Yehuda Avi Ezri manda cada semana los
+   audios con "Dia 21. Domingo". El robot los toma del chat directo `tawil`
+   (`escuchar_directo`, registrado con "!otzar tawil" o `--tawil-numero`), con
+   `temas: true` el título sale del tema de la semana ("#21 Encendido de Velas (1)")
+   y la fecha del archivo es la de ese día de la semana. Temas en
+   `tools/otzar/temas/tawil.json` (los actualizo yo cuando el usuario avisa el
+   domingo; el robot los relee cada 30 min) o "!tema tawil 27 Tema" por WhatsApp
+   (`<show>\temas.json` en la PC, manda sobre el del repo). Se anuncia cada uno SU
+   día (`esperar_fecha`) en los 2 grupos de Tawil y en los generales 3 y 6, con la
+   plantilla: fecha hebrea / civil, título + "Rab Yosef Tawil", plataformas, L"N
+   Moshe Ben Sara / Miriam Bat Lea Luisa, link del grupo. Spotify del show:
+   1gVVXZw6fNyrcqadB5pmLC; para que lea nuestro feed sin perder #1-#26 hace falta
+   su RSS de Spotify for Creators (`--tawil-rss=`).
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre

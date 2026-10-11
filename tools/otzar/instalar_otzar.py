@@ -26,6 +26,9 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py --compactar=musar                   # feed hinchado de espacios (GitHub 422): compactarlo ya
     python instalar_otzar.py --nombres=musar --excluir="musar:שער הבי?טחון"   # nombre del Rab en el título; series que no se bajan
     python instalar_otzar.py --rescatar=hilu,jabura:5          # el robot pide a WhatsApp los audios que se perdieron
+    python instalar_otzar.py --tawil [--tawil-rss=RSS] [--tawil-numero=TEL]   # Rab Yosef Tawil: chat directo, temas, anuncio en su día
+    python instalar_otzar.py --amazon=show:LINK --soundcloud=show:LINK --spotify-espera=torahanytime:6
+    python instalar_otzar.py --revisar                       # en qué plataformas está cada show y qué le falta
 
 Los shows (nacach, peretz…) viven en C:\\OTZAR; el robot en C:\\robotwhats. Los busca solo.
 
@@ -813,11 +816,214 @@ async function rescatarDeHistorial(messages) {
 
 async function procesarMensaje(m) {
 """),
+    ("""// === RESCATE (oct/2026) ===
+// Si un audio se perdio""", """// === PLATAFORMAS, PLANTILLA Y TEMAS (oct/2026) ===
+// Cada anuncio lleva, ademas de Spotify, el link del episodio en Apple Podcasts
+// (API publica de iTunes, sin llaves) y el del show en Amazon Music / SoundCloud.
+// plataformas.json lo escribe jabura\\plataformas.py (una vez al dia, desde ANUNCIAR);
+// "apple" / "amazon" / "soundcloud" en anunciar.<show> lo pisan.
+const PLATAFORMAS_FILE = path.join(__dirname, 'plataformas.json');
+function _plataformasDe(show) {
+  let p = {};
+  try { p = (JSON.parse(fs.readFileSync(PLATAFORMAS_FILE, 'utf8')) || {})[show] || {}; } catch (e) {}
+  const d = (CFG.anunciar || {})[show] || {};
+  const apple = String(d.apple || p.apple || '');
+  const id = String(p.apple_id || (apple.match(/id(\\d{5,})/) || [])[1] || '');
+  return { apple, apple_id: id, amazon: String(d.amazon || p.amazon || ''), soundcloud: String(d.soundcloud || p.soundcloud || '') };
+}
+const _appleCache = {};
+async function linkApple(show, titulo) {
+  const pl = _plataformasDe(show);
+  if (!pl.apple_id) return pl.apple;
+  try {
+    let c = _appleCache[pl.apple_id];
+    if (!c || Date.now() - c.t > 10 * 60000) {
+      const j = JSON.parse(await fetchTexto(`https://itunes.apple.com/lookup?id=${pl.apple_id}&entity=podcastEpisode&limit=200`));
+      c = _appleCache[pl.apple_id] = { t: Date.now(), lista: (j.results || []).filter(r => r.wrapperType === 'podcastEpisode') };
+      if (!pl.apple) { const sh = (j.results || []).find(r => r.wrapperType === 'track'); if (sh && sh.collectionViewUrl) pl.apple = sh.collectionViewUrl.split('?')[0]; }
+    }
+    const k = normTitulo(titulo);
+    const ep = c.lista.find(r => normTitulo(r.trackName) === k) ||
+      c.lista.find(r => { const n = normTitulo(r.trackName); return n && k && Math.min(n.length, k.length) > 12 && (n.includes(k) || k.includes(n)); });
+    if (ep && ep.trackViewUrl) return ep.trackViewUrl.replace(/&uo=\\d+$/, '');
+  } catch (e) {}
+  return pl.apple;   // el episodio aun no aparece en Apple: el link del show
+}
+async function bloquePlataformas(show, titulo) {
+  const pl = _plataformasDe(show);
+  const out = [];
+  const apple = await linkApple(show, titulo);
+  if (apple) out.push(['Apple Podcasts', apple]);
+  if (pl.amazon) out.push(['Amazon Music', pl.amazon]);
+  if (pl.soundcloud) out.push(['SoundCloud', pl.soundcloud]);
+  return out;
+}
+function conPlataformas(texto, lista) {
+  if (!lista || !lista.length) return texto;
+  const extra = lista.map(([n, l]) => `${n}\\n${l}`).join('\\n');
+  const i = texto.lastIndexOf('\\n\\n📢');
+  return i >= 0 ? texto.slice(0, i) + '\\n' + extra + texto.slice(i) : texto + '\\n' + extra;
+}
+// "plantilla" en anunciar.<show>: lista de bloques con {fecha_hebrea} {fecha} {titulo}
+// {spotify} {apple} {amazon} {soundcloud} {whatsapp} {dedicatoria}; un bloque cuyo
+// dato falta no sale. Los bloques van separados por una linea en blanco.
+const _MESES_HE = { Tishri: 'Tishre', Heshvan: 'Jeshvan', Cheshvan: 'Jeshvan' };
+function fechaHebrea(ms) {
+  try {
+    const p = new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' }).formatToParts(new Date(ms));
+    const dia = (p.find(x => x.type === 'day') || {}).value, mes = (p.find(x => x.type === 'month') || {}).value;
+    return dia && mes ? `${dia} de ${_MESES_HE[mes] || mes}` : '';
+  } catch (e) { return ''; }
+}
+function fechaCivil(ms) {
+  return new Date(ms).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })
+    .replace(/de (\\p{L})/u, (a, b) => 'de ' + b.toUpperCase());
+}
+function armarPlantilla(datos, v) {
+  const pl = Object.fromEntries((v.plataformas || []).map(([n, l]) => [n, l]));
+  const val = { fecha_hebrea: fechaHebrea(v.fecha), fecha: fechaCivil(v.fecha), titulo: v.titulo || '',
+    spotify: v.spotify || '', apple: pl['Apple Podcasts'] || '', amazon: pl['Amazon Music'] || '',
+    soundcloud: pl['SoundCloud'] || '', whatsapp: v.whatsapp || '', dedicatoria: datos.dedicatoria || '' };
+  const bloques = Array.isArray(datos.plantilla) ? datos.plantilla : String(datos.plantilla || '').split(/\\n\\s*\\n/);
+  return bloques.map(b => {
+    let falta = false;
+    const t = String(b).replace(/\\{(\\w+)\\}/g, (a, k) => { if (!val[k]) falta = true; return val[k] || ''; });
+    return falta ? '' : t.trim();
+  }).filter(Boolean).join('\\n\\n');
+}
+// "temas": true en escuchar / escuchar_directo -> <show>. El que manda pone solo
+// "Dia 21. Domingo"; el titulo sale del tema de la semana: "#21 Encendido de Velas (1)".
+// Los temas vienen de tools/otzar/temas/<show>.json en GitHub (se actualizan sin
+// tocar la PC) y de <show>\\temas.json en la PC ("!tema <show> <dia> <tema>" por
+// WhatsApp lo escribe); el de la PC manda. El dia de la semana fija la fecha del
+// episodio y, con "esperar_fecha" en anunciar, el anuncio sale ese dia.
+const _temasRemotos = {};
+async function cargarTemasRemotos() {
+  const shows = new Set([
+    ...Object.entries(CFG.escuchar || {}).filter(([, v]) => v && v.temas).map(([k]) => k),
+    ...(CFG.escuchar_directo || []).filter(e => e && e.temas).map(e => e.show)]);
+  for (const sh of shows) {
+    try {
+      const j = JSON.parse(await fetchTexto(`https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/tools/otzar/temas/${sh}.json`));
+      if (Array.isArray(j)) _temasRemotos[sh] = j;
+    } catch (e) {}
+  }
+}
+setTimeout(() => { cargarTemasRemotos().catch(() => {}); }, 5000);
+setInterval(() => { cargarTemasRemotos().catch(() => {}); }, 30 * 60000);
+function _archivoTemas(show) { const c = _carpetaDe(show); return c ? path.join(path.dirname(c), 'temas.json') : null; }
+function temasDe(show) {
+  let local = [];
+  try { local = JSON.parse(fs.readFileSync(_archivoTemas(show), 'utf8')); } catch (e) {}
+  const por = {};
+  for (const t of [].concat(_temasRemotos[show] || [], Array.isArray(local) ? local : []))
+    if (t && Number(t.desde) && t.tema) por[Number(t.desde)] = String(t.tema).trim();
+  return Object.keys(por).map(Number).sort((a, b) => a - b).map(d => ({ desde: d, tema: por[d] }));
+}
+const _DIAS_SEMANA = { domingo: 0, lunes: 1, martes: 2, miercoles: 3, jueves: 4, viernes: 5, sabado: 6 };
+function tituloPorTema(show, texto, carpeta) {
+  const plano = String(texto || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  let n = Number((plano.match(/dia\\s*#?\\s*(\\d{1,4})/) || plano.match(/#\\s*(\\d{1,4})/) || plano.match(/\\b(\\d{1,4})\\b/) || [])[1] || 0);
+  if (!n) {   // sin numero: el que sigue al ultimo guardado
+    let max = 0;
+    try { for (const f of fs.readdirSync(carpeta)) { const mm = f.match(/^#\\s*(\\d+)/); if (mm) max = Math.max(max, +mm[1]); } } catch (e) {}
+    if (!max) return null;
+    n = max + 1;
+  }
+  const lista = temasDe(show).filter(t => t.desde <= n);
+  const t = lista[lista.length - 1];
+  if (!t) log(`TEMAS ${show}: no hay tema para el dia ${n}; se guarda como "#${n}". Avisa el tema de la semana.`);
+  const titulo = t ? `#${n} ${t.tema} (${n - t.desde + 1})` : `#${n}`;
+  let fecha = 0;
+  const dm = plano.match(/\\b(domingo|lunes|martes|miercoles|jueves|viernes|sabado)\\b/);
+  if (dm) {
+    const hoy = new Date(); hoy.setHours(6, 0, 0, 0);
+    fecha = hoy.getTime() + ((_DIAS_SEMANA[dm[1]] - hoy.getDay() + 7) % 7) * 86400000;
+    // en orden: un dia mayor nunca cae antes que uno menor ya guardado
+    const ef = path.join(__dirname, 'temas_estado.json');
+    let st = {}; try { st = JSON.parse(fs.readFileSync(ef, 'utf8')); } catch (e) {}
+    const u = st[show];
+    if (u && n > u.n) while (fecha <= u.fecha) fecha += 7 * 86400000;
+    if (!u || n >= u.n) { st[show] = { n, fecha }; try { fs.writeFileSync(ef, JSON.stringify(st)); } catch (e) {} }
+  }
+  return { titulo, fecha };
+}
+
+// === RESCATE (oct/2026) ===
+// Si un audio se perdio"""),
+    ("""  const directo = chatDirecto();
+""", """  const directo = chatDirecto();
+
+  // === "!tema <show> <dia> <tema>" (oct/2026), en chat privado con el robot ===
+  if (!esGrupo) {
+    const _mt = /^!tema\\s+(\\w+)\\s+(\\d{1,4})\\s+([\\s\\S]+)$/i.exec(String(textoDe(m) || '').trim());
+    if (_mt) {
+      const show = _mt[1].toLowerCase(), desde = Number(_mt[2]), tema = _mt[3].replace(/\\s+/g, ' ').trim();
+      const f = _archivoTemas(show);
+      if (!f) { log(`TEMAS: "${show}" no tiene carpeta; ignoro "!tema"`); return; }
+      let l = []; try { l = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) {}
+      l = (Array.isArray(l) ? l : []).filter(t => Number(t.desde) !== desde).concat([{ desde, tema }]).sort((a, b) => a.desde - b.desde);
+      try { fs.writeFileSync(f, JSON.stringify(l, null, 2)); } catch (e) {}
+      log(`TEMAS ${show}: desde el dia ${desde} el tema es "${tema}"`);
+      try { await sock.sendMessage(jid, { text: `✅ ${show}: desde el día ${desde} el tema es "${tema}"\\n#${desde} ${tema} (1), #${desde + 1} ${tema} (2)...` }); } catch (e) {}
+      return;
+    }
+  }
+"""),
+    ("""  if (titulo && (_r('quitar_lineas') || _r('unir_lineas'))) {
+""", """  // === TEMAS (oct/2026): "Dia 21. Domingo" -> "#21 Encendido de Velas (1)", con fecha de ese dia ===
+  if (_r('temas')) {
+    const _t = tituloPorTema(item.show, String(titulo || ''), carpeta);
+    if (_t) { titulo = _t.titulo; if (_t.fecha) item._fecha = _t.fecha; }
+  }
+  if (titulo && (_r('quitar_lineas') || _r('unir_lineas'))) {
+"""),
+    ("""  log(`GUARDADO [${item.show || '?'}]: ${nombre}  -> ${carpeta}`);
+""", """  if (item._fecha) { try { fs.utimesSync(destino, item._fecha / 1000, item._fecha / 1000); } catch (e) {} }   // fecha del episodio = su dia
+  log(`GUARDADO [${item.show || '?'}]: ${nombre}  -> ${carpeta}`);
+"""),
+    ("""      .filter(ep => !vistos.has(ep.guid))
+""", """      .filter(ep => !vistos.has(ep.guid))
+      .filter(ep => !((CFG.anunciar[show] || {}).esperar_fecha && ep.fecha > Date.now()))   // (oct/2026) sale en su dia
+"""),
+    ("""      const epLink = (spotShow && !sinSpot)
+""", """      let epLink = (spotShow && !sinSpot)
+"""),
+    ("""      // BLINDAJE: sin link exacto NO se anuncia (ni con link del show, ni solo whatsapp)
+      if (!epLink) {
+""", """      // (oct/2026) "spotify_espera_horas": N en anunciar.<show>: si Spotify no toma el
+      // episodio en N horas, sale con el link del SHOW en vez de esperar para siempre
+      // (asi se quedaba trabado TorahAnytime).
+      const _espera = Number(datos.spotify_espera_horas || 0);
+      if (!epLink && spotShow && !sinSpot && _espera > 0 && ep.fecha && Date.now() - ep.fecha > _espera * 3600000) {
+        log(`${show}: "${ep.tit.slice(0, 45)}" Spotify no lo tomo en ${_espera} h; sale con el link del show.`);
+        epLink = spotShow;
+      }
+      // BLINDAJE: sin link exacto NO se anuncia (ni con link del show, ni solo whatsapp)
+      if (!epLink) {
+"""),
+    ("""      const texto = armarMensaje(tituloAnuncio(show, ep.tit), epLink, wa, show, datos.app ? (ep.link || datos.app) : '');
+""", """      const _plat = await bloquePlataformas(show, ep.tit);
+      const texto = datos.plantilla
+        ? armarPlantilla(datos, { titulo: tituloAnuncio(show, ep.tit), spotify: epLink, whatsapp: datos.whatsapp_link || wa, fecha: ep.fecha || Date.now(), plataformas: _plat })
+        : conPlataformas(armarMensaje(tituloAnuncio(show, ep.tit), epLink, wa, show, datos.app ? (ep.link || datos.app) : ''), _plat);
+"""),
+    ("""        if (wa && !datos.sin_whatsapp) texto += `\\nWhatsapp\\n${wa}`;
+        texto += `\\n\\n${DIFUNDE[idiomaDeShow(show)]}`;
+""", """        if (wa && !datos.sin_whatsapp) texto += `\\nWhatsapp\\n${wa}`;
+        texto += `\\n\\n${DIFUNDE[idiomaDeShow(show)]}`;
+        {
+          const _plat = await bloquePlataformas(show, ep.tit);
+          texto = datos.plantilla
+            ? armarPlantilla(datos, { titulo: tituloAnuncio(show, ep.tit), spotify: spotShow, whatsapp: datos.whatsapp_link || wa, fecha: ep.fecha || Date.now(), plataformas: _plat })
+            : conPlataformas(texto, _plat);
+        }
+"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha")
 # הלכות מוקצה: la carpeta "שיעורים מוקצה" que comparte Saúl aparte (31 shiurim
 # numerados al FINAL del nombre). Mismos títulos y simanim que el catálogo de la app.
 MUKZE_CARPETA = r"G:\.shortcut-targets-by-id\1OcakbiF7zD5biDpWYElkB-DoIlidbTlT\שיעורים מוקצה"
@@ -1478,7 +1684,7 @@ def show_nuevo():
         except Exception as e_:                             # noqa: BLE001
             aviso(f"no pude marcar lo rescatado como anunciado: {e_}")
         print(f"   → en Spotify for Creators, redirect del show a https://{c['github_user']}.github.io/{c['github_repo']}/feed.xml")
-    if not grupo.startswith("http") and not esc.get("invite"):
+    if not grupo.startswith("http") and not esc.get("invite") and "--tawil" not in sys.argv:
         print(f"   → cuando tengas el grupo del Rab: python instalar_otzar.py --sin-drive --nuevo={clave} --nuevo-grupo=LINK")
 
 
@@ -3215,7 +3421,8 @@ def instalar_anunciar():
         bajar("otzar/parasha_youtube.py", BASE / "jabura" / "parasha_youtube.py")
         bajar("otzar/correo_shiurim.py", BASE / "jabura" / "correo_shiurim.py")
         bajar("otzar/robot_fiestas.py", BASE / "robot_fiestas.py")   # fiestas pasadas (mantenimiento lo lee)
-        bajar("otzar/diagnostico.py", BASE / "jabura" / "diagnostico.py")   # "por qué no salió": python diagnostico.py <show>
+        bajar("otzar/diagnostico.py", BASE / "jabura" / "diagnostico.py")
+        bajar("otzar/plataformas.py", BASE / "jabura" / "plataformas.py")    # Apple/Amazon/Spotify por show (una vez al día)   # "por qué no salió": python diagnostico.py <show>
     if ruta.exists() and "mantenimiento.py" in ruta.read_text(encoding="utf-8", errors="replace"):
         ok("ya llama al mantenimiento (jabura, shows de WhatsApp, espejo, sin atrasos)")
         return
@@ -3418,6 +3625,150 @@ def rescatar():
     print("     \"RESCATE <show>: llegaron N mensajes...\" y \"GUARDADO [<show>]\". Luego aprieta ANUNCIAR.")
 
 
+# ── 42. Rab Yosef Tawil ───────────────────────────────────────────────────────
+#   --tawil [--tawil-rss=RSS_DEL_SHOW_EN_SPOTIFY] [--tawil-numero=TELEFONO]
+#   Yehuda Avi Ezri manda cada semana los audios con "Dia 21. Domingo"; el robot los
+#   toma del chat directo (registrado con "!otzar tawil" desde ese chat, o por
+#   número), les pone el tema de la semana ("#21 Encendido de Velas (1)", temas en
+#   tools/otzar/temas/tawil.json o "!tema tawil 27 Tema" por WhatsApp), les da la
+#   fecha de su día y los publica (archive.org + feed → Spotify, Apple, Amazon).
+#   Cada uno se anuncia SU día en los dos grupos de Tawil y en los generales (3 y 6)
+#   con el formato: fecha hebrea / civil, título, plataformas, L"N y link del grupo.
+TAWIL = {
+    "nombre": 'Harav Yosef Tawil Shlit"a',
+    "spotify": "https://open.spotify.com/show/1gVVXZw6fNyrcqadB5pmLC",
+    "grupos": ["https://chat.whatsapp.com/EeNJLWF5dbE3VqCX5WUCU2",
+               "https://chat.whatsapp.com/JQRxF5FJDN05aI9otVcLE8"],
+    "whatsapp_link": "https://chat.whatsapp.com/JQRxF5FJDN05aI9otVcLE8",
+    "dedicatoria": 'L"N\nMoshe Ben Sara\nMiriam Bat Lea Luisa',
+    "plantilla": ["{fecha_hebrea}\n{fecha}", "*{titulo}*", "*Spotify*\n{spotify}", "*Apple Podcasts*\n{apple}",
+                  "*Amazon Music*\n{amazon}", "*SoundCloud*\n{soundcloud}", "{dedicatoria}",
+                  "*Grupo de WhatsApp*\n{whatsapp}"],
+}
+
+
+def tawil():
+    if not any(a == "--tawil" or a.startswith("--tawil-") for a in sys.argv):
+        return
+    arg = lambda k: next((a.split("=", 1)[1] for a in sys.argv if a.startswith(f"--{k}=")), "").strip()
+    rss, numero = arg("tawil-rss"), re.sub(r"\D", "", arg("tawil-numero"))
+    viejo = sys.argv[:]
+    sys.argv = [a for a in sys.argv if not a.startswith("--nuevo")] + \
+        ["--nuevo=tawil", "--nuevo-nombre=" + TAWIL["nombre"], "--nuevo-spotify=" + TAWIL["spotify"]] + \
+        (["--nuevo-rss=" + rss] if rss else [])
+    try:
+        show_nuevo()
+    finally:
+        sys.argv = viejo
+    paso(42, "Rab Yosef Tawil: audios del chat directo, título por tema, anuncio en su día")
+    if not ROBOT:
+        aviso("sin carpeta del robot no puedo configurar el anuncio")
+        return
+    rw = ROBOT / "config_whatsapp.json"
+    cfg = json.loads(rw.read_text(encoding="utf-8"))
+    antes = json.dumps(cfg, sort_keys=True)
+    (cfg.get("escuchar") or {}).pop("tawil", None)          # no hay grupo fuente: es chat directo
+    dm = cfg.setdefault("escuchar_directo", [])
+    e = next((x for x in dm if isinstance(x, dict) and x.get("show") == "tawil"), None)
+    if e is None:
+        e = {"show": "tawil"}
+        dm.append(e)
+    e["carpetaDestino"] = str(BASE / "tawil" / "audios_whatsapp")
+    e["temas"] = True
+    if numero:
+        e["numero"] = numero
+    an = cfg.setdefault("anunciar", {}).setdefault("tawil", {})
+    generales = (cfg.get("anunciar", {}).get("nacach") or {}).get("invite") or []
+    generales = generales if isinstance(generales, list) else [generales]
+    an["invite"] = TAWIL["grupos"] + [g for g in generales if g and g not in TAWIL["grupos"]]
+    an.update({
+        "spotify": TAWIL["spotify"], "sin_spotify": False, "spotify_espera_horas": 3,
+        "whatsapp_link": TAWIL["whatsapp_link"], "dedicatoria": TAWIL["dedicatoria"],
+        "plantilla": TAWIL["plantilla"], "sufijo_anuncio": "Rab Yosef Tawil",
+        "esperar_fecha": True, "en_orden": True, "max_anuncios": 2, "solo_ultimos": 10,
+        "sin_audio": True, "sin_whatsapp": True, "link_audio": False, "idioma": "es", "pausado": False,
+    })
+    if json.dumps(cfg, sort_keys=True) != antes:
+        respaldar(rw)
+        if not VER:
+            escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+    ok(f"robot: toma los audios del chat directo 'tawil'{' (número ' + numero + ')' if numero else ''} y les pone el tema de la semana")
+    ok(f"anuncia cada shiur SU día en {len(an['invite'])} grupos (los 2 de Tawil + generales) con fecha hebrea, L\"N y link del grupo")
+    try:
+        temas = json.loads(bajar_texto("otzar/temas/tawil.json"))
+        ok("temas: " + ", ".join(f"desde el {t['desde']}: {t['tema']}" for t in temas))
+    except Exception:
+        pass
+    print("   → 1) agrega al robot (2205947115) a los dos grupos de Tawil (si son de solo admins, hazlo admin)")
+    print("   → 2) que Yehuda Avi Ezri reenvíe los audios TAMBIÉN al robot, o reenvíalos tú; desde ese chat")
+    print("        manda una vez:  !otzar tawil   (así el robot sabe de quién tomar los audios)")
+    print("   → 3) tema nuevo: dímelo y lo pongo, o manda al robot:  !tema tawil 27 Nombre del tema")
+    if not rss:
+        print("   → 4) para que Spotify tome los episodios de aquí (sin perder #1-#26): en Spotify for Creators →")
+        print("        Ajustes → Distribución → copia el link RSS y corre: python instalar_otzar.py --tawil --tawil-rss=LINK")
+        print("        Mientras tanto, si subes a Spotify con el mismo título, el robot encuentra el link exacto;")
+        print("        si no lo encuentra en 3 horas, manda el link del show.")
+
+
+def bajar_texto(nombre):
+    """Texto de tools/<nombre> en el repo (rama de trabajo primero, luego main)."""
+    for ref in REFS:
+        try:
+            req = urllib.request.Request(f"https://raw.githubusercontent.com/jaimeatach/jaburahalaja/{ref}/tools/{nombre}",
+                                         headers={"User-Agent": "instalar-otzar"})
+            with urllib.request.urlopen(req, timeout=30) as r:
+                return r.read().decode("utf-8")
+        except Exception:
+            continue
+    raise RuntimeError("no pude bajar " + nombre)
+
+
+# ── 43. plataformas por show ──────────────────────────────────────────────────
+#   --amazon=show:LINK[,show:LINK]  --soundcloud=show:LINK  --apple=show:LINK
+#   --spotify-espera=show:HORAS     (si Spotify no toma el episodio en N horas, sale con el link del show)
+def plataformas_links():
+    claves = {"amazon": "amazon", "soundcloud": "soundcloud", "apple": "apple", "spotify-espera": "spotify_espera_horas"}
+    pedidos = []
+    for flag, campo in claves.items():
+        v = next((a.split("=", 1)[1] for a in sys.argv if a.startswith(f"--{flag}=")), "")
+        for par in [x for x in re.split(r",(?=\s*[a-z0-9]+:)", v) if x.strip()]:
+            show, _, valor = par.strip().partition(":")
+            if show and valor:
+                pedidos.append((show.strip().lower(), campo, valor.strip()))
+    if not pedidos:
+        return
+    paso(43, "Plataformas por show")
+    if not ROBOT:
+        aviso("sin carpeta del robot")
+        return
+    rw = ROBOT / "config_whatsapp.json"
+    cfg = json.loads(rw.read_text(encoding="utf-8"))
+    antes = json.dumps(cfg, sort_keys=True)
+    for show, campo, valor in pedidos:
+        an = (cfg.get("anunciar") or {}).get(show)
+        if an is None:
+            aviso(f"{show}: no está en anunciar")
+            continue
+        an[campo] = float(valor) if campo == "spotify_espera_horas" else valor.split("?")[0] if "spotify" in valor else valor
+        ok(f"{show}: {campo} = {an[campo]}")
+    if json.dumps(cfg, sort_keys=True) != antes and not VER:
+        respaldar(rw)
+        escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+
+
+# ── 44. revisión de todo ─────────────────────────────────────────────────────
+#   --revisar: en qué plataformas está cada show, cuál no tiene grupo, cuál está trabado
+def revisar_todo():
+    if "--revisar" not in sys.argv:
+        return
+    paso(44, "Revisión: grupos, Spotify, Apple, Amazon y feeds de cada show")
+    script = BASE / "jabura" / "plataformas.py"
+    if VER or not script.exists():
+        aviso("falta jabura\\plataformas.py")
+        return
+    subprocess.run([sys.executable, str(script)], cwd=str(script.parent))
+
+
 def main():
     print("=== Instalador Otzar · jabura + nacach ===")
     print("Base:", BASE, "(prueba en seco)" if VER else "")
@@ -3465,6 +3816,9 @@ def main():
     sin_atrasos_config()
     al_dia()
     rescatar()
+    tawil()
+    plataformas_links()
+    revisar_todo()
     print("\nListo." if not VER else "\nPrueba en seco terminada: no se cambió nada.")
 
 

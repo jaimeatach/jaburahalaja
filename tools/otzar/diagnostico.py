@@ -49,13 +49,17 @@ def main():
               "Error guardando", "No pude guardar", "no pude respaldar"]
     if fuente:
         claves.append(fuente[:20])
+    for g in ((reg.get(show) or {}).get("grupos") or [reg.get(show) or {}]):   # sus grupos de anuncio
+        if g.get("nombre"):
+            claves.append(g["nombre"][:20])
+    claves = [c.lower() for c in claves]
     print(f"\n--- log del robot, últimos {dias} días ---")
     try:
         lineas = (ROBOT / "robot_whatsapp.log").read_text(encoding="utf-8", errors="replace").splitlines()
     except Exception as ex:
         lineas = []
         print(f"no pude leer el log: {ex}")
-    vistas = [l for l in lineas if l.startswith(tuple(fechas)) and any(c in l for c in claves)
+    vistas = [l for l in lineas if l.startswith(tuple(fechas)) and any(c in l.lower() for c in claves)
               and "ya identificado" not in l]
     salida, repetidas = [], 0
     for l in vistas:
