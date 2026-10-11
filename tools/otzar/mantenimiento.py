@@ -452,6 +452,27 @@ def ids_spotify(cfgw):
             log(f"ids de Spotify [{show}]: no pude subir el feed ({ex})")
 
 
+def titulos_jabura():
+    """Títulos corregidos de la jabura (tools/otzar/jabura_titulos.json en el repo,
+    los pongo yo cuando el usuario avisa): se suman a jabura\\titulos.json y el
+    publicador los usa en el feed, en Spotify y en la app, sin renombrar el archivo
+    (mismo episodio, mismo guid)."""
+    remoto = bajar("https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/tools/otzar/jabura_titulos.json")
+    try:
+        nuevos = json.loads(remoto) if remoto.strip() else {}
+    except Exception:
+        return
+    destino = BASE / "jabura" / "titulos.json"
+    actual = leer_json(destino)
+    cambio = [k for k, v in nuevos.items() if actual.get(k) != v]
+    if not cambio:
+        return
+    actual.update({k: nuevos[k] for k in cambio})
+    destino.write_text(json.dumps(actual, ensure_ascii=False, indent=1), encoding="utf-8")
+    for k in cambio:
+        log(f"jabura: título corregido · {k[:40]} → {nuevos[k].get('t') if isinstance(nuevos[k], dict) else nuevos[k]}")
+
+
 def plataformas():
     """Una vez al día: en qué plataformas está cada show (Apple Podcasts por la API
     pública de iTunes). Deja C:\\robotwhats\\plataformas.json para que el robot ponga
@@ -491,6 +512,7 @@ def main():
     alinear_y_marcar(cfgw)
     rescatar_sin_titulo(cfgw)
     correo()
+    titulos_jabura()
     publicar()
     espejo()
     parasha_semanal(cfgw)

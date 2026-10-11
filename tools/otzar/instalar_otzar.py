@@ -1040,11 +1040,42 @@ setInterval(() => { revisarRescate()""", """  if (cambio) {   // (oct/2026) sin 
   }
 }
 setInterval(() => { revisarRescate()"""),
+    ("""  // ---- AVISO (oct/2026): en un grupo FUENTE llego algo que NO es audio ----
+""", """  // ---- MEKOROT (oct/2026): "guardar_documentos": true en escuchar.<show> ----
+  // Los PDF / Word que mandan al grupo fuente (los mekorot del shiur) se guardan en
+  // la carpeta del show como "מקורות · nombre.pdf": el publicador los sube a
+  // archive.org y la app los muestra en מראי מקומות. No se anuncian.
+  if (esGrupo && destinoAudio && destinoAudio.show && ((CFG.escuchar || {})[destinoAudio.show] || {}).guardar_documentos) {
+    const _doc = contenido(m).documentMessage;
+    const _nom = _doc ? String(_doc.fileName || '') : '';
+    if (_doc && /\\.(pdf|docx?)$/i.test(_nom)) {
+      try {
+        const _buf = await downloadMediaMessage({ ...m, message: contenido(m) }, 'buffer', {},
+          { logger: pino({ level: 'silent' }), reuploadRequest: sock.updateMediaMessage });
+        const _carp = destinoAudio.carpeta;
+        fs.mkdirSync(_carp, { recursive: true });
+        const _base = 'מקורות · ' + limpiarTitulo(_nom.replace(/\\.[^.]+$/, ''));
+        const _ext = path.extname(_nom).toLowerCase();
+        if (fs.existsSync(path.join(_carp, _base + _ext))) { log(`MEKOROT [${destinoAudio.show}]: "${_base}${_ext}" ya estaba`); return; }
+        fs.writeFileSync(path.join(_carp, _base + _ext), _buf);
+        log(`GUARDADO MEKOROT [${destinoAudio.show}]: ${_base}${_ext}  -> ${_carp}`);
+      } catch (e) { log('No pude guardar el documento: ' + (e.message || e)); }
+      return;
+    }
+  }
+
+  // ---- AVISO (oct/2026): en un grupo FUENTE llego algo que NO es audio ----
+"""),
+    ("""    const nuevos = delGrupo.filter(m => Number(m.messageTimestamp) * 1000 > desde && !_rescateVistos.has(m.key.id));
+""", """    const nuevos = delGrupo.filter(m => !_rescateVistos.has(m.key.id) && (Number(m.messageTimestamp) * 1000 > desde ||
+      // (oct/2026) "documentos": los PDF/Word (mekorot) desde la fecha pedida, aunque haya un audio despues
+      (r.documentos && contenido(m).documentMessage && Number(m.messageTimestamp) * 1000 > (Date.parse(r.desde || 0) || 0))));
+"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)")
 # הלכות מוקצה: la carpeta "שיעורים מוקצה" que comparte Saúl aparte (31 shiurim
 # numerados al FINAL del nombre). Mismos títulos y simanim que el catálogo de la app.
 MUKZE_CARPETA = r"G:\.shortcut-targets-by-id\1OcakbiF7zD5biDpWYElkB-DoIlidbTlT\שיעורים מוקצה"
@@ -3612,6 +3643,8 @@ def rescatar():
             aviso(f"{show}: no tiene grupo fuente registrado; no se puede rescatar")
             continue
         pend[show] = {"desde": desde}
+        if ((cfgw.get("escuchar") or {}).get(show) or {}).get("guardar_documentos"):
+            pend[show]["documentos"] = True             # también los PDF/Word (mekorot)
         ok(f"{show}: el robot pedirá a WhatsApp los mensajes de \"{fuente.get('nombre', '?')}\" desde {desde[:10]}")
     if not VER:
         rp.write_text(json.dumps(pend, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -3894,6 +3927,28 @@ def guids_originales_flag():
         guids_originales(show)
 
 
+# ── 46. mekorot de la jabura ─────────────────────────────────────────────────
+#   Los PDF / Word que mandan al grupo de la jabura se guardan en la carpeta del
+#   siman como "מקורות · nombre.pdf"; el publicador los sube a archive.org y la app
+#   los muestra en מראי מקומות. No se anuncian. (siempre)
+def mekorot_jabura():
+    if not ROBOT:
+        return
+    rw = ROBOT / "config_whatsapp.json"
+    try:
+        cfg = json.loads(rw.read_text(encoding="utf-8"))
+    except Exception:
+        return
+    esc = (cfg.get("escuchar") or {}).get("jabura")
+    if not isinstance(esc, dict) or esc.get("guardar_documentos"):
+        return
+    paso(46, "Jabura: los PDF de mekorot del grupo van a מראי מקומות de la app")
+    esc["guardar_documentos"] = True
+    respaldar(rw)
+    escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+    ok("el robot guarda los PDF/Word del grupo de la jabura (sin anunciarlos); reinicia el robot")
+
+
 def main():
     print("=== Instalador Otzar · jabura + nacach ===")
     print("Base:", BASE, "(prueba en seco)" if VER else "")
@@ -3940,6 +3995,7 @@ def main():
     ofir_grupo()
     sin_atrasos_config()
     al_dia()
+    mekorot_jabura()
     rescatar()
     tawil()
     guids_originales_flag()

@@ -289,6 +289,15 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    show; `mantenimiento.py` (`ids_spotify`) los vuelve a poner si un feed los pierde.
    Mismo guid = mismo episodio para Spotify: conserva reproducciones y horas.
    No hacer el redirect hasta que diga "N de N episodios con su MISMO ID".
+11. Mekorot y títulos de la jabura: con `guardar_documentos` en `escuchar.jabura`
+   (paso [46], siempre) el robot guarda los PDF/Word del grupo como
+   "מקורות · nombre.pdf" en la carpeta del siman (no se anuncian); el publicador
+   los sube a archive.org, la app los importa como material y `renderMare` los
+   muestra arriba de מראי מקומות. `--rescatar=jabura:N` trae también los
+   documentos (`documentos: true`). Títulos corregidos: `tools/otzar/jabura_titulos.json`
+   (nombre de archivo → {"t": título}); `mantenimiento.py` (`titulos_jabura`) lo
+   suma a `jabura\titulos.json` (el publicador cambia el título en el feed sin
+   cambiar el guid) y la app (`arcTitulosCurados`, admin) corrige el shiur ya importado.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre

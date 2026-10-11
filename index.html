@@ -365,7 +365,7 @@ const SUPABASE_URL = "https://enkofkroxudsblewxxos.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_nAsf0qU7fPUOZ5K7OgqwYw_hUPgzOrZ";
 const BUCKET = "jabura";
 const APP_NAME = "חבורת הלכה";
-const BUILD = "2026-09-17 · מוקצה";
+const BUILD = "2026-10-11 · מקורות";
 
 const $ = id => document.getElementById(id);
 const app = $('app');
@@ -1856,8 +1856,27 @@ async function arcAutoImport(){
   try {
     const plan = await arcFetchPlan(id);
     const { ok } = await arcImportPlan(plan, true);
-    if (ok){ toast(ok + ' ' + t('arcAutoNew')); show(CUR.view); notifBadge(); }
+    const fix = await arcTitulosCurados();
+    if (ok || fix){ if (ok) toast(ok + ' ' + t('arcAutoNew')); show(CUR.view); notifBadge(); }
   } catch(e){ console.warn('arcAutoImport', e); }
+}
+/* Títulos corregidos (tools/otzar/jabura_titulos.json, el mismo que usa el publicador
+   para el feed): un shiur que llegó con el texto del mensaje como título toma el bueno */
+async function arcTitulosCurados(){
+  let mapa = {};
+  try { const r = await fetch('tools/otzar/jabura_titulos.json', { cache:'no-store' }); if (r.ok) mapa = await r.json(); } catch(e){ return 0; }
+  let n = 0;
+  for (const [archivo, v] of Object.entries(mapa || {})){
+    const titulo = (v && typeof v === 'object') ? v.t : v;
+    if (!titulo) continue;
+    const { data } = await sb.from(T.shiurim).select('id,title').eq('fileName', archivo);
+    for (const row of (data || [])){
+      if (row.title === titulo) continue;
+      const { error } = await sb.from(T.shiurim).update({ title: titulo }).eq('id', row.id);
+      if (!error) n++;
+    }
+  }
+  return n;
 }
 
 
@@ -3052,8 +3071,13 @@ async function renderMare(s){
     row = data;
   } catch(e){}
   const text = row ? (row.text || '') : '';
+  /* Los mekorot (PDF/Word) que el robot toma del grupo de la jabura llegan como
+     material del siman con título "מקורות · …": se muestran aquí, arriba */
+  let mek = [];
+  try { mek = (await fetchBySiman(T.materials, s.id)).filter(x => /^מקורות\s*·/.test(String(x.title || x.fileName || ''))).reverse(); } catch(e){}
   const body = $('tabbody'); if (!body) return;
   body.innerHTML = `
+    ${mek.length ? `<div class="item-list" style="margin-bottom:12px">${mek.map(materialHTML).join('')}</div>` : ''}
     <div class="panel">
       ${text ? `<div class="mare-text">${esc(text)}</div>
         <div class="metaline" style="margin-top:10px">${byLine(row.updatedBy, row.updatedAt, 'updatedWord')}</div>` : `

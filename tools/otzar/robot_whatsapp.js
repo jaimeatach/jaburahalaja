@@ -923,7 +923,9 @@ async function rescatarDeHistorial(messages) {
     if (!delGrupo.length) continue;
     const carpeta = _carpetaDe(show);
     const desde = Math.max(Date.parse(r.desde || 0) || 0, (carpeta ? _ultimoAudioMs(carpeta) : 0) + 60000);
-    const nuevos = delGrupo.filter(m => Number(m.messageTimestamp) * 1000 > desde && !_rescateVistos.has(m.key.id));
+    const nuevos = delGrupo.filter(m => !_rescateVistos.has(m.key.id) && (Number(m.messageTimestamp) * 1000 > desde ||
+      // (oct/2026) "documentos": los PDF/Word (mekorot) desde la fecha pedida, aunque haya un audio despues
+      (r.documentos && contenido(m).documentMessage && Number(m.messageTimestamp) * 1000 > (Date.parse(r.desde || 0) || 0))));
     const audios = nuevos.filter(m => audioDe(m));
     log(`RESCATE ${show}: llegaron ${delGrupo.length} mensajes de "${fuente.nombre}"; ` +
         `${audios.length} audio(s) sin guardar desde ${new Date(desde).toLocaleString('es-MX')}.`);
@@ -1125,6 +1127,29 @@ async function procesarMensaje(m) {
     audiosPendientes.push(item);
     log(`Audio recibido (${info.nombre ? 'archivo ' + info.nombre : 'nota de voz'}). Esperando titulo...`);
     return;
+  }
+
+  // ---- MEKOROT (oct/2026): "guardar_documentos": true en escuchar.<show> ----
+  // Los PDF / Word que mandan al grupo fuente (los mekorot del shiur) se guardan en
+  // la carpeta del show como "מקורות · nombre.pdf": el publicador los sube a
+  // archive.org y la app los muestra en מראי מקומות. No se anuncian.
+  if (esGrupo && destinoAudio && destinoAudio.show && ((CFG.escuchar || {})[destinoAudio.show] || {}).guardar_documentos) {
+    const _doc = contenido(m).documentMessage;
+    const _nom = _doc ? String(_doc.fileName || '') : '';
+    if (_doc && /\.(pdf|docx?)$/i.test(_nom)) {
+      try {
+        const _buf = await downloadMediaMessage({ ...m, message: contenido(m) }, 'buffer', {},
+          { logger: pino({ level: 'silent' }), reuploadRequest: sock.updateMediaMessage });
+        const _carp = destinoAudio.carpeta;
+        fs.mkdirSync(_carp, { recursive: true });
+        const _base = 'מקורות · ' + limpiarTitulo(_nom.replace(/\.[^.]+$/, ''));
+        const _ext = path.extname(_nom).toLowerCase();
+        if (fs.existsSync(path.join(_carp, _base + _ext))) { log(`MEKOROT [${destinoAudio.show}]: "${_base}${_ext}" ya estaba`); return; }
+        fs.writeFileSync(path.join(_carp, _base + _ext), _buf);
+        log(`GUARDADO MEKOROT [${destinoAudio.show}]: ${_base}${_ext}  -> ${_carp}`);
+      } catch (e) { log('No pude guardar el documento: ' + (e.message || e)); }
+      return;
+    }
   }
 
   // ---- AVISO (oct/2026): en un grupo FUENTE llego algo que NO es audio ----
