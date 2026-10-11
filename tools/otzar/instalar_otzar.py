@@ -1020,11 +1020,31 @@ function tituloPorTema(show, texto, carpeta) {
             : conPlataformas(texto, _plat);
         }
 """),
+    ("""    r.hecho = true; r.audios = (r.audios || 0) + audios.length; r.cuando = new Date().toISOString();
+    cambio = true;
+""", """    r.hecho = true; r.audios = (r.audios || 0) + audios.length; r.cuando = new Date().toISOString();
+    // (oct/2026) se guarda SOLO este show, leyendo el archivo fresco: dos respuestas
+    // del historial al mismo tiempo se pisaban y un rescate hecho se volvia a pedir
+    { const _f = _leerRescate() || {}; _f[show] = Object.assign(_f[show] || {}, r); _guardarRescate(_f); }
+"""),
+    ("""  if (cambio) _guardarRescate(pend);
+}
+setInterval(() => { revisarRescate()""", """  if (cambio) {   // (oct/2026) sin pisar un rescate que termino mientras se pedia
+    const _f = _leerRescate() || {};
+    for (const [k, v] of Object.entries(pend)) {
+      const cur = _f[k] || {};
+      if (cur.hecho) continue;
+      _f[k] = Object.assign(cur, { pedido: v.pedido, intentos: v.intentos, avisado: v.avisado, rendido: v.rendido });
+    }
+    _guardarRescate(_f);
+  }
+}
+setInterval(() => { revisarRescate()"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate")
 # הלכות מוקצה: la carpeta "שיעורים מוקצה" que comparte Saúl aparte (31 shiurim
 # numerados al FINAL del nombre). Mismos títulos y simanim que el catálogo de la app.
 MUKZE_CARPETA = r"G:\.shortcut-targets-by-id\1OcakbiF7zD5biDpWYElkB-DoIlidbTlT\שיעורים מוקצה"

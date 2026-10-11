@@ -897,7 +897,15 @@ async function revisarRescate() {
           `(${a ? 'desde el ultimo mensaje visto' : 'sin mensaje de referencia todavia'}), intento ${r.intentos}.`);
     } catch (e) { log(`RESCATE ${show}: no pude pedir el historial (${e.message || e})`); }
   }
-  if (cambio) _guardarRescate(pend);
+  if (cambio) {   // (oct/2026) sin pisar un rescate que termino mientras se pedia
+    const _f = _leerRescate() || {};
+    for (const [k, v] of Object.entries(pend)) {
+      const cur = _f[k] || {};
+      if (cur.hecho) continue;
+      _f[k] = Object.assign(cur, { pedido: v.pedido, intentos: v.intentos, avisado: v.avisado, rendido: v.rendido });
+    }
+    _guardarRescate(_f);
+  }
 }
 setInterval(() => { revisarRescate().catch(e => log('RESCATE error: ' + (e.message || e))); }, 20000);
 async function rescatarDeHistorial(messages) {
@@ -924,7 +932,9 @@ async function rescatarDeHistorial(messages) {
       try { await procesarMensaje(m); } catch (e) { log('RESCATE mensaje: ' + (e.message || e)); }
     }
     r.hecho = true; r.audios = (r.audios || 0) + audios.length; r.cuando = new Date().toISOString();
-    cambio = true;
+    // (oct/2026) se guarda SOLO este show, leyendo el archivo fresco: dos respuestas
+    // del historial al mismo tiempo se pisaban y un rescate hecho se volvia a pedir
+    { const _f = _leerRescate() || {}; _f[show] = Object.assign(_f[show] || {}, r); _guardarRescate(_f); }
   }
   if (cambio) _guardarRescate(pend);
 }
