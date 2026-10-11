@@ -281,7 +281,14 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    plantilla: fecha hebrea / civil, título + "Rab Yosef Tawil", plataformas, L"N
    Moshe Ben Sara / Miriam Bat Lea Luisa, link del grupo. Spotify del show:
    1gVVXZw6fNyrcqadB5pmLC; para que lea nuestro feed sin perder #1-#26 hace falta
-   su RSS de Spotify for Creators (`--tawil-rss=`).
+   su RSS de Spotify for Creators (`--tawil-rss=https://anchor.fm/s/1171db72c/podcast/rss`).
+   Estadísticas: al rescatar, podcast_bot pone guids nuevos (nombre del archivo; así
+   quedaron hilu y credi). `guids_originales` (paso [45], `--guids-originales=show`,
+   automático con `--tawil-rss`) le devuelve a cada episodio rescatado el guid y la
+   fecha que tiene en Spotify, y los guarda en `ids_spotify` del config.json del
+   show; `mantenimiento.py` (`ids_spotify`) los vuelve a poner si un feed los pierde.
+   Mismo guid = mismo episodio para Spotify: conserva reproducciones y horas.
+   No hacer el redirect hasta que diga "N de N episodios con su MISMO ID".
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre

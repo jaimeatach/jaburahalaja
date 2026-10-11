@@ -48,6 +48,7 @@ Qué hace, con copia de respaldo de cada archivo que toca:
      carpeta de WhatsApp de nacach y corre podcast_bot.py ahí.
 """
 import base64, importlib.util
+import html
 import hashlib
 import json
 import os
@@ -3660,6 +3661,8 @@ def tawil():
         show_nuevo()
     finally:
         sys.argv = viejo
+    if rss:
+        guids_originales("tawil", rss)
     paso(42, "Rab Yosef Tawil: audios del grupo fuente, título por tema, anuncio en su día")
     if not ROBOT:
         aviso("sin carpeta del robot no puedo configurar el anuncio")
@@ -3706,7 +3709,11 @@ def tawil():
     print("        al arrancar dice 'escucha tawil: ...' y 'tawil: ...' con los nombres de los grupos")
     print("   → 2) si 'escucha tawil' no aparece, manda dentro del grupo de los audios:  !otzar tawil")
     print("   → 3) tema nuevo: dímelo y lo pongo, o manda al robot:  !tema tawil 27 Nombre del tema")
-    if not rss:
+    try:
+        ya_rss = json.loads((BASE / "tawil" / "config.json").read_text(encoding="utf-8")).get("rss_original")
+    except Exception:
+        ya_rss = ""
+    if not (rss or ya_rss):
         print("   → 4) para que Spotify tome los episodios de aquí (sin perder #1-#26): en Spotify for Creators →")
         print("        Ajustes → Distribución → copia el link RSS y corre: python instalar_otzar.py --tawil --tawil-rss=LINK")
         print("        Mientras tanto, si subes a Spotify con el mismo título, el robot encuentra el link exacto;")
@@ -3772,6 +3779,101 @@ def revisar_todo():
     subprocess.run([sys.executable, str(script)], cwd=str(script.parent))
 
 
+# ── 45. mismos IDs que en Spotify ─────────────────────────────────────────────
+#   Al rescatar un show de Spotify for Creators, podcast_bot le pone a cada episodio
+#   un guid nuevo (el nombre del archivo). Si luego se hace el redirect, Spotify ve
+#   episodios "nuevos" y los viejos se van con sus estadísticas. Aquí cada episodio
+#   rescatado recupera el guid y la fecha que tiene en el RSS de Spotify: para
+#   Spotify (y Apple) son los MISMOS episodios y conservan reproducciones y horas.
+#   --guids-originales=show  (lo corre solo --tawil --tawil-rss=...)
+def guids_originales(clave, rss=""):
+    d = BASE / clave
+    try:
+        c = json.loads((d / "config.json").read_text(encoding="utf-8"))
+    except Exception:
+        aviso(f"{clave}: sin config.json")
+        return
+    rss = rss or c.get("rss_original", "")
+    tok = d / "github_token.txt"
+    if not rss or not tok.exists():
+        aviso(f"{clave}: falta el RSS de Spotify o github_token.txt")
+        return
+    paso(45, f"{clave}: los episodios conservan su ID de Spotify (estadísticas)")
+    norm = lambda x: re.sub(r"[^\w]+", " ", html.unescape(re.sub(r"<!\[CDATA\[|\]\]>", "", x or "")).lower()).strip()
+    try:
+        with urllib.request.urlopen(urllib.request.Request(rss, headers={"User-Agent": "Mozilla/5.0"}), timeout=60) as r:
+            orig_xml = r.read().decode("utf-8", "replace")
+    except Exception as e:                                  # noqa: BLE001
+        aviso(f"no pude leer el RSS de Spotify ({e})")
+        return
+    orig = {}
+    for it in re.findall(r"<item>([\s\S]*?)</item>", orig_xml):
+        tt = re.search(r"<title>([\s\S]*?)</title>", it)
+        g = re.search(r"<guid[^>]*>([\s\S]*?)</guid>", it)
+        f = re.search(r"<pubDate>([\s\S]*?)</pubDate>", it)
+        if tt and g:
+            orig[norm(tt.group(1))] = (g.group(1).strip(), f.group(1).strip() if f else "")
+    cab = {"Authorization": "token " + tok.read_text(encoding="utf-8").strip(),
+           "User-Agent": "instalar-otzar", "Accept": "application/vnd.github+json"}
+    base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', clave)}"
+    try:
+        feed, sha = _gh_texto(base, cab, "feed.xml")
+    except Exception as e:                                  # noqa: BLE001
+        aviso(f"no pude leer nuestro feed ({e})")
+        return
+    usados, cambios = set(), 0
+    def arreglar(m):
+        nonlocal cambios
+        it = m.group(1)
+        tt = re.search(r"<title>([\s\S]*?)</title>", it)
+        k = norm(tt.group(1)) if tt else ""
+        if k not in orig:
+            return m.group(0)
+        guid, fecha = orig[k]
+        usados.add(k)
+        nuevo = re.sub(r"<guid[^>]*>[\s\S]*?</guid>", f'<guid isPermaLink="false">{guid}</guid>', it, count=1) \
+            if "<guid" in it else it + f'<guid isPermaLink="false">{guid}</guid>'
+        if fecha:
+            nuevo = re.sub(r"<pubDate>[\s\S]*?</pubDate>", f"<pubDate>{fecha}</pubDate>", nuevo, count=1)
+        if nuevo != it:
+            cambios += 1
+        return f"<item>{nuevo}</item>"
+    nuevo_feed = re.sub(r"<item>([\s\S]*?)</item>", arreglar, feed)
+    faltan = [k for k in orig if k not in usados]
+    if not VER:          # mantenimiento.py lo vuelve a aplicar si un feed nuevo pierde los IDs
+        c["ids_spotify"] = {k: [g, f] for k, (g, f) in orig.items()}
+        escribir(d / "config.json", json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+    if cambios and not VER:
+        _gh_put(base, cab, "feed.xml", nuevo_feed.encode("utf-8"), "episodios con su ID de Spotify", sha)
+    ok(f"{len(usados)} de {len(orig)} episodios con su MISMO ID de Spotify" + (f" ({cambios} corregidos)" if cambios else ""))
+    if faltan:
+        aviso(f"{len(faltan)} episodio(s) de Spotify no están en nuestro feed todavía: NO hagas el redirect aún")
+        for k in faltan[:10]:
+            print("     ·", k[:80])
+    # los IDs originales cuentan como ya anunciados (ya estaban en Spotify)
+    estado_p = (ROBOT or BASE) / "estado_anuncios.json"
+    try:
+        e = json.loads(estado_p.read_text(encoding="utf-8"))
+    except Exception:
+        e = {}
+    previos = e.get(clave) or []
+    nuevos = [g.replace("&amp;", "&") for g, _ in orig.values()]
+    e[clave] = (previos + [g for g in nuevos if g not in previos])[-2000:]
+    if not VER:
+        respaldar(estado_p)
+        escribir(estado_p, json.dumps(e, ensure_ascii=False, indent=2))
+    if not faltan:
+        pages = f"https://{c.get('github_user', 'rabmeireliyahu')}.github.io/{c.get('github_repo', clave)}/feed.xml"
+        print(f"   → listo para el redirect: Spotify for Creators → Ajustes → 'Redirigir / mover el podcast' → {pages}")
+        print("     NO borres el show ni episodios en Spotify for Creators: ahí siguen tus estadísticas.")
+
+
+def guids_originales_flag():
+    v = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--guids-originales=")), "")
+    for show in [x.strip().lower() for x in v.split(",") if x.strip()]:
+        guids_originales(show)
+
+
 def main():
     print("=== Instalador Otzar · jabura + nacach ===")
     print("Base:", BASE, "(prueba en seco)" if VER else "")
@@ -3820,6 +3922,7 @@ def main():
     al_dia()
     rescatar()
     tawil()
+    guids_originales_flag()
     plataformas_links()
     revisar_todo()
     print("\nListo." if not VER else "\nPrueba en seco terminada: no se cambió nada.")

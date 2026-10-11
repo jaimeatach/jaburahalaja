@@ -397,6 +397,61 @@ def parasha_semanal(cfgw):
                 log(f"no pude dejar parasha.ahora: {ex}")
 
 
+def ids_spotify(cfgw):
+    """Shows rescatados de Spotify for Creators ("ids_spotify" en su config.json, lo
+    pone instalar_otzar.py): cada episodio viejo conserva en el feed el MISMO guid y
+    fecha que tenía en Spotify, así Spotify no los toma como nuevos y no se pierden
+    sus estadísticas. Si el feed perdió alguno, se corrige aquí."""
+    import base64
+    import html as _html
+    for show in (cfgw.get("anunciar") or {}):
+        c = leer_json(BASE / show / "config.json")
+        mapa = c.get("ids_spotify") or {}
+        tok = BASE / show / "github_token.txt"
+        if not mapa or not tok.exists():
+            continue
+        norm = lambda x: re.sub(r"[^\w]+", " ", _html.unescape(re.sub(r"<!\[CDATA\[|\]\]>", "", x or "")).lower()).strip()
+        cab = {"Authorization": "token " + tok.read_text(encoding="utf-8").strip(),
+               "User-Agent": "otzar-mantenimiento", "Accept": "application/vnd.github+json"}
+        base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}/contents/feed.xml"
+        try:
+            with urllib.request.urlopen(urllib.request.Request(base, headers=cab), timeout=60) as r:
+                sha = json.loads(r.read().decode())["sha"]
+            cab_raw = dict(cab, Accept="application/vnd.github.raw")
+            with urllib.request.urlopen(urllib.request.Request(base, headers=cab_raw), timeout=120) as r:
+                feed = r.read().decode("utf-8", "replace")
+        except Exception as ex:
+            log(f"ids de Spotify [{show}]: no pude leer el feed ({ex})")
+            continue
+        cambios = 0
+        def arreglar(m):
+            nonlocal cambios
+            it = m.group(1)
+            tt = re.search(r"<title>([\s\S]*?)</title>", it)
+            par = mapa.get(norm(tt.group(1))) if tt else None
+            if not par:
+                return m.group(0)
+            guid, fecha = par
+            nuevo = re.sub(r"<guid[^>]*>[\s\S]*?</guid>", f'<guid isPermaLink="false">{guid}</guid>', it, count=1)
+            if fecha:
+                nuevo = re.sub(r"<pubDate>[\s\S]*?</pubDate>", f"<pubDate>{fecha}</pubDate>", nuevo, count=1)
+            if nuevo != it:
+                cambios += 1
+            return f"<item>{nuevo}</item>"
+        nuevo_feed = re.sub(r"<item>([\s\S]*?)</item>", arreglar, feed)
+        if not cambios:
+            continue
+        try:
+            cuerpo = {"message": "episodios con su ID de Spotify", "sha": sha,
+                      "content": base64.b64encode(nuevo_feed.encode("utf-8")).decode()}
+            req = urllib.request.Request(base, data=json.dumps(cuerpo).encode(), headers=cab, method="PUT")
+            with urllib.request.urlopen(req, timeout=120):
+                pass
+            log(f"ids de Spotify [{show}]: {cambios} episodio(s) recuperaron su ID original")
+        except Exception as ex:
+            log(f"ids de Spotify [{show}]: no pude subir el feed ({ex})")
+
+
 def plataformas():
     """Una vez al día: en qué plataformas está cada show (Apple Podcasts por la API
     pública de iTunes). Deja C:\\robotwhats\\plataformas.json para que el robot ponga
@@ -439,6 +494,7 @@ def main():
     publicar()
     espejo()
     parasha_semanal(cfgw)
+    ids_spotify(cfgw)
     plataformas()
     fiestas_pasadas(cfgw)
     sin_atrasos(cfgw)

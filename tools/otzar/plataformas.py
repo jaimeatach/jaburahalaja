@@ -137,10 +137,13 @@ def main():
                       n_items, f"{dias} d" if dias is not None else "?"))
         if not (apple_id or apple_url) and not datos.get("pausado"):
             faltan_apple.append((show, titulo, publico))
-        if not datos.get("pausado") and not grupos and (datos.get("invite") or "") != "":
-            problemas.append(f"{show}: tiene grupo en el config pero el robot no lo identificó (¿el robot es miembro?)")
-        if not datos.get("pausado") and not datos.get("invite"):
+        inv = datos.get("invite")
+        links = [x for x in (inv if isinstance(inv, list) else [inv]) if isinstance(x, str) and x.startswith("http")]
+        if not datos.get("pausado") and not links:
             problemas.append(f"{show}: NO tiene grupo de WhatsApp donde anunciar")
+        elif not datos.get("pausado") and len(grupos) < len(links):
+            problemas.append(f"{show}: {len(links) - len(grupos)} grupo(s) del config sin identificar "
+                             "(¿el robot es miembro? se ubican al reiniciar el robot)")
         if dias is not None and dias > 14 and not datos.get("pausado"):
             problemas.append(f"{show}: su feed no tiene nada nuevo hace {dias} días")
     for k, v in previo.items():                 # shows que ya no están: se conserva lo puesto a mano

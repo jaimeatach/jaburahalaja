@@ -43,7 +43,7 @@ def main():
     for i in range(dias):
         d = date.today() - timedelta(days=i)
         fechas.append(f"[{d.day}/{d.month}/{d.year},")
-    claves = [show, "SIN AUDIO", "IGNORADO", "Audio recibido", "No pude", "descarga intento",
+    claves = [show, "SIN AUDIO", "Audio recibido", "No pude", "descarga intento",
               "ERROR mensaje", "Reconectando", "ROBOT LISTO", "rechazo la sesion",
               "Conexion cerrada", "OTRA VENTANA", "OTRO ROBOT",
               "Error guardando", "No pude guardar", "no pude respaldar"]
@@ -59,8 +59,15 @@ def main():
     except Exception as ex:
         lineas = []
         print(f"no pude leer el log: {ex}")
+    def ruido(l):
+        b = l.lower()
+        if "ya identificado" in b:
+            return True
+        if "audio ignorado" in b and not any(c in b for c in claves[1:] if c not in ("audio ignorado", "ignorado")):
+            return True                       # audio de un grupo ajeno: no es de este show
+        return "conexion cerrada. codigo 440" in b or "otra ventana del robot" in b
     vistas = [l for l in lineas if l.startswith(tuple(fechas)) and any(c in l.lower() for c in claves)
-              and "ya identificado" not in l]
+              and not ruido(l)]
     salida, repetidas = [], 0
     for l in vistas:
         if "ROBOT LISTO" in l and salida and "ROBOT LISTO" in salida[-1]:
@@ -72,7 +79,7 @@ def main():
         salida.append(l)
     if repetidas:
         salida.append(f"   (... y {repetidas} arranques más seguidos: ¿dos ventanas del robot?)")
-    for l in salida[-120:]:
+    for l in salida[-250:]:
         print(l[:220])
     if not vistas:
         print("(nada)")
