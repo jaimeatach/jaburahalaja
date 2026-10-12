@@ -754,7 +754,7 @@ function armarPlantilla(datos, v) {
   const pl = Object.fromEntries((v.plataformas || []).map(([n, l]) => [n, l]));
   const val = { fecha_hebrea: fechaHebrea(v.fecha), fecha: fechaCivil(v.fecha), titulo: v.titulo || '',
     spotify: v.spotify || '', apple: pl['Apple Podcasts'] || '', amazon: pl['Amazon Music'] || '',
-    soundcloud: pl['SoundCloud'] || '', whatsapp: v.whatsapp || '', dedicatoria: datos.dedicatoria || '' };
+    soundcloud: pl['SoundCloud'] || '', whatsapp: v.whatsapp || '', dedicatoria: v.dedicatoria || datos.dedicatoria || '' };
   const bloques = Array.isArray(datos.plantilla) ? datos.plantilla : String(datos.plantilla || '').split(/\n\s*\n/);
   return bloques.map(b => {
     let falta = false;
@@ -804,7 +804,7 @@ function tituloPorTema(show, texto, carpeta) {
   const lista = temasDe(show).filter(t => t.desde <= n);
   const t = lista[lista.length - 1];
   if (!t) log(`TEMAS ${show}: no hay tema para el dia ${n}; se guarda como "#${n}". Avisa el tema de la semana.`);
-  const titulo = t ? `#${n} ${t.tema} (${n - t.desde + 1})` : `#${n}`;
+  const titulo = t ? `#${n}- ${t.tema} (${n - t.desde + 1})` : `#${n}`;
   let fecha = 0;
   const dm = plano.match(/\b(domingo|lunes|martes|miercoles|jueves|viernes|sabado)\b/);
   if (dm) {
@@ -818,6 +818,60 @@ function tituloPorTema(show, texto, carpeta) {
     if (!u || n >= u.n) { st[show] = { n, fecha }; try { fs.writeFileSync(ef, JSON.stringify(st)); } catch (e) {} }
   }
   return { titulo, fecha };
+}
+
+// === CALENDARIO (oct/2026): "calendario": {"n": 21, "fecha": "2026-10-11"} en anunciar.<show> ===
+// Un shiur por dia: el #21 sale el 11/10, el #22 el dia siguiente que se puede, etc.
+// Sabado y Yom Tov (diaspora) no cuentan y ese dia no se manda nada ("no_shabat": true).
+// El de un dia que ya paso se marca en silencio (no sale tarde); el de manana espera.
+let _hebcal = null;
+try { _hebcal = require('@hebcal/core'); } catch (e) {}
+const _YOM_TOV = new Set(['2026-10-03', '2026-10-04', '2027-04-22', '2027-04-23', '2027-04-28', '2027-04-29',
+  '2027-06-11', '2027-06-12', '2027-10-02', '2027-10-03', '2027-10-11', '2027-10-16', '2027-10-17', '2027-10-23',
+  '2027-10-24', '2028-04-11', '2028-04-12', '2028-04-17', '2028-04-18', '2028-05-31', '2028-06-01', '2028-09-21',
+  '2028-09-22', '2028-09-30']);
+function _diaLocal(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function esYomTov(d) {
+  if (_hebcal) {
+    try {
+      const ev = _hebcal.HebrewCalendar.getHolidaysOnDate(new _hebcal.HDate(new Date(d.getFullYear(), d.getMonth(), d.getDate())), false) || [];
+      return ev.some(e => e.getFlags() & _hebcal.flags.CHAG);
+    } catch (e) {}
+  }
+  return _YOM_TOV.has(_diaLocal(d));
+}
+function diaSinEnvio(d) { return d.getDay() === 6 || esYomTov(d); }
+function numeroDe(tit) { const m = String(tit || '').match(/^\s*#\s*(\d{1,4})/); return m ? Number(m[1]) : 0; }
+function fechaDeNumero(cal, n) {
+  const [y, mo, da] = String(cal.fecha).split('-').map(Number);
+  const d = new Date(y, mo - 1, da, 6, 0, 0, 0);
+  let k = n - Number(cal.n);
+  const paso = k >= 0 ? 1 : -1;
+  for (let i = 0; k !== 0 && i < 3000; i++) {
+    d.setDate(d.getDate() + paso);
+    if (!diaSinEnvio(d)) k -= paso;
+  }
+  return d.getTime();
+}
+// dedicatoria de la semana: en tools/otzar/temas/<show>.json, {"desde": 22, "dedicatoria": "..."}
+function dedicatoriaDe(show, tit) {
+  const n = numeroDe(tit);
+  if (!n) return '';
+  let local = [];
+  try { local = JSON.parse(fs.readFileSync(_archivoTemas(show), 'utf8')); } catch (e) {}
+  const por = {};
+  for (const t of [].concat(_temasRemotos[show] || [], Array.isArray(local) ? local : []))
+    if (t && Number(t.desde) && t.dedicatoria) por[Number(t.desde)] = String(t.dedicatoria).trim();
+  const d = Object.keys(por).map(Number).filter(x => x <= n).sort((a, b) => a - b).pop();
+  return d ? por[d] : '';
+}
+// el titulo del anuncio sale del tema: "#22- Encendido de Velas (2)" (asi lo quieren en el grupo)
+function tituloDeTema(show, tit) {
+  const n = numeroDe(tit);
+  const esc = (CFG.escuchar || {})[show] || {};
+  if (!n || !esc.temas) return tit;
+  const t = temasDe(show).filter(x => x.desde <= n).pop();
+  return t ? `#${n}- ${t.tema} (${n - t.desde + 1})` : String(tit).replace(/^\s*#\s*(\d+)\s*-?\s*/, '#$1- ');
 }
 
 // === RESCATE (oct/2026) ===
@@ -1804,7 +1858,7 @@ function feedDeShow(show) {
 // Solo cambia el texto del anuncio; el link exacto se busca con el titulo original.
 function tituloAnuncio(show, tit) {
   const d = (CFG.anunciar || {})[show] || {};
-  let t = String(tit || '');
+  let t = String(tituloDeTema(show, tit) || '');
   const limpio = x => String(x || '').replace(/[·:\-–]+$|^[·:\-–]+/g, '').trim().toLowerCase();
   if (d.prefijo_anuncio && !t.toLowerCase().includes(limpio(d.prefijo_anuncio))) t = String(d.prefijo_anuncio).trim() + ' ' + t;
   if (d.sufijo_anuncio && !t.toLowerCase().includes(limpio(d.sufijo_anuncio))) t = t + ' ' + String(d.sufijo_anuncio).trim();
@@ -1968,6 +2022,7 @@ async function anunciarInterno(esVigilante) {
 
   for (const [show, datos] of Object.entries(CFG.anunciar || {})) {
     if ((CFG.anunciar[show] || {}).pausado) { log(`${show}: EN PAUSA, no se anuncia (pausado en el config).`); continue; }
+    if ((CFG.anunciar[show] || {}).no_shabat && diaSinEnvio(new Date())) { log(`${show}: hoy es Shabat o Yom Tov, no se manda.`); continue; }
     if ((CFG.anunciar[show] || {}).uno_por_dia && yaMandoHoy(show)) {
       log(`${show}: ya se mando hoy, toca manana (uno_por_dia).`);
       continue;
@@ -2021,8 +2076,22 @@ async function anunciarInterno(esVigilante) {
       .map(it => ({ tit: sacaTitulo(it), guid: sacaGuid(it), audio: sacaAudio(it), peso: sacaPeso(it), fecha: sacaFecha(it),
                     link: ((it.match(/<link>([\s\S]*?)<\/link>/) || [])[1] || '').trim() }))
       .filter(ep => !vistos.has(ep.guid))
+      .map(ep => {   // (oct/2026) "calendario": la fecha sale del numero del shiur, no de cuando se subio
+        const _cal = (CFG.anunciar[show] || {}).calendario;
+        if (_cal && _cal.n && _cal.fecha && numeroDe(ep.tit)) { ep.fecha = fechaDeNumero(_cal, numeroDe(ep.tit)); ep.cal = true; }
+        return ep;
+      })
       .filter(ep => !((CFG.anunciar[show] || {}).esperar_fecha && ep.fecha > Date.now()))   // (oct/2026) sale en su dia
       .sort((a, b) => enOrden ? (a.fecha - b.fecha) : (b.fecha - a.fecha));
+    {
+      const _hoy0 = new Date(); _hoy0.setHours(0, 0, 0, 0);
+      const _pasados = nuevos.filter(ep => ep.cal && ep.fecha < _hoy0.getTime());
+      if (_pasados.length) {
+        log(`${show}: ${_pasados.length} shiur(es) de dias que ya pasaron, no salen tarde: ` + _pasados.map(e => e.tit.slice(0, 40)).join(' | '));
+        for (const ep of _pasados) { marcarAnunciado(show, ep.guid); estado[show].push(ep.guid); }
+        nuevos = nuevos.filter(ep => !_pasados.includes(ep));
+      }
+    }
 
     // NO REPETIR: los titulos de lo ya visto se aprenden del propio feed en cada corrida
     if (!(CFG.anunciar[show] || {}).permitir_repetidos) {
@@ -2172,7 +2241,7 @@ async function anunciarInterno(esVigilante) {
         {
           const _plat = await bloquePlataformas(show, ep.tit);
           texto = datos.plantilla
-            ? armarPlantilla(datos, { titulo: tituloAnuncio(show, ep.tit), spotify: spotShow, whatsapp: datos.whatsapp_link || wa, fecha: ep.fecha || Date.now(), plataformas: _plat })
+            ? armarPlantilla(datos, { dedicatoria: dedicatoriaDe(show, ep.tit), titulo: tituloAnuncio(show, ep.tit), spotify: spotShow, whatsapp: datos.whatsapp_link || wa, fecha: ep.fecha || Date.now(), plataformas: _plat })
             : conPlataformas(texto, _plat);
         }
         const grupos = gruposDeShow(reg, show);
@@ -2210,7 +2279,7 @@ async function anunciarInterno(esVigilante) {
       }
       const _plat = await bloquePlataformas(show, ep.tit);
       const texto = datos.plantilla
-        ? armarPlantilla(datos, { titulo: tituloAnuncio(show, ep.tit), spotify: epLink, whatsapp: datos.whatsapp_link || wa, fecha: ep.fecha || Date.now(), plataformas: _plat })
+        ? armarPlantilla(datos, { dedicatoria: dedicatoriaDe(show, ep.tit), titulo: tituloAnuncio(show, ep.tit), spotify: epLink, whatsapp: datos.whatsapp_link || wa, fecha: ep.fecha || Date.now(), plataformas: _plat })
         : conPlataformas(armarMensaje(tituloAnuncio(show, ep.tit), epLink, wa, show, datos.app ? (ep.link || datos.app) : ''), _plat);
       // ultima revision antes de mandar: si otra corrida ya lo anuncio, lo salto
       if (yaAnunciado(show, ep.guid)) { log(`${show}: "${ep.tit.slice(0,40)}" ya se anuncio; lo salto.`); continue; }

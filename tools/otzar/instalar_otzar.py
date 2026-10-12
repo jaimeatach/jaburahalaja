@@ -1131,11 +1131,110 @@ function elegirPorPalabras(candidatos, titulo, marcaObjetivo) {
   } catch (e) {}
   if (_sc) out.push(['SoundCloud', _sc]);
 """),
+    # (oct/2026) Tawil: calendario por numero (sin Shabat ni Yom Tov), dedicatoria de la semana, "#22- Tema (2)"
+    ("""  return { titulo, fecha };
+}
+
+// === RESCATE (oct/2026) ===
+""", """  return { titulo, fecha };
+}
+
+// === CALENDARIO (oct/2026): "calendario": {"n": 21, "fecha": "2026-10-11"} en anunciar.<show> ===
+// Un shiur por dia: el #21 sale el 11/10, el #22 el dia siguiente que se puede, etc.
+// Sabado y Yom Tov (diaspora) no cuentan y ese dia no se manda nada ("no_shabat": true).
+// El de un dia que ya paso se marca en silencio (no sale tarde); el de manana espera.
+let _hebcal = null;
+try { _hebcal = require('@hebcal/core'); } catch (e) {}
+const _YOM_TOV = new Set(['2026-10-03', '2026-10-04', '2027-04-22', '2027-04-23', '2027-04-28', '2027-04-29',
+  '2027-06-11', '2027-06-12', '2027-10-02', '2027-10-03', '2027-10-11', '2027-10-16', '2027-10-17', '2027-10-23',
+  '2027-10-24', '2028-04-11', '2028-04-12', '2028-04-17', '2028-04-18', '2028-05-31', '2028-06-01', '2028-09-21',
+  '2028-09-22', '2028-09-30']);
+function _diaLocal(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function esYomTov(d) {
+  if (_hebcal) {
+    try {
+      const ev = _hebcal.HebrewCalendar.getHolidaysOnDate(new _hebcal.HDate(new Date(d.getFullYear(), d.getMonth(), d.getDate())), false) || [];
+      return ev.some(e => e.getFlags() & _hebcal.flags.CHAG);
+    } catch (e) {}
+  }
+  return _YOM_TOV.has(_diaLocal(d));
+}
+function diaSinEnvio(d) { return d.getDay() === 6 || esYomTov(d); }
+function numeroDe(tit) { const m = String(tit || '').match(/^\\s*#\\s*(\\d{1,4})/); return m ? Number(m[1]) : 0; }
+function fechaDeNumero(cal, n) {
+  const [y, mo, da] = String(cal.fecha).split('-').map(Number);
+  const d = new Date(y, mo - 1, da, 6, 0, 0, 0);
+  let k = n - Number(cal.n);
+  const paso = k >= 0 ? 1 : -1;
+  for (let i = 0; k !== 0 && i < 3000; i++) {
+    d.setDate(d.getDate() + paso);
+    if (!diaSinEnvio(d)) k -= paso;
+  }
+  return d.getTime();
+}
+// dedicatoria de la semana: en tools/otzar/temas/<show>.json, {"desde": 22, "dedicatoria": "..."}
+function dedicatoriaDe(show, tit) {
+  const n = numeroDe(tit);
+  if (!n) return '';
+  let local = [];
+  try { local = JSON.parse(fs.readFileSync(_archivoTemas(show), 'utf8')); } catch (e) {}
+  const por = {};
+  for (const t of [].concat(_temasRemotos[show] || [], Array.isArray(local) ? local : []))
+    if (t && Number(t.desde) && t.dedicatoria) por[Number(t.desde)] = String(t.dedicatoria).trim();
+  const d = Object.keys(por).map(Number).filter(x => x <= n).sort((a, b) => a - b).pop();
+  return d ? por[d] : '';
+}
+// el titulo del anuncio sale del tema: "#22- Encendido de Velas (2)" (asi lo quieren en el grupo)
+function tituloDeTema(show, tit) {
+  const n = numeroDe(tit);
+  const esc = (CFG.escuchar || {})[show] || {};
+  if (!n || !esc.temas) return tit;
+  const t = temasDe(show).filter(x => x.desde <= n).pop();
+  return t ? `#${n}- ${t.tema} (${n - t.desde + 1})` : String(tit).replace(/^\\s*#\\s*(\\d+)\\s*-?\\s*/, '#$1- ');
+}
+
+// === RESCATE (oct/2026) ===
+"""),
+    ("""function tituloAnuncio(show, tit) {
+  const d = (CFG.anunciar || {})[show] || {};
+  let t = String(tit || '');
+""", """function tituloAnuncio(show, tit) {
+  const d = (CFG.anunciar || {})[show] || {};
+  let t = String(tituloDeTema(show, tit) || '');
+"""),
+    ("""    if ((CFG.anunciar[show] || {}).pausado) { log(`${show}: EN PAUSA, no se anuncia (pausado en el config).`); continue; }
+""", """    if ((CFG.anunciar[show] || {}).pausado) { log(`${show}: EN PAUSA, no se anuncia (pausado en el config).`); continue; }
+    if ((CFG.anunciar[show] || {}).no_shabat && diaSinEnvio(new Date())) { log(`${show}: hoy es Shabat o Yom Tov, no se manda.`); continue; }
+"""),
+    ("""      .filter(ep => !vistos.has(ep.guid))
+      .filter(ep => !((CFG.anunciar[show] || {}).esperar_fecha && ep.fecha > Date.now()))   // (oct/2026) sale en su dia
+      .sort((a, b) => enOrden ? (a.fecha - b.fecha) : (b.fecha - a.fecha));
+""", """      .filter(ep => !vistos.has(ep.guid))
+      .map(ep => {   // (oct/2026) "calendario": la fecha sale del numero del shiur, no de cuando se subio
+        const _cal = (CFG.anunciar[show] || {}).calendario;
+        if (_cal && _cal.n && _cal.fecha && numeroDe(ep.tit)) { ep.fecha = fechaDeNumero(_cal, numeroDe(ep.tit)); ep.cal = true; }
+        return ep;
+      })
+      .filter(ep => !((CFG.anunciar[show] || {}).esperar_fecha && ep.fecha > Date.now()))   // (oct/2026) sale en su dia
+      .sort((a, b) => enOrden ? (a.fecha - b.fecha) : (b.fecha - a.fecha));
+    {
+      const _hoy0 = new Date(); _hoy0.setHours(0, 0, 0, 0);
+      const _pasados = nuevos.filter(ep => ep.cal && ep.fecha < _hoy0.getTime());
+      if (_pasados.length) {
+        log(`${show}: ${_pasados.length} shiur(es) de dias que ya pasaron, no salen tarde: ` + _pasados.map(e => e.tit.slice(0, 40)).join(' | '));
+        for (const ep of _pasados) { marcarAnunciado(show, ep.guid); estado[show].push(ep.guid); }
+        nuevos = nuevos.filter(ep => !_pasados.includes(ep));
+      }
+    }
+"""),
+    ("""armarPlantilla(datos, { titulo: tituloAnuncio(show, ep.tit), """, """armarPlantilla(datos, { dedicatoria: dedicatoriaDe(show, ep.tit), titulo: tituloAnuncio(show, ep.tit), """, True),
+    ("""dedicatoria: datos.dedicatoria || '' };""", """dedicatoria: v.dedicatoria || datos.dedicatoria || '' };"""),
+    ("""  const titulo = t ? `#${n} ${t.tema} (${n - t.desde + 1})` : `#${n}`;""", """  const titulo = t ? `#${n}- ${t.tema} (${n - t.desde + 1})` : `#${n}`;"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe")
 # הלכות מוקצה: la carpeta "שיעורים מוקצה" que comparte Saúl aparte (31 shiurim
 # numerados al FINAL del nombre). Mismos títulos y simanim que el catálogo de la app.
 MUKZE_CARPETA = r"G:\.shortcut-targets-by-id\1OcakbiF7zD5biDpWYElkB-DoIlidbTlT\שיעורים מוקצה"
@@ -3758,6 +3857,7 @@ TAWIL = {
                "https://chat.whatsapp.com/JQRxF5FJDN05aI9otVcLE8"],
     "whatsapp_link": "https://chat.whatsapp.com/JQRxF5FJDN05aI9otVcLE8",
     "fuente": "https://chat.whatsapp.com/KE2AgbfPaGaElrVS8kwdJt",       # donde Yehuda manda los audios
+    "calendario": {"n": 21, "fecha": "2026-10-11"},                      # el #21 salió el domingo 11/10; uno por día, sin Shabat ni Yom Tov
     "dedicatoria": 'L"N\nMoshe Ben Sara\nMiriam Bat Lea Luisa',
     "plantilla": ["{fecha_hebrea}\n{fecha}", "*{titulo}*", "*Spotify*\n{spotify}", "*Apple Podcasts*\n{apple}",
                   "*Amazon Music*\n{amazon}", "*SoundCloud*\n{soundcloud}", "{dedicatoria}",
@@ -3808,7 +3908,8 @@ def tawil():
         "whatsapp_link": TAWIL["whatsapp_link"], "dedicatoria": TAWIL["dedicatoria"],
         "plantilla": TAWIL["plantilla"], "sufijo_anuncio": "Rab Yosef Tawil",
         "esperar_fecha": True, "en_orden": True, "max_anuncios": 2, "solo_ultimos": 10,
-        "sin_audio": True, "sin_whatsapp": True, "link_audio": False, "idioma": "es", "pausado": False,
+        "sin_audio": False, "sin_whatsapp": True, "link_audio": False, "idioma": "es", "pausado": False,
+        "calendario": TAWIL["calendario"], "no_shabat": True,
     })
     if json.dumps(cfg, sort_keys=True) != antes:
         respaldar(rw)
@@ -4013,6 +4114,86 @@ def mekorot_jabura():
     ok("el robot guarda los PDF/Word del grupo de la jabura (sin anunciarlos); reinicia el robot")
 
 
+# ── 47. Tawil: cada shiur en su día (oct/2026) ────────────────────────────────
+#   "calendario": el #N sale el día que le toca contando desde el #21 = 11/10, un
+#   shiur por día, sin Shabat ni Yom Tov ("no_shabat"); el audio va al grupo para
+#   darle play; la dedicatoria cambia cada semana (tools/otzar/temas/tawil.json).
+#   La primera vez desmarca lo de hoy y lo que viene, para que salga en su día.
+YOM_TOV = {"2026-10-03", "2026-10-04", "2027-04-22", "2027-04-23", "2027-04-28", "2027-04-29", "2027-06-11",
+           "2027-06-12", "2027-10-02", "2027-10-03", "2027-10-11", "2027-10-16", "2027-10-17", "2027-10-23",
+           "2027-10-24", "2028-04-11", "2028-04-12", "2028-04-17", "2028-04-18", "2028-05-31", "2028-06-01"}
+
+
+def fecha_de_numero(cal, n):
+    import datetime as dt
+    d = dt.date.fromisoformat(cal["fecha"])
+    k = n - int(cal["n"])
+    paso_ = 1 if k >= 0 else -1
+    for _ in range(3000):
+        if k == 0:
+            break
+        d += dt.timedelta(days=paso_)
+        if d.weekday() != 5 and d.isoformat() not in YOM_TOV:
+            k -= paso_
+    return d
+
+
+def norm_titulo(t):
+    t = re.sub(r"[֑-ׇ]", "", str(t or "").lower())
+    return re.sub(r"\s+", " ", re.sub(r"[\W_]+", " ", t)).strip()
+
+
+def tawil_calendario():
+    if not ROBOT:
+        return
+    rw = ROBOT / "config_whatsapp.json"
+    try:
+        cfg = json.loads(rw.read_text(encoding="utf-8"))
+    except Exception:
+        return
+    an = (cfg.get("anunciar") or {}).get("tawil")
+    if not isinstance(an, dict) or (an.get("calendario") and an.get("no_shabat") and an.get("sin_audio") is False):
+        return
+    import datetime as dt
+    paso(47, "Rab Yosef Tawil: cada shiur en su día, con audio, sin Shabat ni Yom Tov")
+    an.update({"calendario": TAWIL["calendario"], "no_shabat": True, "sin_audio": False})
+    respaldar(rw)
+    if not VER:
+        escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+    ok("tawil: el #22 sale el lunes 12/10, el #26 el viernes 16, el #27 el domingo 18 (sábado y Yom Tov no)")
+    ok("tawil: con el audio para darle play, y la dedicatoria de la semana")
+    try:
+        import urllib.request
+        req = urllib.request.Request("https://rabmeireliyahu.github.io/tawil/feed.xml", headers={"User-Agent": "otzar"})
+        xml = urllib.request.urlopen(req, timeout=60).read().decode("utf-8", "replace")
+    except Exception as ex:
+        aviso(f"no pude leer el feed de tawil ({ex}); lo de hoy puede no salir")
+        return
+    hoy = dt.date.today()
+    pendientes = {}
+    for it in re.findall(r"<item>([\s\S]*?)</item>", xml):
+        t = re.search(r"<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?</title>", it)
+        g = re.search(r"<guid[^>]*>([\s\S]*?)</guid>", it)
+        m = re.match(r"\s*#\s*(\d{1,4})", t.group(1) if t else "")
+        if t and g and m and fecha_de_numero(TAWIL["calendario"], int(m.group(1))) >= hoy:
+            pendientes[g.group(1).strip().replace("&amp;", "&")] = html.unescape(t.group(1).strip())
+    if not pendientes:
+        return
+    for nombre, clave, quitar in (("estado_anuncios.json", "tawil", set(pendientes)),
+                                  ("estado_titulos.json", "tawil", {norm_titulo(x) for x in pendientes.values()})):
+        ruta = ROBOT / nombre
+        try:
+            e = json.loads(ruta.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        antes = list(e.get(clave) or [])
+        e[clave] = [x for x in antes if x not in quitar]
+        if len(e[clave]) != len(antes) and not VER:
+            respaldar(ruta)
+            escribir(ruta, json.dumps(e, ensure_ascii=False, indent=1) + "\n")
+    ok("listos para salir cada uno en su día: " + ", ".join(sorted(pendientes.values(), key=lambda x: int(re.sub(r"\D", "", x.split()[0]) or 0))))
+
+
 def main():
     print("=== Instalador Otzar · jabura + nacach ===")
     print("Base:", BASE, "(prueba en seco)" if VER else "")
@@ -4062,6 +4243,7 @@ def main():
     mekorot_jabura()
     rescatar()
     tawil()
+    tawil_calendario()
     guids_originales_flag()
     plataformas_links()
     revisar_todo()

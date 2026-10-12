@@ -285,7 +285,16 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    (`<show>\temas.json` en la PC, manda sobre el del repo). Se anuncia cada uno SU
    día (`esperar_fecha`) en los 2 grupos de Tawil y en los generales 3 y 6, con la
    plantilla: fecha hebrea / civil, título + "Rab Yosef Tawil", plataformas, L"N
-   Moshe Ben Sara / Miriam Bat Lea Luisa, link del grupo. Spotify del show:
+   Moshe Ben Sara / Miriam Bat Lea Luisa, link del grupo.
+   Calendario (paso [47]): `calendario` {"n": 21, "fecha": "2026-10-11"} en
+   `anunciar.tawil` da la fecha de cada shiur por su número (uno por día, sin sábado
+   ni Yom Tov de la diáspora: `@hebcal/core` del robot o la lista `_YOM_TOV`);
+   `no_shabat` no manda nada ese día; lo de un día ya pasado se marca en silencio.
+   Va con el audio (`sin_audio: false`). El título del anuncio sale del tema
+   ("#22- Encendido de Velas (2)", `tituloDeTema`). La dedicatoria cambia cada semana:
+   `{"desde": N, "dedicatoria": "..."}` en `temas/tawil.json` (`dedicatoriaDe`); sin
+   ella va la del config (L"N Moshe Ben Sara...). El usuario avisa los domingos el
+   tema y el donador. Spotify del show:
    1gVVXZw6fNyrcqadB5pmLC; para que lea nuestro feed sin perder #1-#26 hace falta
    su RSS de Spotify for Creators (`--tawil-rss=https://anchor.fm/s/1171db72c/podcast/rss`).
    Estadísticas: al rescatar, podcast_bot pone guids nuevos (nombre del archivo; así
