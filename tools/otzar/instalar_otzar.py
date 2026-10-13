@@ -4386,6 +4386,35 @@ def nuevo_host():
         ok("el feed viejo avisa a Apple/Amazon que el show se mudó; nosotros ya no publicamos nada ahí")
 
 
+# ── 49. --pausar=show / --despausar=show: solo el ANUNCIO del robot (oct/2026) ──
+#   No toca feeds, bots ni archivos: el robot deja de mandar ese show a los grupos
+#   (o vuelve a mandarlo). Así se pausó mishlei (el curso saturó; vendrá otro).
+def pausar_anuncio():
+    for flag, valor in (("pausar", True), ("despausar", False)):
+        shows = _arg_lista(flag)
+        if not shows or not ROBOT:
+            continue
+        paso(49, ("PAUSAR" if valor else "REANUDAR") + " el anuncio de: " + ", ".join(shows))
+        rw = ROBOT / "config_whatsapp.json"
+        cfg = json.loads(rw.read_text(encoding="utf-8"))
+        an_all = cfg.get("anunciar") or {}
+        cambio = False
+        for show in shows:
+            an = an_all.get(show)
+            if not isinstance(an, dict):
+                aviso(f"{show}: no está en anunciar (hay: {', '.join(sorted(an_all))})")
+                continue
+            if bool(an.get("pausado")) != valor:
+                an["pausado"] = valor
+                cambio = True
+            ok(f"{show}: " + ("EN PAUSA, el robot ya no lo manda a ningún grupo" if valor else "el robot lo vuelve a mandar"))
+        if cambio:
+            respaldar(rw)
+            if not VER:
+                escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+            print("   → reinicia el robot (cierra su ventana y abre ROBOT_WHATSAPP.bat)")
+
+
 def main():
     print("=== Instalador Otzar · jabura + nacach ===")
     print("Base:", BASE, "(prueba en seco)" if VER else "")
@@ -4439,6 +4468,7 @@ def main():
     frenar()
     reanudar()
     nuevo_host()
+    pausar_anuncio()
     guids_originales_flag()
     plataformas_links()
     revisar_todo()

@@ -327,6 +327,9 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    `<itunes:new-feed-url>` en el feed viejo. Así se frenó `ravyitzchakyosef` (13/10/2026):
    de 170 episodios, 109 no eran del Rab Yitzjak Yosef (otros rabinos, Rab Ovadia zt"l,
    una descarga de otro canal del 9/8); el usuario lo sube a mano desde Creators.
+   `--pausar=show` / `--despausar=show` (paso [49]) solo pausan el ANUNCIO del robot
+   (`anunciar.<show>.pausado`), sin tocar feeds ni bots. Mishlei quedó en pausa el
+   13/10/2026 (la gente se saturó; luego viene otro curso).
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre
