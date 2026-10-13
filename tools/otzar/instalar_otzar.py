@@ -4194,6 +4194,198 @@ def tawil_calendario():
     ok("listos para salir cada uno en su día: " + ", ".join(sorted(pendientes.values(), key=lambda x: int(re.sub(r"\D", "", x.split()[0]) or 0))))
 
 
+# ── 48. --frenar=show: parar un show por completo y limpiar su feed (oct/2026) ──
+#   - el robot deja de anunciarlo (anunciar.<show>.pausado)
+#   - podcast_bot.py queda en podcast_bot.py.pausado y en su lugar uno que no hace
+#     nada: ni ACTUALIZAR ni ANUNCIAR bajan, suben o publican ese show
+#   - sus canales de YouTube se apartan (el robot de fiestas no busca ahí)
+#   - si hay tools/otzar/limpieza_<show>.json, quita del feed esos episodios (los mp3
+#     siguen en archive.org y en la PC; el feed de antes queda de respaldo en la carpeta)
+#   --reanudar=show lo deshace. --nuevo-host=show:RSS (cuando el show ya vive en
+#   Spotify for Creators) pone <itunes:new-feed-url> en el feed viejo.
+STUB_PAUSADO = """# PAUSADO por instalar_otzar.py --frenar ({fecha}). El bot original es podcast_bot.py.pausado.
+# Para volver a usarlo: python instalar_otzar.py --reanudar={show}
+print("{show}: PAUSADO. No se baja ni se publica nada; los episodios se suben a mano en Spotify for Creators.")
+"""
+
+
+def _arg_lista(nombre):
+    return [x.strip().lower() for a in sys.argv if a.startswith(f"--{nombre}=") for x in a.split("=", 1)[1].split(",") if x.strip()]
+
+
+def _cab_github(d):
+    tok = next((p for p in (d / "github_token.txt", BASE / "jabura" / "github_token.txt") if p.exists()), None)
+    if not tok:
+        return None
+    return {"Authorization": "token " + tok.read_text(encoding="utf-8").strip(),
+            "User-Agent": "instalar-otzar", "Accept": "application/vnd.github+json"}
+
+
+def frenar():
+    for show in _arg_lista("frenar"):
+        paso(48, f"{show}: FRENAR todo (sin bajar, sin publicar, sin anunciar) y limpiar el feed")
+        d = BASE / show
+        if not d.is_dir():
+            aviso(f"no existe {d}")
+            continue
+        # 1) robot: no anunciar
+        if ROBOT:
+            rw = ROBOT / "config_whatsapp.json"
+            try:
+                cfg = json.loads(rw.read_text(encoding="utf-8"))
+                an = (cfg.get("anunciar") or {}).get(show)
+                if isinstance(an, dict) and not an.get("pausado"):
+                    an["pausado"] = True
+                    respaldar(rw)
+                    if not VER:
+                        escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+                ok("robot: ya no anuncia este show")
+            except Exception as ex:                       # noqa: BLE001
+                aviso(f"config del robot: {ex}")
+        # 2) el bot: apartado, con uno que no hace nada en su lugar
+        bot, guardado = d / "podcast_bot.py", d / "podcast_bot.py.pausado"
+        if bot.exists() and STUB_PAUSADO.splitlines()[0][:20] not in bot.read_text(encoding="utf-8", errors="replace"):
+            if not VER:
+                if guardado.exists():
+                    respaldar(guardado)
+                shutil.copy2(bot, guardado)
+                escribir(bot, STUB_PAUSADO.format(show=show, fecha=time.strftime("%d/%m/%Y")))
+            ok("podcast_bot.py apartado (quedó en podcast_bot.py.pausado): ACTUALIZAR ya no baja ni publica nada de este show")
+        else:
+            ok("el bot ya estaba pausado")
+        # 3) config del show: canales apartados
+        cp = d / "config.json"
+        c = {}
+        try:
+            c = json.loads(cp.read_text(encoding="utf-8"))
+            cambio = False
+            for k in ("canales_youtube", "canal_youtube"):
+                if c.get(k):
+                    c[k + "_pausado"] = c.pop(k)
+                    cambio = True
+            if not c.get("pausado"):
+                c["pausado"] = True
+                cambio = True
+            if cambio:
+                respaldar(cp)
+                if not VER:
+                    escribir(cp, json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+            ok("canales de YouTube apartados: el robot de fiestas ya no busca en ellos")
+        except Exception as ex:                           # noqa: BLE001
+            aviso(f"config.json: {ex}")
+        # 4) limpiar el feed
+        try:
+            lim = json.loads(bajar_texto(f"otzar/limpieza_{show}.json"))
+        except Exception:
+            lim = None
+        if not lim:
+            continue
+        quitar = {q["guid"] for q in lim.get("quitar", [])}
+        cab = _cab_github(d)
+        if not cab:
+            aviso("falta github_token.txt: no puedo limpiar el feed")
+            continue
+        base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}"
+        try:
+            feed, sha = _gh_texto(base, cab, "feed.xml")
+        except Exception as ex:                           # noqa: BLE001
+            aviso(f"no pude leer el feed: {ex}")
+            continue
+        quitados = []
+
+        def _fuera(m):
+            g = re.search(r"<guid[^>]*>([\s\S]*?)</guid>", m.group(0))
+            if g and html.unescape(g.group(1).strip()) in quitar:
+                t = re.search(r"<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?</title>", m.group(0))
+                quitados.append(html.unescape(t.group(1)) if t else g.group(1))
+                return ""
+            return m.group(0)
+        nuevo = re.sub(r"[ \t]*<item>[\s\S]*?</item>[ \t]*\n?", _fuera, feed)
+        quedan = nuevo.count("<item>")
+        print(f"   episodios antes: {feed.count('<item>')} · se quitan: {len(quitados)} · quedan: {quedan}")
+        for t in quitados[:8]:
+            print("     - " + t[:90])
+        if len(quitados) > 8:
+            print(f"     ... y {len(quitados) - 8} más (lista completa en tools/otzar/limpieza_{show}.json)")
+        if not quitados:
+            ok("el feed ya estaba limpio")
+            continue
+        if quedan < 5:
+            aviso("quedarían menos de 5 episodios; no toco el feed")
+            continue
+        if VER:
+            ok("(prueba en seco)")
+            continue
+        (d / f"feed_antes_de_limpiar_{time.strftime('%Y%m%d%H%M%S')}.xml").write_text(feed, encoding="utf-8")
+        _gh_put(base, cab, "feed.xml", nuevo.encode("utf-8"), f"quitar {len(quitados)} episodios que no son del show", sha)
+        ok(f"feed limpio: {quedan} episodios. Spotify quita los otros en unas horas (los mp3 siguen en archive.org)")
+
+
+def reanudar():
+    for show in _arg_lista("reanudar"):
+        paso(48, f"{show}: reanudar")
+        d = BASE / show
+        bot, guardado = d / "podcast_bot.py", d / "podcast_bot.py.pausado"
+        if guardado.exists() and not VER:
+            shutil.copy2(guardado, bot)
+            ok("podcast_bot.py original de vuelta")
+        cp = d / "config.json"
+        try:
+            c = json.loads(cp.read_text(encoding="utf-8"))
+            for k in ("canales_youtube", "canal_youtube"):
+                if c.get(k + "_pausado") and not c.get(k):
+                    c[k] = c.pop(k + "_pausado")
+            c.pop("pausado", None)
+            if not VER:
+                escribir(cp, json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+        except Exception:
+            pass
+        if ROBOT:
+            rw = ROBOT / "config_whatsapp.json"
+            cfg = json.loads(rw.read_text(encoding="utf-8"))
+            an = (cfg.get("anunciar") or {}).get(show)
+            if isinstance(an, dict) and an.get("pausado"):
+                an["pausado"] = False
+                respaldar(rw)
+                if not VER:
+                    escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+        ok("reanudado")
+
+
+def nuevo_host():
+    for par in [a.split("=", 1)[1] for a in sys.argv if a.startswith("--nuevo-host=")]:
+        show, _, url = par.partition(":")
+        show, url = show.strip().lower(), url.strip()
+        if not url.startswith("http"):
+            aviso("uso: --nuevo-host=show:https://anchor.fm/s/.../podcast/rss")
+            continue
+        paso(48, f"{show}: el show ya vive en Spotify for Creators")
+        d = BASE / show
+        c = json.loads((d / "config.json").read_text(encoding="utf-8")) if (d / "config.json").exists() else {}
+        cab = _cab_github(d)
+        if not cab:
+            aviso("falta github_token.txt")
+            continue
+        base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}"
+        feed, sha = _gh_texto(base, cab, "feed.xml")
+        feed = re.sub(r"\s*<itunes:new-feed-url>[\s\S]*?</itunes:new-feed-url>", "", feed)
+        feed = re.sub(r"(<channel>)", r"\1\n    <itunes:new-feed-url>" + html.escape(url) + "</itunes:new-feed-url>", feed, count=1)
+        if not VER:
+            _gh_put(base, cab, "feed.xml", feed.encode("utf-8"), "el show se mudó a Spotify for Creators", sha)
+            c["rss_nuevo_host"] = url
+            escribir(d / "config.json", json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+        if ROBOT:
+            rw = ROBOT / "config_whatsapp.json"
+            cfg = json.loads(rw.read_text(encoding="utf-8"))
+            an = (cfg.get("anunciar") or {}).get(show)
+            if isinstance(an, dict):
+                an["feed"] = url                        # si se reanuda el anuncio, lee lo que se sube en Creators
+                respaldar(rw)
+                if not VER:
+                    escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+        ok("el feed viejo avisa a Apple/Amazon que el show se mudó; nosotros ya no publicamos nada ahí")
+
+
 def main():
     print("=== Instalador Otzar · jabura + nacach ===")
     print("Base:", BASE, "(prueba en seco)" if VER else "")
@@ -4244,6 +4436,9 @@ def main():
     rescatar()
     tawil()
     tawil_calendario()
+    frenar()
+    reanudar()
+    nuevo_host()
     guids_originales_flag()
     plataformas_links()
     revisar_todo()

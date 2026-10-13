@@ -317,6 +317,16 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    compara solo las palabras que dicen de qué trata (sin relleno, sin nombre del Rab
    y sin las que salen en >30% de los episodios del show), con el mismo candado de
    números de serie, y no adivina si dos empatan.
+12. Frenar un show (paso [48], `--frenar=show`): pausa su anuncio, aparta su
+   `podcast_bot.py` (queda `podcast_bot.py.pausado` y en su lugar uno que no hace nada,
+   así ni ACTUALIZAR ni ANUNCIAR publican), aparta sus `canales_youtube` (el robot de
+   fiestas buscaba en TODOS los canales y metía otros rabinos) y, con
+   `tools/otzar/limpieza_<show>.json`, quita esos episodios del feed en GitHub (los mp3
+   quedan en archive.org; el feed de antes queda en la carpeta del show). `--reanudar=show`
+   lo deshace; `--nuevo-host=show:RSS` (el show pasó a Spotify for Creators) pone
+   `<itunes:new-feed-url>` en el feed viejo. Así se frenó `ravyitzchakyosef` (13/10/2026):
+   de 170 episodios, 109 no eran del Rab Yitzjak Yosef (otros rabinos, Rab Ovadia zt"l,
+   una descarga de otro canal del 9/8); el usuario lo sube a mano desde Creators.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre
