@@ -1062,7 +1062,15 @@ async function procesarMensaje(m) {
   //   donador: L"N               <- todo lo que sigue va tal cual en el mensaje
   //   Fulano Ben Fulana
   // Se guarda en C:\OTZAR\<show>\temas.json (manda sobre el del repo) y el robot contesta como va a salir.
-  if (!esGrupo) {
+  // (oct/2026) tambien dentro del GRUPO FUENTE del show (p. ej. "Shiurim rab yosi" de Tawil);
+  // la respuesta del propio robot ahi ("✅ ..."/"❌ ...") no se toma como titulo de ningun audio
+  const _t0 = String(textoDe(m) || '').trim();
+  const _fuenteCmd = (esGrupo && /^(!|✅ |❌ )/.test(_t0)) ? (() => {
+    const r = leerRegistro();
+    return Object.keys(r).find(k => k.startsWith('escucha:') && r[k] && r[k].id === jid) || null;
+  })() : null;
+  if (_fuenteCmd && /^(✅|❌) /.test(_t0)) return;
+  if (!esGrupo || _fuenteCmd) {
     const _txt = String(textoDe(m) || '').replace(/\r/g, '').trim();
     const _mc = /^!(tawil|tema-dedica|semana)\b[ \t]*(\w+)?[ \t]*(\d{1,4})?/i.exec(_txt);
     if (_mc && /tema\s*:|donador\s*:|dedicatoria\s*:/i.test(_txt)) {

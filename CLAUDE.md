@@ -295,8 +295,9 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    ("#22- Encendido de Velas (2)", `tituloDeTema`). La dedicatoria cambia cada semana:
    `{"desde": N, "dedicatoria": "..."}` en `temas/tawil.json` (`dedicatoriaDe`); sin
    ella va la del config (L"N Moshe Ben Sara...). El usuario avisa los domingos el
-   tema y el donador. Lo puede mandar él mismo por WhatsApp al robot (chat
-   privado): "!tawil 27" (sin número: el shiur del domingo que viene) y abajo
+   tema y el donador. Lo puede mandar él mismo por WhatsApp (chat privado
+   con el robot o dentro del grupo fuente "Shiurim rab yosi"; ahí el robot ignora
+   sus propias respuestas ✅/❌ para que no se vuelvan título de un audio): "!tawil 27" (sin número: el shiur del domingo que viene) y abajo
    "tema: Kidush" / "donador: L\"N ..." (el donador puede ocupar varias líneas); se
    guarda en `C:\OTZAR\tawil\temas.json` (manda sobre el repo) y el robot contesta
    cómo va a salir. Spotify del show:
