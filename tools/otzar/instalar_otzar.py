@@ -1230,11 +1230,34 @@ function tituloDeTema(show, tit) {
     ("""armarPlantilla(datos, { titulo: tituloAnuncio(show, ep.tit), """, """armarPlantilla(datos, { dedicatoria: dedicatoriaDe(show, ep.tit), titulo: tituloAnuncio(show, ep.tit), """, True),
     ("""dedicatoria: datos.dedicatoria || '' };""", """dedicatoria: v.dedicatoria || datos.dedicatoria || '' };"""),
     ("""  const titulo = t ? `#${n} ${t.tema} (${n - t.desde + 1})` : `#${n}`;""", """  const titulo = t ? `#${n}- ${t.tema} (${n - t.desde + 1})` : `#${n}`;"""),
+    # (oct/2026) anunciar se relee en cada corrida (una pausa vale sin reiniciar); temas desde la rama de trabajo
+    ("""  log(esVigilante ? `=== VIGILANTE: reintento automatico ${vigilanteIntentos}/12 ===` : '=== ANUNCIANDO (boton) ===');
+  const estado = leerEstado();
+""", """  log(esVigilante ? `=== VIGILANTE: reintento automatico ${vigilanteIntentos}/12 ===` : '=== ANUNCIANDO (boton) ===');
+  // (oct/2026) "anunciar" se relee del disco en cada corrida: una pausa (--pausar=show)
+  // o cualquier cambio del instalador vale YA, sin reiniciar el robot
+  try {
+    const _f = JSON.parse(fs.readFileSync(path.join(__dirname, 'config_whatsapp.json'), 'utf8'));
+    if (_f && _f.anunciar && typeof _f.anunciar === 'object') CFG.anunciar = _f.anunciar;
+  } catch (e) { log('no pude releer config_whatsapp.json (sigo con el de memoria): ' + e.message); }
+  const estado = leerEstado();
+"""),
+    ("""    try {
+      const j = JSON.parse(await fetchTexto(`https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/tools/otzar/temas/${sh}.json`));
+      if (Array.isArray(j)) _temasRemotos[sh] = j;
+    } catch (e) {}
+""", """    for (const rama of ['claude/shiurim-halachot-shabbat-vriig5', 'main']) {   // (oct/2026) la rama de trabajo primero
+      try {
+        const j = JSON.parse(await fetchTexto(`https://raw.githubusercontent.com/jaimeatach/jaburahalaja/${rama}/tools/otzar/temas/${sh}.json`));
+        if (Array.isArray(j)) { _temasRemotos[sh] = j; break; }
+      } catch (e) {}
+    }
+"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero")
 # הלכות מוקצה: la carpeta "שיעורים מוקצה" que comparte Saúl aparte (31 shiurim
 # numerados al FINAL del nombre). Mismos títulos y simanim que el catálogo de la app.
 MUKZE_CARPETA = r"G:\.shortcut-targets-by-id\1OcakbiF7zD5biDpWYElkB-DoIlidbTlT\שיעורים מוקצה"
@@ -1351,6 +1374,13 @@ def escribir(ruta, texto):
 
 
 # ── 1. robot ──────────────────────────────────────────────────────────────────
+def _ya_puesto(viejo, nuevo, plano):
+    lineas_plano = {x.strip() for x in plano.split("\n")}
+    viejas = {x.strip() for x in viejo.split("\n")}
+    propias = [x.strip() for x in nuevo.split("\n") if len(x.strip()) > 15 and x.strip() not in viejas]
+    return bool(propias) and all(x in lineas_plano for x in propias)
+
+
 def parchar_robot():
     paso(1, "Robot de WhatsApp (robot_whatsapp.js)")
     if not ROBOT:
@@ -1374,6 +1404,12 @@ def parchar_robot():
         # ya aplicado y luego retocado por un parche posterior (su "viejo" vive dentro
         # de este "nuevo" y su "nuevo" ya está): no se vuelve a meter
         if any(h2[0] in nuevo and h2[1] in plano for h2 in HUNKS[i + 1:]):
+            aplicados += 1
+            continue
+        # (oct/2026) retocado por una CADENA de parches posteriores: si todas las líneas
+        # propias que agrega este parche ya están en el robot, ya está puesto (antes se
+        # volvía a meter y duplicaba feedDeShow y el filtro de esperar_fecha)
+        if _ya_puesto(viejo, nuevo, plano):
             aplicados += 1
             continue
         if todos and viejo in plano:

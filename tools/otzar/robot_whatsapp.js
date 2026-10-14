@@ -774,10 +774,12 @@ async function cargarTemasRemotos() {
     ...Object.entries(CFG.escuchar || {}).filter(([, v]) => v && v.temas).map(([k]) => k),
     ...(CFG.escuchar_directo || []).filter(e => e && e.temas).map(e => e.show)]);
   for (const sh of shows) {
-    try {
-      const j = JSON.parse(await fetchTexto(`https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/tools/otzar/temas/${sh}.json`));
-      if (Array.isArray(j)) _temasRemotos[sh] = j;
-    } catch (e) {}
+    for (const rama of ['claude/shiurim-halachot-shabbat-vriig5', 'main']) {   // (oct/2026) la rama de trabajo primero
+      try {
+        const j = JSON.parse(await fetchTexto(`https://raw.githubusercontent.com/jaimeatach/jaburahalaja/${rama}/tools/otzar/temas/${sh}.json`));
+        if (Array.isArray(j)) { _temasRemotos[sh] = j; break; }
+      } catch (e) {}
+    }
   }
 }
 setTimeout(() => { cargarTemasRemotos().catch(() => {}); }, 5000);
@@ -2015,6 +2017,12 @@ async function anunciarInterno(esVigilante) {
   if (vigilanteTimer) { clearTimeout(vigilanteTimer); vigilanteTimer = null; }
   if (!esVigilante) vigilanteIntentos = 0;
   log(esVigilante ? `=== VIGILANTE: reintento automatico ${vigilanteIntentos}/12 ===` : '=== ANUNCIANDO (boton) ===');
+  // (oct/2026) "anunciar" se relee del disco en cada corrida: una pausa (--pausar=show)
+  // o cualquier cambio del instalador vale YA, sin reiniciar el robot
+  try {
+    const _f = JSON.parse(fs.readFileSync(path.join(__dirname, 'config_whatsapp.json'), 'utf8'));
+    if (_f && _f.anunciar && typeof _f.anunciar === 'object') CFG.anunciar = _f.anunciar;
+  } catch (e) { log('no pude releer config_whatsapp.json (sigo con el de memoria): ' + e.message); }
   const estado = leerEstado();
   const reg = leerRegistro();
   let enviados = 0;
