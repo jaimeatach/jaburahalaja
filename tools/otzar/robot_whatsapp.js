@@ -1056,6 +1056,53 @@ async function procesarMensaje(m) {
     }
   }
 
+  // === "!tawil" (oct/2026), en chat privado con el robot: tema y donador de la semana ===
+  //   !tawil 27                  <- numero del shiur desde el que vale (sin numero: el del domingo que viene)
+  //   tema: Kidush               <- el titulo sale "#27- Kidush (1)", "#28- Kidush (2)"...
+  //   donador: L"N               <- todo lo que sigue va tal cual en el mensaje
+  //   Fulano Ben Fulana
+  // Se guarda en C:\OTZAR\<show>\temas.json (manda sobre el del repo) y el robot contesta como va a salir.
+  if (!esGrupo) {
+    const _txt = String(textoDe(m) || '').replace(/\r/g, '').trim();
+    const _mc = /^!(tawil|tema-dedica|semana)\b[ \t]*(\w+)?[ \t]*(\d{1,4})?/i.exec(_txt);
+    if (_mc && /tema\s*:|donador\s*:|dedicatoria\s*:/i.test(_txt)) {
+      const show = (_mc[1].toLowerCase() === 'tawil' ? 'tawil' : String(_mc[2] || '').toLowerCase());
+      const datosAn = (CFG.anunciar || {})[show] || {};
+      const f = _archivoTemas(show);
+      const responder = async t => { try { await sock.sendMessage(jid, { text: t }); } catch (e) {} };
+      if (!f) { await responder(`❌ No encuentro el show "${show}".`); return; }
+      let desde = Number(_mc[3] || (_mc[1].toLowerCase() === 'tawil' ? _mc[2] : 0) || 0);
+      const _cal = datosAn.calendario;
+      if (!desde && _cal && _cal.n && _cal.fecha) {   // sin numero: el shiur del domingo (hoy si es domingo)
+        const obj = new Date(); obj.setHours(0, 0, 0, 0); obj.setDate(obj.getDate() + ((7 - obj.getDay()) % 7));
+        for (let k = Number(_cal.n) - 30; k < Number(_cal.n) + 2000; k++) if (fechaDeNumero(_cal, k) >= obj.getTime()) { desde = k; break; }
+      }
+      if (!desde) { await responder('❌ Falta el número del shiur. Ejemplo:\n!tawil 27\ntema: Kidush\ndonador: L"N Fulano Ben Fulana'); return; }
+      const lineas = _txt.split('\n');
+      let tema = '', dedic = [], enDedic = false;
+      for (const l of lineas.slice(1)) {
+        const mt = /^\s*tema\s*:\s*(.*)$/i.exec(l), md = /^\s*(donador|dedicatoria)\s*:\s*(.*)$/i.exec(l);
+        if (mt) { tema = mt[1].trim(); enDedic = false; }
+        else if (md) { enDedic = true; if (md[2].trim()) dedic.push(md[2].trim()); }
+        else if (enDedic && l.trim()) dedic.push(l.trim());
+      }
+      let l = []; try { l = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) {}
+      l = Array.isArray(l) ? l : [];
+      let e = l.find(t => Number(t.desde) === desde);
+      if (!e) { e = { desde }; l.push(e); }
+      if (tema) e.tema = tema.replace(/\s+/g, ' ');
+      if (dedic.length) e.dedicatoria = dedic.join('\n');
+      l.sort((a, b) => a.desde - b.desde);
+      try { fs.writeFileSync(f, JSON.stringify(l, null, 2)); } catch (err) { await responder('❌ No pude guardar: ' + err.message); return; }
+      log(`SEMANA ${show}: desde el #${desde}` + (tema ? ` tema "${tema}"` : '') + (dedic.length ? ` donador "${dedic.join(' / ')}"` : ''));
+      const tit = tituloAnuncio(show, `#${desde} x`);
+      const ded = dedicatoriaDe(show, `#${desde} x`) || datosAn.dedicatoria || '';
+      const dia = _cal && _cal.n ? new Date(fechaDeNumero(_cal, desde)).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' }) : '';
+      await responder(`✅ ${show}: guardado desde el #${desde}${dia ? ' (' + dia + ')' : ''}.\n\nAsí sale:\n*${tit}*\n\n${ded}`);
+      return;
+    }
+  }
+
   // ===== NUBE DE TORA: solo privados que NO son chat directo =====
   // Todo va dentro de try/catch: si truena, el robot ni se entera.
   if (!esGrupo && !directo && !/^!otzar\s/i.test(textoDe(m))) {
