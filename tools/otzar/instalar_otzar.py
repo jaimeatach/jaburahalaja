@@ -1359,11 +1359,36 @@ function tituloDeTema(show, tit) {
       }
       // (oct/2026) "spotify_espera_horas": N en anunciar.<show>: si Spotify no toma el
 """),
+    # (oct/2026) temas del repo guardados en la PC (temas_cache.json) y el mismo tema no reinicia la cuenta
+    ("""const _temasRemotos = {};
+""", """// (oct/2026) la ultima lista del repo queda guardada en temas_cache.json: al arrancar el robot ya
+// la tiene (antes, un "!tawil" que llegaba en el primer segundo veia solo la de la PC y contaba mal)
+const _temasRemotos = (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'temas_cache.json'), 'utf8')) || {}; } catch (e) { return {}; } })();
+"""),
+    ("""        if (Array.isArray(j)) { _temasRemotos[sh] = j; break; }
+""", """        if (Array.isArray(j)) {
+          _temasRemotos[sh] = j;
+          try { fs.writeFileSync(path.join(__dirname, 'temas_cache.json'), JSON.stringify(_temasRemotos)); } catch (e) {}
+          break;
+        }
+"""),
+    ("""      if (!f) { await responder(`❌ No encuentro el show "${show}".`); return; }
+""", """      if (!f) { await responder(`❌ No encuentro el show "${show}".`); return; }
+      try { await cargarTemasRemotos(); } catch (e) {}   // (oct/2026) la lista del repo al dia antes de contestar
+"""),
+    ("""      if (tema) e.tema = tema.replace(/\\s+/g, ' ');
+""", """      if (tema) {   // (oct/2026) el MISMO tema que venia no se guarda como tema nuevo: la cuenta sigue
+        const _nt2 = x => String(x || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/[^\\p{L}\\p{N}]+/gu, ' ').trim();
+        const _prev = temasDe(show).filter(t => t.desde < desde).pop();
+        if (_prev && _nt2(_prev.tema) === _nt2(tema)) delete e.tema;
+        else e.tema = tema.replace(/\\s+/g, ' ');
+      }
+"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema", "temas_cache.json", "la lista del repo al dia antes de contestar")
 # הלכות מוקצה: la carpeta "שיעורים מוקצה" que comparte Saúl aparte (31 shiurim
 # numerados al FINAL del nombre). Mismos títulos y simanim que el catálogo de la app.
 MUKZE_CARPETA = r"G:\.shortcut-targets-by-id\1OcakbiF7zD5biDpWYElkB-DoIlidbTlT\שיעורים מוקצה"

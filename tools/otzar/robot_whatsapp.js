@@ -768,7 +768,9 @@ function armarPlantilla(datos, v) {
 // tocar la PC) y de <show>\temas.json en la PC ("!tema <show> <dia> <tema>" por
 // WhatsApp lo escribe); el de la PC manda. El dia de la semana fija la fecha del
 // episodio y, con "esperar_fecha" en anunciar, el anuncio sale ese dia.
-const _temasRemotos = {};
+// (oct/2026) la ultima lista del repo queda guardada en temas_cache.json: al arrancar el robot ya
+// la tiene (antes, un "!tawil" que llegaba en el primer segundo veia solo la de la PC y contaba mal)
+const _temasRemotos = (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'temas_cache.json'), 'utf8')) || {}; } catch (e) { return {}; } })();
 async function cargarTemasRemotos() {
   const shows = new Set([
     ...Object.entries(CFG.escuchar || {}).filter(([, v]) => v && v.temas).map(([k]) => k),
@@ -777,7 +779,11 @@ async function cargarTemasRemotos() {
     for (const rama of ['claude/shiurim-halachot-shabbat-vriig5', 'main']) {   // (oct/2026) la rama de trabajo primero
       try {
         const j = JSON.parse(await fetchTexto(`https://raw.githubusercontent.com/jaimeatach/jaburahalaja/${rama}/tools/otzar/temas/${sh}.json`));
-        if (Array.isArray(j)) { _temasRemotos[sh] = j; break; }
+        if (Array.isArray(j)) {
+          _temasRemotos[sh] = j;
+          try { fs.writeFileSync(path.join(__dirname, 'temas_cache.json'), JSON.stringify(_temasRemotos)); } catch (e) {}
+          break;
+        }
       } catch (e) {}
     }
   }
@@ -1083,6 +1089,7 @@ async function procesarMensaje(m) {
       const f = _archivoTemas(show);
       const responder = async t => { try { await sock.sendMessage(jid, { text: t }); } catch (e) {} };
       if (!f) { await responder(`❌ No encuentro el show "${show}".`); return; }
+      try { await cargarTemasRemotos(); } catch (e) {}   // (oct/2026) la lista del repo al dia antes de contestar
       let desde = Number(_mc[3] || (_mc[1].toLowerCase() === 'tawil' ? _mc[2] : 0) || 0);
       const _cal = datosAn.calendario;
       if (!desde && _cal && _cal.n && _cal.fecha) {   // sin numero: el shiur del domingo (hoy si es domingo)
@@ -1102,7 +1109,12 @@ async function procesarMensaje(m) {
       l = Array.isArray(l) ? l : [];
       let e = l.find(t => Number(t.desde) === desde);
       if (!e) { e = { desde }; l.push(e); }
-      if (tema) e.tema = tema.replace(/\s+/g, ' ');
+      if (tema) {   // (oct/2026) el MISMO tema que venia no se guarda como tema nuevo: la cuenta sigue
+        const _nt2 = x => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+        const _prev = temasDe(show).filter(t => t.desde < desde).pop();
+        if (_prev && _nt2(_prev.tema) === _nt2(tema)) delete e.tema;
+        else e.tema = tema.replace(/\s+/g, ' ');
+      }
       if (dedic.length) e.dedicatoria = dedic.join('\n');
       l.sort((a, b) => a.desde - b.desde);
       try { fs.writeFileSync(f, JSON.stringify(l, null, 2)); } catch (err) { await responder('❌ No pude guardar: ' + err.message); return; }
