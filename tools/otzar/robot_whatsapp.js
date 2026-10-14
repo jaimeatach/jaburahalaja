@@ -791,7 +791,11 @@ function temasDe(show) {
   const por = {};
   for (const t of [].concat(_temasRemotos[show] || [], Array.isArray(local) ? local : []))
     if (t && Number(t.desde) && t.tema) por[Number(t.desde)] = String(t.tema).trim();
-  return Object.keys(por).map(Number).sort((a, b) => a - b).map(d => ({ desde: d, tema: por[d] }));
+  // (oct/2026) si una semana se avisa el MISMO tema que venia, la cuenta sigue (#27 = (7)), no vuelve a (1)
+  const _nt = x => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+    .replace(/\(\s*\d+\s*\)\s*$/, '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  const _lista = Object.keys(por).map(Number).sort((a, b) => a - b).map(d => ({ desde: d, tema: por[d] }));
+  return _lista.filter((t, i) => i === 0 || _nt(t.tema) !== _nt(_lista[i - 1].tema));
 }
 const _DIAS_SEMANA = { domingo: 0, lunes: 1, martes: 2, miercoles: 3, jueves: 4, viernes: 5, sabado: 6 };
 function tituloPorTema(show, texto, carpeta) {
@@ -2331,6 +2335,12 @@ async function anunciarInterno(esVigilante) {
         continue;
       }
 
+      // (oct/2026) con temas: si el titulo guardado quedo con otra cuenta ("(1)" en vez de "(7)"),
+      // se busca tambien con el titulo corregido del tema
+      if (!epLink && spotShow && !sinSpot && tituloDeTema(show, ep.tit) !== ep.tit) {
+        epLink = await linkEpisodio(spotShow, tituloDeTema(show, ep.tit), {}, 1, (CFG.anunciar[show] || {}).market);
+        if (epLink) log(`${show}: "${ep.tit.slice(0, 40)}" encontrado en Spotify como "${tituloDeTema(show, ep.tit)}"`);
+      }
       // (oct/2026) "spotify_espera_horas": N en anunciar.<show>: si Spotify no toma el
       // episodio en N horas, sale con el link del SHOW en vez de esperar para siempre
       // (asi se quedaba trabado TorahAnytime).

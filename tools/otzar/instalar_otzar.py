@@ -1341,11 +1341,29 @@ function tituloDeTema(show, tit) {
   if (!esGrupo || _fuenteCmd) {
     const _txt = String(textoDe(m) || '').replace(/\\r/g, '').trim();
 """),
+    # (oct/2026) Tawil: el mismo tema otra semana sigue la cuenta (#27 = (7))
+    ("""  return Object.keys(por).map(Number).sort((a, b) => a - b).map(d => ({ desde: d, tema: por[d] }));
+""", """  // (oct/2026) si una semana se avisa el MISMO tema que venia, la cuenta sigue (#27 = (7)), no vuelve a (1)
+  const _nt = x => String(x || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase()
+    .replace(/\\(\\s*\\d+\\s*\\)\\s*$/, '').replace(/[^\\p{L}\\p{N}]+/gu, ' ').trim();
+  const _lista = Object.keys(por).map(Number).sort((a, b) => a - b).map(d => ({ desde: d, tema: por[d] }));
+  return _lista.filter((t, i) => i === 0 || _nt(t.tema) !== _nt(_lista[i - 1].tema));
+"""),
+    # (oct/2026) Spotify: buscar tambien con el titulo corregido del tema
+    ("""      // (oct/2026) "spotify_espera_horas": N en anunciar.<show>: si Spotify no toma el
+""", """      // (oct/2026) con temas: si el titulo guardado quedo con otra cuenta ("(1)" en vez de "(7)"),
+      // se busca tambien con el titulo corregido del tema
+      if (!epLink && spotShow && !sinSpot && tituloDeTema(show, ep.tit) !== ep.tit) {
+        epLink = await linkEpisodio(spotShow, tituloDeTema(show, ep.tit), {}, 1, (CFG.anunciar[show] || {}).market);
+        if (epLink) log(`${show}: "${ep.tit.slice(0, 40)}" encontrado en Spotify como "${tituloDeTema(show, ep.tit)}"`);
+      }
+      // (oct/2026) "spotify_espera_horas": N en anunciar.<show>: si Spotify no toma el
+"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema")
 # הלכות מוקצה: la carpeta "שיעורים מוקצה" que comparte Saúl aparte (31 shiurim
 # numerados al FINAL del nombre). Mismos títulos y simanim que el catálogo de la app.
 MUKZE_CARPETA = r"G:\.shortcut-targets-by-id\1OcakbiF7zD5biDpWYElkB-DoIlidbTlT\שיעורים מוקצה"

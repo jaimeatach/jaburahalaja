@@ -300,7 +300,10 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    sus propias respuestas ✅/❌ para que no se vuelvan título de un audio): "!tawil 27" (sin número: el shiur del domingo que viene) y abajo
    "tema: Kidush" / "donador: L\"N ..." (el donador puede ocupar varias líneas); se
    guarda en `C:\OTZAR\tawil\temas.json` (manda sobre el repo) y el robot contesta
-   cómo va a salir. Spotify del show:
+   cómo va a salir. Si una semana se avisa el MISMO tema que venía, la cuenta sigue
+   (`temasDe` junta temas iguales seguidos: #27 = Encendido de Velas (7), no (1)); si el
+   título guardado quedó con otra cuenta, el robot busca en Spotify también con el
+   título corregido. Spotify del show:
    1gVVXZw6fNyrcqadB5pmLC; para que lea nuestro feed sin perder #1-#26 hace falta
    su RSS de Spotify for Creators (`--tawil-rss=https://anchor.fm/s/1171db72c/podcast/rss`).
    Estadísticas: al rescatar, podcast_bot pone guids nuevos (nombre del archivo; así
