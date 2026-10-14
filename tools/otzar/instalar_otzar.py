@@ -1253,11 +1253,26 @@ function tituloDeTema(show, tit) {
       } catch (e) {}
     }
 """),
+    # (oct/2026) calendario: el shiur sale desde las 00:00 de su dia; "nada para hoy; el proximo es..."
+    ("""  const d = new Date(y, mo - 1, da, 6, 0, 0, 0);
+""", """  const d = new Date(y, mo - 1, da, 0, 0, 0, 0);   // (oct/2026) desde las 00:00 de su dia (el ANUNCIAR de las 5:30 ya lo manda)
+"""),
+    ("""    if (!nuevos.length) { log(`${show}: nada nuevo.`); continue; }
+""", """    if (!nuevos.length) {
+      // (oct/2026) con calendario: decir cuando sale el proximo, en vez de solo "nada nuevo"
+      const _cal = (CFG.anunciar[show] || {}).calendario;
+      const _prox = (_cal && _cal.n && _cal.fecha) ? items.filter(it => !vistos.has(sacaGuid(it)) && numeroDe(sacaTitulo(it)))
+        .map(it => ({ t: sacaTitulo(it), f: fechaDeNumero(_cal, numeroDe(sacaTitulo(it))) })).sort((a, b) => a.f - b.f)[0] : null;
+      log(_prox ? `${show}: nada para hoy; el proximo es "${_prox.t.slice(0, 40)}" el ${new Date(_prox.f).toLocaleDateString('es-MX')}.`
+                : `${show}: nada nuevo.`);
+      continue;
+    }
+"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es")
 # הלכות מוקצה: la carpeta "שיעורים מוקצה" que comparte Saúl aparte (31 shiurim
 # numerados al FINAL del nombre). Mismos títulos y simanim que el catálogo de la app.
 MUKZE_CARPETA = r"G:\.shortcut-targets-by-id\1OcakbiF7zD5biDpWYElkB-DoIlidbTlT\שיעורים מוקצה"

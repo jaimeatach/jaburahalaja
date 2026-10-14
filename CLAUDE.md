@@ -290,6 +290,7 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    `anunciar.tawil` da la fecha de cada shiur por su número (uno por día, sin sábado
    ni Yom Tov de la diáspora: `@hebcal/core` del robot o la lista `_YOM_TOV`);
    `no_shabat` no manda nada ese día; lo de un día ya pasado se marca en silencio.
+   Sale desde las 00:00 de su día (el usuario aprieta ANUNCIAR a las 5:30).
    Va con el audio (`sin_audio: false`). El título del anuncio sale del tema
    ("#22- Encendido de Velas (2)", `tituloDeTema`). La dedicatoria cambia cada semana:
    `{"desde": N, "dedicatoria": "..."}` en `temas/tawil.json` (`dedicatoriaDe`); sin

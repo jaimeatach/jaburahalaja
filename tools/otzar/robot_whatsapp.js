@@ -846,7 +846,7 @@ function diaSinEnvio(d) { return d.getDay() === 6 || esYomTov(d); }
 function numeroDe(tit) { const m = String(tit || '').match(/^\s*#\s*(\d{1,4})/); return m ? Number(m[1]) : 0; }
 function fechaDeNumero(cal, n) {
   const [y, mo, da] = String(cal.fecha).split('-').map(Number);
-  const d = new Date(y, mo - 1, da, 6, 0, 0, 0);
+  const d = new Date(y, mo - 1, da, 0, 0, 0, 0);   // (oct/2026) desde las 00:00 de su dia (el ANUNCIAR de las 5:30 ya lo manda)
   let k = n - Number(cal.n);
   const paso = k >= 0 ? 1 : -1;
   for (let i = 0; k !== 0 && i < 3000; i++) {
@@ -2118,7 +2118,15 @@ async function anunciarInterno(esVigilante) {
         for (const ep of _repetidos) { marcarAnunciado(show, ep.guid); estado[show].push(ep.guid); }
       }
     }
-    if (!nuevos.length) { log(`${show}: nada nuevo.`); continue; }
+    if (!nuevos.length) {
+      // (oct/2026) con calendario: decir cuando sale el proximo, en vez de solo "nada nuevo"
+      const _cal = (CFG.anunciar[show] || {}).calendario;
+      const _prox = (_cal && _cal.n && _cal.fecha) ? items.filter(it => !vistos.has(sacaGuid(it)) && numeroDe(sacaTitulo(it)))
+        .map(it => ({ t: sacaTitulo(it), f: fechaDeNumero(_cal, numeroDe(sacaTitulo(it))) })).sort((a, b) => a.f - b.f)[0] : null;
+      log(_prox ? `${show}: nada para hoy; el proximo es "${_prox.t.slice(0, 40)}" el ${new Date(_prox.f).toLocaleDateString('es-MX')}.`
+                : `${show}: nada nuevo.`);
+      continue;
+    }
 
     // los VIEJOS (mas de DIAS_FRESCO dias, o sin fecha) NO se anuncian nunca:
     // se marcan como vistos en silencio. Asi el catalogo viejo jamas se dispara.
