@@ -397,6 +397,64 @@ def parasha_semanal(cfgw):
                 log(f"no pude dejar parasha.ahora: {ex}")
 
 
+def sin_fechas_futuras(cfgw):
+    """(oct/2026) Shows con "calendario" en anunciar (Tawil): el episodio se sube YA a Spotify
+    y Apple (que no muestran un episodio con fecha futura); el anuncio a los grupos sigue
+    saliendo en SU día, porque el robot lo calcula por el número, no por esta fecha. Si el
+    feed trae fechas futuras (el bot las toma del archivo), se cambian por la de hoy, en
+    orden de número (#27 antes que #28) y sin tocar el guid."""
+    import base64
+    import datetime as _dt
+    from email.utils import format_datetime
+    ahora = _dt.datetime.now(_dt.timezone.utc)
+    for show, datos in (cfgw.get("anunciar") or {}).items():
+        if not isinstance(datos, dict) or not datos.get("calendario"):
+            continue
+        c = leer_json(BASE / show / "config.json")
+        tok = next((p for p in (BASE / show / "github_token.txt", BASE / "jabura" / "github_token.txt") if p.exists()), None)
+        if not tok:
+            continue
+        cab = {"Authorization": "token " + tok.read_text(encoding="utf-8").strip(),
+               "User-Agent": "otzar-mantenimiento", "Accept": "application/vnd.github+json"}
+        base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}/contents/feed.xml"
+        try:
+            with urllib.request.urlopen(urllib.request.Request(base, headers=cab), timeout=60) as r:
+                sha = json.loads(r.read().decode())["sha"]
+            with urllib.request.urlopen(urllib.request.Request(base, headers=dict(cab, Accept="application/vnd.github.raw")), timeout=120) as r:
+                feed = r.read().decode("utf-8", "replace")
+        except Exception as ex:
+            log(f"fechas [{show}]: no pude leer el feed ({ex})")
+            continue
+        futuros = []
+        for m in re.finditer(r"<item>([\s\S]*?)</item>", feed):
+            d = re.search(r"<pubDate>([\s\S]*?)</pubDate>", m.group(1))
+            try:
+                cuando = parsedate_to_datetime(d.group(1).strip()) if d else None
+            except Exception:
+                cuando = None
+            if cuando and not cuando.tzinfo:          # "-0000" llega sin zona: es UTC
+                cuando = cuando.replace(tzinfo=_dt.timezone.utc)
+            if cuando and cuando > ahora:
+                t = re.search(r"<title>(?:<!\[CDATA\[)?\s*#\s*(\d+)", m.group(1))
+                futuros.append((int(t.group(1)) if t else 0, cuando, m.group(1)))
+        if not futuros:
+            continue
+        futuros.sort(key=lambda x: (x[0], x[1]))
+        nuevo = feed
+        for i, (_n, _c, it) in enumerate(futuros):
+            fecha = format_datetime(ahora - _dt.timedelta(minutes=len(futuros) - i), usegmt=True)
+            nuevo = nuevo.replace(it, re.sub(r"<pubDate>[\s\S]*?</pubDate>", f"<pubDate>{fecha}</pubDate>", it, count=1), 1)
+        try:
+            cuerpo = {"message": "episodios visibles ya (el anuncio sale en su día)", "sha": sha,
+                      "content": base64.b64encode(nuevo.encode("utf-8")).decode()}
+            req = urllib.request.Request(base, data=json.dumps(cuerpo).encode(), headers=cab, method="PUT")
+            with urllib.request.urlopen(req, timeout=120):
+                pass
+            log(f"fechas [{show}]: {len(futuros)} episodio(s) con fecha futura → hoy (ya se ven en Spotify/Apple; el anuncio sale en su día)")
+        except Exception as ex:
+            log(f"fechas [{show}]: no pude subir el feed ({ex})")
+
+
 def ids_spotify(cfgw):
     """Shows rescatados de Spotify for Creators ("ids_spotify" en su config.json, lo
     pone instalar_otzar.py): cada episodio viejo conserva en el feed el MISMO guid y
@@ -530,6 +588,7 @@ def main():
     espejo()
     parasha_semanal(cfgw)
     ids_spotify(cfgw)
+    sin_fechas_futuras(cfgw)
     soundcloud()
     plataformas()
     fiestas_pasadas(cfgw)

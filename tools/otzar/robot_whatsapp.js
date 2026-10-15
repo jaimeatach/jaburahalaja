@@ -604,7 +604,8 @@ function guardarAudio(item, titulo) {
   // === TEMAS (oct/2026): "Dia 21. Domingo" -> "#21 Encendido de Velas (1)", con fecha de ese dia ===
   if (_r('temas')) {
     const _t = tituloPorTema(item.show, String(titulo || ''), carpeta);
-    if (_t) { titulo = _t.titulo; if (_t.fecha) item._fecha = _t.fecha; }
+    // (oct/2026) nunca fecha futura en el archivo: el episodio se ve YA en Spotify/Apple; el anuncio sale en su dia (calendario)
+    if (_t) { titulo = _t.titulo; if (_t.fecha && _t.fecha <= Date.now()) item._fecha = _t.fecha; }
   }
   if (titulo && (_r('quitar_lineas') || _r('unir_lineas'))) {
     let lineas = String(titulo).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
