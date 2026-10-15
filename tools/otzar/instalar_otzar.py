@@ -1384,11 +1384,25 @@ const _temasRemotos = (() => { try { return JSON.parse(fs.readFileSync(path.join
         else e.tema = tema.replace(/\\s+/g, ' ');
       }
 """),
+    # (oct/2026) el robot nunca anuncia en Shabat ni Yom Tov (boton, vigilante y piloto)
+    ("""  } catch (e) { log('no pude releer config_whatsapp.json (sigo con el de memoria): ' + e.message); }
+  const estado = leerEstado();
+""", """  } catch (e) { log('no pude releer config_whatsapp.json (sigo con el de memoria): ' + e.message); }
+  // (oct/2026) NUNCA en Shabat ni Yom Tov: desde las 16:00 de la vispera hasta la medianoche del dia
+  // (vale para el boton, el vigilante y el piloto automatico)
+  {
+    const _ah = new Date(), _man = new Date(_ah.getFullYear(), _ah.getMonth(), _ah.getDate() + 1);
+    const _bq = _ah.getDay() === 6 ? 'Shabat' : esYomTov(_ah) ? 'Yom Tov'
+      : (_ah.getHours() >= 16 && (_ah.getDay() === 5 || esYomTov(_man))) ? (_ah.getDay() === 5 ? 'Erev Shabat' : 'Erev Yom Tov') : '';
+    if (_bq) { log(`${_bq}: no se anuncia nada hasta que termine.`); return; }
+  }
+  const estado = leerEstado();
+"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema", "temas_cache.json", "la lista del repo al dia antes de contestar")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema", "temas_cache.json", "la lista del repo al dia antes de contestar", "NUNCA en Shabat ni Yom Tov")
 # הלכות מוקצה: la carpeta "שיעורים מוקצה" que comparte Saúl aparte (31 shiurim
 # numerados al FINAL del nombre). Mismos títulos y simanim que el catálogo de la app.
 MUKZE_CARPETA = r"G:\.shortcut-targets-by-id\1OcakbiF7zD5biDpWYElkB-DoIlidbTlT\שיעורים מוקצה"
@@ -3804,6 +3818,8 @@ def instalar_anunciar():
         bajar("otzar/robot_fiestas.py", BASE / "robot_fiestas.py")   # fiestas pasadas (mantenimiento lo lee)
         bajar("otzar/diagnostico.py", BASE / "jabura" / "diagnostico.py")
         bajar("otzar/plataformas.py", BASE / "jabura" / "plataformas.py")    # Apple/Amazon/Spotify por show (una vez al día)
+        bajar("otzar/piloto.py", BASE / "jabura" / "piloto.py")   # (oct/2026) piloto automático
+        bajar("otzar/PILOTO.bat", ROBOT / "PILOTO.bat")
         bajar("otzar/soundcloud_subir.py", BASE / "jabura" / "soundcloud_subir.py")   # SoundCloud automático (si hay llaves)   # "por qué no salió": python diagnostico.py <show>
     if ruta.exists() and "mantenimiento.py" in ruta.read_text(encoding="utf-8", errors="replace"):
         ok("ya llama al mantenimiento (jabura, shows de WhatsApp, espejo, sin atrasos)")

@@ -339,6 +339,16 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    `--pausar=show` / `--despausar=show` (paso [49]) solo pausan el ANUNCIO del robot
    (`anunciar.<show>.pausado`), sin tocar feeds ni bots. Mishlei quedó en pausa el
    13/10/2026 (la gente se saturó; luego viene otro curso).
+13. Piloto automático (oct/2026; el usuario pidió dejar de apretar botones):
+   `tools/otzar/piloto.py` (en `C:\OTZAR\jabura\`, se abre con `PILOTO.bat` junto al robot).
+   Cada 5 min: si el robot guardó un audio nuevo en cualquier carpeta fuente, corre
+   `mantenimiento.py` (lo de ANUNCIAR.bat); si no, una vez por hora. Cada 30 min corre
+   `podcast_bot.py` de los shows de YouTube (lo de ACTUALIZAR; salta pausados/manuales y
+   los de `--frenar`). Después de publicar y cada 15 min escribe `comando.txt` = anunciar
+   (solo de 5:30 a 22:00). Nada en Shabat/Yom Tov (desde las 16:00 de la víspera hasta la
+   medianoche); el robot tiene el mismo candado en `anunciarInterno`. `PILOTO_PAUSA.txt`
+   lo pausa; ajustes en `jabura\piloto.json`; log en `C:\OTZAR\piloto.log`. Necesita la PC
+   prendida: para que funcione con la PC apagada hay que llevarlo a un servidor.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre

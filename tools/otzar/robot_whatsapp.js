@@ -2094,6 +2094,14 @@ async function anunciarInterno(esVigilante) {
     const _f = JSON.parse(fs.readFileSync(path.join(__dirname, 'config_whatsapp.json'), 'utf8'));
     if (_f && _f.anunciar && typeof _f.anunciar === 'object') CFG.anunciar = _f.anunciar;
   } catch (e) { log('no pude releer config_whatsapp.json (sigo con el de memoria): ' + e.message); }
+  // (oct/2026) NUNCA en Shabat ni Yom Tov: desde las 16:00 de la vispera hasta la medianoche del dia
+  // (vale para el boton, el vigilante y el piloto automatico)
+  {
+    const _ah = new Date(), _man = new Date(_ah.getFullYear(), _ah.getMonth(), _ah.getDate() + 1);
+    const _bq = _ah.getDay() === 6 ? 'Shabat' : esYomTov(_ah) ? 'Yom Tov'
+      : (_ah.getHours() >= 16 && (_ah.getDay() === 5 || esYomTov(_man))) ? (_ah.getDay() === 5 ? 'Erev Shabat' : 'Erev Yom Tov') : '';
+    if (_bq) { log(`${_bq}: no se anuncia nada hasta que termine.`); return; }
+  }
   const estado = leerEstado();
   const reg = leerRegistro();
   let enviados = 0;
