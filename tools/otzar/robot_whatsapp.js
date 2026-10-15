@@ -854,6 +854,26 @@ function esYomTov(d) {
   return _YOM_TOV.has(_diaLocal(d));
 }
 function diaSinEnvio(d) { return d.getDay() === 6 || esYomTov(d); }
+// (oct/2026) puesta del sol en CDMX (formula de la NOAA; coincide con hebcal +-1 min)
+function puestaSol(dia, lat = 19.4326, lon = -99.1332) {
+  const y = dia.getFullYear(), m = dia.getMonth(), d = dia.getDate();
+  const N = Math.round((Date.UTC(y, m, d) - Date.UTC(y, 0, 1)) / 864e5) + 1;
+  const g = 2 * Math.PI / 365 * (N - 1 + (18 - 12) / 24), r = Math.PI / 180;
+  const eq = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+  const de = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+  const ha = Math.acos(Math.cos(90.833 * r) / (Math.cos(lat * r) * Math.cos(de)) - Math.tan(lat * r) * Math.tan(de)) / r;
+  return Date.UTC(y, m, d) + (720 - 4 * (lon - ha) - eq) * 60000;
+}
+// Shabat / Yom Tov: desde las 16:00 de la vispera hasta 50 min despues de la puesta del sol del
+// ultimo dia (Motzaei Shabat ya se anuncia). '' = se puede.
+function bloqueoSagrado(ah) {
+  const hoy = new Date(ah.getFullYear(), ah.getMonth(), ah.getDate());
+  const man = new Date(ah.getFullYear(), ah.getMonth(), ah.getDate() + 1);
+  const hoyS = diaSinEnvio(hoy), manS = diaSinEnvio(man);
+  if (hoyS && (manS || ah.getTime() < puestaSol(hoy) + 50 * 60000)) return hoy.getDay() === 6 ? 'Shabat' : 'Yom Tov';
+  if (!hoyS && manS && ah.getHours() >= 16) return man.getDay() === 6 ? 'Erev Shabat' : 'Erev Yom Tov';
+  return '';
+}
 function numeroDe(tit) { const m = String(tit || '').match(/^\s*#\s*(\d{1,4})/); return m ? Number(m[1]) : 0; }
 function fechaDeNumero(cal, n) {
   const [y, mo, da] = String(cal.fecha).split('-').map(Number);
@@ -2095,12 +2115,10 @@ async function anunciarInterno(esVigilante) {
     const _f = JSON.parse(fs.readFileSync(path.join(__dirname, 'config_whatsapp.json'), 'utf8'));
     if (_f && _f.anunciar && typeof _f.anunciar === 'object') CFG.anunciar = _f.anunciar;
   } catch (e) { log('no pude releer config_whatsapp.json (sigo con el de memoria): ' + e.message); }
-  // (oct/2026) NUNCA en Shabat ni Yom Tov: desde las 16:00 de la vispera hasta la medianoche del dia
-  // (vale para el boton, el vigilante y el piloto automatico)
+  // (oct/2026) NUNCA en Shabat ni Yom Tov: desde las 16:00 de la vispera hasta que sale (puesta del
+  // sol + 50 min); vale para el boton, el vigilante y el piloto automatico
   {
-    const _ah = new Date(), _man = new Date(_ah.getFullYear(), _ah.getMonth(), _ah.getDate() + 1);
-    const _bq = _ah.getDay() === 6 ? 'Shabat' : esYomTov(_ah) ? 'Yom Tov'
-      : (_ah.getHours() >= 16 && (_ah.getDay() === 5 || esYomTov(_man))) ? (_ah.getDay() === 5 ? 'Erev Shabat' : 'Erev Yom Tov') : '';
+    const _bq = bloqueoSagrado(new Date());
     if (_bq) { log(`${_bq}: no se anuncia nada hasta que termine.`); return; }
   }
   const estado = leerEstado();

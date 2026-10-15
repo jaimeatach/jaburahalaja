@@ -10,8 +10,8 @@ Cada 5 minutos:
   3. Después de publicar, y cada 15 minutos, le da la orden "anunciar" al robot. El robot
      solo manda lo que ya tiene su link exacto de Spotify (si todavía no, lo reintenta en la
      siguiente vuelta), y nunca repite.
-Nunca en Shabat ni en Yom Tov (desde el viernes / la víspera a las 16:00 hasta la medianoche
-del día) y nunca de noche (anuncios solo de 5:30 a 22:00). Para pausarlo: crea el archivo
+Nunca en Shabat ni en Yom Tov (desde la víspera a las 16:00 hasta que sale: puesta del sol
++ 50 min) y nunca de noche (anuncios solo de 5:30 a 22:00). Para pausarlo: crea el archivo
 C:\\OTZAR\\PILOTO_PAUSA.txt (o cierra la ventana). Ajustes en C:\\OTZAR\\jabura\\piloto.json.
 """
 import datetime as dt
@@ -73,16 +73,33 @@ def ajustes():
     return a
 
 
+def puesta_sol(dia, lat=19.4326, lon=-99.1332):
+    """Puesta del sol en CDMX (fórmula de la NOAA, la misma del robot), como datetime local."""
+    import math
+    n = dia.timetuple().tm_yday
+    g = 2 * math.pi / 365 * (n - 1 + (18 - 12) / 24)
+    eq = 229.18 * (0.000075 + 0.001868 * math.cos(g) - 0.032077 * math.sin(g) - 0.014615 * math.cos(2 * g) - 0.040849 * math.sin(2 * g))
+    de = (0.006918 - 0.399912 * math.cos(g) + 0.070257 * math.sin(g) - 0.006758 * math.cos(2 * g)
+          + 0.000907 * math.sin(2 * g) - 0.002697 * math.cos(3 * g) + 0.00148 * math.sin(3 * g))
+    r = math.pi / 180
+    ha = math.acos(math.cos(90.833 * r) / (math.cos(lat * r) * math.cos(de)) - math.tan(lat * r) * math.tan(de)) / r
+    utc = dt.datetime(dia.year, dia.month, dia.day, tzinfo=dt.timezone.utc) + dt.timedelta(minutes=720 - 4 * (lon - ha) - eq)
+    return utc.astimezone().replace(tzinfo=None)
+
+
+def dia_sagrado(d):
+    return d.weekday() == 5 or d.isoformat() in YOM_TOV
+
+
 def bloqueo(ahora):
-    """Shabat / Yom Tov: desde las 16:00 de la víspera hasta la medianoche del día."""
+    """Shabat / Yom Tov: desde las 16:00 de la víspera hasta 50 min después de la puesta del
+    sol del último día (Motzaei Shabat ya se anuncia). None = se puede."""
     d = ahora.date()
-    if d.weekday() == 5:
-        return "Shabat"
-    if d.isoformat() in YOM_TOV:
-        return "Yom Tov"
-    manana = (d + dt.timedelta(days=1))
-    if ahora.hour >= 16 and (d.weekday() == 4 or manana.isoformat() in YOM_TOV):
-        return "Erev Shabat" if d.weekday() == 4 else "Erev Yom Tov"
+    manana = d + dt.timedelta(days=1)
+    if dia_sagrado(d) and (dia_sagrado(manana) or ahora < puesta_sol(d) + dt.timedelta(minutes=50)):
+        return "Shabat" if d.weekday() == 5 else "Yom Tov"
+    if not dia_sagrado(d) and dia_sagrado(manana) and ahora.hour >= 16:
+        return "Erev Shabat" if manana.weekday() == 5 else "Erev Yom Tov"
     return None
 
 

@@ -348,8 +348,10 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    `mantenimiento.py` (lo de ANUNCIAR.bat); si no, una vez por hora. Cada 30 min corre
    `podcast_bot.py` de los shows de YouTube (lo de ACTUALIZAR; salta pausados/manuales y
    los de `--frenar`). Después de publicar y cada 15 min escribe `comando.txt` = anunciar
-   (solo de 5:30 a 22:00). Nada en Shabat/Yom Tov (desde las 16:00 de la víspera hasta la
-   medianoche); el robot tiene el mismo candado en `anunciarInterno`. `PILOTO_PAUSA.txt`
+   (solo de 5:30 a 22:00). Nada en Shabat/Yom Tov: desde las 16:00 de la víspera hasta la
+   puesta del sol + 50 min del último día (`puestaSol`/`puesta_sol`, NOAA para CDMX, ±1 min de
+   hebcal), así Motzaei Shabat ya se anuncia; el robot tiene el mismo candado
+   (`bloqueoSagrado` en `anunciarInterno`, también para el botón y el vigilante). `PILOTO_PAUSA.txt`
    lo pausa; ajustes en `jabura\piloto.json`; log en `C:\OTZAR\piloto.log`. Necesita la PC
    prendida: para que funcione con la PC apagada hay que llevarlo a un servidor.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
