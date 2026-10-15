@@ -10,6 +10,8 @@ Cada 5 minutos:
   3. Después de publicar, y cada 15 minutos, le da la orden "anunciar" al robot. El robot
      solo manda lo que ya tiene su link exacto de Spotify (si todavía no, lo reintenta en la
      siguiente vuelta), y nunca repite.
+Vigila al robot (si se cierra lo vuelve a abrir), deja cada mañana un reporte para el chat que
+mandó "!reporte" al robot y avisa si algo falla (disco lleno, mantenimiento que falla...).
 Nunca en Shabat ni en Yom Tov (desde la víspera a las 16:00 hasta que sale: puesta del sol
 + 50 min) y nunca de noche (anuncios solo de 5:30 a 22:00). Para pausarlo: crea el archivo
 C:\\OTZAR\\PILOTO_PAUSA.txt (o cierra la ventana). Ajustes en C:\\OTZAR\\jabura\\piloto.json.
@@ -34,9 +36,12 @@ LOG = BASE / "piloto.log"
 LOCK = BASE / "piloto.lock"
 PAUSA = BASE / "PILOTO_PAUSA.txt"
 ESTADO = JAB / "piloto_estado.json"
+REPORTE = BASE / "piloto_reporte.txt"      # lo lee el robot con "!estado"
+AVISOS = ROBOT / "avisos"                  # el robot los manda al chat de "!reporte"
 AUDIO = (".m4a", ".mp3", ".ogg", ".opus", ".aac", ".wav", ".amr", ".pdf", ".doc", ".docx")
 AJUSTES = {"cada_min": 5, "mantenimiento_min": 60, "youtube_min": 30, "anuncio_min": 15,
-           "desde": "05:30", "hasta": "22:00", "youtube": True, "timeout_show_min": 20}
+           "desde": "05:30", "hasta": "22:00", "youtube": True, "timeout_show_min": 20,
+           "vigilar_robot": True, "reporte_hora": "07:00", "disco_minimo_gb": 5}
 # Yom Tov de la diáspora (sale de @hebcal/core; lo mismo que usa el robot)
 YOM_TOV = {"2026-10-03", "2026-10-04", "2027-04-22", "2027-04-23", "2027-04-28", "2027-04-29",
            "2027-06-11", "2027-06-12", "2027-10-02", "2027-10-03", "2027-10-11", "2027-10-16",
@@ -223,6 +228,137 @@ def anunciar():
     return False
 
 
+# ── vigilancia, reporte y avisos (para cuando nadie está frente a la PC) ──────────
+_ultimo_aviso = {}
+
+
+def avisar(clave, texto, cada_horas=3):
+    """Deja un aviso para el chat de "!reporte" (el robot lo manda). Uno por tipo cada 3 h."""
+    if time.time() - _ultimo_aviso.get(clave, 0) < cada_horas * 3600:
+        return
+    _ultimo_aviso[clave] = time.time()
+    try:
+        AVISOS.mkdir(parents=True, exist_ok=True)
+        (AVISOS / f"{time.strftime('%Y%m%d%H%M%S')}_{clave}.txt").write_text(texto, encoding="utf-8")
+    except Exception:
+        pass
+    log("AVISO: " + texto.replace("\n", " · "))
+
+
+def robot_vivo():
+    try:
+        return time.time() - (ROBOT / "robot.lock").stat().st_mtime < 180
+    except Exception:
+        return False
+
+
+def bat_del_robot():
+    for nombre in ("ROBOT_WHATSAPP.bat", "ROBOT.bat", "INICIAR_ROBOT.bat"):
+        if (ROBOT / nombre).exists():
+            return ROBOT / nombre
+    otros = sorted(ROBOT.glob("ROBOT*.bat"))
+    return otros[0] if otros else None
+
+
+_ult_relanzo = 0.0
+
+
+def vigilar_robot(a):
+    """Si la ventana del robot se cerró o se colgó, la vuelve a abrir (máximo una vez cada 10 min)."""
+    global _ult_relanzo
+    if not a.get("vigilar_robot", True) or robot_vivo():
+        return
+    if time.time() - _ult_relanzo < 600:
+        return
+    _ult_relanzo = time.time()
+    bat = bat_del_robot()
+    if not bat:
+        log("robot: no está abierto y no encuentro ROBOT_WHATSAPP.bat para abrirlo")
+        return
+    try:
+        subprocess.Popen(["cmd", "/c", "start", "ROBOT", "/d", str(ROBOT), str(bat)], cwd=str(ROBOT))
+        log("robot: estaba cerrado o colgado; lo volví a abrir")
+        avisar("robot", "⚠️ El robot de WhatsApp se había cerrado y el piloto lo volvió a abrir. Si vuelve a pasar seguido, revisa la PC.")
+    except Exception as ex:
+        log(f"robot: no pude abrirlo ({ex})")
+
+
+def disco_libre_gb():
+    try:
+        import shutil
+        return shutil.disk_usage(str(BASE)).free / 1e9
+    except Exception:
+        return -1
+
+
+def contar_log_robot(dia):
+    """Audios guardados, anuncios y errores del robot en un día (lee la cola del log)."""
+    import re
+    p = ROBOT / "robot_whatsapp.log"
+    g = an = er = 0
+    try:
+        with open(p, "rb") as f:
+            f.seek(0, 2)
+            f.seek(max(0, f.tell() - 8_000_000))
+            texto = f.read().decode("utf-8", "replace")
+    except Exception:
+        return g, an, er
+    pref = re.compile(r"^\[0?%d/0?%d/%d," % (dia.day, dia.month, dia.year))
+    for linea in texto.splitlines():
+        if not pref.match(linea):
+            continue
+        if "GUARDADO" in linea:
+            g += 1
+        elif "ANUNCIADO en" in linea:
+            an += 1
+        elif "ERROR" in linea:
+            er += 1
+    return g, an, er
+
+
+def escribir_reporte(est):
+    ahora = dt.datetime.now()
+    ayer = (ahora - dt.timedelta(days=1)).date()
+    g, an, er = contar_log_robot(ayer)
+    gh, anh, erh = contar_log_robot(ahora.date())
+    hora = lambda t: dt.datetime.fromtimestamp(t).strftime("%d/%m %H:%M") if t else "nunca"
+    libre = disco_libre_gb()
+    lineas = [
+        f"🤖 Otzar · {ahora.strftime('%d/%m %H:%M')}",
+        ("✅ Robot conectado" if robot_vivo() else "❌ Robot NO responde"),
+        ("⏸️ Piloto en PAUSA (!sigue para seguir)" if PAUSA.exists() else "✅ Piloto andando"),
+        f"Ayer: {g} audios guardados · {an} anuncios · {er} errores",
+        f"Hoy: {gh} audios · {anh} anuncios · {erh} errores",
+        f"Mantenimiento: {hora(est.get('ult_mant'))}" + ("" if est.get("mant_ok", True) else " ⚠️ con errores"),
+        f"YouTube: {hora(est.get('ult_yt'))} · Anuncio: {hora(est.get('ult_anuncio'))}",
+        (f"Disco: {libre:.0f} GB libres" if libre >= 0 else ""),
+    ]
+    b = bloqueo(ahora)
+    if b:
+        lineas.append(f"🕯️ {b}: en espera hasta que termine")
+    texto = "\n".join(x for x in lineas if x)
+    try:
+        REPORTE.write_text(texto, encoding="utf-8")
+    except Exception:
+        pass
+    return texto
+
+
+def revisar_salud(a, est):
+    texto = escribir_reporte(est)
+    hoy = dt.date.today().isoformat()
+    if dt.datetime.now().strftime("%H:%M") >= a.get("reporte_hora", "07:00") and est.get("reporte_dia") != hoy:
+        est["reporte_dia"] = hoy
+        avisar("reporte", "☀️ Reporte de la mañana\n" + texto, cada_horas=0)
+    libre = disco_libre_gb()
+    if 0 <= libre < a.get("disco_minimo_gb", 5):
+        avisar("disco", f"⚠️ Al disco de la PC le quedan {libre:.1f} GB. Hay que liberar espacio (audios viejos ya subidos).", 12)
+    if est.get("mant_fallos", 0) >= 3:
+        avisar("mant", "⚠️ El mantenimiento falló 3 veces seguidas (subir a archive.org / feeds). Revisa C:\\OTZAR\\piloto.log.")
+    if est.get("anuncio_fallos", 0) >= 3:
+        avisar("anuncio", "⚠️ El robot no recoge la orden de anunciar (3 veces). ¿Está abierta su ventana?")
+
+
 def otro_piloto_vivo():
     try:
         if time.time() - LOCK.stat().st_mtime < 120:
@@ -243,6 +379,7 @@ def main():
     ult_mant = float(e.get("ult_mant", 0))
     ult_yt = float(e.get("ult_yt", 0))
     ult_anuncio = float(e.get("ult_anuncio", 0))
+    est = dict(e)
     avisado = ""
     while True:
         try:
@@ -251,6 +388,8 @@ def main():
             pass
         a = ajustes()
         ahora = dt.datetime.now()
+        vigilar_robot(a)
+        revisar_salud(a, est)
         motivo = "pausa (existe PILOTO_PAUSA.txt)" if PAUSA.exists() else bloqueo(ahora)
         if motivo:
             if motivo != avisado:
@@ -267,21 +406,25 @@ def main():
             log(f"audio nuevo del robot: {cual}")
             # que el robot termine de escribirlo
             time.sleep(20)
-            if mantenimiento():
-                hubo = True
+            bien = mantenimiento()
+            est["mant_ok"], est["mant_fallos"] = bien, (0 if bien else est.get("mant_fallos", 0) + 1)
+            hubo = hubo or bien
             ultimo_audio, ult_mant = nuevo, time.time()
         elif time.time() - ult_mant > a["mantenimiento_min"] * 60:
-            mantenimiento()
+            bien = mantenimiento()
+            est["mant_ok"], est["mant_fallos"] = bien, (0 if bien else est.get("mant_fallos", 0) + 1)
             ult_mant, hubo = time.time(), True
         if a.get("youtube", True) and time.time() - ult_yt > a["youtube_min"] * 60:
             youtube(a)
             ult_yt, hubo = time.time(), True
         if en_horario(dt.datetime.now(), a) and (hubo or time.time() - ult_anuncio > a["anuncio_min"] * 60):
-            anunciar()
+            recogio = anunciar()
+            est["anuncio_fallos"] = 0 if recogio else est.get("anuncio_fallos", 0) + 1
             ult_anuncio = time.time()
+        est.update({"ultimo_audio": ultimo_audio, "ult_mant": ult_mant, "ult_yt": ult_yt, "ult_anuncio": ult_anuncio})
+        escribir_reporte(est)
         try:
-            ESTADO.write_text(json.dumps({"ultimo_audio": ultimo_audio, "ult_mant": ult_mant, "ult_yt": ult_yt,
-                                          "ult_anuncio": ult_anuncio}), encoding="utf-8")
+            ESTADO.write_text(json.dumps(est), encoding="utf-8")
         except Exception:
             pass
         espera = max(60, int(a["cada_min"] * 60))

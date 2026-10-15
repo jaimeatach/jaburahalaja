@@ -1148,6 +1148,43 @@ async function procesarMensaje(m) {
     }
   }
 
+  // === "!reporte" / "!estado" / "!pausa" / "!sigue" (oct/2026), en chat privado con el robot ===
+  // "!reporte" registra ESTE chat para el reporte de cada mañana y los avisos del piloto (el primero
+  // que lo manda; despues solo ese chat puede cambiarlo). Los demas comandos, solo desde ese chat.
+  if (!esGrupo) {
+    const _ma = /^!(reporte|estado|pausa|sigue)\b/i.exec(String(textoDe(m) || '').trim());
+    if (_ma) {
+      const orden = _ma[1].toLowerCase();
+      const reg = leerRegistro();
+      const adm = reg['admin:reporte'];
+      const resp = async t => { try { await sock.sendMessage(jid, { text: t }); } catch (e) {} };
+      const PAUSA_PILOTO = path.join('C:\\OTZAR', 'PILOTO_PAUSA.txt');
+      if (orden === 'reporte') {
+        if (adm && adm.id && adm.id !== jid) { await resp('❌ Los reportes ya van a otro chat.'); return; }
+        reg['admin:reporte'] = { id: jid, nombre: 'reportes del piloto' };
+        guardarRegistro(reg);
+        log(`ADMIN: los reportes del piloto van a ${jid}`);
+        await resp('✅ Listo: aquí te llega cada mañana el reporte del robot y del piloto, y un aviso si algo falla.\n\nComandos:\n!estado → cómo está todo ahora\n!pausa → el piloto deja de subir y anunciar\n!sigue → vuelve a andar');
+        return;
+      }
+      if (!adm || adm.id !== jid) { await resp('❌ Primero manda !reporte desde el chat que va a recibir los avisos.'); return; }
+      if (orden === 'pausa') {
+        try { fs.writeFileSync(PAUSA_PILOTO, 'pausado por WhatsApp ' + new Date().toLocaleString('es-MX')); } catch (e) {}
+        await resp('⏸️ Piloto en pausa: no sube ni anuncia nada hasta que mandes !sigue.');
+        return;
+      }
+      if (orden === 'sigue') {
+        try { fs.unlinkSync(PAUSA_PILOTO); } catch (e) {}
+        await resp('▶️ Piloto andando otra vez.');
+        return;
+      }
+      let est = '';
+      try { est = fs.readFileSync(path.join('C:\\OTZAR', 'piloto_reporte.txt'), 'utf8').trim(); } catch (e) {}
+      await resp(est || '🤖 El robot está conectado, pero el piloto todavía no dejó reporte (¿está abierta su ventana?).');
+      return;
+    }
+  }
+
   // ===== NUBE DE TORA: solo privados que NO son chat directo =====
   // Todo va dentro de try/catch: si truena, el robot ni se entera.
   if (!esGrupo && !directo && !/^!otzar\s/i.test(textoDe(m))) {
@@ -1362,6 +1399,27 @@ setInterval(async () => {
   } catch (e) { log('ERROR comando: ' + (e.stack || e.message || e)); }
   ocupado = false;
 }, 5000);
+
+// === AVISOS AL ADMIN (oct/2026) ===
+// El piloto deja avisos en <robot>\avisos\*.txt (reporte de la mañana, algo que fallo) y el
+// robot los manda al chat que se registro con "!reporte". Sin chat registrado, esperan ahi.
+const AVISOS_DIR = path.join(__dirname, 'avisos');
+setInterval(async () => {
+  if (!listo || bloqueoSagrado(new Date())) return;   // en Shabat / Yom Tov esperan
+  let archivos = [];
+  try { archivos = fs.readdirSync(AVISOS_DIR).filter(f => f.endsWith('.txt')).sort(); } catch (e) { return; }
+  if (!archivos.length) return;
+  while (archivos.length > 20) { try { fs.unlinkSync(path.join(AVISOS_DIR, archivos.shift())); } catch (e) { break; } }
+  const destino = (leerRegistro()['admin:reporte'] || {}).id;
+  if (!destino) return;
+  for (const f of archivos.slice(0, 3)) {
+    const p = path.join(AVISOS_DIR, f);
+    let t = ''; try { t = fs.readFileSync(p, 'utf8').trim(); } catch (e) {}
+    try { if (t) await sock.sendMessage(destino, { text: t }); fs.unlinkSync(p); }
+    catch (e) { log('AVISO no enviado: ' + (e.message || e)); break; }
+    await new Promise(r => setTimeout(r, 2000));
+  }
+}, 30000);
 
 // ---------------- anuncios ----------------
 // Busca el link EXACTO del episodio en Spotify por su titulo.

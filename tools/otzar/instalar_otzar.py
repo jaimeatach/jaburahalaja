@@ -1438,11 +1438,78 @@ function bloqueoSagrado(ah) {
   {
     const _bq = bloqueoSagrado(new Date());
 """),
+    # (oct/2026) avisos del piloto al admin y comandos !reporte !estado !pausa !sigue
+    ("""// ---------------- anuncios ----------------
+// Busca el link EXACTO del episodio en Spotify por su titulo.
+""", """// === AVISOS AL ADMIN (oct/2026) ===
+// El piloto deja avisos en <robot>\\avisos\\*.txt (reporte de la mañana, algo que fallo) y el
+// robot los manda al chat que se registro con "!reporte". Sin chat registrado, esperan ahi.
+const AVISOS_DIR = path.join(__dirname, 'avisos');
+setInterval(async () => {
+  if (!listo || bloqueoSagrado(new Date())) return;   // en Shabat / Yom Tov esperan
+  let archivos = [];
+  try { archivos = fs.readdirSync(AVISOS_DIR).filter(f => f.endsWith('.txt')).sort(); } catch (e) { return; }
+  if (!archivos.length) return;
+  while (archivos.length > 20) { try { fs.unlinkSync(path.join(AVISOS_DIR, archivos.shift())); } catch (e) { break; } }
+  const destino = (leerRegistro()['admin:reporte'] || {}).id;
+  if (!destino) return;
+  for (const f of archivos.slice(0, 3)) {
+    const p = path.join(AVISOS_DIR, f);
+    let t = ''; try { t = fs.readFileSync(p, 'utf8').trim(); } catch (e) {}
+    try { if (t) await sock.sendMessage(destino, { text: t }); fs.unlinkSync(p); }
+    catch (e) { log('AVISO no enviado: ' + (e.message || e)); break; }
+    await new Promise(r => setTimeout(r, 2000));
+  }
+}, 30000);
+
+// ---------------- anuncios ----------------
+// Busca el link EXACTO del episodio en Spotify por su titulo.
+"""),
+    ("""  // ===== NUBE DE TORA: solo privados que NO son chat directo =====
+""", """  // === "!reporte" / "!estado" / "!pausa" / "!sigue" (oct/2026), en chat privado con el robot ===
+  // "!reporte" registra ESTE chat para el reporte de cada mañana y los avisos del piloto (el primero
+  // que lo manda; despues solo ese chat puede cambiarlo). Los demas comandos, solo desde ese chat.
+  if (!esGrupo) {
+    const _ma = /^!(reporte|estado|pausa|sigue)\\b/i.exec(String(textoDe(m) || '').trim());
+    if (_ma) {
+      const orden = _ma[1].toLowerCase();
+      const reg = leerRegistro();
+      const adm = reg['admin:reporte'];
+      const resp = async t => { try { await sock.sendMessage(jid, { text: t }); } catch (e) {} };
+      const PAUSA_PILOTO = path.join('C:\\\\OTZAR', 'PILOTO_PAUSA.txt');
+      if (orden === 'reporte') {
+        if (adm && adm.id && adm.id !== jid) { await resp('❌ Los reportes ya van a otro chat.'); return; }
+        reg['admin:reporte'] = { id: jid, nombre: 'reportes del piloto' };
+        guardarRegistro(reg);
+        log(`ADMIN: los reportes del piloto van a ${jid}`);
+        await resp('✅ Listo: aquí te llega cada mañana el reporte del robot y del piloto, y un aviso si algo falla.\\n\\nComandos:\\n!estado → cómo está todo ahora\\n!pausa → el piloto deja de subir y anunciar\\n!sigue → vuelve a andar');
+        return;
+      }
+      if (!adm || adm.id !== jid) { await resp('❌ Primero manda !reporte desde el chat que va a recibir los avisos.'); return; }
+      if (orden === 'pausa') {
+        try { fs.writeFileSync(PAUSA_PILOTO, 'pausado por WhatsApp ' + new Date().toLocaleString('es-MX')); } catch (e) {}
+        await resp('⏸️ Piloto en pausa: no sube ni anuncia nada hasta que mandes !sigue.');
+        return;
+      }
+      if (orden === 'sigue') {
+        try { fs.unlinkSync(PAUSA_PILOTO); } catch (e) {}
+        await resp('▶️ Piloto andando otra vez.');
+        return;
+      }
+      let est = '';
+      try { est = fs.readFileSync(path.join('C:\\\\OTZAR', 'piloto_reporte.txt'), 'utf8').trim(); } catch (e) {}
+      await resp(est || '🤖 El robot está conectado, pero el piloto todavía no dejó reporte (¿está abierta su ventana?).');
+      return;
+    }
+  }
+
+  // ===== NUBE DE TORA: solo privados que NO son chat directo =====
+"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema", "temas_cache.json", "la lista del repo al dia antes de contestar", "NUNCA en Shabat ni Yom Tov", "nunca fecha futura en el archivo", "function bloqueoSagrado")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema", "temas_cache.json", "la lista del repo al dia antes de contestar", "NUNCA en Shabat ni Yom Tov", "nunca fecha futura en el archivo", "function bloqueoSagrado", "AVISOS AL ADMIN", "!reporte\" / \"!estado")
 # הלכות מוקצה: la carpeta "שיעורים מוקצה" que comparte Saúl aparte (31 shiurim
 # numerados al FINAL del nombre). Mismos títulos y simanim que el catálogo de la app.
 MUKZE_CARPETA = r"G:\.shortcut-targets-by-id\1OcakbiF7zD5biDpWYElkB-DoIlidbTlT\שיעורים מוקצה"
@@ -3860,6 +3927,7 @@ def instalar_anunciar():
         bajar("otzar/plataformas.py", BASE / "jabura" / "plataformas.py")    # Apple/Amazon/Spotify por show (una vez al día)
         bajar("otzar/piloto.py", BASE / "jabura" / "piloto.py")   # (oct/2026) piloto automático
         bajar("otzar/PILOTO.bat", ROBOT / "PILOTO.bat")
+        bajar("otzar/mudanza.py", BASE / "jabura" / "mudanza.py")   # (oct/2026) pasar todo a la HP
         bajar("otzar/soundcloud_subir.py", BASE / "jabura" / "soundcloud_subir.py")   # SoundCloud automático (si hay llaves)   # "por qué no salió": python diagnostico.py <show>
     if ruta.exists() and "mantenimiento.py" in ruta.read_text(encoding="utf-8", errors="replace"):
         ok("ya llama al mantenimiento (jabura, shows de WhatsApp, espejo, sin atrasos)")

@@ -354,6 +354,17 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    (`bloqueoSagrado` en `anunciarInterno`, también para el botón y el vigilante). `PILOTO_PAUSA.txt`
    lo pausa; ajustes en `jabura\piloto.json`; log en `C:\OTZAR\piloto.log`. Necesita la PC
    prendida: para que funcione con la PC apagada hay que llevarlo a un servidor.
+14. Vigilancia y mudanza (oct/2026): el piloto vuelve a abrir el robot si `robot.lock` no
+   se refresca en 3 min (máx. una vez cada 10 min), escribe `C:\OTZAR\piloto_reporte.txt`
+   y deja avisos en `<robot>\avisos\*.txt` (reporte de las 7:00, disco < 5 GB, mantenimiento
+   o anuncio que falla 3 veces); el robot los manda al chat que se registró con "!reporte"
+   (privado; el primero que lo manda, después solo ese) y no los manda en Shabat/Yom Tov.
+   Desde ese chat: "!estado", "!pausa" (crea `PILOTO_PAUSA.txt`), "!sigue". `PILOTO.bat` se
+   reabre solo si el piloto se cae. `tools/otzar/mudanza.py empacar|desempacar|revisar` pasa
+   `C:\robotwhats` (con `sesion_baileys`) y `C:\OTZAR` a la HP que queda prendida: copia sin
+   borrar, inventario de Node/Python/ffmpeg/pip, instala lo que falte con winget/pip, pone
+   `OTZAR_inicio.cmd` en la carpeta Inicio de Windows (robot y piloto al prender) y powercfg
+   (sin suspender con corriente, tapa = nada, CPU 85% para menos calor).
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre
