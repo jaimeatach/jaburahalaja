@@ -1,0 +1,13 @@
+{
+ "nota": "Encabezado del show igual al que tenía en Spotify for Creators (foto SIN tapar; la del feed salió tapada por el filtro de la PC). La foto va en base64 para que el filtro no la toque.",
+ "title": "Harav Yosef Tawil Shlit”a",
+ "description": "Shiurim Rab Yosi Tawil",
+ "author": "otzar hatorah",
+ "categoria": [
+  "Religion & Spirituality",
+  "Judaism"
+ ],
+ "portada_b64": "tawil_portada.b64",
+ "portada_sha256": "868696e34fbb6bd83799c891e0c5b50c19971c3654e0ea7665d30f21812b0425",
+ "portada_origen": "https://d3t3ozftmdmh3i.cloudfront.net/staging/podcast_uploaded_nologo/46727907/46727907-1789084825548-d607dd975d0e1.jpg"
+}

@@ -316,6 +316,15 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    show; `mantenimiento.py` (`ids_spotify`) los vuelve a poner si un feed los pierde.
    Mismo guid = mismo episodio para Spotify: conserva reproducciones y horas.
    No hacer el redirect hasta que diga "N de N episodios con su MISMO ID".
+   Encabezado igual al de Spotify (paso [50], `CANALES`): `tools/otzar/canales/tawil.json`
+   (nombre "Harav Yosef Tawil Shlit”a", descripción "Shiurim Rab Yosi Tawil", autor
+   "otzar hatorah", Religion & Spirituality › Judaism) + la foto ORIGINAL en base64
+   (`tawil_portada.b64`, con sha256): la portada que bajó la PC salió con la cara tapada
+   (filtro Techloq), así que nunca se baja como imagen en esa PC. Se sube con nombre
+   fechado y queda en `config.json` → `canal`; `mantenimiento.py` (`canal_feed`) la vuelve a
+   poner en el feed en cada corrida. `revisar_spotify.py <show>` dice si el redirect quedó
+   (el RSS de anchor tiene que llevar a nuestro feed) y qué episodios le faltan a Spotify;
+   el 18/10/2026 el redirect de Tawil NO estaba hecho (Spotify seguía en #26).
 11. Mekorot y títulos de la jabura: con `guardar_documentos` en `escuchar.jabura`
    (paso [46], siempre) el robot guarda los PDF/Word del grupo como
    "מקורות · nombre.pdf" en la carpeta del siman (no se anuncian); el publicador

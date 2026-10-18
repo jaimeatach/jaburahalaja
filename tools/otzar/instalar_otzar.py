@@ -4707,6 +4707,67 @@ def pausar_anuncio():
             print("   → reinicia el robot (cierra su ventana y abre ROBOT_WHATSAPP.bat)")
 
 
+# ── 50. Encabezado del show igual al de Spotify (nombre, descripción, autor, foto) ──
+#   tools/otzar/canales/<show>.json + la foto ORIGINAL en base64 (.b64): así el filtro de
+#   la PC no la "tapa" (la portada de Tawil salió con la cara en negro). Se sube al repo del
+#   show con nombre fechado (Spotify solo vuelve a bajar la foto si cambia la URL) y queda en
+#   config.json → "canal"; mantenimiento.py (canal_feed) lo vuelve a poner en el feed siempre.
+CANALES = ["tawil"]
+
+
+def canales_shows():
+    import hashlib
+    for show in CANALES:
+        d = BASE / show
+        if not (d / "config.json").exists():
+            continue
+        try:
+            datos = json.loads(bajar_texto(f"otzar/canales/{show}.json"))
+        except Exception as ex:                             # noqa: BLE001
+            aviso(f"{show}: no pude bajar canales/{show}.json ({ex})")
+            continue
+        c = json.loads((d / "config.json").read_text(encoding="utf-8"))
+        previo = c.get("canal") or {}
+        if previo.get("portada_sha256") == datos.get("portada_sha256") and all(
+                previo.get(k) == datos.get(k) for k in ("title", "description", "author", "categoria")):
+            continue
+        paso(50, f"{show}: nombre, descripción y foto iguales a los de Spotify")
+        canal = {k: datos.get(k) for k in ("title", "description", "author", "categoria")}
+        canal["imagen"] = previo.get("imagen", "")
+        canal["portada_sha256"] = previo.get("portada_sha256", "")
+        if previo.get("portada_sha256") != datos.get("portada_sha256"):
+            try:
+                img = base64.b64decode(bajar_texto(f"otzar/canales/{datos['portada_b64']}"))
+            except Exception as ex:                         # noqa: BLE001
+                aviso(f"{show}: no pude bajar la foto ({ex})")
+                continue
+            if hashlib.sha256(img).hexdigest() != datos.get("portada_sha256"):
+                aviso(f"{show}: la foto llegó alterada (¿filtro?); no la subo")
+                continue
+            cab = _cab_github(d)
+            if not cab:
+                aviso("falta github_token.txt")
+                continue
+            base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}"
+            pages = f"https://{c.get('github_user', 'rabmeireliyahu')}.github.io/{c.get('github_repo', show)}"
+            nombre = "portada_" + time.strftime("%Y%m%d%H%M") + ".jpg"
+            if not VER:
+                try:
+                    _gh_put(base, cab, nombre, img, "portada original (sin tapar)")
+                except Exception as ex:                     # noqa: BLE001
+                    aviso(f"{show}: no pude subir la foto ({ex})")
+                    continue
+            canal["imagen"] = f"{pages}/{nombre}"
+            canal["portada_sha256"] = datos.get("portada_sha256")
+            ok(f"foto original (3000×3000, sin tapar) subida como {nombre}")
+        c["canal"] = canal
+        respaldar(d / "config.json")
+        if not VER:
+            escribir(d / "config.json", json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+        ok(f"nombre: {canal['title']} · descripción: {canal['description']} · autor: {canal['author']}")
+        ok("el próximo ANUNCIAR (o el piloto) lo pone en el feed; Spotify lo toma al leerlo")
+
+
 def main():
     print("=== Instalador Otzar · jabura + nacach ===")
     print("Base:", BASE, "(prueba en seco)" if VER else "")
@@ -4757,6 +4818,7 @@ def main():
     rescatar()
     tawil()
     tawil_calendario()
+    canales_shows()
     frenar()
     reanudar()
     nuevo_host()
