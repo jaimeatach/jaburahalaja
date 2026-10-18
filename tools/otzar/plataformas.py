@@ -2,7 +2,7 @@
 """Dónde está cada show: grupos de WhatsApp, Spotify, Apple Podcasts, Amazon, SoundCloud.
 
     python plataformas.py            # revisa todo y lo muestra
-    python plataformas.py --rapido   # lo mismo, pero si ya se revisó hace menos de 20 h no hace nada
+    python plataformas.py --rapido   # lo mismo, pero si ya se revisó hace menos de 3 h no hace nada
                                      # (así lo corre mantenimiento.py en cada ANUNCIAR)
 
 Apple Podcasts se revisa solo (API pública de iTunes, sin llaves): se busca el show
@@ -81,7 +81,9 @@ def main():
     rapido = "--rapido" in sys.argv
     destino = ROBOT / "plataformas.json"
     previo = leer_json(destino)
-    if rapido and time.time() - float(previo.get("_revisado", 0) or 0) < 20 * 3600:
+    # (oct/2026) cada 3 h (antes 20): en modo rápido solo pregunta por los shows que AÚN no
+    # tiene ubicados en Apple, así un show recién aprobado sale en el siguiente ANUNCIAR
+    if rapido and time.time() - float(previo.get("_revisado", 0) or 0) < 3 * 3600:
         return 0
     cfgw = leer_json(ROBOT / "config_whatsapp.json")
     reg = leer_json(ROBOT / "grupos_registrados.json")

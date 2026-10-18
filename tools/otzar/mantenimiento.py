@@ -607,7 +607,7 @@ def soundcloud():
 
 
 def plataformas():
-    """Una vez al día: en qué plataformas está cada show (Apple Podcasts por la API
+    """Cada 3 h (solo pregunta por los que faltan): en qué plataformas está cada show (Apple Podcasts por la API
     pública de iTunes). Deja C:\\robotwhats\\plataformas.json para que el robot ponga
     el link del episodio en Apple en cada anuncio."""
     script = BASE / "jabura" / "plataformas.py"

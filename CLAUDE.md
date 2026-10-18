@@ -259,7 +259,7 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    Plataformas: cada anuncio lleva, además de Spotify, el link del episodio en
    Apple Podcasts (API pública de iTunes por `apple_id`; si el episodio aún no
    aparece, el del show) y el del show en Amazon Music / SoundCloud.
-   `tools/otzar/plataformas.py` (lo corre `mantenimiento.py` una vez al día;
+   `tools/otzar/plataformas.py` (lo corre `mantenimiento.py` cada 3 h, solo pregunta por los que faltan;
    `--revisar` en el instalador da el reporte completo) busca cada show en Apple,
    dice cuál no tiene grupo o lleva >14 días sin nada y deja `plataformas.json`.
    Amazon y SoundCloud no tienen API: `--amazon=show:LINK`, `--soundcloud=show:LINK`.
