@@ -759,7 +759,9 @@ async function bloquePlataformas(show, titulo) {
 function conPlataformas(texto, lista) {
   if (!lista || !lista.length) return texto;
   const extra = lista.map(([n, l]) => `${n}\n${l}`).join('\n');
-  const i = texto.lastIndexOf('\n\n📢');
+  // (oct/2026) orden: Spotify, Apple (y demas), y AL FINAL el grupo de WhatsApp
+  let i = texto.search(/\nWhats[Aa]pp\n/);
+  if (i < 0) i = texto.lastIndexOf('\n\n📢');
   return i >= 0 ? texto.slice(0, i) + '\n' + extra + texto.slice(i) : texto + '\n' + extra;
 }
 // "plantilla" en anunciar.<show>: lista de bloques con {fecha_hebrea} {fecha} {titulo}

@@ -1550,11 +1550,19 @@ async function acortarLink(u) {
 }
 function appleCorto(u) {
 """),
+    # (oct/2026) orden de los links: Spotify, Apple, y al final WhatsApp
+    ("""  const i = texto.lastIndexOf('\\n\\n📢');
+  return i >= 0 ? texto.slice(0, i) + '\\n' + extra + texto.slice(i) : texto + '\\n' + extra;
+""", """  // (oct/2026) orden: Spotify, Apple (y demas), y AL FINAL el grupo de WhatsApp
+  let i = texto.search(/\\nWhats[Aa]pp\\n/);
+  if (i < 0) i = texto.lastIndexOf('\\n\\n📢');
+  return i >= 0 ? texto.slice(0, i) + '\\n' + extra + texto.slice(i) : texto + '\\n' + extra;
+"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema", "temas_cache.json", "la lista del repo al dia antes de contestar", "NUNCA en Shabat ni Yom Tov", "nunca fecha futura en el archivo", "function bloqueoSagrado", "AVISOS AL ADMIN", "!reporte\" / \"!estado", "function appleCorto", "async function acortarLink")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema", "temas_cache.json", "la lista del repo al dia antes de contestar", "NUNCA en Shabat ni Yom Tov", "nunca fecha futura en el archivo", "function bloqueoSagrado", "AVISOS AL ADMIN", "!reporte\" / \"!estado", "function appleCorto", "async function acortarLink", "AL FINAL el grupo de WhatsApp")
 # הלכות מוקצה: la carpeta "שיעורים מוקצה" que comparte Saúl aparte (31 shiurim
 # numerados al FINAL del nombre). Mismos títulos y simanim que el catálogo de la app.
 MUKZE_CARPETA = r"G:\.shortcut-targets-by-id\1OcakbiF7zD5biDpWYElkB-DoIlidbTlT\שיעורים מוקצה"
@@ -4813,6 +4821,50 @@ def canales_shows():
         ok("el próximo ANUNCIAR (o el piloto) lo pone en el feed; Spotify lo toma al leerlo")
 
 
+# ── 51. --quitar-del-robot=show: que el robot ya no sepa nada de ese show (oct/2026) ──
+#   Lo saca de config_whatsapp.json (anunciar, escuchar, escuchar_directo) y de
+#   grupos_registrados.json, con respaldo. No borra archivos, feed ni carpeta del show.
+def quitar_del_robot():
+    shows = _arg_lista("quitar-del-robot")
+    if not shows or not ROBOT:
+        return
+    paso(51, "Quitar del robot: " + ", ".join(shows))
+    rw = ROBOT / "config_whatsapp.json"
+    cfg = json.loads(rw.read_text(encoding="utf-8"))
+    rg = ROBOT / "grupos_registrados.json"
+    try:
+        reg = json.loads(rg.read_text(encoding="utf-8"))
+    except Exception:
+        reg = {}
+    cambio_cfg = cambio_reg = False
+    for show in shows:
+        quitado = []
+        for sec in ("anunciar", "escuchar"):
+            if show in (cfg.get(sec) or {}):
+                cfg[sec].pop(show)
+                quitado.append(sec)
+        dm = cfg.get("escuchar_directo") or []
+        resto = [e for e in dm if not (isinstance(e, dict) and e.get("show") == show)]
+        if len(resto) != len(dm):
+            cfg["escuchar_directo"] = resto
+            quitado.append("escuchar_directo")
+        for k in (show, "escucha:" + show, "dm:" + show):
+            if k in reg:
+                reg.pop(k)
+                cambio_reg = True
+                quitado.append(k)
+        cambio_cfg = cambio_cfg or bool(quitado)
+        ok(f"{show}: quitado de {', '.join(quitado)}" if quitado else f"{show}: el robot ya no lo tenía")
+    if not VER:
+        if cambio_cfg:
+            respaldar(rw)
+            escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+        if cambio_reg:
+            respaldar(rg)
+            escribir(rg, json.dumps(reg, ensure_ascii=False, indent=2) + "\n")
+    print("   → reinicia el robot. Los archivos, el feed y la carpeta del show no se tocan.")
+
+
 def main():
     print("=== Instalador Otzar · jabura + nacach ===")
     print("Base:", BASE, "(prueba en seco)" if VER else "")
@@ -4868,6 +4920,7 @@ def main():
     reanudar()
     nuevo_host()
     pausar_anuncio()
+    quitar_del_robot()
     guids_originales_flag()
     plataformas_links()
     revisar_todo()

@@ -355,6 +355,11 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    `--pausar=show` / `--despausar=show` (paso [49]) solo pausan el ANUNCIO del robot
    (`anunciar.<show>.pausado`), sin tocar feeds ni bots. Mishlei quedó en pausa el
    13/10/2026 (la gente se saturó; luego viene otro curso).
+   `--quitar-del-robot=show` (paso [51]) lo saca de `config_whatsapp.json` (anunciar,
+   escuchar, escuchar_directo) y de `grupos_registrados.json`, con respaldo, sin tocar
+   archivos ni feed: así salió `ravyitzchakyosef` (18/10/2026). En los anuncios armados con
+   `armarMensaje`, `conPlataformas` mete Apple/Amazon/SoundCloud DESPUÉS de Spotify y ANTES
+   del grupo de WhatsApp (orden pedido: Spotify, Apple, WhatsApp).
 13. Piloto automático (oct/2026; el usuario pidió dejar de apretar botones):
    `tools/otzar/piloto.py` (en `C:\OTZAR\jabura\`, se abre con `PILOTO.bat` junto al robot).
    Cada 5 min: si el robot guardó un audio nuevo en cualquier carpeta fuente, corre
