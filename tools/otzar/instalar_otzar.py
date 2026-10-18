@@ -1521,11 +1521,40 @@ function appleCorto(u) {
   return m ? `https://podcasts.apple.com/podcast/${m[1]}${m[2] || ''}` : u;
 }
 """),
+    # (oct/2026) link de Apple muy corto con is.gd (si falla, el normal)
+    ("""  const apple = await linkApple(show, titulo);
+  if (apple) out.push(['Apple Podcasts', apple]);
+""", """  const apple = await acortarLink(await linkApple(show, titulo));
+  if (apple) out.push(['Apple Podcasts', apple]);
+"""),
+    ("""function appleCorto(u) {
+""", """// (oct/2026) link MUY corto con is.gd (sin publicidad ni rastreo, lleva directo): https://is.gd/Ab3xYz.
+// Se guardan en links_cortos.json para no pedir dos veces; si is.gd falla, va el link normal.
+// "acortar_links": false en el config lo apaga.
+let _cortos = null;
+async function acortarLink(u) {
+  if (!u || CFG.acortar_links === false || !/^https:\\/\\/podcasts\\.apple\\.com\\//.test(u)) return u;
+  const f = path.join(__dirname, 'links_cortos.json');
+  if (!_cortos) { try { _cortos = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { _cortos = {}; } }
+  if (_cortos[u]) return _cortos[u];
+  try {
+    const r = String(await Promise.race([fetchTexto('https://is.gd/create.php?format=simple&url=' + encodeURIComponent(u)),
+      new Promise((_, no) => setTimeout(() => no(new Error('tardo')), 8000))])).trim();
+    if (/^https:\\/\\/is\\.gd\\/\\w+$/.test(r)) {
+      _cortos[u] = r;
+      try { fs.writeFileSync(f, JSON.stringify(_cortos, null, 1)); } catch (e) {}
+      return r;
+    }
+  } catch (e) {}
+  return u;
+}
+function appleCorto(u) {
+"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema", "temas_cache.json", "la lista del repo al dia antes de contestar", "NUNCA en Shabat ni Yom Tov", "nunca fecha futura en el archivo", "function bloqueoSagrado", "AVISOS AL ADMIN", "!reporte\" / \"!estado", "function appleCorto")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema", "temas_cache.json", "la lista del repo al dia antes de contestar", "NUNCA en Shabat ni Yom Tov", "nunca fecha futura en el archivo", "function bloqueoSagrado", "AVISOS AL ADMIN", "!reporte\" / \"!estado", "function appleCorto", "async function acortarLink")
 # הלכות מוקצה: la carpeta "שיעורים מוקצה" que comparte Saúl aparte (31 shiurim
 # numerados al FINAL del nombre). Mismos títulos y simanim que el catálogo de la app.
 MUKZE_CARPETA = r"G:\.shortcut-targets-by-id\1OcakbiF7zD5biDpWYElkB-DoIlidbTlT\שיעורים מוקצה"

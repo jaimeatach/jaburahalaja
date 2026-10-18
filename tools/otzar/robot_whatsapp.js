@@ -716,6 +716,26 @@ async function linkApple(show, titulo) {
   } catch (e) {}
   return appleCorto(pl.apple);   // el episodio aun no aparece en Apple: el link del show
 }
+// (oct/2026) link MUY corto con is.gd (sin publicidad ni rastreo, lleva directo): https://is.gd/Ab3xYz.
+// Se guardan en links_cortos.json para no pedir dos veces; si is.gd falla, va el link normal.
+// "acortar_links": false en el config lo apaga.
+let _cortos = null;
+async function acortarLink(u) {
+  if (!u || CFG.acortar_links === false || !/^https:\/\/podcasts\.apple\.com\//.test(u)) return u;
+  const f = path.join(__dirname, 'links_cortos.json');
+  if (!_cortos) { try { _cortos = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { _cortos = {}; } }
+  if (_cortos[u]) return _cortos[u];
+  try {
+    const r = String(await Promise.race([fetchTexto('https://is.gd/create.php?format=simple&url=' + encodeURIComponent(u)),
+      new Promise((_, no) => setTimeout(() => no(new Error('tardo')), 8000))])).trim();
+    if (/^https:\/\/is\.gd\/\w+$/.test(r)) {
+      _cortos[u] = r;
+      try { fs.writeFileSync(f, JSON.stringify(_cortos, null, 1)); } catch (e) {}
+      return r;
+    }
+  } catch (e) {}
+  return u;
+}
 function appleCorto(u) {
   const m = String(u || '').match(/^https:\/\/podcasts\.apple\.com\/(?:[a-z]{2}\/)?podcast\/(?:[^/?]+\/)?(id\d+)(\?i=\d+)?/);
   return m ? `https://podcasts.apple.com/podcast/${m[1]}${m[2] || ''}` : u;
@@ -723,7 +743,7 @@ function appleCorto(u) {
 async function bloquePlataformas(show, titulo) {
   const pl = _plataformasDe(show);
   const out = [];
-  const apple = await linkApple(show, titulo);
+  const apple = await acortarLink(await linkApple(show, titulo));
   if (apple) out.push(['Apple Podcasts', apple]);
   if (pl.amazon) out.push(['Amazon Music', pl.amazon]);
   // (oct/2026) el link del EPISODIO en SoundCloud (lo deja jabura\\soundcloud_subir.py); si no, el del perfil

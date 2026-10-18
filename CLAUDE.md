@@ -270,6 +270,10 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    cada ANUNCIAR: la primera vez memoriza lo existente, luego sube lo nuevo (4 por vez)
    y deja `soundcloud_episodios.json` en el robot, que pone el link del episodio.
    Guía para el usuario: `tools/otzar/GUIA_PLATAFORMAS.pdf`.
+   Link de Apple corto (oct/2026): `appleCorto` quita el nombre del episodio
+   (`podcasts.apple.com/podcast/id…?i=…`) y `acortarLink` lo pasa por is.gd (sin publicidad;
+   TinyURL NO: mete un redirect de viglink); caché en `links_cortos.json`, si is.gd falla va el
+   normal; `"acortar_links": false` en el config lo apaga. Spotify ya va en su forma mínima.
    `spotify_espera_horas` (`--spotify-espera=show:H`): si Spotify no toma el
    episodio en H horas sale con el link del show (TorahAnytime se trababa).
    `plantilla` en anunciar.<show>: bloques con {fecha_hebrea} {fecha} {titulo}
