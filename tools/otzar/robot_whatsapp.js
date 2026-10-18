@@ -710,9 +710,15 @@ async function linkApple(show, titulo) {
     const k = normTitulo(titulo);
     const ep = c.lista.find(r => normTitulo(r.trackName) === k) ||
       c.lista.find(r => { const n = normTitulo(r.trackName); return n && k && Math.min(n.length, k.length) > 12 && (n.includes(k) || k.includes(n)); });
-    if (ep && ep.trackViewUrl) return ep.trackViewUrl.replace(/&uo=\d+$/, '');
+    // (oct/2026) link corto: sin el nombre del episodio adentro (Apple lo abre igual)
+    if (ep && ep.collectionId && ep.trackId) return `https://podcasts.apple.com/podcast/id${ep.collectionId}?i=${ep.trackId}`;
+    if (ep && ep.trackViewUrl) return appleCorto(ep.trackViewUrl.replace(/&uo=\d+$/, ''));
   } catch (e) {}
-  return pl.apple;   // el episodio aun no aparece en Apple: el link del show
+  return appleCorto(pl.apple);   // el episodio aun no aparece en Apple: el link del show
+}
+function appleCorto(u) {
+  const m = String(u || '').match(/^https:\/\/podcasts\.apple\.com\/(?:[a-z]{2}\/)?podcast\/(?:[^/?]+\/)?(id\d+)(\?i=\d+)?/);
+  return m ? `https://podcasts.apple.com/podcast/${m[1]}${m[2] || ''}` : u;
 }
 async function bloquePlataformas(show, titulo) {
   const pl = _plataformasDe(show);
