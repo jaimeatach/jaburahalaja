@@ -4865,6 +4865,52 @@ def quitar_del_robot():
     print("   → reinicia el robot. Los archivos, el feed y la carpeta del show no se tocan.")
 
 
+# ── 52. Amud Yomi: que el mensaje diga para QUÉ DÍA es (oct/2026) ──────────────
+#   daf_diario.js (del usuario, en el robot) arma el amud de MAÑANA ("un día adelantado")
+#   y el mensaje no lo decía: la gente creía que era el de hoy. Se le pone arriba
+#   "📅 Mañana · Tomorrow · מחר" o "📅 Hoy · Today · היום" según la fecha del renglón.
+#   Con respaldo; si el archivo cambió y no encuentra dónde, no toca nada.
+def amud_cuando():
+    if not ROBOT:
+        return
+    f = ROBOT / "daf_diario.js"
+    if not f.exists():
+        return
+    crudo = f.read_bytes().decode("utf-8")
+    if "_cuando" in crudo:
+        return
+    paso(52, "Amud Yomi: el mensaje dice si es el de Mañana o el de Hoy")
+    salto = "\r\n" if "\r\n" in crudo else "\n"
+    t = crudo.replace("\r\n", "\n")
+    a1 = "  const [fecha, heb, limud, jazarot] = renglon;\n"
+    a2 = "      texto: `📖 *סנהדרין*\\n${heb}\\n\\n` +"
+    a3 = "  let texto = `📖 *סנהדרין ${hebAmud(limud)}*\\n` +"
+    if not all(t.count(x) == 1 for x in (a1, a2, a3)):
+        aviso("daf_diario.js no es como esperaba; no lo toco (mándame el archivo)")
+        return
+    t = t.replace(a1, a1 + "  // (oct/2026) para que no confunda: el de mañana dice Mañana, el de hoy dice Hoy\n"
+                  "  const _h = hoyISO();\n"
+                  "  const _cuando = fecha === _h ? '📅 *Hoy · Today · היום*\\n'\n"
+                  "    : (fecha > _h ? '📅 *Mañana · Tomorrow · מחר*\\n' : '');\n", 1)
+    t = t.replace(a2, "      texto: _cuando + `📖 *סנהדרין*\\n${heb}\\n\\n` +", 1)
+    t = t.replace(a3, "  let texto = _cuando + `📖 *סנהדרין ${hebAmud(limud)}*\\n` +", 1)
+    respaldar(f)
+    if not VER:
+        escribir(f, t.replace("\n", salto))
+        r = subprocess.run(["node", "--check", str(f)], capture_output=True, text=True)
+        if r.returncode != 0:
+            f.write_bytes(crudo.encode("utf-8"))
+            aviso("node --check falló en daf_diario.js; lo dejé como estaba: " + (r.stderr or "")[:200])
+            return
+    ok("el Amud Yomi sale con '📅 Mañana · Tomorrow · מחר' (o 'Hoy · Today · היום' si es el de hoy)")
+    otro = ROBOT / "enviar_daf.js"
+    if otro.exists():
+        lineas = [f"   {i + 1}: {l.strip()[:110]}" for i, l in enumerate(otro.read_text(encoding="utf-8", errors="replace").splitlines())
+                  if re.search(r"\bhoy\b|today|היום|mañana|manana|tomorrow|מחר", l, re.I)]
+        print("   enviar_daf.js, líneas que mencionan el día (mándamelas si alguna dice 'hoy'):")
+        print("\n".join(lineas[:20]) if lineas else "   (ninguna: no hay choque)")
+
+
 def main():
     print("=== Instalador Otzar · jabura + nacach ===")
     print("Base:", BASE, "(prueba en seco)" if VER else "")
@@ -4921,6 +4967,7 @@ def main():
     nuevo_host()
     pausar_anuncio()
     quitar_del_robot()
+    amud_cuando()
     guids_originales_flag()
     plataformas_links()
     revisar_todo()

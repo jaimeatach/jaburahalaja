@@ -360,6 +360,9 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    archivos ni feed: así salió `ravyitzchakyosef` (18/10/2026). En los anuncios armados con
    `armarMensaje`, `conPlataformas` mete Apple/Amazon/SoundCloud DESPUÉS de Spotify y ANTES
    del grupo de WhatsApp (orden pedido: Spotify, Apple, WhatsApp).
+   Amud Yomi (paso [52], siempre): `daf_diario.js` del usuario manda el amud de MAÑANA;
+   `amud_cuando` le pone arriba "📅 Mañana · Tomorrow · מחר" (o "Hoy · Today · היום" si la
+   fecha del renglón es hoy). Con respaldo y `node --check`; si el archivo cambió, no lo toca.
 13. Piloto automático (oct/2026; el usuario pidió dejar de apretar botones):
    `tools/otzar/piloto.py` (en `C:\OTZAR\jabura\`, se abre con `PILOTO.bat` junto al robot).
    Cada 5 min: si el robot guardó un audio nuevo en cualquier carpeta fuente, corre
