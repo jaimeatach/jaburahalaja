@@ -64,16 +64,28 @@ def norm(t):
 
 def buscar_apple(titulo, feeds):
     """(collectionId, url del show) si el show está en Apple Podcasts."""
-    q = urllib.parse.quote(titulo[:80])
-    j = json.loads(bajar(f"https://itunes.apple.com/search?media=podcast&entity=podcast&limit=15&term={q}"))
     validos = {plano(f) for f in feeds if f}
-    res = j.get("results") or []
-    for r in res:
-        if plano(r.get("feedUrl")) in validos:
-            return str(r.get("collectionId")), (r.get("collectionViewUrl") or "").split("?")[0]
-    for r in res:
-        if norm(r.get("collectionName")) == norm(titulo):
-            return str(r.get("collectionId")), (r.get("collectionViewUrl") or "").split("?")[0]
+    # (oct/2026) "Harav Yosef Tawil Shlit”a" no salía: las comillas raras rompen la búsqueda de
+    # Apple. Se prueba el título tal cual, sin comillas y con sus primeras palabras; solo se acepta
+    # un resultado con NUESTRO feed o con el mismo nombre, así que probar más no trae otro show.
+    limpio = re.sub(r"[\"”“״׳'`’]", "", titulo).strip()
+    palabras = [w for w in re.split(r"\s+", limpio) if w]
+    terminos = []
+    for t in (titulo[:80], limpio[:80], " ".join(palabras[:3]), " ".join(palabras[1:3])):
+        if t and t not in terminos:
+            terminos.append(t)
+    for i, t in enumerate(terminos):
+        if i:
+            time.sleep(3)                          # Apple: máximo ~20 consultas por minuto
+        q = urllib.parse.quote(t)
+        j = json.loads(bajar(f"https://itunes.apple.com/search?media=podcast&entity=podcast&limit=25&term={q}"))
+        res = j.get("results") or []
+        for r in res:
+            if plano(r.get("feedUrl")) in validos:
+                return str(r.get("collectionId")), (r.get("collectionViewUrl") or "").split("?")[0]
+        for r in res:
+            if norm(r.get("collectionName")) in (norm(titulo), norm(limpio)):
+                return str(r.get("collectionId")), (r.get("collectionViewUrl") or "").split("?")[0]
     return "", ""
 
 
