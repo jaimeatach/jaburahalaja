@@ -55,7 +55,16 @@ def feeds_de(show, datos, cfg_show):
 
 
 def plano(u):
-    return re.sub(r"^https?://|/+$", "", str(u or "").strip().lower())
+    # (oct/2026) Apple guardó el de dafyomi como ".../dafyomi/feed", sin ".xml": se comparan igual
+    return re.sub(r"(/feed)\.xml$", r"\1", re.sub(r"^https?://|/+$", "", str(u or "").strip().lower()))
+
+
+# Shows que ya sabemos que están en Apple (oct/2026): si la búsqueda de Apple no los trae
+# (pasa con los recién aprobados), se usa este id. El de anunciar.<show>.apple manda sobre todo.
+APPLE_FIJOS = {
+    "tawil": "https://podcasts.apple.com/us/podcast/harav-yosef-tawil-shlit-a/id6824121409",
+    "dafyomi": "https://podcasts.apple.com/us/podcast/daf-yomi-espa%C3%B1ol-jabrutouch/id6824132852",
+}
 
 
 def norm(t):
@@ -136,6 +145,9 @@ def main():
                 apple_id, apple_url = prev.get("apple_id", ""), prev.get("apple", "")
         else:
             apple_id, apple_url = prev.get("apple_id", ""), prev.get("apple", "")
+        if not apple_id and APPLE_FIJOS.get(show):
+            apple_url = APPLE_FIJOS[show]
+            apple_id = re.search(r"id(\d{5,})", apple_url).group(1)
         if datos.get("apple"):
             apple_url = datos["apple"]
             apple_id = (re.search(r"id(\d{5,})", apple_url) or [None, apple_id])[1]
