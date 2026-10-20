@@ -3982,6 +3982,7 @@ def instalar_anunciar():
         bajar("otzar/PILOTO.bat", ROBOT / "PILOTO.bat")
         bajar("otzar/mudanza.py", BASE / "jabura" / "mudanza.py")   # (oct/2026) pasar todo a la HP
         bajar("otzar/revisar_spotify.py", BASE / "jabura" / "revisar_spotify.py")   # ¿por qué no se ve en Spotify?
+        bajar("otzar/espacio.py", BASE / "jabura" / "espacio.py")   # (oct/2026) audios a salvo en archive.org salen de la PC
         bajar("otzar/soundcloud_subir.py", BASE / "jabura" / "soundcloud_subir.py")   # SoundCloud automático (si hay llaves)   # "por qué no salió": python diagnostico.py <show>
     if ruta.exists() and "mantenimiento.py" in ruta.read_text(encoding="utf-8", errors="replace"):
         ok("ya llama al mantenimiento (jabura, shows de WhatsApp, espejo, sin atrasos)")

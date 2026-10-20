@@ -619,6 +619,22 @@ def plataformas():
         log(f"plataformas: {ex}")
 
 
+def limpieza():
+    """(oct/2026) Una vez al día, si el usuario ya aprobó la limpieza (espacio.py limpiar --si
+    deja limpieza_auto.json): aparta de la PC los audios que ya están en archive.org (mismo md5)
+    y en el feed. Quedan 14 días en C:\\OTZAR\\_papelera y luego se borran solos."""
+    marca, script = BASE / "limpieza_auto.json", BASE / "jabura" / "espacio.py"
+    if not (marca.exists() and script.exists()):
+        return
+    if time.time() - float(leer_json(marca, {}).get("ultima", 0) or 0) < 20 * 3600:
+        return
+    log("--- limpieza: audios ya a salvo en archive.org salen de la PC ---")
+    try:
+        subprocess.run([sys.executable, str(script), "limpiar", "--si", "--auto"], timeout=3600)
+    except Exception as ex:
+        log(f"limpieza: {ex}")
+
+
 def main():
     cfgw = leer_json(ROBOT / "config_whatsapp.json")
     if not cfgw:
@@ -656,6 +672,7 @@ def main():
     plataformas()
     fiestas_pasadas(cfgw)
     sin_atrasos(cfgw)
+    limpieza()
     log("mantenimiento listo; ahora el robot anuncia.")
     return 0
 

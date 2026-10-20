@@ -386,6 +386,20 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    borrar, inventario de Node/Python/ffmpeg/pip, instala lo que falte con winget/pip, pone
    `OTZAR_inicio.cmd` en la carpeta Inicio de Windows (robot y piloto al prender) y powercfg
    (sin suspender con corriente, tapa = nada, CPU 85% para menos calor).
+15. Audios fuera de la PC (oct/2026; el usuario no quiere guardarlos, "no quiero perder shiurim"):
+   `tools/otzar/espacio.py` (en `C:\OTZAR\jabura\`). Sin argumentos: cuánto ocupa cada show,
+   cuántos ya están en archive.org con el mismo tamaño, y manda al repo (`tools/otzar/bots/`)
+   cada `podcast_bot.py` distinto (revisando que no lleve llaves) y `espacio_reporte.txt`.
+   El 20/10/2026: 70 GB en la PC, 66 GB ya en archive.org, disco con 703 GB libres.
+   `limpiar` lista; `limpiar --si` aparta a `C:\OTZAR\_papelera\<fecha>` (14 días y se borra)
+   solo lo que tiene en archive.org el MISMO md5 y ya está en el feed (shows frenados: sin
+   feed), y los originales de WhatsApp ya en `procesados_whatsapp.txt` con su mp3 en archive.org;
+   deja los de los últimos 7 días y los 3 más nuevos de cada carpeta; antes pone
+   `solo_agregar: true` (sin eso `generar_feed` rearma el feed con la carpeta y perdería
+   episodios). Los bots saben qué bajaron por `ya_descargados.txt`/`procesados_whatsapp.txt`
+   (no por los mp3) y el robot baja el audio del anuncio de archive.org, así que no dependen
+   de la carpeta. Nunca la jabura (G:, Drive compartido de Saúl) ni nada fuera de C:\OTZAR.
+   Con `limpieza_auto.json` `mantenimiento.py` (`limpieza`) lo corre una vez al día.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre
