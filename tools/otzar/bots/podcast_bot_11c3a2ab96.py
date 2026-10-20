@@ -1,0 +1,608 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+PODCAST BOT UNIVERSAL - sirve para cualquier show
+=================================================
+Lee la configuracion de config.json (en la misma carpeta).
+Cada show vive en su propia carpeta con su propio config.json.
+
+COMANDOS:
+  python podcast_bot.py rescatar   -> baja episodios existentes del RSS de Spotify
+                                      y les pone su fecha original
+  python podcast_bot.py apartar    -> mueve videos disfrazados a videos_apartados/
+  python podcast_bot.py subir      -> sube episodios/ a Archive.org (reanudable)
+  python podcast_bot.py feed       -> genera feed.xml y lo sube a GitHub
+  python podcast_bot.py            -> MODO ROBOT (diario): baja nuevos de YouTube
+                                      -> Archive -> feed -> GitHub
+"""
+
+import base64
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import time
+import urllib.request
+import xml.etree.ElementTree as ET
+from datetime import datetime
+from email.utils import format_datetime, parsedate_to_datetime
+from pathlib import Path
+from urllib.parse import quote
+from xml.sax.saxutils import escape
+
+CARPETA = Path("episodios")
+FEED = "feed.xml"
+TOKEN_FILE = "github_token.txt"
+
+
+def cargar_config():
+    ruta = Path("config.json")
+    if not ruta.exists():
+        print("ERROR: falta config.json en esta carpeta.")
+        sys.exit(1)
+    with open(ruta, encoding="utf-8") as f:
+        return json.load(f)
+
+
+CFG = cargar_config()
+URL_AUDIO_BASE = f"https://archive.org/download/{CFG['archive_id']}"
+URL_FEED_BASE = f"https://{CFG['github_user']}.github.io/{CFG['github_repo']}"
+
+
+def log(msg):
+    print(f"[{datetime.now():%d/%m %H:%M}] {msg}")
+
+
+def limpiar(nombre):
+    nombre = re.sub(r'[<>:"/\\|?*]', "", nombre).strip()
+    return re.sub(r"\s+", "_", nombre)[:120]
+
+
+# ─────────── RESCATAR (episodios existentes + fechas reales) ───────────
+def rescatar():
+    CARPETA.mkdir(exist_ok=True)
+    url = CFG.get("rss_original", "").strip()
+    if not url:
+        log("Este show no tiene rss_original en config.json. Nada que rescatar.")
+        return
+    log(f"Leyendo feed original: {url}")
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req) as r:
+        root = ET.fromstring(r.read())
+    items = root.findall(".//item")
+    log(f"El feed tiene {len(items)} episodios.")
+    for item in items:
+        titulo = (item.findtext("title") or "episodio").strip()
+        fecha_txt = (item.findtext("pubDate") or "").strip()
+        enclosure = item.find("enclosure")
+        if enclosure is None:
+            continue
+        destino = CARPETA / f"{limpiar(titulo)}.mp3"
+        if not destino.exists():
+            print(f"Bajando: {titulo} ...")
+            req2 = urllib.request.Request(enclosure.get("url"),
+                                          headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req2) as audio, open(destino, "wb") as f:
+                f.write(audio.read())
+        if fecha_txt:
+            try:
+                epoch = parsedate_to_datetime(fecha_txt).timestamp()
+                os.utime(destino, (epoch, epoch))
+            except Exception:
+                pass
+    log("Rescate terminado (con fechas originales).")
+
+
+# ─────────── APARTAR videos disfrazados ───────────
+def apartar():
+    apartados = Path("videos_apartados")
+    apartados.mkdir(exist_ok=True)
+    movidos = 0
+    for p in sorted(CARPETA.glob("*.mp3")):
+        with open(p, "rb") as f:
+            head = f.read(12)
+        if head[4:8] == b"ftyp":
+            shutil.move(str(p), str(apartados / p.name))
+            movidos += 1
+            print(f"Apartado (video): {p.name}")
+    log(f"{movidos} videos apartados. En episodios/ queda solo audio.")
+
+
+# ─────────── SUBIR a Archive (masivo, reanudable) ───────────
+def subir():
+    try:
+        from internetarchive import get_item, upload
+    except ImportError:
+        log("ERROR: falta internetarchive. Corre: pip install internetarchive")
+        return
+    locales = sorted(CARPETA.glob("*.mp3"))
+    item = get_item(CFG["archive_id"])
+    ya = {f["name"] for f in item.files} if item.exists else set()
+    pendientes = [p for p in locales if p.name not in ya]
+    metadata = {"title": CFG["titulo"], "mediatype": "audio",
+                "collection": "opensource_audio"}
+    log(f"Locales: {len(locales)} | Subidos: {len(locales)-len(pendientes)} | Pendientes: {len(pendientes)}")
+    for i, p in enumerate(pendientes, 1):
+        print(f"[{i}/{len(pendientes)}] Subiendo {p.name} ({p.stat().st_size/1_048_576:.1f} MB)...")
+        intentos = 0
+        while True:
+            intentos += 1
+            try:
+                upload(CFG["archive_id"], files=[str(p)], metadata=metadata,
+                       retries=10, retries_sleep=30, verbose=False)
+                print("   OK")
+                break
+            except Exception as e:
+                msg = str(e).lower()
+                if "unacceptable" in msg or "extension" in msg:
+                    print("   SALTADO (no es audio valido). Corre: python podcast_bot.py apartar")
+                    break
+                if intentos >= 5:
+                    print(f"   FALLO tras 5 intentos. Sigo con el siguiente.")
+                    break
+                print(f"   Archive saturado. Espero 90 seg ({intentos}/5)...")
+                time.sleep(90)
+    log("Subida terminada. Vuelve a correr este comando si quedo algo pendiente.")
+
+
+# ─────────── FEED (fechas reales) + GITHUB ───────────
+# Orden canonico del Tanaj (para shows con "orden_tanaj": true)
+VALORES_HEB = {'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,
+               'י':10,'כ':20,'ל':30,'מ':40,'נ':50,'ס':60,'ע':70,'פ':80,'צ':90,
+               'ק':100,'ר':200,'ש':300,'ת':400,'ך':20,'ם':40,'ן':50,'ף':80,'ץ':90}
+LIBROS_TANAJ = ["בראשית","שמות","ויקרא","במדבר","דברים",
+    "יהושע","שופטים","שמואל א","שמואל ב","מלכים א","מלכים ב","שמואל","מלכים",
+    "ישעיהו","ישעיה","ירמיהו","ירמיה","יחזקאל",
+    "הושע","יואל","עמוס","עובדיה","יונה","מיכה","נחום","חבקוק","צפניה","חגי","זכריה","מלאכי",
+    "תהילים","תהלים","משלי","איוב","שיר השירים","רות","איכה","קהלת","אסתר","דניאל","עזרא","נחמיה",
+    "דברי הימים א","דברי הימים ב","דברי הימים"]
+# Nombres en ingles/transliterado -> libro hebreo (para archivos tipo "he nach shir hashirim6")
+LIBROS_ING = {
+    "bereshit":"בראשית","shemot":"שמות","shmot":"שמות","vayikra":"ויקרא","bamidbar":"במדבר","devarim":"דברים",
+    "yehoshua":"יהושע","shoftim":"שופטים","shmuel":"שמואל","melachim":"מלכים",
+    "yeshayahu":"ישעיהו","yeshaya":"ישעיה","yirmiyahu":"ירמיהו","yirmiya":"ירמיה","yechezkel":"יחזקאל",
+    "hoshea":"הושע","yoel":"יואל","amos":"עמוס","ovadia":"עובדיה","yona":"יונה","micha":"מיכה",
+    "nachum":"נחום","chavakuk":"חבקוק","tzefania":"צפניה","chagai":"חגי","zecharia":"זכריה","malachi":"מלאכי",
+    "tehillim":"תהילים","tehilim":"תהילים","mishlei":"משלי","iyov":"איוב",
+    "shir hashirim":"שיר השירים","ruth":"רות","rut":"רות","eicha":"איכה","kohelet":"קהלת",
+    "esther":"אסתר","ester":"אסתר","daniel":"דניאל","ezra":"עזרא","nechemia":"נחמיה","nehemia":"נחמיה",
+    "divrei hayamim":"דברי הימים",
+}
+
+
+def num_a_heb(n):
+    """31 -> לא, 15 -> טו, 119 -> קיט (numeral hebreo)."""
+    if n <= 0:
+        return str(n)
+    especial = {15: "טו", 16: "טז"}
+    partes = []
+    for v, letra in [(400,"ת"),(300,"ש"),(200,"ר"),(100,"ק")]:
+        while n >= v:
+            partes.append(letra); n -= v
+    if n in especial:
+        partes.append(especial[n]); n = 0
+    for v, letra in [(90,"צ"),(80,"פ"),(70,"ע"),(60,"ס"),(50,"נ"),(40,"מ"),(30,"ל"),(20,"כ"),(10,"י")]:
+        while n >= v:
+            if n - v in (5, 6) and v == 10 and n in (15, 16):
+                break
+            partes.append(letra); n -= v
+    unidades = {1:"א",2:"ב",3:"ג",4:"ד",5:"ה",6:"ו",7:"ז",8:"ח",9:"ט"}
+    if n in unidades:
+        partes.append(unidades[n])
+    return "".join(partes)
+
+
+def _libro_ingles(t_norm):
+    """Devuelve (libro_hebreo, num_perek) si el nombre es en ingles, o None."""
+    t_low = t_norm.lower()
+    for eng in sorted(LIBROS_ING, key=len, reverse=True):
+        if eng in t_low:
+            m = re.search(r"(\d+)", t_low)
+            return (LIBROS_ING[eng], int(m.group(1)) if m else 0)
+    return None
+
+
+def _norm_heb(nombre):
+    t = re.sub(r"\.mp3$", "", nombre, flags=re.I)
+    t = re.sub(r"[_\-]+", " ", t)
+    t = t.replace("״", "").replace("׳", "").replace('"', "").replace("'", "")
+    return re.sub(r"\s+", " ", t).strip()
+
+
+def _num_perek(texto):
+    m = re.search(r"(\d+)", texto)
+    if m:
+        return int(m.group(1))
+    for tok in reversed(re.findall(r"[א-ת]{1,4}", texto)):
+        if tok == "פרק":
+            continue
+        v = sum(VALORES_HEB.get(c, 0) for c in tok)
+        if 0 < v <= 200:
+            return v
+    return 0
+
+
+def clave_tanaj(mp3):
+    t = _norm_heb(mp3.name)
+    for i, libro in enumerate(LIBROS_TANAJ):
+        if libro in t:
+            resto = t.replace(libro, " ", 1)
+            return (0, i, _num_perek(resto), mp3.stat().st_mtime)
+    ing = _libro_ingles(t)
+    if ing:
+        return (0, LIBROS_TANAJ.index(ing[0]), ing[1], mp3.stat().st_mtime)
+    return (1, 999, 0, mp3.stat().st_mtime)  # desconocidos al final
+
+
+def titulo_desde_nombre(nombre):
+    base = re.sub(r"\.mp3$", "", nombre, flags=re.I)
+    t = re.sub(r"[_]+", " ", base).strip()
+    t = re.sub(r"פרק(\d)", r"פרק \1", t)  # "פרק131" -> "פרק 131"
+    if CFG.get("formato_perek"):
+        # Nombres en ingles tipo "he nach shir hashirim6" -> "שיר השירים - פרק ו"
+        if not re.search(r"[א-ת]", t):
+            ing = _libro_ingles(_norm_heb(nombre))
+            if ing:
+                num = f" - פרק {num_a_heb(ing[1])}" if ing[1] else ""
+                return f"{ing[0]}{num}"
+        # "יחזקאל א" -> "יחזקאל - פרק א" (no toca titulos que ya dicen פרק)
+        if "פרק" not in t:
+            m = re.match(r'^(.+?)\s*-?\s*([א-ת]{1,2}[״"\']?[א-ת]?)$', t)
+            if m and m.group(1).strip():
+                t = f"{m.group(1).strip()} - פרק {m.group(2)}"
+    return t
+
+
+def duracion_mp3(ruta):
+    try:
+        from mutagen.mp3 import MP3
+        seg = int(MP3(ruta).info.length)
+        return f"{seg // 3600:02}:{(seg % 3600) // 60:02}:{seg % 60:02}"
+    except Exception:
+        return ""
+
+
+def generar_feed():
+    if CFG.get("orden_tanaj"):
+        # Orden canonico: libro por libro, perek por perek (Yehoshua 1 primero).
+        # Fechas sinteticas en secuencia para que Spotify respete el orden.
+        from datetime import timedelta
+        mp3s = sorted(CARPETA.glob("*.mp3"), key=clave_tanaj)
+        base = datetime(2023, 1, 1, 6, 0)
+        fechas = [base + timedelta(hours=3 * i) for i in range(len(mp3s))]
+    else:
+        mp3s = sorted(CARPETA.glob("*.mp3"), key=lambda p: p.stat().st_mtime)
+        fechas = [datetime.fromtimestamp(p.stat().st_mtime) for p in mp3s]
+    if not mp3s:
+        log("No hay MP3s, no genero feed.")
+        return False
+    items = []
+    for mp3, fecha_dt in zip(mp3s, fechas):
+        titulo = titulo_desde_nombre(mp3.name)
+        fecha = format_datetime(fecha_dt)
+        dur = duracion_mp3(mp3)
+        dur_tag = f"\n      <itunes:duration>{dur}</itunes:duration>" if dur else ""
+        url_mp3 = f"https://op3.dev/e/{URL_AUDIO_BASE}/{quote(mp3.name)}"
+        items.append(f"""    <item>
+      <title>{escape(titulo)}</title>
+      <description>{escape(titulo)}</description>
+      <enclosure url="{url_mp3}" length="{mp3.stat().st_size}" type="audio/mpeg"/>
+      <guid isPermaLink="false">{escape(mp3.name)}</guid>
+      <pubDate>{fecha}</pubDate>{dur_tag}
+      <itunes:explicit>false</itunes:explicit>
+    </item>""")
+    feed = f"""<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>{escape(CFG["titulo"])}</title>
+    <description>{escape(CFG["descripcion"])}</description>
+    <link>{URL_FEED_BASE}</link>
+    <language>{CFG["idioma"]}</language>
+    <itunes:author>{escape(CFG["autor"])}</itunes:author>
+    <itunes:owner>
+      <itunes:name>{escape(CFG["autor"])}</itunes:name>
+      <itunes:email>{CFG["email"]}</itunes:email>
+    </itunes:owner>
+    <itunes:image href="{URL_FEED_BASE}/portada.jpg"/>
+    <itunes:category text="Religion &amp; Spirituality"/>
+    <itunes:explicit>false</itunes:explicit>
+{chr(10).join(items)}
+  </channel>
+</rss>
+"""
+    Path(FEED).write_text(feed, encoding="utf-8")
+    log(f"feed.xml regenerado con {len(mp3s)} episodios (fechas reales).")
+    return True
+
+
+# === feed compacto (otzar) ===
+def _compacto(s):
+    # quita espacio acumulado (lineas en blanco, colas, sangrias enormes): el feed crecia sin fin
+    out = []
+    for ln in s.splitlines():
+        ln = ln.rstrip()
+        if not ln.strip():
+            continue
+        out.append(re.sub(r"^[ \t]{7,}", "      ", ln))
+    return "\n".join(out) + "\n"
+
+
+def _feed_compacto_bytes():
+    texto = _compacto(Path(FEED).read_text(encoding="utf-8", errors="replace"))
+    Path(FEED).write_text(texto, encoding="utf-8")
+    return texto.encode("utf-8")
+
+
+def subir_feed_a_github():
+    token_path = Path(TOKEN_FILE)
+    if not token_path.exists():
+        log(f"ERROR: no encuentro {TOKEN_FILE}.")
+        return False
+    token = token_path.read_text(encoding="utf-8").strip()
+    api = f"https://api.github.com/repos/{CFG['github_user']}/{CFG['github_repo']}/contents/feed.xml"
+    headers = {"Authorization": f"token {token}", "User-Agent": "robot-podcast",
+               "Accept": "application/vnd.github+json"}
+    sha = None
+    try:
+        req = urllib.request.Request(api, headers=headers)
+        with urllib.request.urlopen(req) as r:
+            sha = json.loads(r.read().decode())["sha"]
+    except Exception:
+        pass
+    cuerpo = {"message": f"Robot: feed {datetime.now():%d/%m/%Y %H:%M}",
+              "content": base64.b64encode(_feed_compacto_bytes()).decode()}
+    if sha:
+        cuerpo["sha"] = sha
+    req = urllib.request.Request(api, data=json.dumps(cuerpo).encode(),
+                                 headers=headers, method="PUT")
+    try:
+        with urllib.request.urlopen(req) as r:
+            if r.status in (200, 201):
+                log("feed.xml subido a GitHub: OK")
+                return True
+    except Exception as e:
+        log(f"ERROR subiendo a GitHub: {e}")
+    return False
+
+
+# ─────────── ROBOT (nuevos de YouTube) ───────────
+def _lista_canales():
+    """Soporta canales_youtube (lista) o canal_youtube (uno solo, viejo)."""
+    canales = CFG.get("canales_youtube")
+    if canales:
+        return canales
+    uno = (CFG.get("canal_youtube") or "").strip()
+    return [{"url": uno}] if uno else []
+
+
+def _url_shorts(url):
+    """.../videos -> .../shorts"""
+    base = re.sub(r"/(videos|shorts|streams)/?$", "", url.rstrip("/"))
+    return base + "/shorts"
+
+
+# === turbo2 otzar: lista plana + solo faltantes + progreso ===
+TOPE_SHOW_SEG  = 15 * 60
+TOPE_VIDEO_SEG = 4 * 60
+_t0_show = time.time()
+_ids_ok = {}
+_ya_publicados_lote = set()
+
+def _reloj():
+    t = int(time.time() - _t0_show); return f"[{t//60:02d}:{t%60:02d}]"
+
+def _ids_ya_bajados():
+    p = Path("ya_descargados.txt")
+    if not p.exists(): return set()
+    out = set()
+    for l in p.read_text(encoding="utf-8", errors="replace").splitlines():
+        s = l.strip().split()
+        if s: out.add(s[-1])
+    return out
+
+def _marcar_ids_bajados():
+    if not _ids_ok: return
+    ya = Path("ya_descargados.txt")
+    previos = set(ya.read_text(encoding="utf-8").splitlines()) if ya.exists() else set()
+    with open(ya, "a", encoding="utf-8") as f:
+        for vid in list(_ids_ok):
+            linea = f"youtube {vid}"
+            if linea not in previos: f.write(linea + "\n"); previos.add(linea)
+    _ids_ok.clear()
+
+def _publicar_lote(forzar=False):
+    try:
+        pend = [p for p in sorted(CARPETA.glob("*.mp3")) if p.name not in _ya_publicados_lote]
+        if not pend: return
+        log(f"{_reloj()} publicando {len(pend)} mp3...")
+        if not subir_nuevos_a_archive(pend):
+            log(f"{_reloj()} fallo Archive; lo reintento luego."); return
+        feed_seguro(pend)
+        if not subir_feed_a_github():
+            log(f"{_reloj()} fallo GitHub; lo reintento luego."); return
+        _marcar_ids_bajados()
+        for p in pend:
+            _ya_publicados_lote.add(p.name)
+            try: p.unlink()
+            except Exception: pass
+        log(f"{_reloj()} {len(pend)} publicado(s). ✓")
+    except Exception as e:
+        log(f"{_reloj()} publicar: {e}")
+
+# === nombre del rab y exclusiones (otzar) ===
+_EXCLUIR = CFG.get("excluir_titulo") or ""     # regex: titulos que NO se bajan (p. ej. una serie)
+_PREFIJO = ""                                    # nombre del Rab del canal en turno
+
+def _nombra(titulo, prefijo):
+    # True si el titulo ya trae el nombre (todas las palabras del prefijo salvo 'הרב'/'Rab')
+    palabras = [p for p in re.split(r"\s+", prefijo) if p and p not in ("הרב", 'הרה"ג', "הגאון", "רבי", "Rab", "Rav", "Rabbi", "Sr.")]
+    return bool(palabras) and all(p in titulo for p in palabras)
+
+def _lista_plana(url, n, filtro):
+    """ids+titulos de los ultimos n, SIN bajar ni resolver retos (1-2 seg)."""
+    cmd = ["yt-dlp", "--flat-playlist", "--playlist-end", str(n), "--no-warnings",
+           "--extractor-args", "youtube:player_client=web_embedded",
+           "--print", "%(id)s\t%(title)s", url]
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8",
+                           errors="replace", timeout=90)
+    except Exception as e:
+        log(f"{_reloj()} lista plana: {e}"); return []
+    out = []
+    for l in (r.stdout or "").splitlines():
+        if "\t" not in l: continue
+        vid, tit = l.split("\t", 1)
+        vid, tit = vid.strip(), tit.strip()
+        if not vid or vid == "NA": continue
+        if filtro and not re.search(filtro, tit, re.I): continue
+        if _EXCLUIR and re.search(_EXCLUIR, tit, re.I): continue   # excluir_titulo
+        out.append((vid, tit))
+    return out
+
+def _bajar_uno(vid, titulo):
+    """baja UN video con progreso en vivo. True si dejo mp3."""
+    url = f"https://www.youtube.com/watch?v={vid}"
+    cmd = ["yt-dlp", "-x", "--audio-format", "mp3", "--no-playlist",
+           "--no-warnings", "--newline", "--progress",
+           "--socket-timeout", "30", "--retries", "3",
+           "--extractor-args", "youtube:player_client=web_embedded",
+           "--print", "after_move:__OTZAR_OK__%(id)s\t%(filepath)s",
+           "-o", str(CARPETA / (((_PREFIJO + " · ") if _PREFIJO and not _nombra(titulo, _PREFIJO) else "") + "%(title)s.%(ext)s")), url]
+    if os.environ.get("OTZAR_YTDLP_EXTRA"):
+        cmd += os.environ["OTZAR_YTDLP_EXTRA"].split()
+    log(f"{_reloj()} bajando: {titulo[:70]}")
+    ok = False
+    try:
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                text=True, encoding="utf-8", errors="replace", bufsize=1)
+        t0 = time.time(); ultimo = 0
+        for ln in proc.stdout:
+            ln = ln.rstrip()
+            if ln.startswith("__OTZAR_OK__"):
+                v, ruta = ln[len("__OTZAR_OK__"):].split("\t", 1)
+                if Path(ruta).exists(): _ids_ok[v] = ruta; ok = True
+            elif "[download]" in ln and "%" in ln:
+                # progreso en la misma linea
+                m = re.search(r"(\d+\.?\d*)%", ln)
+                if m and time.time() - ultimo > 2:
+                    print(f"      {m.group(1)}%  ", end="\r", flush=True); ultimo = time.time()
+            elif ln and not ln.startswith("[download]"):
+                print("      " + ln[:110], flush=True)
+            if time.time() - t0 > TOPE_VIDEO_SEG:
+                proc.kill(); log(f"{_reloj()} video tardo >{TOPE_VIDEO_SEG//60} min, lo salto"); break
+        proc.wait(timeout=10)
+    except Exception as e:
+        log(f"{_reloj()} bajar: {e}")
+    print(" " * 20, end="\r")
+    return ok
+
+def bajar_nuevos():
+    global _EXCLUIR, _PREFIJO   # === otzar ===
+    CARPETA.mkdir(exist_ok=True)
+    antes = {p.name for p in CARPETA.glob("*.mp3")}
+    cuantos_global = int(CFG.get("revisar_ultimos", 5))
+    canales = CFG.get("canales_youtube") or ([CFG.get("canal_youtube")] if CFG.get("canal_youtube") else [])
+    ya = _ids_ya_bajados()
+    for ch in canales:
+        if time.time() - _t0_show > TOPE_SHOW_SEG:
+            log(f"{_reloj()} TOPE de {TOPE_SHOW_SEG//60} min del show; paro de bajar."); break
+        if isinstance(ch, dict):
+            u = ch.get("url"); n = int(ch.get("revisar_ultimos", cuantos_global))
+            filtro = ch.get("filtro_titulo") or CFG.get("filtro_titulo")
+            nombre = ch.get("nombre") or u
+        else:
+            u = ch; n = cuantos_global; filtro = CFG.get("filtro_titulo"); nombre = u
+        _EXCLUIR = (ch.get("excluir_titulo") if isinstance(ch, dict) else None) or CFG.get("excluir_titulo") or ""
+        _PREFIJO = (ch.get("prefijo") if isinstance(ch, dict) else None) or ""
+        if isinstance(filtro, list): filtro = "|".join(re.escape(f) for f in filtro)
+        if not u: continue
+        log(f"{_reloj()} [{str(nombre)[:50]}] lista de los ultimos {n}...")
+        lista = _lista_plana(u, n, filtro)
+        falt = [(v, t) for v, t in lista if v not in ya]
+        log(f"{_reloj()}   {len(lista)} en el canal, {len(falt)} por bajar")
+        for vid, tit in falt:
+            if time.time() - _t0_show > TOPE_SHOW_SEG:
+                log(f"{_reloj()} TOPE del show; lo que falta queda para la proxima."); break
+            if _bajar_uno(vid, tit):
+                _publicar_lote()        # uno baja, uno sube
+                ya.add(vid)
+    # lo que ya se publico de uno en uno ya no esta en disco; regreso solo lo que quede
+    despues = {p.name for p in CARPETA.glob("*.mp3")}
+    nuevos = sorted(despues - antes)
+    log(f"{_reloj()} Videos nuevos bajados: {len(_ya_publicados_lote) + len(nuevos)} "
+        f"({len(_ya_publicados_lote)} ya publicados al vuelo, {len(nuevos)} pendientes)")
+    return [CARPETA / n for n in nuevos]
+
+def subir_nuevos_a_archive(archivos):
+    if not archivos:
+        return True
+    try:
+        from internetarchive import upload
+    except ImportError:
+        log("ERROR: falta internetarchive.")
+        return False
+    log(f"Subiendo {len(archivos)} archivo(s) a Archive.org...")
+    # === archive con calma v2 (otzar) ===
+    # por tandas, sin repetir lo ya subido (checksum) y esperando si Archive pide calma
+    rutas = [str(a) for a in archivos]
+    lote = 25
+    for i in range(0, len(rutas), lote):
+        parte = rutas[i:i + lote]
+        for intento in range(8):
+            try:
+                upload(CFG["archive_id"], files=parte,
+                       metadata={"title": CFG["titulo"], "mediatype": "audio",
+                                 "collection": "opensource_audio"},
+                       retries=10, retries_sleep=30, checksum=True)
+                break
+            except Exception as e:
+                txt = str(e)
+                if "reduce your request rate" in txt or "rationed" in txt or "exceeds" in txt:
+                    log(f"Archive pide calma ({i + len(parte)}/{len(rutas)}); espero 5 min y sigo...")
+                    time.sleep(300)
+                    continue
+                if ("Connection aborted" in txt or "ConnectionReset" in txt or "10054" in txt or "timed out" in txt
+                        or "Max retries" in txt or "RemoteDisconnected" in txt or "503" in txt or "SlowDown" in txt):
+                    log(f"Archive corto la conexion ({i + len(parte)}/{len(rutas)}); espero {2 + intento} min y reintento...")
+                    time.sleep(60 * (2 + intento))
+                    continue
+                log(f"ERROR subiendo a Archive: {e}")
+                return False
+        else:
+            log("Archive sigue pidiendo calma; lo reintento en el proximo ANUNCIAR.")
+            return False
+        if i + lote < len(rutas):
+            log(f"  {i + len(parte)}/{len(rutas)} subidos...")
+            time.sleep(20)
+    log("Subida a Archive: OK")
+    return True
+
+def main():
+    cmd = sys.argv[1].lower() if len(sys.argv) > 1 else "robot"
+    log(f"=== PODCAST BOT [{CFG['titulo']}] comando: {cmd} ===")
+    if cmd == "rescatar":
+        rescatar()
+    elif cmd == "apartar":
+        apartar()
+    elif cmd == "subir":
+        subir()
+    elif cmd == "feed":
+        if generar_feed():
+            subir_feed_a_github()
+    else:  # robot
+        nuevos = bajar_nuevos()
+        if not nuevos:
+            log("No hay videos nuevos. ===")
+            return
+        if not subir_nuevos_a_archive(nuevos):
+            log("Fallo Archive; reintento en la proxima corrida. ===")
+            return
+        if generar_feed():
+            subir_feed_a_github()
+    log("=== FIN ===")
+
+
+if __name__ == "__main__":
+    main()
