@@ -4766,7 +4766,7 @@ def pausar_anuncio():
 #   la PC no la "tapa" (la portada de Tawil salió con la cara en negro). Se sube al repo del
 #   show con nombre fechado (Spotify solo vuelve a bajar la foto si cambia la URL) y queda en
 #   config.json → "canal"; mantenimiento.py (canal_feed) lo vuelve a poner en el feed siempre.
-CANALES = ["tawil"]
+CANALES = ["tawil", "credi"]
 
 
 def canales_shows():
@@ -4813,7 +4813,7 @@ def canales_shows():
                     continue
             canal["imagen"] = f"{pages}/{nombre}"
             canal["portada_sha256"] = datos.get("portada_sha256")
-            ok(f"foto original (3000×3000, sin tapar) subida como {nombre}")
+            ok(f"foto original (sin tapar) subida como {nombre}")
         c["canal"] = canal
         respaldar(d / "config.json")
         if not VER:
