@@ -101,7 +101,20 @@ def subir_nuevos(cfg, archivos, ver):
     claves = {}
     if os.environ.get("IA_ACCESS_KEY") and os.environ.get("IA_SECRET_KEY"):
         claves = {"access_key": os.environ["IA_ACCESS_KEY"], "secret_key": os.environ["IA_SECRET_KEY"]}
-    item = get_item(cfg["archive_id"])
+    # (oct/2026) archive.org a veces tarda más de 12 s en contestar y el script tronaba con un
+    # traceback larguísimo: se reintenta con más paciencia; si no contesta, se sale SIN armar el
+    # feed (un feed armado sin saber qué hay arriba quedaría vacío y Spotify perdería episodios).
+    item = None
+    for intento in range(1, 4):
+        try:
+            item = get_item(cfg["archive_id"], request_kwargs={"timeout": 60})
+            break
+        except Exception as ex:          # noqa: BLE001
+            log(f"archive.org no contesta ({intento}/3): {str(ex)[:120]}")
+            time.sleep(20 * intento)
+    if item is None or not item.exists:
+        log("archive.org no contestó: no subo nada ni toco el feed. Se reintenta en la próxima corrida.")
+        sys.exit(1)
     ya = {f["name"] for f in (item.files or [])}
     pendientes = [(l, r) for l, r in archivos if r not in ya]
     log(f"En el Drive: {len(archivos)} · ya en archive.org: {len(archivos) - len(pendientes)} · por subir: {len(pendientes)}")
