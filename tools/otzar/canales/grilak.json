@@ -1,0 +1,12 @@
+{
+ "nota": "Foto del Rab Yohanan Grilak que mandó el usuario (23/10/2026, captura de un video), recortada cuadrada y centrada en el Rab (1400×1400). En base64 para que el filtro de la PC no le tape la cara.",
+ "title": "Rab Yohanan Grilak · הרב יוחנן גרילק",
+ "description": "Shiurim del Rab Yohanan Grilak · שיעורים מהרב יוחנן גרילק",
+ "author": "Rab Yohanan Grilak",
+ "categoria": [
+  "Religion & Spirituality",
+  "Judaism"
+ ],
+ "portada_b64": "grilak_portada.b64",
+ "portada_sha256": "b60e3398d041ab865a2a1d6373300658d717929dce86f6cadb5dee16c2dc598c"
+}
