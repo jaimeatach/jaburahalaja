@@ -546,6 +546,13 @@ def main():
     archivos, dudosos = SA.listar(carpeta)
     if dudosos:
         log(f"OJO: {len(dudosos)} archivos sin extensión que no identifiqué; se saltean.")
+    # (oct/2026) lo que está suelto en la raíz del Drive no es de la jabura (así se subió a
+    # archive.org, que es público, un "BASE DE DATOS DELICATESSEN.xlsx.docx"): solo se publica lo
+    # que está dentro de una carpeta (שיעורים בהלכה, שיחות מוסר, ספרים…).
+    sueltos = [r for _, r in archivos if "/" not in r]
+    if sueltos:
+        log(f"OJO: {len(sueltos)} archivo(s) sueltos en la raíz del Drive NO se suben: {', '.join(sueltos[:5])}")
+        archivos = [(l, r) for l, r in archivos if "/" in r]
     # "ignorar_carpetas": subcarpetas del Drive que ya no van (la מוקצה vieja de 3
     # shiurim quedó dentro de la carpeta completa); "ignorar": nombres de archivo
     ign_carp = {norm(c) for c in (cfg.get("ignorar_carpetas") or [])}
