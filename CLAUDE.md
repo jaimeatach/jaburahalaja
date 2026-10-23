@@ -88,6 +88,13 @@ El contenido de la jabura vive en un ítem de archive.org, no en Supabase Storag
   quedan en el primer saif por no tratar de un saif concreto.
 - Los módulos que comparten siman se unen: מעבד·טוחן·לש en שכ״א y
   גוזז·כותב ומוחק en ש״מ, cada uno con `groups` para resolver la numeración.
+- ש״מ junta muchas melajot (texto del ש״ע, ya consultable en Sefaria: §1-2 גוזז · §3 מוחק ·
+  §4 כותב · §5 רושם · §6-7 תופר · §8 מוכין · §9-10 מעמר · §11-12 לש · §13 קורע · §14 מדבק/מפרק)
+  y el robot guarda todo en la carpeta `כותב ומוחק`. `CAT_TEMAS` (por siman) ubica un shiur de
+  título libre en el saif de lo que trata, por palabras en hebreo/español/transliteradas
+  (`catSaifPorTema`, después de `CAT_SAIF`); `arcSaifimPorTema` (admin, con el auto-import)
+  mueve los ya importados que quedaron en el saif 1. En el feed, `titulo_de` pone adelante
+  la melajá del título (`TEMAS_340`: "תופר · …") en vez de la carpeta.
 - `הלכות מוקצה`: la carpeta "שיעורים מוקצה" que Saúl comparte aparte (31
   shiurim numerados al FINAL del nombre, `tail:true`). Sus ítems son objetos
   `{ t, s, saif }`: cada uno va a su propio siman (רע״ט, ש״ח–שי״ב) y a su saif
@@ -259,7 +266,7 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    Plataformas: cada anuncio lleva, además de Spotify, el link del episodio en
    Apple Podcasts (API pública de iTunes por `apple_id`; si el episodio aún no
    aparece, el del show) y el del show en Amazon Music / SoundCloud.
-   `tools/otzar/plataformas.py` (lo corre `mantenimiento.py` una vez al día;
+   `tools/otzar/plataformas.py` (lo corre `mantenimiento.py` cada 3 h, solo pregunta por los que faltan;
    `--revisar` en el instalador da el reporte completo) busca cada show en Apple,
    dice cuál no tiene grupo o lleva >14 días sin nada y deja `plataformas.json`.
    Amazon y SoundCloud no tienen API: `--amazon=show:LINK`, `--soundcloud=show:LINK`.
@@ -270,6 +277,10 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    cada ANUNCIAR: la primera vez memoriza lo existente, luego sube lo nuevo (4 por vez)
    y deja `soundcloud_episodios.json` en el robot, que pone el link del episodio.
    Guía para el usuario: `tools/otzar/GUIA_PLATAFORMAS.pdf`.
+   Link de Apple corto (oct/2026): `appleCorto` quita el nombre del episodio
+   (`podcasts.apple.com/podcast/id…?i=…`) y `acortarLink` lo pasa por is.gd (sin publicidad;
+   TinyURL NO: mete un redirect de viglink); caché en `links_cortos.json`, si is.gd falla va el
+   normal; `"acortar_links": false` en el config lo apaga. Spotify ya va en su forma mínima.
    `spotify_espera_horas` (`--spotify-espera=show:H`): si Spotify no toma el
    episodio en H horas sale con el link del show (TorahAnytime se trababa).
    `plantilla` en anunciar.<show>: bloques con {fecha_hebrea} {fecha} {titulo}
@@ -290,11 +301,23 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    `anunciar.tawil` da la fecha de cada shiur por su número (uno por día, sin sábado
    ni Yom Tov de la diáspora: `@hebcal/core` del robot o la lista `_YOM_TOV`);
    `no_shabat` no manda nada ese día; lo de un día ya pasado se marca en silencio.
+   Sale desde las 00:00 de su día (el usuario aprieta ANUNCIAR a las 5:30).
+   En Spotify/Apple se ven YA: el robot no pone fecha futura al archivo y
+   `mantenimiento.py` (`sin_fechas_futuras`) cambia por la de hoy cualquier pubDate futuro
+   de los shows con `calendario` (en orden de número, mismo guid); solo el ANUNCIO espera su día.
    Va con el audio (`sin_audio: false`). El título del anuncio sale del tema
    ("#22- Encendido de Velas (2)", `tituloDeTema`). La dedicatoria cambia cada semana:
    `{"desde": N, "dedicatoria": "..."}` en `temas/tawil.json` (`dedicatoriaDe`); sin
    ella va la del config (L"N Moshe Ben Sara...). El usuario avisa los domingos el
-   tema y el donador. Spotify del show:
+   tema y el donador. Lo puede mandar él mismo por WhatsApp (chat privado
+   con el robot o dentro del grupo fuente "Shiurim rab yosi"; ahí el robot ignora
+   sus propias respuestas ✅/❌ para que no se vuelvan título de un audio): "!tawil 27" (sin número: el shiur del domingo que viene) y abajo
+   "tema: Kidush" / "donador: L\"N ..." (el donador puede ocupar varias líneas); se
+   guarda en `C:\OTZAR\tawil\temas.json` (manda sobre el repo) y el robot contesta
+   cómo va a salir. Si una semana se avisa el MISMO tema que venía, la cuenta sigue
+   (`temasDe` junta temas iguales seguidos: #27 = Encendido de Velas (7), no (1)); si el
+   título guardado quedó con otra cuenta, el robot busca en Spotify también con el
+   título corregido. Spotify del show:
    1gVVXZw6fNyrcqadB5pmLC; para que lea nuestro feed sin perder #1-#26 hace falta
    su RSS de Spotify for Creators (`--tawil-rss=https://anchor.fm/s/1171db72c/podcast/rss`).
    Estadísticas: al rescatar, podcast_bot pone guids nuevos (nombre del archivo; así
@@ -304,6 +327,15 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    show; `mantenimiento.py` (`ids_spotify`) los vuelve a poner si un feed los pierde.
    Mismo guid = mismo episodio para Spotify: conserva reproducciones y horas.
    No hacer el redirect hasta que diga "N de N episodios con su MISMO ID".
+   Encabezado igual al de Spotify (paso [50], `CANALES`): `tools/otzar/canales/tawil.json`
+   (nombre "Harav Yosef Tawil Shlit”a", descripción "Shiurim Rab Yosi Tawil", autor
+   "otzar hatorah", Religion & Spirituality › Judaism) + la foto ORIGINAL en base64
+   (`tawil_portada.b64`, con sha256): la portada que bajó la PC salió con la cara tapada
+   (filtro Techloq), así que nunca se baja como imagen en esa PC. Se sube con nombre
+   fechado y queda en `config.json` → `canal`; `mantenimiento.py` (`canal_feed`) la vuelve a
+   poner en el feed en cada corrida. `revisar_spotify.py <show>` dice si el redirect quedó
+   (el RSS de anchor tiene que llevar a nuestro feed) y qué episodios le faltan a Spotify;
+   el 18/10/2026 el redirect de Tawil NO estaba hecho (Spotify seguía en #26).
 11. Mekorot y títulos de la jabura: con `guardar_documentos` en `escuchar.jabura`
    (paso [46], siempre) el robot guarda los PDF/Word del grupo como
    "מקורות · nombre.pdf" en la carpeta del siman (no se anuncian); el publicador
@@ -317,6 +349,69 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    compara solo las palabras que dicen de qué trata (sin relleno, sin nombre del Rab
    y sin las que salen en >30% de los episodios del show), con el mismo candado de
    números de serie, y no adivina si dos empatan.
+12. Frenar un show (paso [48], `--frenar=show`): pausa su anuncio, aparta su
+   `podcast_bot.py` (queda `podcast_bot.py.pausado` y en su lugar uno que no hace nada,
+   así ni ACTUALIZAR ni ANUNCIAR publican), aparta sus `canales_youtube` (el robot de
+   fiestas buscaba en TODOS los canales y metía otros rabinos) y, con
+   `tools/otzar/limpieza_<show>.json`, quita esos episodios del feed en GitHub (los mp3
+   quedan en archive.org; el feed de antes queda en la carpeta del show). `--reanudar=show`
+   lo deshace; `--nuevo-host=show:RSS` (el show pasó a Spotify for Creators) pone
+   `<itunes:new-feed-url>` en el feed viejo. Así se frenó `ravyitzchakyosef` (13/10/2026):
+   de 170 episodios, 109 no eran del Rab Yitzjak Yosef (otros rabinos, Rab Ovadia zt"l,
+   una descarga de otro canal del 9/8); el usuario lo sube a mano desde Creators.
+   `--pausar=show` / `--despausar=show` (paso [49]) solo pausan el ANUNCIO del robot
+   (`anunciar.<show>.pausado`), sin tocar feeds ni bots. Mishlei quedó en pausa el
+   13/10/2026 (la gente se saturó; luego viene otro curso).
+   `--quitar-del-robot=show` (paso [51]) lo saca de `config_whatsapp.json` (anunciar,
+   escuchar, escuchar_directo) y de `grupos_registrados.json`, con respaldo, sin tocar
+   archivos ni feed: así salió `ravyitzchakyosef` (18/10/2026). En los anuncios armados con
+   `armarMensaje`, `conPlataformas` mete Apple/Amazon/SoundCloud DESPUÉS de Spotify y ANTES
+   del grupo de WhatsApp (orden pedido: Spotify, Apple, WhatsApp).
+   `--quitar-grupo=show:parte del nombre` (paso [53]) quita un grupo de los anuncios de un show
+   (su link en `anunciar.<show>.invite` y el grupo en `grupos_registrados.json`): ofirmalka
+   anunciaba también en el grupo de Pinto (23/10/2026). `plataformas.py` avisa al chat del
+   "!reporte" si un grupo lo usan exactamente dos shows; `diagnostico.py` dice a qué grupos
+   anuncia el show y quién más los usa.
+   Amud Yomi (paso [52], siempre): `daf_diario.js` del usuario manda el amud de MAÑANA;
+   `amud_cuando` le pone arriba "📅 Mañana · Tomorrow · מחר" (o "Hoy · Today · היום" si la
+   fecha del renglón es hoy). Con respaldo y `node --check`; si el archivo cambió, no lo toca.
+13. Piloto automático (oct/2026; el usuario pidió dejar de apretar botones):
+   `tools/otzar/piloto.py` (en `C:\OTZAR\jabura\`, se abre con `PILOTO.bat` junto al robot).
+   Cada 5 min: si el robot guardó un audio nuevo en cualquier carpeta fuente, corre
+   `mantenimiento.py` (lo de ANUNCIAR.bat); si no, una vez por hora. Cada 30 min corre
+   `podcast_bot.py` de los shows de YouTube (lo de ACTUALIZAR; salta pausados/manuales y
+   los de `--frenar`). Después de publicar y cada 15 min escribe `comando.txt` = anunciar
+   (solo de 5:30 a 22:00). Nada en Shabat/Yom Tov: desde las 16:00 de la víspera hasta la
+   puesta del sol + 50 min del último día (`puestaSol`/`puesta_sol`, NOAA para CDMX, ±1 min de
+   hebcal), así Motzaei Shabat ya se anuncia; el robot tiene el mismo candado
+   (`bloqueoSagrado` en `anunciarInterno`, también para el botón y el vigilante). `PILOTO_PAUSA.txt`
+   lo pausa; ajustes en `jabura\piloto.json`; log en `C:\OTZAR\piloto.log`. Necesita la PC
+   prendida: para que funcione con la PC apagada hay que llevarlo a un servidor.
+14. Vigilancia y mudanza (oct/2026): el piloto vuelve a abrir el robot si `robot.lock` no
+   se refresca en 3 min (máx. una vez cada 10 min), escribe `C:\OTZAR\piloto_reporte.txt`
+   y deja avisos en `<robot>\avisos\*.txt` (reporte de las 7:00, disco < 5 GB, mantenimiento
+   o anuncio que falla 3 veces); el robot los manda al chat que se registró con "!reporte"
+   (privado; el primero que lo manda, después solo ese) y no los manda en Shabat/Yom Tov.
+   Desde ese chat: "!estado", "!pausa" (crea `PILOTO_PAUSA.txt`), "!sigue". `PILOTO.bat` se
+   reabre solo si el piloto se cae. `tools/otzar/mudanza.py empacar|desempacar|revisar` pasa
+   `C:\robotwhats` (con `sesion_baileys`) y `C:\OTZAR` a la HP que queda prendida: copia sin
+   borrar, inventario de Node/Python/ffmpeg/pip, instala lo que falte con winget/pip, pone
+   `OTZAR_inicio.cmd` en la carpeta Inicio de Windows (robot y piloto al prender) y powercfg
+   (sin suspender con corriente, tapa = nada, CPU 85% para menos calor).
+15. Audios fuera de la PC (oct/2026; el usuario no quiere guardarlos, "no quiero perder shiurim"):
+   `tools/otzar/espacio.py` (en `C:\OTZAR\jabura\`). Sin argumentos: cuánto ocupa cada show,
+   cuántos ya están en archive.org con el mismo tamaño, y manda al repo (`tools/otzar/bots/`)
+   cada `podcast_bot.py` distinto (revisando que no lleve llaves) y `espacio_reporte.txt`.
+   El 20/10/2026: 70 GB en la PC, 66 GB ya en archive.org, disco con 703 GB libres.
+   `limpiar` lista; `limpiar --si` aparta a `C:\OTZAR\_papelera\<fecha>` (14 días y se borra)
+   solo lo que tiene en archive.org el MISMO md5 y ya está en el feed (shows frenados: sin
+   feed), y los originales de WhatsApp ya en `procesados_whatsapp.txt` con su mp3 en archive.org;
+   deja los de los últimos 7 días y los 3 más nuevos de cada carpeta; antes pone
+   `solo_agregar: true` (sin eso `generar_feed` rearma el feed con la carpeta y perdería
+   episodios). Los bots saben qué bajaron por `ya_descargados.txt`/`procesados_whatsapp.txt`
+   (no por los mp3) y el robot baja el audio del anuncio de archive.org, así que no dependen
+   de la carpeta. Nunca la jabura (G:, Drive compartido de Saúl) ni nada fuera de C:\OTZAR.
+   Con `limpieza_auto.json` `mantenimiento.py` (`limpieza`) lo corre una vez al día.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre

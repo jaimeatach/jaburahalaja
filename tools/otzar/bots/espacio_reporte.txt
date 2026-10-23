@@ -1,0 +1,42 @@
+=== Espacio de los shiurim en la PC (no se borra nada) ===
+Disco C: libres 703.1 GB de 1023.2 GB
+
+show                 audios     pesan  en archive   se podrían borrar
+abergel                   1     21 MB           0                0 MB
+ahavatjesed              21     34 MB           0                0 MB
+chazaq                    1     50 MB           0                0 MB
+credi                   107     82 MB          90               80 MB
+efshar                  163    4.2 GB         160              4.1 GB
+hilu                     20    176 MB          10              104 MB
+isaaccredi               43    134 MB          20              106 MB
+mishnaberura            696    1.3 GB         696              1.3 GB
+musar                     7    1.2 GB           0                0 MB
+musayof                   1     36 MB           0                0 MB
+nacach                   72    786 MB          68              770 MB
+ofirmalka                56    1.5 GB          30              1.2 GB
+peretz                  327    2.2 GB         191              1.8 GB
+ravmeir                   1     53 MB           0                0 MB
+ravmutzafi                1     58 MB           0                0 MB
+ravshmueli                3    293 MB           0                0 MB
+ravyitzchakyosef        113    5.8 GB         112              5.8 GB
+shaked                    4    103 MB           0                0 MB
+shawat                 1724   47.6 GB        1724             47.6 GB
+taamim                  386    2.0 GB         333              1.2 GB
+tawil                    43     83 MB           8               19 MB
+tefila                   25    165 MB          11              123 MB
+yalkutyosef             696    2.0 GB         696              2.0 GB
+yechavedaat               1      2 MB           0                0 MB
+
+TOTAL en la PC: 70.0 GB · ya a salvo en archive.org (mismo tamaño): 66.3 GB
+C:\robotwhats: 1.0 GB
+C:\OTZAR\jabura: 1 MB
+El Drive de la jabura (G:) es del grupo de Saúl: NO se borra (se borraría para todos).
+
+podcast_bot cddb2b4f79 mandado (abergel, abuhatzeira, ahavatjesed, bensoussan, chazaq, dafyomi, davidpinto, golan, kavas, krohn, meital, musar, musayof, podcast, ravasherweiss, ravmeir, ravmutzafi, ravshmueli, shaked, torahanytime, yakobov, yechavedaat)
+podcast_bot 97ee7b039e mandado (credi, hilu, isaaccredi, nacach, ofirmalka, peretz, shawat, taamim, tawil, tefila)
+podcast_bot 9bf6eba9ae mandado (efshar)
+podcast_bot b3a63e8a6f mandado (mishnaberura, yalkutyosef)
+podcast_bot 11c3a2ab96 mandado (nuebos, robo)
+podcast_bot ca7205b86c mandado (ravyitzchakyosef)
+
+bots: {"cddb2b4f79": ["abergel", "abuhatzeira", "ahavatjesed", "bensoussan", "chazaq", "dafyomi", "davidpinto", "golan", "kavas", "krohn", "meital", "musar", "musayof", "podcast", "ravasherweiss", "ravmeir", "ravmutzafi", "ravshmueli", "shaked", "torahanytime", "yakobov", "yechavedaat"], "97ee7b039e": ["credi", "hilu", "isaaccredi", "nacach", "ofirmalka", "peretz", "shawat", "taamim", "tawil", "tefila"], "9bf6eba9ae": ["efshar"], "b3a63e8a6f": ["mishnaberura", "yalkutyosef"], "11c3a2ab96": ["nuebos", "robo"], "ca7205b86c": ["ravyitzchakyosef"]}

@@ -397,6 +397,126 @@ def parasha_semanal(cfgw):
                 log(f"no pude dejar parasha.ahora: {ex}")
 
 
+def canal_feed(cfgw):
+    """(oct/2026) Shows con "canal" en su config.json (lo pone instalar_otzar.py paso [50]):
+    el encabezado del feed (nombre, descripción, autor, foto, categoría) queda igual al que
+    tenía en Spotify. podcast_bot rearma el feed y lo pierde; aquí se vuelve a poner."""
+    import base64
+    import html as _html
+    for show in (cfgw.get("anunciar") or {}):
+        c = leer_json(BASE / show / "config.json")
+        canal = c.get("canal") or {}
+        if not canal:
+            continue
+        tok = next((p for p in (BASE / show / "github_token.txt", BASE / "jabura" / "github_token.txt") if p.exists()), None)
+        if not tok:
+            continue
+        cab = {"Authorization": "token " + tok.read_text(encoding="utf-8").strip(),
+               "User-Agent": "otzar-mantenimiento", "Accept": "application/vnd.github+json"}
+        base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}/contents/feed.xml"
+        try:
+            with urllib.request.urlopen(urllib.request.Request(base, headers=cab), timeout=60) as r:
+                sha = json.loads(r.read().decode())["sha"]
+            with urllib.request.urlopen(urllib.request.Request(base, headers=dict(cab, Accept="application/vnd.github.raw")), timeout=120) as r:
+                feed = r.read().decode("utf-8", "replace")
+        except Exception as ex:
+            log(f"canal [{show}]: no pude leer el feed ({ex})")
+            continue
+        i = feed.find("<item>")
+        cabeza, resto = (feed[:i], feed[i:]) if i >= 0 else (feed, "")
+        nueva = cabeza
+        esc = lambda x: _html.escape(str(x or ""), quote=False)
+        def poner(texto, patron, nuevo, despues_de=None):
+            if re.search(patron, texto):
+                return re.sub(patron, lambda _m: nuevo, texto, count=1)
+            if despues_de and re.search(despues_de, texto):
+                return re.sub(despues_de, lambda m: m.group(0) + "\n    " + nuevo, texto, count=1)
+            return texto
+        if canal.get("title"):
+            nueva = poner(nueva, r"<title>[\s\S]*?</title>", f"<title>{esc(canal['title'])}</title>")
+        if canal.get("description"):
+            nueva = poner(nueva, r"<description>[\s\S]*?</description>", f"<description>{esc(canal['description'])}</description>")
+            nueva = poner(nueva, r"<itunes:summary>[\s\S]*?</itunes:summary>", f"<itunes:summary>{esc(canal['description'])}</itunes:summary>", r"</description>")
+        if canal.get("author"):
+            nueva = poner(nueva, r"<itunes:author>[\s\S]*?</itunes:author>", f"<itunes:author>{esc(canal['author'])}</itunes:author>")
+        if canal.get("imagen"):
+            nueva = poner(nueva, r'<itunes:image href="[^"]*"\s*/>', f'<itunes:image href="{esc(canal["imagen"])}"/>')
+            nueva = re.sub(r"(<image>\s*<url>)[^<]*(</url>)", lambda m: m.group(1) + esc(canal["imagen"]) + m.group(2), nueva, count=1)
+        cat = canal.get("categoria") or []
+        if len(cat) == 2:
+            bloque = f'<itunes:category text="{esc(cat[0])}"><itunes:category text="{esc(cat[1])}"/></itunes:category>'
+            nueva = poner(nueva, r'<itunes:category text="[^"]*"\s*/>|<itunes:category text="[^"]*">[\s\S]*?</itunes:category>\s*</itunes:category>|<itunes:category text="[^"]*">\s*<itunes:category text="[^"]*"\s*/>\s*</itunes:category>', bloque)
+        if nueva == cabeza:
+            continue
+        try:
+            cuerpo = {"message": "encabezado igual al de Spotify (nombre, descripción, foto)", "sha": sha,
+                      "content": base64.b64encode((nueva + resto).encode("utf-8")).decode()}
+            req = urllib.request.Request(base, data=json.dumps(cuerpo).encode(), headers=cab, method="PUT")
+            with urllib.request.urlopen(req, timeout=120):
+                pass
+            log(f"canal [{show}]: nombre, descripción y foto como en Spotify")
+        except Exception as ex:
+            log(f"canal [{show}]: no pude subir el feed ({ex})")
+
+
+def sin_fechas_futuras(cfgw):
+    """(oct/2026) Shows con "calendario" en anunciar (Tawil): el episodio se sube YA a Spotify
+    y Apple (que no muestran un episodio con fecha futura); el anuncio a los grupos sigue
+    saliendo en SU día, porque el robot lo calcula por el número, no por esta fecha. Si el
+    feed trae fechas futuras (el bot las toma del archivo), se cambian por la de hoy, en
+    orden de número (#27 antes que #28) y sin tocar el guid."""
+    import base64
+    import datetime as _dt
+    from email.utils import format_datetime
+    ahora = _dt.datetime.now(_dt.timezone.utc)
+    for show, datos in (cfgw.get("anunciar") or {}).items():
+        if not isinstance(datos, dict) or not datos.get("calendario"):
+            continue
+        c = leer_json(BASE / show / "config.json")
+        tok = next((p for p in (BASE / show / "github_token.txt", BASE / "jabura" / "github_token.txt") if p.exists()), None)
+        if not tok:
+            continue
+        cab = {"Authorization": "token " + tok.read_text(encoding="utf-8").strip(),
+               "User-Agent": "otzar-mantenimiento", "Accept": "application/vnd.github+json"}
+        base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}/contents/feed.xml"
+        try:
+            with urllib.request.urlopen(urllib.request.Request(base, headers=cab), timeout=60) as r:
+                sha = json.loads(r.read().decode())["sha"]
+            with urllib.request.urlopen(urllib.request.Request(base, headers=dict(cab, Accept="application/vnd.github.raw")), timeout=120) as r:
+                feed = r.read().decode("utf-8", "replace")
+        except Exception as ex:
+            log(f"fechas [{show}]: no pude leer el feed ({ex})")
+            continue
+        futuros = []
+        for m in re.finditer(r"<item>([\s\S]*?)</item>", feed):
+            d = re.search(r"<pubDate>([\s\S]*?)</pubDate>", m.group(1))
+            try:
+                cuando = parsedate_to_datetime(d.group(1).strip()) if d else None
+            except Exception:
+                cuando = None
+            if cuando and not cuando.tzinfo:          # "-0000" llega sin zona: es UTC
+                cuando = cuando.replace(tzinfo=_dt.timezone.utc)
+            if cuando and cuando > ahora:
+                t = re.search(r"<title>(?:<!\[CDATA\[)?\s*#\s*(\d+)", m.group(1))
+                futuros.append((int(t.group(1)) if t else 0, cuando, m.group(1)))
+        if not futuros:
+            continue
+        futuros.sort(key=lambda x: (x[0], x[1]))
+        nuevo = feed
+        for i, (_n, _c, it) in enumerate(futuros):
+            fecha = format_datetime(ahora - _dt.timedelta(minutes=len(futuros) - i), usegmt=True)
+            nuevo = nuevo.replace(it, re.sub(r"<pubDate>[\s\S]*?</pubDate>", f"<pubDate>{fecha}</pubDate>", it, count=1), 1)
+        try:
+            cuerpo = {"message": "episodios visibles ya (el anuncio sale en su día)", "sha": sha,
+                      "content": base64.b64encode(nuevo.encode("utf-8")).decode()}
+            req = urllib.request.Request(base, data=json.dumps(cuerpo).encode(), headers=cab, method="PUT")
+            with urllib.request.urlopen(req, timeout=120):
+                pass
+            log(f"fechas [{show}]: {len(futuros)} episodio(s) con fecha futura → hoy (ya se ven en Spotify/Apple; el anuncio sale en su día)")
+        except Exception as ex:
+            log(f"fechas [{show}]: no pude subir el feed ({ex})")
+
+
 def ids_spotify(cfgw):
     """Shows rescatados de Spotify for Creators ("ids_spotify" en su config.json, lo
     pone instalar_otzar.py): cada episodio viejo conserva en el feed el MISMO guid y
@@ -487,7 +607,7 @@ def soundcloud():
 
 
 def plataformas():
-    """Una vez al día: en qué plataformas está cada show (Apple Podcasts por la API
+    """Cada 3 h (solo pregunta por los que faltan): en qué plataformas está cada show (Apple Podcasts por la API
     pública de iTunes). Deja C:\\robotwhats\\plataformas.json para que el robot ponga
     el link del episodio en Apple en cada anuncio."""
     script = BASE / "jabura" / "plataformas.py"
@@ -497,6 +617,22 @@ def plataformas():
         subprocess.run([sys.executable, str(script), "--rapido"], timeout=300)
     except Exception as ex:
         log(f"plataformas: {ex}")
+
+
+def limpieza():
+    """(oct/2026) Una vez al día, si el usuario ya aprobó la limpieza (espacio.py limpiar --si
+    deja limpieza_auto.json): aparta de la PC los audios que ya están en archive.org (mismo md5)
+    y en el feed. Quedan 14 días en C:\\OTZAR\\_papelera y luego se borran solos."""
+    marca, script = BASE / "limpieza_auto.json", BASE / "jabura" / "espacio.py"
+    if not (marca.exists() and script.exists()):
+        return
+    if time.time() - float(leer_json(marca, {}).get("ultima", 0) or 0) < 20 * 3600:
+        return
+    log("--- limpieza: audios ya a salvo en archive.org salen de la PC ---")
+    try:
+        subprocess.run([sys.executable, str(script), "limpiar", "--si", "--auto"], timeout=3600)
+    except Exception as ex:
+        log(f"limpieza: {ex}")
 
 
 def main():
@@ -530,10 +666,13 @@ def main():
     espejo()
     parasha_semanal(cfgw)
     ids_spotify(cfgw)
+    sin_fechas_futuras(cfgw)
+    canal_feed(cfgw)
     soundcloud()
     plataformas()
     fiestas_pasadas(cfgw)
     sin_atrasos(cfgw)
+    limpieza()
     log("mantenimiento listo; ahora el robot anuncia.")
     return 0
 

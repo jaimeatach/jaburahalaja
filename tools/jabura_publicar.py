@@ -101,7 +101,20 @@ def subir_nuevos(cfg, archivos, ver):
     claves = {}
     if os.environ.get("IA_ACCESS_KEY") and os.environ.get("IA_SECRET_KEY"):
         claves = {"access_key": os.environ["IA_ACCESS_KEY"], "secret_key": os.environ["IA_SECRET_KEY"]}
-    item = get_item(cfg["archive_id"])
+    # (oct/2026) archive.org a veces tarda más de 12 s en contestar y el script tronaba con un
+    # traceback larguísimo: se reintenta con más paciencia; si no contesta, se sale SIN armar el
+    # feed (un feed armado sin saber qué hay arriba quedaría vacío y Spotify perdería episodios).
+    item = None
+    for intento in range(1, 4):
+        try:
+            item = get_item(cfg["archive_id"], request_kwargs={"timeout": 60})
+            break
+        except Exception as ex:          # noqa: BLE001
+            log(f"archive.org no contesta ({intento}/3): {str(ex)[:120]}")
+            time.sleep(20 * intento)
+    if item is None or not item.exists:
+        log("archive.org no contestó: no subo nada ni toco el feed. Se reintenta en la próxima corrida.")
+        sys.exit(1)
     ya = {f["name"] for f in (item.files or [])}
     pendientes = [(l, r) for l, r in archivos if r not in ya]
     log(f"En el Drive: {len(archivos)} · ya en archive.org: {len(archivos) - len(pendientes)} · por subir: {len(pendientes)}")
@@ -164,9 +177,24 @@ def titulo_de(remoto):
     modulo = partes[-2] if len(partes) >= 2 else ""
     if modulo in ("שיעורים", "audios", "audio"):                 # subcarpeta genérica
         modulo = partes[-3] if len(partes) >= 3 else ""
+    # (oct/2026) ש״מ junta muchas melajot y el robot las guarda todas en la carpeta del siman
+    # ("כותב ומוחק"): si el shiur es de otra (תופר, קורע…), esa va adelante y no la carpeta.
+    if norm(modulo) in ("גוזז", "כותב ומוחק"):
+        for melaja, patron in TEMAS_340:
+            if re.search(patron, base, re.I):
+                modulo = "" if melaja in base else melaja
+                break
     if modulo and not re.match(r"^שיעורים", modulo) and modulo not in base:
         return f"{modulo} · {base}"
     return base
+
+
+TEMAS_340 = [
+    ("תופר", r"תופר|תפירה|לתפור|zipper|velcro|velkro|cierre|costura|coser"),
+    ("קורע", r"קורע|קריעה|לקרוע|rasgar"),
+    ("מעמר", r"מעמר|meamer"),
+    ("מדבק", r"מדבק|הדבקה|סלוטייפ|pegar"),
+]
 
 
 MIME = {".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".mp4": "audio/mp4", ".aac": "audio/aac",
@@ -518,6 +546,13 @@ def main():
     archivos, dudosos = SA.listar(carpeta)
     if dudosos:
         log(f"OJO: {len(dudosos)} archivos sin extensión que no identifiqué; se saltean.")
+    # (oct/2026) lo que está suelto en la raíz del Drive no es de la jabura (así se subió a
+    # archive.org, que es público, un "BASE DE DATOS DELICATESSEN.xlsx.docx"): solo se publica lo
+    # que está dentro de una carpeta (שיעורים בהלכה, שיחות מוסר, ספרים…).
+    sueltos = [r for _, r in archivos if "/" not in r]
+    if sueltos:
+        log(f"OJO: {len(sueltos)} archivo(s) sueltos en la raíz del Drive NO se suben: {', '.join(sueltos[:5])}")
+        archivos = [(l, r) for l, r in archivos if "/" in r]
     # "ignorar_carpetas": subcarpetas del Drive que ya no van (la מוקצה vieja de 3
     # shiurim quedó dentro de la carpeta completa); "ignorar": nombres de archivo
     ign_carp = {norm(c) for c in (cfg.get("ignorar_carpetas") or [])}

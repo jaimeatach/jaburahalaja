@@ -1230,11 +1230,339 @@ function tituloDeTema(show, tit) {
     ("""armarPlantilla(datos, { titulo: tituloAnuncio(show, ep.tit), """, """armarPlantilla(datos, { dedicatoria: dedicatoriaDe(show, ep.tit), titulo: tituloAnuncio(show, ep.tit), """, True),
     ("""dedicatoria: datos.dedicatoria || '' };""", """dedicatoria: v.dedicatoria || datos.dedicatoria || '' };"""),
     ("""  const titulo = t ? `#${n} ${t.tema} (${n - t.desde + 1})` : `#${n}`;""", """  const titulo = t ? `#${n}- ${t.tema} (${n - t.desde + 1})` : `#${n}`;"""),
+    # (oct/2026) anunciar se relee en cada corrida (una pausa vale sin reiniciar); temas desde la rama de trabajo
+    ("""  log(esVigilante ? `=== VIGILANTE: reintento automatico ${vigilanteIntentos}/12 ===` : '=== ANUNCIANDO (boton) ===');
+  const estado = leerEstado();
+""", """  log(esVigilante ? `=== VIGILANTE: reintento automatico ${vigilanteIntentos}/12 ===` : '=== ANUNCIANDO (boton) ===');
+  // (oct/2026) "anunciar" se relee del disco en cada corrida: una pausa (--pausar=show)
+  // o cualquier cambio del instalador vale YA, sin reiniciar el robot
+  try {
+    const _f = JSON.parse(fs.readFileSync(path.join(__dirname, 'config_whatsapp.json'), 'utf8'));
+    if (_f && _f.anunciar && typeof _f.anunciar === 'object') CFG.anunciar = _f.anunciar;
+  } catch (e) { log('no pude releer config_whatsapp.json (sigo con el de memoria): ' + e.message); }
+  const estado = leerEstado();
+"""),
+    ("""    try {
+      const j = JSON.parse(await fetchTexto(`https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/tools/otzar/temas/${sh}.json`));
+      if (Array.isArray(j)) _temasRemotos[sh] = j;
+    } catch (e) {}
+""", """    for (const rama of ['claude/shiurim-halachot-shabbat-vriig5', 'main']) {   // (oct/2026) la rama de trabajo primero
+      try {
+        const j = JSON.parse(await fetchTexto(`https://raw.githubusercontent.com/jaimeatach/jaburahalaja/${rama}/tools/otzar/temas/${sh}.json`));
+        if (Array.isArray(j)) { _temasRemotos[sh] = j; break; }
+      } catch (e) {}
+    }
+"""),
+    # (oct/2026) calendario: el shiur sale desde las 00:00 de su dia; "nada para hoy; el proximo es..."
+    ("""  const d = new Date(y, mo - 1, da, 6, 0, 0, 0);
+""", """  const d = new Date(y, mo - 1, da, 0, 0, 0, 0);   // (oct/2026) desde las 00:00 de su dia (el ANUNCIAR de las 5:30 ya lo manda)
+"""),
+    ("""    if (!nuevos.length) { log(`${show}: nada nuevo.`); continue; }
+""", """    if (!nuevos.length) {
+      // (oct/2026) con calendario: decir cuando sale el proximo, en vez de solo "nada nuevo"
+      const _cal = (CFG.anunciar[show] || {}).calendario;
+      const _prox = (_cal && _cal.n && _cal.fecha) ? items.filter(it => !vistos.has(sacaGuid(it)) && numeroDe(sacaTitulo(it)))
+        .map(it => ({ t: sacaTitulo(it), f: fechaDeNumero(_cal, numeroDe(sacaTitulo(it))) })).sort((a, b) => a.f - b.f)[0] : null;
+      log(_prox ? `${show}: nada para hoy; el proximo es "${_prox.t.slice(0, 40)}" el ${new Date(_prox.f).toLocaleDateString('es-MX')}.`
+                : `${show}: nada nuevo.`);
+      continue;
+    }
+"""),
+    # (oct/2026) "!tawil" por WhatsApp: tema y donador de la semana en un solo mensaje
+    ("""      return;
+    }
+  }
+
+  // ===== NUBE DE TORA: solo privados que NO son chat directo =====
+""", """      return;
+    }
+  }
+
+  // === "!tawil" (oct/2026), en chat privado con el robot: tema y donador de la semana ===
+  //   !tawil 27                  <- numero del shiur desde el que vale (sin numero: el del domingo que viene)
+  //   tema: Kidush               <- el titulo sale "#27- Kidush (1)", "#28- Kidush (2)"...
+  //   donador: L"N               <- todo lo que sigue va tal cual en el mensaje
+  //   Fulano Ben Fulana
+  // Se guarda en C:\\OTZAR\\<show>\\temas.json (manda sobre el del repo) y el robot contesta como va a salir.
+  if (!esGrupo) {
+    const _txt = String(textoDe(m) || '').replace(/\\r/g, '').trim();
+    const _mc = /^!(tawil|tema-dedica|semana)\\b[ \\t]*(\\w+)?[ \\t]*(\\d{1,4})?/i.exec(_txt);
+    if (_mc && /tema\\s*:|donador\\s*:|dedicatoria\\s*:/i.test(_txt)) {
+      const show = (_mc[1].toLowerCase() === 'tawil' ? 'tawil' : String(_mc[2] || '').toLowerCase());
+      const datosAn = (CFG.anunciar || {})[show] || {};
+      const f = _archivoTemas(show);
+      const responder = async t => { try { await sock.sendMessage(jid, { text: t }); } catch (e) {} };
+      if (!f) { await responder(`❌ No encuentro el show "${show}".`); return; }
+      let desde = Number(_mc[3] || (_mc[1].toLowerCase() === 'tawil' ? _mc[2] : 0) || 0);
+      const _cal = datosAn.calendario;
+      if (!desde && _cal && _cal.n && _cal.fecha) {   // sin numero: el shiur del domingo (hoy si es domingo)
+        const obj = new Date(); obj.setHours(0, 0, 0, 0); obj.setDate(obj.getDate() + ((7 - obj.getDay()) % 7));
+        for (let k = Number(_cal.n) - 30; k < Number(_cal.n) + 2000; k++) if (fechaDeNumero(_cal, k) >= obj.getTime()) { desde = k; break; }
+      }
+      if (!desde) { await responder('❌ Falta el número del shiur. Ejemplo:\\n!tawil 27\\ntema: Kidush\\ndonador: L"N Fulano Ben Fulana'); return; }
+      const lineas = _txt.split('\\n');
+      let tema = '', dedic = [], enDedic = false;
+      for (const l of lineas.slice(1)) {
+        const mt = /^\\s*tema\\s*:\\s*(.*)$/i.exec(l), md = /^\\s*(donador|dedicatoria)\\s*:\\s*(.*)$/i.exec(l);
+        if (mt) { tema = mt[1].trim(); enDedic = false; }
+        else if (md) { enDedic = true; if (md[2].trim()) dedic.push(md[2].trim()); }
+        else if (enDedic && l.trim()) dedic.push(l.trim());
+      }
+      let l = []; try { l = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) {}
+      l = Array.isArray(l) ? l : [];
+      let e = l.find(t => Number(t.desde) === desde);
+      if (!e) { e = { desde }; l.push(e); }
+      if (tema) e.tema = tema.replace(/\\s+/g, ' ');
+      if (dedic.length) e.dedicatoria = dedic.join('\\n');
+      l.sort((a, b) => a.desde - b.desde);
+      try { fs.writeFileSync(f, JSON.stringify(l, null, 2)); } catch (err) { await responder('❌ No pude guardar: ' + err.message); return; }
+      log(`SEMANA ${show}: desde el #${desde}` + (tema ? ` tema "${tema}"` : '') + (dedic.length ? ` donador "${dedic.join(' / ')}"` : ''));
+      const tit = tituloAnuncio(show, `#${desde} x`);
+      const ded = dedicatoriaDe(show, `#${desde} x`) || datosAn.dedicatoria || '';
+      const dia = _cal && _cal.n ? new Date(fechaDeNumero(_cal, desde)).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' }) : '';
+      await responder(`✅ ${show}: guardado desde el #${desde}${dia ? ' (' + dia + ')' : ''}.\\n\\nAsí sale:\\n*${tit}*\\n\\n${ded}`);
+      return;
+    }
+  }
+
+  // ===== NUBE DE TORA: solo privados que NO son chat directo =====
+"""),
+    # (oct/2026) "!tawil" tambien dentro del grupo fuente del show
+    ("""  if (!esGrupo) {
+    const _txt = String(textoDe(m) || '').replace(/\\r/g, '').trim();
+""", """  // (oct/2026) tambien dentro del GRUPO FUENTE del show (p. ej. "Shiurim rab yosi" de Tawil);
+  // la respuesta del propio robot ahi ("✅ ..."/"❌ ...") no se toma como titulo de ningun audio
+  const _t0 = String(textoDe(m) || '').trim();
+  const _fuenteCmd = (esGrupo && /^(!|✅ |❌ )/.test(_t0)) ? (() => {
+    const r = leerRegistro();
+    return Object.keys(r).find(k => k.startsWith('escucha:') && r[k] && r[k].id === jid) || null;
+  })() : null;
+  if (_fuenteCmd && /^(✅|❌) /.test(_t0)) return;
+  if (!esGrupo || _fuenteCmd) {
+    const _txt = String(textoDe(m) || '').replace(/\\r/g, '').trim();
+"""),
+    # (oct/2026) Tawil: el mismo tema otra semana sigue la cuenta (#27 = (7))
+    ("""  return Object.keys(por).map(Number).sort((a, b) => a - b).map(d => ({ desde: d, tema: por[d] }));
+""", """  // (oct/2026) si una semana se avisa el MISMO tema que venia, la cuenta sigue (#27 = (7)), no vuelve a (1)
+  const _nt = x => String(x || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase()
+    .replace(/\\(\\s*\\d+\\s*\\)\\s*$/, '').replace(/[^\\p{L}\\p{N}]+/gu, ' ').trim();
+  const _lista = Object.keys(por).map(Number).sort((a, b) => a - b).map(d => ({ desde: d, tema: por[d] }));
+  return _lista.filter((t, i) => i === 0 || _nt(t.tema) !== _nt(_lista[i - 1].tema));
+"""),
+    # (oct/2026) Spotify: buscar tambien con el titulo corregido del tema
+    ("""      // (oct/2026) "spotify_espera_horas": N en anunciar.<show>: si Spotify no toma el
+""", """      // (oct/2026) con temas: si el titulo guardado quedo con otra cuenta ("(1)" en vez de "(7)"),
+      // se busca tambien con el titulo corregido del tema
+      if (!epLink && spotShow && !sinSpot && tituloDeTema(show, ep.tit) !== ep.tit) {
+        epLink = await linkEpisodio(spotShow, tituloDeTema(show, ep.tit), {}, 1, (CFG.anunciar[show] || {}).market);
+        if (epLink) log(`${show}: "${ep.tit.slice(0, 40)}" encontrado en Spotify como "${tituloDeTema(show, ep.tit)}"`);
+      }
+      // (oct/2026) "spotify_espera_horas": N en anunciar.<show>: si Spotify no toma el
+"""),
+    # (oct/2026) temas del repo guardados en la PC (temas_cache.json) y el mismo tema no reinicia la cuenta
+    ("""const _temasRemotos = {};
+""", """// (oct/2026) la ultima lista del repo queda guardada en temas_cache.json: al arrancar el robot ya
+// la tiene (antes, un "!tawil" que llegaba en el primer segundo veia solo la de la PC y contaba mal)
+const _temasRemotos = (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'temas_cache.json'), 'utf8')) || {}; } catch (e) { return {}; } })();
+"""),
+    ("""        if (Array.isArray(j)) { _temasRemotos[sh] = j; break; }
+""", """        if (Array.isArray(j)) {
+          _temasRemotos[sh] = j;
+          try { fs.writeFileSync(path.join(__dirname, 'temas_cache.json'), JSON.stringify(_temasRemotos)); } catch (e) {}
+          break;
+        }
+"""),
+    ("""      if (!f) { await responder(`❌ No encuentro el show "${show}".`); return; }
+""", """      if (!f) { await responder(`❌ No encuentro el show "${show}".`); return; }
+      try { await cargarTemasRemotos(); } catch (e) {}   // (oct/2026) la lista del repo al dia antes de contestar
+"""),
+    ("""      if (tema) e.tema = tema.replace(/\\s+/g, ' ');
+""", """      if (tema) {   // (oct/2026) el MISMO tema que venia no se guarda como tema nuevo: la cuenta sigue
+        const _nt2 = x => String(x || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/[^\\p{L}\\p{N}]+/gu, ' ').trim();
+        const _prev = temasDe(show).filter(t => t.desde < desde).pop();
+        if (_prev && _nt2(_prev.tema) === _nt2(tema)) delete e.tema;
+        else e.tema = tema.replace(/\\s+/g, ' ');
+      }
+"""),
+    # (oct/2026) el robot nunca anuncia en Shabat ni Yom Tov (boton, vigilante y piloto)
+    ("""  } catch (e) { log('no pude releer config_whatsapp.json (sigo con el de memoria): ' + e.message); }
+  const estado = leerEstado();
+""", """  } catch (e) { log('no pude releer config_whatsapp.json (sigo con el de memoria): ' + e.message); }
+  // (oct/2026) NUNCA en Shabat ni Yom Tov: desde las 16:00 de la vispera hasta la medianoche del dia
+  // (vale para el boton, el vigilante y el piloto automatico)
+  {
+    const _ah = new Date(), _man = new Date(_ah.getFullYear(), _ah.getMonth(), _ah.getDate() + 1);
+    const _bq = _ah.getDay() === 6 ? 'Shabat' : esYomTov(_ah) ? 'Yom Tov'
+      : (_ah.getHours() >= 16 && (_ah.getDay() === 5 || esYomTov(_man))) ? (_ah.getDay() === 5 ? 'Erev Shabat' : 'Erev Yom Tov') : '';
+    if (_bq) { log(`${_bq}: no se anuncia nada hasta que termine.`); return; }
+  }
+  const estado = leerEstado();
+"""),
+    # (oct/2026) Tawil: el archivo nunca con fecha futura (se ve ya en Spotify/Apple)
+    ("""    if (_t) { titulo = _t.titulo; if (_t.fecha) item._fecha = _t.fecha; }
+""", """    // (oct/2026) nunca fecha futura en el archivo: el episodio se ve YA en Spotify/Apple; el anuncio sale en su dia (calendario)
+    if (_t) { titulo = _t.titulo; if (_t.fecha && _t.fecha <= Date.now()) item._fecha = _t.fecha; }
+"""),
+    # (oct/2026) Motzaei Shabat / Yom Tov: se puede anunciar desde la puesta del sol + 50 min
+    ("""function diaSinEnvio(d) { return d.getDay() === 6 || esYomTov(d); }
+""", """function diaSinEnvio(d) { return d.getDay() === 6 || esYomTov(d); }
+// (oct/2026) puesta del sol en CDMX (formula de la NOAA; coincide con hebcal +-1 min)
+function puestaSol(dia, lat = 19.4326, lon = -99.1332) {
+  const y = dia.getFullYear(), m = dia.getMonth(), d = dia.getDate();
+  const N = Math.round((Date.UTC(y, m, d) - Date.UTC(y, 0, 1)) / 864e5) + 1;
+  const g = 2 * Math.PI / 365 * (N - 1 + (18 - 12) / 24), r = Math.PI / 180;
+  const eq = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+  const de = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+  const ha = Math.acos(Math.cos(90.833 * r) / (Math.cos(lat * r) * Math.cos(de)) - Math.tan(lat * r) * Math.tan(de)) / r;
+  return Date.UTC(y, m, d) + (720 - 4 * (lon - ha) - eq) * 60000;
+}
+// Shabat / Yom Tov: desde las 16:00 de la vispera hasta 50 min despues de la puesta del sol del
+// ultimo dia (Motzaei Shabat ya se anuncia). '' = se puede.
+function bloqueoSagrado(ah) {
+  const hoy = new Date(ah.getFullYear(), ah.getMonth(), ah.getDate());
+  const man = new Date(ah.getFullYear(), ah.getMonth(), ah.getDate() + 1);
+  const hoyS = diaSinEnvio(hoy), manS = diaSinEnvio(man);
+  if (hoyS && (manS || ah.getTime() < puestaSol(hoy) + 50 * 60000)) return hoy.getDay() === 6 ? 'Shabat' : 'Yom Tov';
+  if (!hoyS && manS && ah.getHours() >= 16) return man.getDay() === 6 ? 'Erev Shabat' : 'Erev Yom Tov';
+  return '';
+}
+"""),
+    ("""  // (oct/2026) NUNCA en Shabat ni Yom Tov: desde las 16:00 de la vispera hasta la medianoche del dia
+  // (vale para el boton, el vigilante y el piloto automatico)
+  {
+    const _ah = new Date(), _man = new Date(_ah.getFullYear(), _ah.getMonth(), _ah.getDate() + 1);
+    const _bq = _ah.getDay() === 6 ? 'Shabat' : esYomTov(_ah) ? 'Yom Tov'
+      : (_ah.getHours() >= 16 && (_ah.getDay() === 5 || esYomTov(_man))) ? (_ah.getDay() === 5 ? 'Erev Shabat' : 'Erev Yom Tov') : '';
+""", """  // (oct/2026) NUNCA en Shabat ni Yom Tov: desde las 16:00 de la vispera hasta que sale (puesta del
+  // sol + 50 min); vale para el boton, el vigilante y el piloto automatico
+  {
+    const _bq = bloqueoSagrado(new Date());
+"""),
+    # (oct/2026) avisos del piloto al admin y comandos !reporte !estado !pausa !sigue
+    ("""// ---------------- anuncios ----------------
+// Busca el link EXACTO del episodio en Spotify por su titulo.
+""", """// === AVISOS AL ADMIN (oct/2026) ===
+// El piloto deja avisos en <robot>\\avisos\\*.txt (reporte de la mañana, algo que fallo) y el
+// robot los manda al chat que se registro con "!reporte". Sin chat registrado, esperan ahi.
+const AVISOS_DIR = path.join(__dirname, 'avisos');
+setInterval(async () => {
+  if (!listo || bloqueoSagrado(new Date())) return;   // en Shabat / Yom Tov esperan
+  let archivos = [];
+  try { archivos = fs.readdirSync(AVISOS_DIR).filter(f => f.endsWith('.txt')).sort(); } catch (e) { return; }
+  if (!archivos.length) return;
+  while (archivos.length > 20) { try { fs.unlinkSync(path.join(AVISOS_DIR, archivos.shift())); } catch (e) { break; } }
+  const destino = (leerRegistro()['admin:reporte'] || {}).id;
+  if (!destino) return;
+  for (const f of archivos.slice(0, 3)) {
+    const p = path.join(AVISOS_DIR, f);
+    let t = ''; try { t = fs.readFileSync(p, 'utf8').trim(); } catch (e) {}
+    try { if (t) await sock.sendMessage(destino, { text: t }); fs.unlinkSync(p); }
+    catch (e) { log('AVISO no enviado: ' + (e.message || e)); break; }
+    await new Promise(r => setTimeout(r, 2000));
+  }
+}, 30000);
+
+// ---------------- anuncios ----------------
+// Busca el link EXACTO del episodio en Spotify por su titulo.
+"""),
+    ("""  // ===== NUBE DE TORA: solo privados que NO son chat directo =====
+""", """  // === "!reporte" / "!estado" / "!pausa" / "!sigue" (oct/2026), en chat privado con el robot ===
+  // "!reporte" registra ESTE chat para el reporte de cada mañana y los avisos del piloto (el primero
+  // que lo manda; despues solo ese chat puede cambiarlo). Los demas comandos, solo desde ese chat.
+  if (!esGrupo) {
+    const _ma = /^!(reporte|estado|pausa|sigue)\\b/i.exec(String(textoDe(m) || '').trim());
+    if (_ma) {
+      const orden = _ma[1].toLowerCase();
+      const reg = leerRegistro();
+      const adm = reg['admin:reporte'];
+      const resp = async t => { try { await sock.sendMessage(jid, { text: t }); } catch (e) {} };
+      const PAUSA_PILOTO = path.join('C:\\\\OTZAR', 'PILOTO_PAUSA.txt');
+      if (orden === 'reporte') {
+        if (adm && adm.id && adm.id !== jid) { await resp('❌ Los reportes ya van a otro chat.'); return; }
+        reg['admin:reporte'] = { id: jid, nombre: 'reportes del piloto' };
+        guardarRegistro(reg);
+        log(`ADMIN: los reportes del piloto van a ${jid}`);
+        await resp('✅ Listo: aquí te llega cada mañana el reporte del robot y del piloto, y un aviso si algo falla.\\n\\nComandos:\\n!estado → cómo está todo ahora\\n!pausa → el piloto deja de subir y anunciar\\n!sigue → vuelve a andar');
+        return;
+      }
+      if (!adm || adm.id !== jid) { await resp('❌ Primero manda !reporte desde el chat que va a recibir los avisos.'); return; }
+      if (orden === 'pausa') {
+        try { fs.writeFileSync(PAUSA_PILOTO, 'pausado por WhatsApp ' + new Date().toLocaleString('es-MX')); } catch (e) {}
+        await resp('⏸️ Piloto en pausa: no sube ni anuncia nada hasta que mandes !sigue.');
+        return;
+      }
+      if (orden === 'sigue') {
+        try { fs.unlinkSync(PAUSA_PILOTO); } catch (e) {}
+        await resp('▶️ Piloto andando otra vez.');
+        return;
+      }
+      let est = '';
+      try { est = fs.readFileSync(path.join('C:\\\\OTZAR', 'piloto_reporte.txt'), 'utf8').trim(); } catch (e) {}
+      await resp(est || '🤖 El robot está conectado, pero el piloto todavía no dejó reporte (¿está abierta su ventana?).');
+      return;
+    }
+  }
+
+  // ===== NUBE DE TORA: solo privados que NO son chat directo =====
+"""),
+    # (oct/2026) link de Apple corto (sin el nombre del episodio)
+    ("""    if (ep && ep.trackViewUrl) return ep.trackViewUrl.replace(/&uo=\\d+$/, '');
+  } catch (e) {}
+  return pl.apple;   // el episodio aun no aparece en Apple: el link del show
+}
+""", """    // (oct/2026) link corto: sin el nombre del episodio adentro (Apple lo abre igual)
+    if (ep && ep.collectionId && ep.trackId) return `https://podcasts.apple.com/podcast/id${ep.collectionId}?i=${ep.trackId}`;
+    if (ep && ep.trackViewUrl) return appleCorto(ep.trackViewUrl.replace(/&uo=\\d+$/, ''));
+  } catch (e) {}
+  return appleCorto(pl.apple);   // el episodio aun no aparece en Apple: el link del show
+}
+function appleCorto(u) {
+  const m = String(u || '').match(/^https:\\/\\/podcasts\\.apple\\.com\\/(?:[a-z]{2}\\/)?podcast\\/(?:[^/?]+\\/)?(id\\d+)(\\?i=\\d+)?/);
+  return m ? `https://podcasts.apple.com/podcast/${m[1]}${m[2] || ''}` : u;
+}
+"""),
+    # (oct/2026) link de Apple muy corto con is.gd (si falla, el normal)
+    ("""  const apple = await linkApple(show, titulo);
+  if (apple) out.push(['Apple Podcasts', apple]);
+""", """  const apple = await acortarLink(await linkApple(show, titulo));
+  if (apple) out.push(['Apple Podcasts', apple]);
+"""),
+    ("""function appleCorto(u) {
+""", """// (oct/2026) link MUY corto con is.gd (sin publicidad ni rastreo, lleva directo): https://is.gd/Ab3xYz.
+// Se guardan en links_cortos.json para no pedir dos veces; si is.gd falla, va el link normal.
+// "acortar_links": false en el config lo apaga.
+let _cortos = null;
+async function acortarLink(u) {
+  if (!u || CFG.acortar_links === false || !/^https:\\/\\/podcasts\\.apple\\.com\\//.test(u)) return u;
+  const f = path.join(__dirname, 'links_cortos.json');
+  if (!_cortos) { try { _cortos = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { _cortos = {}; } }
+  if (_cortos[u]) return _cortos[u];
+  try {
+    const r = String(await Promise.race([fetchTexto('https://is.gd/create.php?format=simple&url=' + encodeURIComponent(u)),
+      new Promise((_, no) => setTimeout(() => no(new Error('tardo')), 8000))])).trim();
+    if (/^https:\\/\\/is\\.gd\\/\\w+$/.test(r)) {
+      _cortos[u] = r;
+      try { fs.writeFileSync(f, JSON.stringify(_cortos, null, 1)); } catch (e) {}
+      return r;
+    }
+  } catch (e) {}
+  return u;
+}
+function appleCorto(u) {
+"""),
+    # (oct/2026) orden de los links: Spotify, Apple, y al final WhatsApp
+    ("""  const i = texto.lastIndexOf('\\n\\n📢');
+  return i >= 0 ? texto.slice(0, i) + '\\n' + extra + texto.slice(i) : texto + '\\n' + extra;
+""", """  // (oct/2026) orden: Spotify, Apple (y demas), y AL FINAL el grupo de WhatsApp
+  let i = texto.search(/\\nWhats[Aa]pp\\n/);
+  if (i < 0) i = texto.lastIndexOf('\\n\\n📢');
+  return i >= 0 ? texto.slice(0, i) + '\\n' + extra + texto.slice(i) : texto + '\\n' + extra;
+"""),
 ]
 MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
-                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe")
+                "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema", "temas_cache.json", "la lista del repo al dia antes de contestar", "NUNCA en Shabat ni Yom Tov", "nunca fecha futura en el archivo", "function bloqueoSagrado", "AVISOS AL ADMIN", "!reporte\" / \"!estado", "function appleCorto", "async function acortarLink", "AL FINAL el grupo de WhatsApp")
 # הלכות מוקצה: la carpeta "שיעורים מוקצה" que comparte Saúl aparte (31 shiurim
 # numerados al FINAL del nombre). Mismos títulos y simanim que el catálogo de la app.
 MUKZE_CARPETA = r"G:\.shortcut-targets-by-id\1OcakbiF7zD5biDpWYElkB-DoIlidbTlT\שיעורים מוקצה"
@@ -1351,6 +1679,13 @@ def escribir(ruta, texto):
 
 
 # ── 1. robot ──────────────────────────────────────────────────────────────────
+def _ya_puesto(viejo, nuevo, plano):
+    lineas_plano = {x.strip() for x in plano.split("\n")}
+    viejas = {x.strip() for x in viejo.split("\n")}
+    propias = [x.strip() for x in nuevo.split("\n") if len(x.strip()) > 15 and x.strip() not in viejas]
+    return bool(propias) and all(x in lineas_plano for x in propias)
+
+
 def parchar_robot():
     paso(1, "Robot de WhatsApp (robot_whatsapp.js)")
     if not ROBOT:
@@ -1374,6 +1709,12 @@ def parchar_robot():
         # ya aplicado y luego retocado por un parche posterior (su "viejo" vive dentro
         # de este "nuevo" y su "nuevo" ya está): no se vuelve a meter
         if any(h2[0] in nuevo and h2[1] in plano for h2 in HUNKS[i + 1:]):
+            aplicados += 1
+            continue
+        # (oct/2026) retocado por una CADENA de parches posteriores: si todas las líneas
+        # propias que agrega este parche ya están en el robot, ya está puesto (antes se
+        # volvía a meter y duplicaba feedDeShow y el filtro de esperar_fecha)
+        if _ya_puesto(viejo, nuevo, plano):
             aplicados += 1
             continue
         if todos and viejo in plano:
@@ -3637,6 +3978,11 @@ def instalar_anunciar():
         bajar("otzar/robot_fiestas.py", BASE / "robot_fiestas.py")   # fiestas pasadas (mantenimiento lo lee)
         bajar("otzar/diagnostico.py", BASE / "jabura" / "diagnostico.py")
         bajar("otzar/plataformas.py", BASE / "jabura" / "plataformas.py")    # Apple/Amazon/Spotify por show (una vez al día)
+        bajar("otzar/piloto.py", BASE / "jabura" / "piloto.py")   # (oct/2026) piloto automático
+        bajar("otzar/PILOTO.bat", ROBOT / "PILOTO.bat")
+        bajar("otzar/mudanza.py", BASE / "jabura" / "mudanza.py")   # (oct/2026) pasar todo a la HP
+        bajar("otzar/revisar_spotify.py", BASE / "jabura" / "revisar_spotify.py")   # ¿por qué no se ve en Spotify?
+        bajar("otzar/espacio.py", BASE / "jabura" / "espacio.py")   # (oct/2026) audios a salvo en archive.org salen de la PC
         bajar("otzar/soundcloud_subir.py", BASE / "jabura" / "soundcloud_subir.py")   # SoundCloud automático (si hay llaves)   # "por qué no salió": python diagnostico.py <show>
     if ruta.exists() and "mantenimiento.py" in ruta.read_text(encoding="utf-8", errors="replace"):
         ok("ya llama al mantenimiento (jabura, shows de WhatsApp, espejo, sin atrasos)")
@@ -4194,6 +4540,442 @@ def tawil_calendario():
     ok("listos para salir cada uno en su día: " + ", ".join(sorted(pendientes.values(), key=lambda x: int(re.sub(r"\D", "", x.split()[0]) or 0))))
 
 
+# ── 48. --frenar=show: parar un show por completo y limpiar su feed (oct/2026) ──
+#   - el robot deja de anunciarlo (anunciar.<show>.pausado)
+#   - podcast_bot.py queda en podcast_bot.py.pausado y en su lugar uno que no hace
+#     nada: ni ACTUALIZAR ni ANUNCIAR bajan, suben o publican ese show
+#   - sus canales de YouTube se apartan (el robot de fiestas no busca ahí)
+#   - si hay tools/otzar/limpieza_<show>.json, quita del feed esos episodios (los mp3
+#     siguen en archive.org y en la PC; el feed de antes queda de respaldo en la carpeta)
+#   --reanudar=show lo deshace. --nuevo-host=show:RSS (cuando el show ya vive en
+#   Spotify for Creators) pone <itunes:new-feed-url> en el feed viejo.
+STUB_PAUSADO = """# PAUSADO por instalar_otzar.py --frenar ({fecha}). El bot original es podcast_bot.py.pausado.
+# Para volver a usarlo: python instalar_otzar.py --reanudar={show}
+print("{show}: PAUSADO. No se baja ni se publica nada; los episodios se suben a mano en Spotify for Creators.")
+"""
+
+
+def _arg_lista(nombre):
+    return [x.strip().lower() for a in sys.argv if a.startswith(f"--{nombre}=") for x in a.split("=", 1)[1].split(",") if x.strip()]
+
+
+def _cab_github(d):
+    tok = next((p for p in (d / "github_token.txt", BASE / "jabura" / "github_token.txt") if p.exists()), None)
+    if not tok:
+        return None
+    return {"Authorization": "token " + tok.read_text(encoding="utf-8").strip(),
+            "User-Agent": "instalar-otzar", "Accept": "application/vnd.github+json"}
+
+
+def frenar():
+    for show in _arg_lista("frenar"):
+        paso(48, f"{show}: FRENAR todo (sin bajar, sin publicar, sin anunciar) y limpiar el feed")
+        d = BASE / show
+        if not d.is_dir():
+            aviso(f"no existe {d}")
+            continue
+        # 1) robot: no anunciar
+        if ROBOT:
+            rw = ROBOT / "config_whatsapp.json"
+            try:
+                cfg = json.loads(rw.read_text(encoding="utf-8"))
+                an = (cfg.get("anunciar") or {}).get(show)
+                if isinstance(an, dict) and not an.get("pausado"):
+                    an["pausado"] = True
+                    respaldar(rw)
+                    if not VER:
+                        escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+                ok("robot: ya no anuncia este show")
+            except Exception as ex:                       # noqa: BLE001
+                aviso(f"config del robot: {ex}")
+        # 2) el bot: apartado, con uno que no hace nada en su lugar
+        bot, guardado = d / "podcast_bot.py", d / "podcast_bot.py.pausado"
+        if bot.exists() and STUB_PAUSADO.splitlines()[0][:20] not in bot.read_text(encoding="utf-8", errors="replace"):
+            if not VER:
+                if guardado.exists():
+                    respaldar(guardado)
+                shutil.copy2(bot, guardado)
+                escribir(bot, STUB_PAUSADO.format(show=show, fecha=time.strftime("%d/%m/%Y")))
+            ok("podcast_bot.py apartado (quedó en podcast_bot.py.pausado): ACTUALIZAR ya no baja ni publica nada de este show")
+        else:
+            ok("el bot ya estaba pausado")
+        # 3) config del show: canales apartados
+        cp = d / "config.json"
+        c = {}
+        try:
+            c = json.loads(cp.read_text(encoding="utf-8"))
+            cambio = False
+            for k in ("canales_youtube", "canal_youtube"):
+                if c.get(k):
+                    c[k + "_pausado"] = c.pop(k)
+                    cambio = True
+            if not c.get("pausado"):
+                c["pausado"] = True
+                cambio = True
+            if cambio:
+                respaldar(cp)
+                if not VER:
+                    escribir(cp, json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+            ok("canales de YouTube apartados: el robot de fiestas ya no busca en ellos")
+        except Exception as ex:                           # noqa: BLE001
+            aviso(f"config.json: {ex}")
+        # 4) limpiar el feed
+        try:
+            lim = json.loads(bajar_texto(f"otzar/limpieza_{show}.json"))
+        except Exception:
+            lim = None
+        if not lim:
+            continue
+        quitar = {q["guid"] for q in lim.get("quitar", [])}
+        cab = _cab_github(d)
+        if not cab:
+            aviso("falta github_token.txt: no puedo limpiar el feed")
+            continue
+        base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}"
+        try:
+            feed, sha = _gh_texto(base, cab, "feed.xml")
+        except Exception as ex:                           # noqa: BLE001
+            aviso(f"no pude leer el feed: {ex}")
+            continue
+        quitados = []
+
+        def _fuera(m):
+            g = re.search(r"<guid[^>]*>([\s\S]*?)</guid>", m.group(0))
+            if g and html.unescape(g.group(1).strip()) in quitar:
+                t = re.search(r"<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?</title>", m.group(0))
+                quitados.append(html.unescape(t.group(1)) if t else g.group(1))
+                return ""
+            return m.group(0)
+        nuevo = re.sub(r"[ \t]*<item>[\s\S]*?</item>[ \t]*\n?", _fuera, feed)
+        quedan = nuevo.count("<item>")
+        print(f"   episodios antes: {feed.count('<item>')} · se quitan: {len(quitados)} · quedan: {quedan}")
+        for t in quitados[:8]:
+            print("     - " + t[:90])
+        if len(quitados) > 8:
+            print(f"     ... y {len(quitados) - 8} más (lista completa en tools/otzar/limpieza_{show}.json)")
+        if not quitados:
+            ok("el feed ya estaba limpio")
+            continue
+        if quedan < 5:
+            aviso("quedarían menos de 5 episodios; no toco el feed")
+            continue
+        if VER:
+            ok("(prueba en seco)")
+            continue
+        (d / f"feed_antes_de_limpiar_{time.strftime('%Y%m%d%H%M%S')}.xml").write_text(feed, encoding="utf-8")
+        _gh_put(base, cab, "feed.xml", nuevo.encode("utf-8"), f"quitar {len(quitados)} episodios que no son del show", sha)
+        ok(f"feed limpio: {quedan} episodios. Spotify quita los otros en unas horas (los mp3 siguen en archive.org)")
+
+
+def reanudar():
+    for show in _arg_lista("reanudar"):
+        paso(48, f"{show}: reanudar")
+        d = BASE / show
+        bot, guardado = d / "podcast_bot.py", d / "podcast_bot.py.pausado"
+        if guardado.exists() and not VER:
+            shutil.copy2(guardado, bot)
+            ok("podcast_bot.py original de vuelta")
+        cp = d / "config.json"
+        try:
+            c = json.loads(cp.read_text(encoding="utf-8"))
+            for k in ("canales_youtube", "canal_youtube"):
+                if c.get(k + "_pausado") and not c.get(k):
+                    c[k] = c.pop(k + "_pausado")
+            c.pop("pausado", None)
+            if not VER:
+                escribir(cp, json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+        except Exception:
+            pass
+        if ROBOT:
+            rw = ROBOT / "config_whatsapp.json"
+            cfg = json.loads(rw.read_text(encoding="utf-8"))
+            an = (cfg.get("anunciar") or {}).get(show)
+            if isinstance(an, dict) and an.get("pausado"):
+                an["pausado"] = False
+                respaldar(rw)
+                if not VER:
+                    escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+        ok("reanudado")
+
+
+def nuevo_host():
+    for par in [a.split("=", 1)[1] for a in sys.argv if a.startswith("--nuevo-host=")]:
+        show, _, url = par.partition(":")
+        show, url = show.strip().lower(), url.strip()
+        if not url.startswith("http"):
+            aviso("uso: --nuevo-host=show:https://anchor.fm/s/.../podcast/rss")
+            continue
+        paso(48, f"{show}: el show ya vive en Spotify for Creators")
+        d = BASE / show
+        c = json.loads((d / "config.json").read_text(encoding="utf-8")) if (d / "config.json").exists() else {}
+        cab = _cab_github(d)
+        if not cab:
+            aviso("falta github_token.txt")
+            continue
+        base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}"
+        feed, sha = _gh_texto(base, cab, "feed.xml")
+        feed = re.sub(r"\s*<itunes:new-feed-url>[\s\S]*?</itunes:new-feed-url>", "", feed)
+        feed = re.sub(r"(<channel>)", r"\1\n    <itunes:new-feed-url>" + html.escape(url) + "</itunes:new-feed-url>", feed, count=1)
+        if not VER:
+            _gh_put(base, cab, "feed.xml", feed.encode("utf-8"), "el show se mudó a Spotify for Creators", sha)
+            c["rss_nuevo_host"] = url
+            escribir(d / "config.json", json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+        if ROBOT:
+            rw = ROBOT / "config_whatsapp.json"
+            cfg = json.loads(rw.read_text(encoding="utf-8"))
+            an = (cfg.get("anunciar") or {}).get(show)
+            if isinstance(an, dict):
+                an["feed"] = url                        # si se reanuda el anuncio, lee lo que se sube en Creators
+                respaldar(rw)
+                if not VER:
+                    escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+        ok("el feed viejo avisa a Apple/Amazon que el show se mudó; nosotros ya no publicamos nada ahí")
+
+
+# ── 49. --pausar=show / --despausar=show: solo el ANUNCIO del robot (oct/2026) ──
+#   No toca feeds, bots ni archivos: el robot deja de mandar ese show a los grupos
+#   (o vuelve a mandarlo). Así se pausó mishlei (el curso saturó; vendrá otro).
+def pausar_anuncio():
+    for flag, valor in (("pausar", True), ("despausar", False)):
+        shows = _arg_lista(flag)
+        if not shows or not ROBOT:
+            continue
+        paso(49, ("PAUSAR" if valor else "REANUDAR") + " el anuncio de: " + ", ".join(shows))
+        rw = ROBOT / "config_whatsapp.json"
+        cfg = json.loads(rw.read_text(encoding="utf-8"))
+        an_all = cfg.get("anunciar") or {}
+        cambio = False
+        for show in shows:
+            an = an_all.get(show)
+            if not isinstance(an, dict):
+                aviso(f"{show}: no está en anunciar (hay: {', '.join(sorted(an_all))})")
+                continue
+            if bool(an.get("pausado")) != valor:
+                an["pausado"] = valor
+                cambio = True
+            ok(f"{show}: " + ("EN PAUSA, el robot ya no lo manda a ningún grupo" if valor else "el robot lo vuelve a mandar"))
+        if cambio:
+            respaldar(rw)
+            if not VER:
+                escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+            print("   → reinicia el robot (cierra su ventana y abre ROBOT_WHATSAPP.bat)")
+
+
+# ── 50. Encabezado del show igual al de Spotify (nombre, descripción, autor, foto) ──
+#   tools/otzar/canales/<show>.json + la foto ORIGINAL en base64 (.b64): así el filtro de
+#   la PC no la "tapa" (la portada de Tawil salió con la cara en negro). Se sube al repo del
+#   show con nombre fechado (Spotify solo vuelve a bajar la foto si cambia la URL) y queda en
+#   config.json → "canal"; mantenimiento.py (canal_feed) lo vuelve a poner en el feed siempre.
+CANALES = ["tawil", "credi"]
+
+
+def canales_shows():
+    import hashlib
+    for show in CANALES:
+        d = BASE / show
+        if not (d / "config.json").exists():
+            continue
+        try:
+            datos = json.loads(bajar_texto(f"otzar/canales/{show}.json"))
+        except Exception as ex:                             # noqa: BLE001
+            aviso(f"{show}: no pude bajar canales/{show}.json ({ex})")
+            continue
+        c = json.loads((d / "config.json").read_text(encoding="utf-8"))
+        previo = c.get("canal") or {}
+        if previo.get("portada_sha256") == datos.get("portada_sha256") and all(
+                previo.get(k) == datos.get(k) for k in ("title", "description", "author", "categoria")):
+            continue
+        paso(50, f"{show}: nombre, descripción y foto iguales a los de Spotify")
+        canal = {k: datos.get(k) for k in ("title", "description", "author", "categoria")}
+        canal["imagen"] = previo.get("imagen", "")
+        canal["portada_sha256"] = previo.get("portada_sha256", "")
+        if previo.get("portada_sha256") != datos.get("portada_sha256"):
+            try:
+                img = base64.b64decode(bajar_texto(f"otzar/canales/{datos['portada_b64']}"))
+            except Exception as ex:                         # noqa: BLE001
+                aviso(f"{show}: no pude bajar la foto ({ex})")
+                continue
+            if hashlib.sha256(img).hexdigest() != datos.get("portada_sha256"):
+                aviso(f"{show}: la foto llegó alterada (¿filtro?); no la subo")
+                continue
+            cab = _cab_github(d)
+            if not cab:
+                aviso("falta github_token.txt")
+                continue
+            base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}"
+            pages = f"https://{c.get('github_user', 'rabmeireliyahu')}.github.io/{c.get('github_repo', show)}"
+            nombre = "portada_" + time.strftime("%Y%m%d%H%M") + ".jpg"
+            if not VER:
+                try:
+                    _gh_put(base, cab, nombre, img, "portada original (sin tapar)")
+                except Exception as ex:                     # noqa: BLE001
+                    aviso(f"{show}: no pude subir la foto ({ex})")
+                    continue
+            canal["imagen"] = f"{pages}/{nombre}"
+            canal["portada_sha256"] = datos.get("portada_sha256")
+            ok(f"foto original (sin tapar) subida como {nombre}")
+        c["canal"] = canal
+        respaldar(d / "config.json")
+        if not VER:
+            escribir(d / "config.json", json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+        ok(f"nombre: {canal['title']} · descripción: {canal['description']} · autor: {canal['author']}")
+        ok("el próximo ANUNCIAR (o el piloto) lo pone en el feed; Spotify lo toma al leerlo")
+
+
+# ── 51. --quitar-del-robot=show: que el robot ya no sepa nada de ese show (oct/2026) ──
+#   Lo saca de config_whatsapp.json (anunciar, escuchar, escuchar_directo) y de
+#   grupos_registrados.json, con respaldo. No borra archivos, feed ni carpeta del show.
+def quitar_del_robot():
+    shows = _arg_lista("quitar-del-robot")
+    if not shows or not ROBOT:
+        return
+    paso(51, "Quitar del robot: " + ", ".join(shows))
+    rw = ROBOT / "config_whatsapp.json"
+    cfg = json.loads(rw.read_text(encoding="utf-8"))
+    rg = ROBOT / "grupos_registrados.json"
+    try:
+        reg = json.loads(rg.read_text(encoding="utf-8"))
+    except Exception:
+        reg = {}
+    cambio_cfg = cambio_reg = False
+    for show in shows:
+        quitado = []
+        for sec in ("anunciar", "escuchar"):
+            if show in (cfg.get(sec) or {}):
+                cfg[sec].pop(show)
+                quitado.append(sec)
+        dm = cfg.get("escuchar_directo") or []
+        resto = [e for e in dm if not (isinstance(e, dict) and e.get("show") == show)]
+        if len(resto) != len(dm):
+            cfg["escuchar_directo"] = resto
+            quitado.append("escuchar_directo")
+        for k in (show, "escucha:" + show, "dm:" + show):
+            if k in reg:
+                reg.pop(k)
+                cambio_reg = True
+                quitado.append(k)
+        cambio_cfg = cambio_cfg or bool(quitado)
+        ok(f"{show}: quitado de {', '.join(quitado)}" if quitado else f"{show}: el robot ya no lo tenía")
+    if not VER:
+        if cambio_cfg:
+            respaldar(rw)
+            escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+        if cambio_reg:
+            respaldar(rg)
+            escribir(rg, json.dumps(reg, ensure_ascii=False, indent=2) + "\n")
+    print("   → reinicia el robot. Los archivos, el feed y la carpeta del show no se tocan.")
+
+
+# ── 52. Amud Yomi: que el mensaje diga para QUÉ DÍA es (oct/2026) ──────────────
+#   daf_diario.js (del usuario, en el robot) arma el amud de MAÑANA ("un día adelantado")
+#   y el mensaje no lo decía: la gente creía que era el de hoy. Se le pone arriba
+#   "📅 Mañana · Tomorrow · מחר" o "📅 Hoy · Today · היום" según la fecha del renglón.
+#   Con respaldo; si el archivo cambió y no encuentra dónde, no toca nada.
+def amud_cuando():
+    if not ROBOT:
+        return
+    f = ROBOT / "daf_diario.js"
+    if not f.exists():
+        return
+    crudo = f.read_bytes().decode("utf-8")
+    if "_cuando" in crudo:
+        return
+    paso(52, "Amud Yomi: el mensaje dice si es el de Mañana o el de Hoy")
+    salto = "\r\n" if "\r\n" in crudo else "\n"
+    t = crudo.replace("\r\n", "\n")
+    a1 = "  const [fecha, heb, limud, jazarot] = renglon;\n"
+    a2 = "      texto: `📖 *סנהדרין*\\n${heb}\\n\\n` +"
+    a3 = "  let texto = `📖 *סנהדרין ${hebAmud(limud)}*\\n` +"
+    if not all(t.count(x) == 1 for x in (a1, a2, a3)):
+        aviso("daf_diario.js no es como esperaba; no lo toco (mándame el archivo)")
+        return
+    t = t.replace(a1, a1 + "  // (oct/2026) para que no confunda: el de mañana dice Mañana, el de hoy dice Hoy\n"
+                  "  const _h = hoyISO();\n"
+                  "  const _cuando = fecha === _h ? '📅 *Hoy · Today · היום*\\n'\n"
+                  "    : (fecha > _h ? '📅 *Mañana · Tomorrow · מחר*\\n' : '');\n", 1)
+    t = t.replace(a2, "      texto: _cuando + `📖 *סנהדרין*\\n${heb}\\n\\n` +", 1)
+    t = t.replace(a3, "  let texto = _cuando + `📖 *סנהדרין ${hebAmud(limud)}*\\n` +", 1)
+    respaldar(f)
+    if not VER:
+        escribir(f, t.replace("\n", salto))
+        r = subprocess.run(["node", "--check", str(f)], capture_output=True, text=True)
+        if r.returncode != 0:
+            f.write_bytes(crudo.encode("utf-8"))
+            aviso("node --check falló en daf_diario.js; lo dejé como estaba: " + (r.stderr or "")[:200])
+            return
+    ok("el Amud Yomi sale con '📅 Mañana · Tomorrow · מחר' (o 'Hoy · Today · היום' si es el de hoy)")
+    otro = ROBOT / "enviar_daf.js"
+    if otro.exists():
+        lineas = [f"   {i + 1}: {l.strip()[:110]}" for i, l in enumerate(otro.read_text(encoding="utf-8", errors="replace").splitlines())
+                  if re.search(r"\bhoy\b|today|היום|mañana|manana|tomorrow|מחר", l, re.I)]
+        print("   enviar_daf.js, líneas que mencionan el día (mándamelas si alguna dice 'hoy'):")
+        print("\n".join(lineas[:20]) if lineas else "   (ninguna: no hay choque)")
+
+
+# ── 53. --quitar-grupo=show:parte del nombre  (oct/2026) ──────────────────────
+#   Un show anunciaba en el grupo de OTRO Rab (Ofir Malka salía en el grupo de Pinto: uno de
+#   los dos links de "invite" de ofirmalka era el de Pinto). Quita ese grupo de los anuncios
+#   del show: su link de anunciar.<show>.invite y el grupo de grupos_registrados.json. Con
+#   respaldo. Si el link no está guardado en el registro, quita el que comparte con el show
+#   dueño del grupo (el que también lo usa).
+def quitar_grupo():
+    pedidos = [a.split("=", 1)[1] for a in sys.argv if a.startswith("--quitar-grupo=")]
+    if not pedidos or not ROBOT:
+        return
+    paso(53, "Quitar un grupo de los anuncios de un show")
+    rw, rg = ROBOT / "config_whatsapp.json", ROBOT / "grupos_registrados.json"
+    cfg = json.loads(rw.read_text(encoding="utf-8"))
+    reg = json.loads(rg.read_text(encoding="utf-8")) if rg.exists() else {}
+    an_todo = cfg.get("anunciar") or {}
+
+    def lista(v):
+        return [x for x in (v if isinstance(v, list) else [v]) if isinstance(x, str) and x.startswith("http")]
+
+    def grupos(sh):
+        r = reg.get(sh) or {}
+        return r.get("grupos") or ([r] if r.get("id") else [])
+
+    cambio = False
+    for pedido in pedidos:
+        show, _, texto = pedido.partition(":")
+        show, texto = show.strip().lower(), texto.strip()
+        an = an_todo.get(show)
+        if an is None or not texto:
+            aviso(f"{pedido}: no encuentro el show o falta parte del nombre del grupo")
+            continue
+        quitar = [g for g in grupos(show) if texto.lower() in str(g.get("nombre", "")).lower()]
+        if not quitar:
+            aviso(f"{show}: ninguno de sus grupos se llama como '{texto}': " + ", ".join(g.get("nombre", "?") for g in grupos(show)))
+            continue
+        invites = lista(an.get("invite"))
+        fuera = {g.get("invite") for g in quitar if g.get("invite")}
+        if not fuera:                       # sin link en el registro: el que comparte con el dueño
+            for g in quitar:
+                for otro, datos in an_todo.items():
+                    if otro != show and any(x.get("id") == g.get("id") for x in grupos(otro)):
+                        fuera |= set(invites) & set(lista((datos or {}).get("invite")))
+        quedan = [x for x in invites if x not in fuera]
+        if len(quedan) == len(invites):
+            aviso(f"{show}: no supe cuál de sus links es el de '{texto}'; no toco el config (mándame la salida)")
+            continue
+        an["invite"] = quedan if len(quedan) != 1 else quedan[0]
+        ids = {g.get("id") for g in quitar}
+        resto = [g for g in grupos(show) if g.get("id") not in ids]
+        if resto:
+            reg[show] = {"id": resto[0].get("id"), "nombre": resto[0].get("nombre"), "grupos": resto}
+        else:
+            reg.pop(show, None)
+        cambio = True
+        ok(f"{show}: ya no anuncia en " + " + ".join(g.get("nombre", "?") for g in quitar)
+           + (f"; sigue en " + " + ".join(g.get("nombre", "?") for g in resto) if resto else ""))
+    if cambio and not VER:
+        respaldar(rw)
+        escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+        respaldar(rg)
+        escribir(rg, json.dumps(reg, ensure_ascii=False, indent=2) + "\n")
+        print("   → reinicia el robot para que lo tome.")
+
+
 def main():
     print("=== Instalador Otzar · jabura + nacach ===")
     print("Base:", BASE, "(prueba en seco)" if VER else "")
@@ -4244,6 +5026,14 @@ def main():
     rescatar()
     tawil()
     tawil_calendario()
+    canales_shows()
+    frenar()
+    reanudar()
+    nuevo_host()
+    pausar_anuncio()
+    quitar_del_robot()
+    amud_cuando()
+    quitar_grupo()
     guids_originales_flag()
     plataformas_links()
     revisar_todo()

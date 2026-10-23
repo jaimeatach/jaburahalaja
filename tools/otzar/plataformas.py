@@ -2,7 +2,7 @@
 """Dónde está cada show: grupos de WhatsApp, Spotify, Apple Podcasts, Amazon, SoundCloud.
 
     python plataformas.py            # revisa todo y lo muestra
-    python plataformas.py --rapido   # lo mismo, pero si ya se revisó hace menos de 20 h no hace nada
+    python plataformas.py --rapido   # lo mismo, pero si ya se revisó hace menos de 3 h no hace nada
                                      # (así lo corre mantenimiento.py en cada ANUNCIAR)
 
 Apple Podcasts se revisa solo (API pública de iTunes, sin llaves): se busca el show
@@ -55,7 +55,16 @@ def feeds_de(show, datos, cfg_show):
 
 
 def plano(u):
-    return re.sub(r"^https?://|/+$", "", str(u or "").strip().lower())
+    # (oct/2026) Apple guardó el de dafyomi como ".../dafyomi/feed", sin ".xml": se comparan igual
+    return re.sub(r"(/feed)\.xml$", r"\1", re.sub(r"^https?://|/+$", "", str(u or "").strip().lower()))
+
+
+# Shows que ya sabemos que están en Apple (oct/2026): si la búsqueda de Apple no los trae
+# (pasa con los recién aprobados), se usa este id. El de anunciar.<show>.apple manda sobre todo.
+APPLE_FIJOS = {
+    "tawil": "https://podcasts.apple.com/us/podcast/harav-yosef-tawil-shlit-a/id6824121409",
+    "dafyomi": "https://podcasts.apple.com/us/podcast/daf-yomi-espa%C3%B1ol-jabrutouch/id6824132852",
+}
 
 
 def norm(t):
@@ -64,16 +73,28 @@ def norm(t):
 
 def buscar_apple(titulo, feeds):
     """(collectionId, url del show) si el show está en Apple Podcasts."""
-    q = urllib.parse.quote(titulo[:80])
-    j = json.loads(bajar(f"https://itunes.apple.com/search?media=podcast&entity=podcast&limit=15&term={q}"))
     validos = {plano(f) for f in feeds if f}
-    res = j.get("results") or []
-    for r in res:
-        if plano(r.get("feedUrl")) in validos:
-            return str(r.get("collectionId")), (r.get("collectionViewUrl") or "").split("?")[0]
-    for r in res:
-        if norm(r.get("collectionName")) == norm(titulo):
-            return str(r.get("collectionId")), (r.get("collectionViewUrl") or "").split("?")[0]
+    # (oct/2026) "Harav Yosef Tawil Shlit”a" no salía: las comillas raras rompen la búsqueda de
+    # Apple. Se prueba el título tal cual, sin comillas y con sus primeras palabras; solo se acepta
+    # un resultado con NUESTRO feed o con el mismo nombre, así que probar más no trae otro show.
+    limpio = re.sub(r"[\"”“״׳'`’]", "", titulo).strip()
+    palabras = [w for w in re.split(r"\s+", limpio) if w]
+    terminos = []
+    for t in (titulo[:80], limpio[:80], " ".join(palabras[:3]), " ".join(palabras[1:3])):
+        if t and t not in terminos:
+            terminos.append(t)
+    for i, t in enumerate(terminos):
+        if i:
+            time.sleep(3)                          # Apple: máximo ~20 consultas por minuto
+        q = urllib.parse.quote(t)
+        j = json.loads(bajar(f"https://itunes.apple.com/search?media=podcast&entity=podcast&limit=25&term={q}"))
+        res = j.get("results") or []
+        for r in res:
+            if plano(r.get("feedUrl")) in validos:
+                return str(r.get("collectionId")), (r.get("collectionViewUrl") or "").split("?")[0]
+        for r in res:
+            if norm(r.get("collectionName")) in (norm(titulo), norm(limpio)):
+                return str(r.get("collectionId")), (r.get("collectionViewUrl") or "").split("?")[0]
     return "", ""
 
 
@@ -81,7 +102,9 @@ def main():
     rapido = "--rapido" in sys.argv
     destino = ROBOT / "plataformas.json"
     previo = leer_json(destino)
-    if rapido and time.time() - float(previo.get("_revisado", 0) or 0) < 20 * 3600:
+    # (oct/2026) cada 3 h (antes 20): en modo rápido solo pregunta por los shows que AÚN no
+    # tiene ubicados en Apple, así un show recién aprobado sale en el siguiente ANUNCIAR
+    if rapido and time.time() - float(previo.get("_revisado", 0) or 0) < 3 * 3600:
         return 0
     cfgw = leer_json(ROBOT / "config_whatsapp.json")
     reg = leer_json(ROBOT / "grupos_registrados.json")
@@ -122,6 +145,9 @@ def main():
                 apple_id, apple_url = prev.get("apple_id", ""), prev.get("apple", "")
         else:
             apple_id, apple_url = prev.get("apple_id", ""), prev.get("apple", "")
+        if not apple_id and APPLE_FIJOS.get(show):
+            apple_url = APPLE_FIJOS[show]
+            apple_id = re.search(r"id(\d{5,})", apple_url).group(1)
         if datos.get("apple"):
             apple_url = datos["apple"]
             apple_id = (re.search(r"id(\d{5,})", apple_url) or [None, apple_id])[1]
@@ -149,6 +175,30 @@ def main():
     for k, v in previo.items():                 # shows que ya no están: se conserva lo puesto a mano
         if k not in out and isinstance(v, dict):
             out[k] = v
+    # (oct/2026) un grupo de anuncio que usan SOLO dos shows suele ser el grupo de un Rab metido
+    # por error en otro show (Ofir Malka salía en el grupo de Pinto). Los generales ("Solo Shiurim")
+    # los usan muchos y no cuentan. Se avisa una vez al chat del "!reporte".
+    uso = {}
+    for sh, r in reg.items():
+        if sh.startswith(("escucha:", "admin:")) or not isinstance(r, dict):
+            continue
+        for g in (r.get("grupos") or ([r] if r.get("id") else [])):
+            if g.get("id"):
+                uso.setdefault(g["id"], {"nombre": g.get("nombre", "?"), "shows": set()})["shows"].add(sh)
+    avisados = set(previo.get("_grupos_avisados") or [])
+    for gid, u in uso.items():
+        if len(u["shows"]) == 2:
+            txt = f"grupo «{u['nombre']}» lo usan {' y '.join(sorted(u['shows']))}: ¿uno anuncia en el grupo del otro? (quitar: instalar_otzar.py --quitar-grupo=show:nombre)"
+            problemas.append(txt)
+            clave = gid + "|" + ",".join(sorted(u["shows"]))
+            if clave not in avisados:
+                avisados.add(clave)
+                try:
+                    (ROBOT / "avisos").mkdir(exist_ok=True)
+                    (ROBOT / "avisos" / f"{time.strftime('%Y%m%d%H%M%S')}_grupo.txt").write_text("⚠️ Otzar: " + txt, encoding="utf-8")
+                except OSError:
+                    pass
+    out["_grupos_avisados"] = sorted(avisados)
     destino.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
     if rapido:
         print(f"plataformas: revisadas ({sum(1 for f in filas if f[4] == 'sí')} de {len(filas)} shows en Apple Podcasts)")

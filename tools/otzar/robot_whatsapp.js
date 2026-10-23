@@ -604,7 +604,8 @@ function guardarAudio(item, titulo) {
   // === TEMAS (oct/2026): "Dia 21. Domingo" -> "#21 Encendido de Velas (1)", con fecha de ese dia ===
   if (_r('temas')) {
     const _t = tituloPorTema(item.show, String(titulo || ''), carpeta);
-    if (_t) { titulo = _t.titulo; if (_t.fecha) item._fecha = _t.fecha; }
+    // (oct/2026) nunca fecha futura en el archivo: el episodio se ve YA en Spotify/Apple; el anuncio sale en su dia (calendario)
+    if (_t) { titulo = _t.titulo; if (_t.fecha && _t.fecha <= Date.now()) item._fecha = _t.fecha; }
   }
   if (titulo && (_r('quitar_lineas') || _r('unir_lineas'))) {
     let lineas = String(titulo).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
@@ -709,14 +710,40 @@ async function linkApple(show, titulo) {
     const k = normTitulo(titulo);
     const ep = c.lista.find(r => normTitulo(r.trackName) === k) ||
       c.lista.find(r => { const n = normTitulo(r.trackName); return n && k && Math.min(n.length, k.length) > 12 && (n.includes(k) || k.includes(n)); });
-    if (ep && ep.trackViewUrl) return ep.trackViewUrl.replace(/&uo=\d+$/, '');
+    // (oct/2026) link corto: sin el nombre del episodio adentro (Apple lo abre igual)
+    if (ep && ep.collectionId && ep.trackId) return `https://podcasts.apple.com/podcast/id${ep.collectionId}?i=${ep.trackId}`;
+    if (ep && ep.trackViewUrl) return appleCorto(ep.trackViewUrl.replace(/&uo=\d+$/, ''));
   } catch (e) {}
-  return pl.apple;   // el episodio aun no aparece en Apple: el link del show
+  return appleCorto(pl.apple);   // el episodio aun no aparece en Apple: el link del show
+}
+// (oct/2026) link MUY corto con is.gd (sin publicidad ni rastreo, lleva directo): https://is.gd/Ab3xYz.
+// Se guardan en links_cortos.json para no pedir dos veces; si is.gd falla, va el link normal.
+// "acortar_links": false en el config lo apaga.
+let _cortos = null;
+async function acortarLink(u) {
+  if (!u || CFG.acortar_links === false || !/^https:\/\/podcasts\.apple\.com\//.test(u)) return u;
+  const f = path.join(__dirname, 'links_cortos.json');
+  if (!_cortos) { try { _cortos = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { _cortos = {}; } }
+  if (_cortos[u]) return _cortos[u];
+  try {
+    const r = String(await Promise.race([fetchTexto('https://is.gd/create.php?format=simple&url=' + encodeURIComponent(u)),
+      new Promise((_, no) => setTimeout(() => no(new Error('tardo')), 8000))])).trim();
+    if (/^https:\/\/is\.gd\/\w+$/.test(r)) {
+      _cortos[u] = r;
+      try { fs.writeFileSync(f, JSON.stringify(_cortos, null, 1)); } catch (e) {}
+      return r;
+    }
+  } catch (e) {}
+  return u;
+}
+function appleCorto(u) {
+  const m = String(u || '').match(/^https:\/\/podcasts\.apple\.com\/(?:[a-z]{2}\/)?podcast\/(?:[^/?]+\/)?(id\d+)(\?i=\d+)?/);
+  return m ? `https://podcasts.apple.com/podcast/${m[1]}${m[2] || ''}` : u;
 }
 async function bloquePlataformas(show, titulo) {
   const pl = _plataformasDe(show);
   const out = [];
-  const apple = await linkApple(show, titulo);
+  const apple = await acortarLink(await linkApple(show, titulo));
   if (apple) out.push(['Apple Podcasts', apple]);
   if (pl.amazon) out.push(['Amazon Music', pl.amazon]);
   // (oct/2026) el link del EPISODIO en SoundCloud (lo deja jabura\\soundcloud_subir.py); si no, el del perfil
@@ -732,7 +759,9 @@ async function bloquePlataformas(show, titulo) {
 function conPlataformas(texto, lista) {
   if (!lista || !lista.length) return texto;
   const extra = lista.map(([n, l]) => `${n}\n${l}`).join('\n');
-  const i = texto.lastIndexOf('\n\n📢');
+  // (oct/2026) orden: Spotify, Apple (y demas), y AL FINAL el grupo de WhatsApp
+  let i = texto.search(/\nWhats[Aa]pp\n/);
+  if (i < 0) i = texto.lastIndexOf('\n\n📢');
   return i >= 0 ? texto.slice(0, i) + '\n' + extra + texto.slice(i) : texto + '\n' + extra;
 }
 // "plantilla" en anunciar.<show>: lista de bloques con {fecha_hebrea} {fecha} {titulo}
@@ -768,16 +797,24 @@ function armarPlantilla(datos, v) {
 // tocar la PC) y de <show>\temas.json en la PC ("!tema <show> <dia> <tema>" por
 // WhatsApp lo escribe); el de la PC manda. El dia de la semana fija la fecha del
 // episodio y, con "esperar_fecha" en anunciar, el anuncio sale ese dia.
-const _temasRemotos = {};
+// (oct/2026) la ultima lista del repo queda guardada en temas_cache.json: al arrancar el robot ya
+// la tiene (antes, un "!tawil" que llegaba en el primer segundo veia solo la de la PC y contaba mal)
+const _temasRemotos = (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'temas_cache.json'), 'utf8')) || {}; } catch (e) { return {}; } })();
 async function cargarTemasRemotos() {
   const shows = new Set([
     ...Object.entries(CFG.escuchar || {}).filter(([, v]) => v && v.temas).map(([k]) => k),
     ...(CFG.escuchar_directo || []).filter(e => e && e.temas).map(e => e.show)]);
   for (const sh of shows) {
-    try {
-      const j = JSON.parse(await fetchTexto(`https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/tools/otzar/temas/${sh}.json`));
-      if (Array.isArray(j)) _temasRemotos[sh] = j;
-    } catch (e) {}
+    for (const rama of ['claude/shiurim-halachot-shabbat-vriig5', 'main']) {   // (oct/2026) la rama de trabajo primero
+      try {
+        const j = JSON.parse(await fetchTexto(`https://raw.githubusercontent.com/jaimeatach/jaburahalaja/${rama}/tools/otzar/temas/${sh}.json`));
+        if (Array.isArray(j)) {
+          _temasRemotos[sh] = j;
+          try { fs.writeFileSync(path.join(__dirname, 'temas_cache.json'), JSON.stringify(_temasRemotos)); } catch (e) {}
+          break;
+        }
+      } catch (e) {}
+    }
   }
 }
 setTimeout(() => { cargarTemasRemotos().catch(() => {}); }, 5000);
@@ -789,7 +826,11 @@ function temasDe(show) {
   const por = {};
   for (const t of [].concat(_temasRemotos[show] || [], Array.isArray(local) ? local : []))
     if (t && Number(t.desde) && t.tema) por[Number(t.desde)] = String(t.tema).trim();
-  return Object.keys(por).map(Number).sort((a, b) => a - b).map(d => ({ desde: d, tema: por[d] }));
+  // (oct/2026) si una semana se avisa el MISMO tema que venia, la cuenta sigue (#27 = (7)), no vuelve a (1)
+  const _nt = x => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+    .replace(/\(\s*\d+\s*\)\s*$/, '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  const _lista = Object.keys(por).map(Number).sort((a, b) => a - b).map(d => ({ desde: d, tema: por[d] }));
+  return _lista.filter((t, i) => i === 0 || _nt(t.tema) !== _nt(_lista[i - 1].tema));
 }
 const _DIAS_SEMANA = { domingo: 0, lunes: 1, martes: 2, miercoles: 3, jueves: 4, viernes: 5, sabado: 6 };
 function tituloPorTema(show, texto, carpeta) {
@@ -841,10 +882,30 @@ function esYomTov(d) {
   return _YOM_TOV.has(_diaLocal(d));
 }
 function diaSinEnvio(d) { return d.getDay() === 6 || esYomTov(d); }
+// (oct/2026) puesta del sol en CDMX (formula de la NOAA; coincide con hebcal +-1 min)
+function puestaSol(dia, lat = 19.4326, lon = -99.1332) {
+  const y = dia.getFullYear(), m = dia.getMonth(), d = dia.getDate();
+  const N = Math.round((Date.UTC(y, m, d) - Date.UTC(y, 0, 1)) / 864e5) + 1;
+  const g = 2 * Math.PI / 365 * (N - 1 + (18 - 12) / 24), r = Math.PI / 180;
+  const eq = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+  const de = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+  const ha = Math.acos(Math.cos(90.833 * r) / (Math.cos(lat * r) * Math.cos(de)) - Math.tan(lat * r) * Math.tan(de)) / r;
+  return Date.UTC(y, m, d) + (720 - 4 * (lon - ha) - eq) * 60000;
+}
+// Shabat / Yom Tov: desde las 16:00 de la vispera hasta 50 min despues de la puesta del sol del
+// ultimo dia (Motzaei Shabat ya se anuncia). '' = se puede.
+function bloqueoSagrado(ah) {
+  const hoy = new Date(ah.getFullYear(), ah.getMonth(), ah.getDate());
+  const man = new Date(ah.getFullYear(), ah.getMonth(), ah.getDate() + 1);
+  const hoyS = diaSinEnvio(hoy), manS = diaSinEnvio(man);
+  if (hoyS && (manS || ah.getTime() < puestaSol(hoy) + 50 * 60000)) return hoy.getDay() === 6 ? 'Shabat' : 'Yom Tov';
+  if (!hoyS && manS && ah.getHours() >= 16) return man.getDay() === 6 ? 'Erev Shabat' : 'Erev Yom Tov';
+  return '';
+}
 function numeroDe(tit) { const m = String(tit || '').match(/^\s*#\s*(\d{1,4})/); return m ? Number(m[1]) : 0; }
 function fechaDeNumero(cal, n) {
   const [y, mo, da] = String(cal.fecha).split('-').map(Number);
-  const d = new Date(y, mo - 1, da, 6, 0, 0, 0);
+  const d = new Date(y, mo - 1, da, 0, 0, 0, 0);   // (oct/2026) desde las 00:00 de su dia (el ANUNCIAR de las 5:30 ya lo manda)
   let k = n - Number(cal.n);
   const paso = k >= 0 ? 1 : -1;
   for (let i = 0; k !== 0 && i < 3000; i++) {
@@ -1050,6 +1111,104 @@ async function procesarMensaje(m) {
       try { fs.writeFileSync(f, JSON.stringify(l, null, 2)); } catch (e) {}
       log(`TEMAS ${show}: desde el dia ${desde} el tema es "${tema}"`);
       try { await sock.sendMessage(jid, { text: `✅ ${show}: desde el día ${desde} el tema es "${tema}"\n#${desde} ${tema} (1), #${desde + 1} ${tema} (2)...` }); } catch (e) {}
+      return;
+    }
+  }
+
+  // === "!tawil" (oct/2026), en chat privado con el robot: tema y donador de la semana ===
+  //   !tawil 27                  <- numero del shiur desde el que vale (sin numero: el del domingo que viene)
+  //   tema: Kidush               <- el titulo sale "#27- Kidush (1)", "#28- Kidush (2)"...
+  //   donador: L"N               <- todo lo que sigue va tal cual en el mensaje
+  //   Fulano Ben Fulana
+  // Se guarda en C:\OTZAR\<show>\temas.json (manda sobre el del repo) y el robot contesta como va a salir.
+  // (oct/2026) tambien dentro del GRUPO FUENTE del show (p. ej. "Shiurim rab yosi" de Tawil);
+  // la respuesta del propio robot ahi ("✅ ..."/"❌ ...") no se toma como titulo de ningun audio
+  const _t0 = String(textoDe(m) || '').trim();
+  const _fuenteCmd = (esGrupo && /^(!|✅ |❌ )/.test(_t0)) ? (() => {
+    const r = leerRegistro();
+    return Object.keys(r).find(k => k.startsWith('escucha:') && r[k] && r[k].id === jid) || null;
+  })() : null;
+  if (_fuenteCmd && /^(✅|❌) /.test(_t0)) return;
+  if (!esGrupo || _fuenteCmd) {
+    const _txt = String(textoDe(m) || '').replace(/\r/g, '').trim();
+    const _mc = /^!(tawil|tema-dedica|semana)\b[ \t]*(\w+)?[ \t]*(\d{1,4})?/i.exec(_txt);
+    if (_mc && /tema\s*:|donador\s*:|dedicatoria\s*:/i.test(_txt)) {
+      const show = (_mc[1].toLowerCase() === 'tawil' ? 'tawil' : String(_mc[2] || '').toLowerCase());
+      const datosAn = (CFG.anunciar || {})[show] || {};
+      const f = _archivoTemas(show);
+      const responder = async t => { try { await sock.sendMessage(jid, { text: t }); } catch (e) {} };
+      if (!f) { await responder(`❌ No encuentro el show "${show}".`); return; }
+      try { await cargarTemasRemotos(); } catch (e) {}   // (oct/2026) la lista del repo al dia antes de contestar
+      let desde = Number(_mc[3] || (_mc[1].toLowerCase() === 'tawil' ? _mc[2] : 0) || 0);
+      const _cal = datosAn.calendario;
+      if (!desde && _cal && _cal.n && _cal.fecha) {   // sin numero: el shiur del domingo (hoy si es domingo)
+        const obj = new Date(); obj.setHours(0, 0, 0, 0); obj.setDate(obj.getDate() + ((7 - obj.getDay()) % 7));
+        for (let k = Number(_cal.n) - 30; k < Number(_cal.n) + 2000; k++) if (fechaDeNumero(_cal, k) >= obj.getTime()) { desde = k; break; }
+      }
+      if (!desde) { await responder('❌ Falta el número del shiur. Ejemplo:\n!tawil 27\ntema: Kidush\ndonador: L"N Fulano Ben Fulana'); return; }
+      const lineas = _txt.split('\n');
+      let tema = '', dedic = [], enDedic = false;
+      for (const l of lineas.slice(1)) {
+        const mt = /^\s*tema\s*:\s*(.*)$/i.exec(l), md = /^\s*(donador|dedicatoria)\s*:\s*(.*)$/i.exec(l);
+        if (mt) { tema = mt[1].trim(); enDedic = false; }
+        else if (md) { enDedic = true; if (md[2].trim()) dedic.push(md[2].trim()); }
+        else if (enDedic && l.trim()) dedic.push(l.trim());
+      }
+      let l = []; try { l = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) {}
+      l = Array.isArray(l) ? l : [];
+      let e = l.find(t => Number(t.desde) === desde);
+      if (!e) { e = { desde }; l.push(e); }
+      if (tema) {   // (oct/2026) el MISMO tema que venia no se guarda como tema nuevo: la cuenta sigue
+        const _nt2 = x => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+        const _prev = temasDe(show).filter(t => t.desde < desde).pop();
+        if (_prev && _nt2(_prev.tema) === _nt2(tema)) delete e.tema;
+        else e.tema = tema.replace(/\s+/g, ' ');
+      }
+      if (dedic.length) e.dedicatoria = dedic.join('\n');
+      l.sort((a, b) => a.desde - b.desde);
+      try { fs.writeFileSync(f, JSON.stringify(l, null, 2)); } catch (err) { await responder('❌ No pude guardar: ' + err.message); return; }
+      log(`SEMANA ${show}: desde el #${desde}` + (tema ? ` tema "${tema}"` : '') + (dedic.length ? ` donador "${dedic.join(' / ')}"` : ''));
+      const tit = tituloAnuncio(show, `#${desde} x`);
+      const ded = dedicatoriaDe(show, `#${desde} x`) || datosAn.dedicatoria || '';
+      const dia = _cal && _cal.n ? new Date(fechaDeNumero(_cal, desde)).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' }) : '';
+      await responder(`✅ ${show}: guardado desde el #${desde}${dia ? ' (' + dia + ')' : ''}.\n\nAsí sale:\n*${tit}*\n\n${ded}`);
+      return;
+    }
+  }
+
+  // === "!reporte" / "!estado" / "!pausa" / "!sigue" (oct/2026), en chat privado con el robot ===
+  // "!reporte" registra ESTE chat para el reporte de cada mañana y los avisos del piloto (el primero
+  // que lo manda; despues solo ese chat puede cambiarlo). Los demas comandos, solo desde ese chat.
+  if (!esGrupo) {
+    const _ma = /^!(reporte|estado|pausa|sigue)\b/i.exec(String(textoDe(m) || '').trim());
+    if (_ma) {
+      const orden = _ma[1].toLowerCase();
+      const reg = leerRegistro();
+      const adm = reg['admin:reporte'];
+      const resp = async t => { try { await sock.sendMessage(jid, { text: t }); } catch (e) {} };
+      const PAUSA_PILOTO = path.join('C:\\OTZAR', 'PILOTO_PAUSA.txt');
+      if (orden === 'reporte') {
+        if (adm && adm.id && adm.id !== jid) { await resp('❌ Los reportes ya van a otro chat.'); return; }
+        reg['admin:reporte'] = { id: jid, nombre: 'reportes del piloto' };
+        guardarRegistro(reg);
+        log(`ADMIN: los reportes del piloto van a ${jid}`);
+        await resp('✅ Listo: aquí te llega cada mañana el reporte del robot y del piloto, y un aviso si algo falla.\n\nComandos:\n!estado → cómo está todo ahora\n!pausa → el piloto deja de subir y anunciar\n!sigue → vuelve a andar');
+        return;
+      }
+      if (!adm || adm.id !== jid) { await resp('❌ Primero manda !reporte desde el chat que va a recibir los avisos.'); return; }
+      if (orden === 'pausa') {
+        try { fs.writeFileSync(PAUSA_PILOTO, 'pausado por WhatsApp ' + new Date().toLocaleString('es-MX')); } catch (e) {}
+        await resp('⏸️ Piloto en pausa: no sube ni anuncia nada hasta que mandes !sigue.');
+        return;
+      }
+      if (orden === 'sigue') {
+        try { fs.unlinkSync(PAUSA_PILOTO); } catch (e) {}
+        await resp('▶️ Piloto andando otra vez.');
+        return;
+      }
+      let est = '';
+      try { est = fs.readFileSync(path.join('C:\\OTZAR', 'piloto_reporte.txt'), 'utf8').trim(); } catch (e) {}
+      await resp(est || '🤖 El robot está conectado, pero el piloto todavía no dejó reporte (¿está abierta su ventana?).');
       return;
     }
   }
@@ -1268,6 +1427,27 @@ setInterval(async () => {
   } catch (e) { log('ERROR comando: ' + (e.stack || e.message || e)); }
   ocupado = false;
 }, 5000);
+
+// === AVISOS AL ADMIN (oct/2026) ===
+// El piloto deja avisos en <robot>\avisos\*.txt (reporte de la mañana, algo que fallo) y el
+// robot los manda al chat que se registro con "!reporte". Sin chat registrado, esperan ahi.
+const AVISOS_DIR = path.join(__dirname, 'avisos');
+setInterval(async () => {
+  if (!listo || bloqueoSagrado(new Date())) return;   // en Shabat / Yom Tov esperan
+  let archivos = [];
+  try { archivos = fs.readdirSync(AVISOS_DIR).filter(f => f.endsWith('.txt')).sort(); } catch (e) { return; }
+  if (!archivos.length) return;
+  while (archivos.length > 20) { try { fs.unlinkSync(path.join(AVISOS_DIR, archivos.shift())); } catch (e) { break; } }
+  const destino = (leerRegistro()['admin:reporte'] || {}).id;
+  if (!destino) return;
+  for (const f of archivos.slice(0, 3)) {
+    const p = path.join(AVISOS_DIR, f);
+    let t = ''; try { t = fs.readFileSync(p, 'utf8').trim(); } catch (e) {}
+    try { if (t) await sock.sendMessage(destino, { text: t }); fs.unlinkSync(p); }
+    catch (e) { log('AVISO no enviado: ' + (e.message || e)); break; }
+    await new Promise(r => setTimeout(r, 2000));
+  }
+}, 30000);
 
 // ---------------- anuncios ----------------
 // Busca el link EXACTO del episodio en Spotify por su titulo.
@@ -2015,6 +2195,18 @@ async function anunciarInterno(esVigilante) {
   if (vigilanteTimer) { clearTimeout(vigilanteTimer); vigilanteTimer = null; }
   if (!esVigilante) vigilanteIntentos = 0;
   log(esVigilante ? `=== VIGILANTE: reintento automatico ${vigilanteIntentos}/12 ===` : '=== ANUNCIANDO (boton) ===');
+  // (oct/2026) "anunciar" se relee del disco en cada corrida: una pausa (--pausar=show)
+  // o cualquier cambio del instalador vale YA, sin reiniciar el robot
+  try {
+    const _f = JSON.parse(fs.readFileSync(path.join(__dirname, 'config_whatsapp.json'), 'utf8'));
+    if (_f && _f.anunciar && typeof _f.anunciar === 'object') CFG.anunciar = _f.anunciar;
+  } catch (e) { log('no pude releer config_whatsapp.json (sigo con el de memoria): ' + e.message); }
+  // (oct/2026) NUNCA en Shabat ni Yom Tov: desde las 16:00 de la vispera hasta que sale (puesta del
+  // sol + 50 min); vale para el boton, el vigilante y el piloto automatico
+  {
+    const _bq = bloqueoSagrado(new Date());
+    if (_bq) { log(`${_bq}: no se anuncia nada hasta que termine.`); return; }
+  }
   const estado = leerEstado();
   const reg = leerRegistro();
   let enviados = 0;
@@ -2110,7 +2302,15 @@ async function anunciarInterno(esVigilante) {
         for (const ep of _repetidos) { marcarAnunciado(show, ep.guid); estado[show].push(ep.guid); }
       }
     }
-    if (!nuevos.length) { log(`${show}: nada nuevo.`); continue; }
+    if (!nuevos.length) {
+      // (oct/2026) con calendario: decir cuando sale el proximo, en vez de solo "nada nuevo"
+      const _cal = (CFG.anunciar[show] || {}).calendario;
+      const _prox = (_cal && _cal.n && _cal.fecha) ? items.filter(it => !vistos.has(sacaGuid(it)) && numeroDe(sacaTitulo(it)))
+        .map(it => ({ t: sacaTitulo(it), f: fechaDeNumero(_cal, numeroDe(sacaTitulo(it))) })).sort((a, b) => a.f - b.f)[0] : null;
+      log(_prox ? `${show}: nada para hoy; el proximo es "${_prox.t.slice(0, 40)}" el ${new Date(_prox.f).toLocaleDateString('es-MX')}.`
+                : `${show}: nada nuevo.`);
+      continue;
+    }
 
     // los VIEJOS (mas de DIAS_FRESCO dias, o sin fecha) NO se anuncian nunca:
     // se marcan como vistos en silencio. Asi el catalogo viejo jamas se dispara.
@@ -2260,6 +2460,12 @@ async function anunciarInterno(esVigilante) {
         continue;
       }
 
+      // (oct/2026) con temas: si el titulo guardado quedo con otra cuenta ("(1)" en vez de "(7)"),
+      // se busca tambien con el titulo corregido del tema
+      if (!epLink && spotShow && !sinSpot && tituloDeTema(show, ep.tit) !== ep.tit) {
+        epLink = await linkEpisodio(spotShow, tituloDeTema(show, ep.tit), {}, 1, (CFG.anunciar[show] || {}).market);
+        if (epLink) log(`${show}: "${ep.tit.slice(0, 40)}" encontrado en Spotify como "${tituloDeTema(show, ep.tit)}"`);
+      }
       // (oct/2026) "spotify_espera_horas": N en anunciar.<show>: si Spotify no toma el
       // episodio en N horas, sale con el link del SHOW en vez de esperar para siempre
       // (asi se quedaba trabado TorahAnytime).

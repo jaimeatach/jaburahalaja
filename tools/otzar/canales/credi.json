@@ -1,0 +1,11 @@
+{
+ "nota": "Foto de David Credi que mandó el usuario (20/10/2026), recortada cuadrada y centrada (1400×1400). En base64 para que el filtro de la PC no le tape la cara. Nombre, descripción y autor: los que ya tenía el feed.",
+ "title": "David Credi",
+ "description": "Halajot Cortas",
+ "author": "David Credi",
+ "categoria": [
+  "Religion & Spirituality"
+ ],
+ "portada_b64": "credi_portada.b64",
+ "portada_sha256": "d09d6992e91ffc4023b3d3a3231ea5104b605645a8034d471dc98792441155dc"
+}

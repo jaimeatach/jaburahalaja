@@ -365,7 +365,7 @@ const SUPABASE_URL = "https://enkofkroxudsblewxxos.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_nAsf0qU7fPUOZ5K7OgqwYw_hUPgzOrZ";
 const BUCKET = "jabura";
 const APP_NAME = "חבורת הלכה";
-const BUILD = "2026-10-11 · מקורות";
+const BUILD = "2026-10-23 · ש״מ por temas";
 
 const $ = id => document.getElementById(id);
 const app = $('app');
@@ -1497,7 +1497,7 @@ async function catItemDestino(mod, n){
   const it = mod.items[n - 1];
   const title = catItemT(it);
   const s = (it && typeof it === 'object' && it.s) ? await catEnsureSiman(it.s) : catSiman(mod);
-  const saifim = (it && typeof it === 'object' && it.saif && it.saif.length) ? it.saif : catSaifDeShiur(title);
+  const saifim = (it && typeof it === 'object' && it.saif && it.saif.length) ? it.saif : catSaifDeShiur(title, s && s.number);
   return { title, s, saifim };
 }
 /* Archivos de módulos que se reemplazaron por otra carpeta (la de מוקצה vieja,
@@ -1819,7 +1819,7 @@ async function arcImportPlan(plan, silent){
     /* Sin storagePath: el archivo no es nuestro, vive en archive.org */
     const meta = { url: f._arc, fileName: f.name, size: f.size };
     const { error } = await sb.from(tbl).insert({
-      simanId: s.id, saifim: dest ? dest.saifim : catSaifDeShiur(title), title, ...meta, uploadedBy: ME.name
+      simanId: s.id, saifim: dest ? dest.saifim : catSaifDeShiur(title, s.number), title, ...meta, uploadedBy: ME.name
     });
     fail(error);
     seen.add(s.id + '|' + f.name);
@@ -1856,9 +1856,32 @@ async function arcAutoImport(){
   try {
     const plan = await arcFetchPlan(id);
     const { ok } = await arcImportPlan(plan, true);
-    const fix = await arcTitulosCurados();
+    const fix = (await arcTitulosCurados()) + (await arcSaifimPorTema());
     if (ok || fix){ if (ok) toast(ok + ' ' + t('arcAutoNew')); show(CUR.view); notifBadge(); }
   } catch(e){ console.warn('arcAutoImport', e); }
+}
+/* (oct/2026) Shiurim de un siman con CAT_TEMAS que quedaron en el saif por defecto ([1]) o
+   con los saifim viejos del catálogo: se mueven al saif de lo que tratan. No toca los que
+   el admin ya puso a mano en otro saif ni los que dicen "סעיף …" en el título. */
+async function arcSaifimPorTema(){
+  let n = 0;
+  for (const num of Object.keys(CAT_TEMAS).map(Number)){
+    const s = SIMANIM.find(x => x.number === num && !isMusar(x));
+    if (!s) continue;
+    const { data } = await sb.from(T.shiurim).select('id,title,saifim').eq('simanId', s.id);
+    for (const row of (data || [])){
+      if (catSaifDe(row.title).length) continue;
+      const actual = JSON.stringify((row.saifim || []).map(Number).sort((a, b) => a - b));
+      const nuevo = CAT_SAIF[row.title] || catSaifPorTema(row.title, num);
+      if (!nuevo || JSON.stringify(nuevo) === actual) continue;
+      const porDefecto = actual === '[1]' || actual === '[]';
+      const catalogoViejo = (row.title in CAT_SAIF) && (actual === '[2,3]' || actual === '[4]');
+      if (!porDefecto && !catalogoViejo) continue;
+      const { error } = await sb.from(T.shiurim).update({ saifim: nuevo }).eq('id', row.id);
+      if (!error) n++;
+    }
+  }
+  return n;
 }
 /* Títulos corregidos (tools/otzar/jabura_titulos.json, el mismo que usa el publicador
    para el feed): un shiur que llegó con el texto del mensaje como título toma el bueno */
@@ -2202,13 +2225,14 @@ const CAT_SAIF = {
 'לש · חרדל · שינוי מערבו בנחת · ומה הדין ביד המזלג': [16,17,18,19],
 'לישה אחר לישה': [13,14,15],
 'לישה בדבר מבושל · האם מותר לאכול מסתיק בשבת': [13,14,15],
-  // ── ש״מ · גוזז, כותב ומוחק (§1 גוזז · §2-3 כותב · §4 מוחק · §5 רושם)
+  // ── ש״מ (ש״ע: §1-2 גוזז · §3 מוחק · §4 כותב · §5 רושם · §6-7 תופר · §8 מוכין ·
+  //    §9-10 מעמר · §11-12 לש · §13 קורע · §14 מדבק/מפרק). Lo nuevo se ubica por CAT_TEMAS.
 'הקדמה למלאכת גוזז': [1],
 'כסוס ציפורנים ולגרד הזקן · גוזז ב': [1],
 'לסרוק בשבת על ידי גוי': [1],
 'ביאור המתירים לסרוק שערות על ידי גוי בשבת': [1],
-'הקדמה למלאכת כותב ומוחק': [2,3],
-'יסודות במלאכת מוחק · טשטוש דיו בידיו · האם אפשר לנקותו': [4],
+'הקדמה למלאכת כותב ומוחק': [3,4],
+'יסודות במלאכת מוחק · טשטוש דיו בידיו · האם אפשר לנקותו': [3],
   // ── ש״ח · מוקצה (§35-42 חפצי ילדים)
 'ליקח ילד אבן או דבר מוקצה': [35,36,37,38,39,40,41,42],
 };
@@ -2218,10 +2242,34 @@ const catEsIntro = t => /הקדמה|פתיחה|סיכום|חזרה|חזרות|כ
 /* Dónde va un shiur: su saif si lo dice, y si no el primero del siman */
 /* Primero lo que dice el propio nombre; después el catálogo del ש״ע; si no,
    el primer saif (es un shiur de הקדמה, סיכום o חזרה). */
-function catSaifDeShiur(titulo){
+function catSaifDeShiur(titulo, siman){
   const delNombre = catSaifDe(titulo);
   if (delNombre.length) return delNombre;
-  return CAT_SAIF[titulo] || [1];
+  return CAT_SAIF[titulo] || catSaifPorTema(titulo, siman) || [1];
+}
+/* Simanim que juntan varias melajot (ש״מ: גוזז, מוחק, כותב, רושם, תופר, מעמר, קורע):
+   un shiur nuevo con título libre ("תופר zipper velkro") va al saif de lo que trata,
+   por palabras en hebreo, en español o transliteradas. Si nombra dos temas, va a los dos. */
+const CAT_TEMAS = {
+  340: [
+    [/גוזז|גזיזה|ציפורנ|צפרנ|שערות|יבלת|לסרוק|מסרק|uñas|pelo|cabello|verruga|peinar|gozez/i, [1,2]],
+    [/מוחק|מחיקה|למחוק|עוגה|טשטוש|mojek|moje[jk]|borrar|pastel|torta/i, [3]],
+    [/כותב|כתיבה|כתב|לכתוב|אותיות|kotev|escrib|letras/i, [4]],
+    [/רושם|לרשום|רשימה|marcar/i, [5]],
+    [/תופר|תפירה|לתפור|תפר|חוט|כפתור|שרוך|tofer|coser|costura|hilo|zipper|cierre|velcro|velkro|bot[oó]n|agujeta/i, [6,7]],
+    [/מוכין|כסת|כרית|almohada|relleno/i, [8]],
+    [/מעמר|עימור|לקבץ|meamer|juntar|recolectar/i, [9,10]],
+    [/חובץ|זרע פשתן|שומשמין|semillas/i, [11,12]],
+    [/קורע|קריעה|לקרוע|נייר|חרס|kore[a]?\b|rasgar|romper|papel/i, [13]],
+    [/מדבק|הדבקה|דבק|מפרק|סלוטייפ|סלוטיפ|pegar|cinta|scotch|despegar/i, [14]],
+  ],
+};
+function catSaifPorTema(titulo, siman){
+  const reglas = CAT_TEMAS[siman];
+  if (!reglas) return null;
+  const out = new Set();
+  for (const [re, saifim] of reglas) if (re.test(String(titulo || ''))) saifim.forEach(n => out.add(n));
+  return out.size ? [...out].sort((a, b) => a - b) : null;
 }
 
 /* Los saifim reales del siman, según el שולחן ערוך */
@@ -2548,7 +2596,7 @@ async function catDirUpload(){
         const url = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
         const meta = { url, fileName: f.name, size: f.size, storagePath: path };
         const { error } = await sb.from(tbl).insert({
-          simanId: s.id, saifim: dest ? dest.saifim : catSaifDeShiur(title), title, ...meta, uploadedBy: ME.name
+          simanId: s.id, saifim: dest ? dest.saifim : catSaifDeShiur(title, s.number), title, ...meta, uploadedBy: ME.name
         });
         fail(error);
         seen.add(s.id + '|' + f.name);

@@ -37,6 +37,18 @@ def main():
     fuente = (reg.get("escucha:" + show) or {}).get("nombre", "")
     carpeta = ((cfg.get("escuchar") or {}).get(show) or {}).get("carpetaDestino") or str(BASE / show / "audios_whatsapp")
     print(f"=== {show}: grupo fuente = {fuente or '(sin registrar)'} · carpeta = {carpeta}")
+    # (oct/2026) a qué grupos ANUNCIA este show y qué otros shows anuncian en esos mismos grupos
+    # (así se ve si un grupo de otro Rab quedó registrado para este show por error)
+    def _grupos(sh):
+        r = reg.get(sh) or {}
+        return r.get("grupos") or ([r] if r.get("id") else [])
+    an = (cfg.get("anunciar") or {}).get(show) or {}
+    inv = an.get("invite") or []
+    print(f"--- anuncia en ({len(inv) if isinstance(inv, list) else 1} link(s) en el config) ---")
+    for g in _grupos(show):
+        otros = [sh for sh in reg if not sh.startswith(("escucha:", "admin:")) and sh != show
+                 and any(x.get("id") == g.get("id") for x in _grupos(sh))]
+        print(f"   · {g.get('nombre', '?')}" + (f"   (también lo usan: {', '.join(otros)})" if otros else ""))
 
     # días en el formato del log del robot (es-MX): [10/10/2026, ...]
     fechas = []
