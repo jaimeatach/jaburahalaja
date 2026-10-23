@@ -4912,6 +4912,70 @@ def amud_cuando():
         print("\n".join(lineas[:20]) if lineas else "   (ninguna: no hay choque)")
 
 
+# ── 53. --quitar-grupo=show:parte del nombre  (oct/2026) ──────────────────────
+#   Un show anunciaba en el grupo de OTRO Rab (Ofir Malka salía en el grupo de Pinto: uno de
+#   los dos links de "invite" de ofirmalka era el de Pinto). Quita ese grupo de los anuncios
+#   del show: su link de anunciar.<show>.invite y el grupo de grupos_registrados.json. Con
+#   respaldo. Si el link no está guardado en el registro, quita el que comparte con el show
+#   dueño del grupo (el que también lo usa).
+def quitar_grupo():
+    pedidos = [a.split("=", 1)[1] for a in sys.argv if a.startswith("--quitar-grupo=")]
+    if not pedidos or not ROBOT:
+        return
+    paso(53, "Quitar un grupo de los anuncios de un show")
+    rw, rg = ROBOT / "config_whatsapp.json", ROBOT / "grupos_registrados.json"
+    cfg = json.loads(rw.read_text(encoding="utf-8"))
+    reg = json.loads(rg.read_text(encoding="utf-8")) if rg.exists() else {}
+    an_todo = cfg.get("anunciar") or {}
+
+    def lista(v):
+        return [x for x in (v if isinstance(v, list) else [v]) if isinstance(x, str) and x.startswith("http")]
+
+    def grupos(sh):
+        r = reg.get(sh) or {}
+        return r.get("grupos") or ([r] if r.get("id") else [])
+
+    cambio = False
+    for pedido in pedidos:
+        show, _, texto = pedido.partition(":")
+        show, texto = show.strip().lower(), texto.strip()
+        an = an_todo.get(show)
+        if an is None or not texto:
+            aviso(f"{pedido}: no encuentro el show o falta parte del nombre del grupo")
+            continue
+        quitar = [g for g in grupos(show) if texto.lower() in str(g.get("nombre", "")).lower()]
+        if not quitar:
+            aviso(f"{show}: ninguno de sus grupos se llama como '{texto}': " + ", ".join(g.get("nombre", "?") for g in grupos(show)))
+            continue
+        invites = lista(an.get("invite"))
+        fuera = {g.get("invite") for g in quitar if g.get("invite")}
+        if not fuera:                       # sin link en el registro: el que comparte con el dueño
+            for g in quitar:
+                for otro, datos in an_todo.items():
+                    if otro != show and any(x.get("id") == g.get("id") for x in grupos(otro)):
+                        fuera |= set(invites) & set(lista((datos or {}).get("invite")))
+        quedan = [x for x in invites if x not in fuera]
+        if len(quedan) == len(invites):
+            aviso(f"{show}: no supe cuál de sus links es el de '{texto}'; no toco el config (mándame la salida)")
+            continue
+        an["invite"] = quedan if len(quedan) != 1 else quedan[0]
+        ids = {g.get("id") for g in quitar}
+        resto = [g for g in grupos(show) if g.get("id") not in ids]
+        if resto:
+            reg[show] = {"id": resto[0].get("id"), "nombre": resto[0].get("nombre"), "grupos": resto}
+        else:
+            reg.pop(show, None)
+        cambio = True
+        ok(f"{show}: ya no anuncia en " + " + ".join(g.get("nombre", "?") for g in quitar)
+           + (f"; sigue en " + " + ".join(g.get("nombre", "?") for g in resto) if resto else ""))
+    if cambio and not VER:
+        respaldar(rw)
+        escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+        respaldar(rg)
+        escribir(rg, json.dumps(reg, ensure_ascii=False, indent=2) + "\n")
+        print("   → reinicia el robot para que lo tome.")
+
+
 def main():
     print("=== Instalador Otzar · jabura + nacach ===")
     print("Base:", BASE, "(prueba en seco)" if VER else "")
@@ -4969,6 +5033,7 @@ def main():
     pausar_anuncio()
     quitar_del_robot()
     amud_cuando()
+    quitar_grupo()
     guids_originales_flag()
     plataformas_links()
     revisar_todo()

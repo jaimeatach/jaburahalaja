@@ -175,6 +175,30 @@ def main():
     for k, v in previo.items():                 # shows que ya no están: se conserva lo puesto a mano
         if k not in out and isinstance(v, dict):
             out[k] = v
+    # (oct/2026) un grupo de anuncio que usan SOLO dos shows suele ser el grupo de un Rab metido
+    # por error en otro show (Ofir Malka salía en el grupo de Pinto). Los generales ("Solo Shiurim")
+    # los usan muchos y no cuentan. Se avisa una vez al chat del "!reporte".
+    uso = {}
+    for sh, r in reg.items():
+        if sh.startswith(("escucha:", "admin:")) or not isinstance(r, dict):
+            continue
+        for g in (r.get("grupos") or ([r] if r.get("id") else [])):
+            if g.get("id"):
+                uso.setdefault(g["id"], {"nombre": g.get("nombre", "?"), "shows": set()})["shows"].add(sh)
+    avisados = set(previo.get("_grupos_avisados") or [])
+    for gid, u in uso.items():
+        if len(u["shows"]) == 2:
+            txt = f"grupo «{u['nombre']}» lo usan {' y '.join(sorted(u['shows']))}: ¿uno anuncia en el grupo del otro? (quitar: instalar_otzar.py --quitar-grupo=show:nombre)"
+            problemas.append(txt)
+            clave = gid + "|" + ",".join(sorted(u["shows"]))
+            if clave not in avisados:
+                avisados.add(clave)
+                try:
+                    (ROBOT / "avisos").mkdir(exist_ok=True)
+                    (ROBOT / "avisos" / f"{time.strftime('%Y%m%d%H%M%S')}_grupo.txt").write_text("⚠️ Otzar: " + txt, encoding="utf-8")
+                except OSError:
+                    pass
+    out["_grupos_avisados"] = sorted(avisados)
     destino.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
     if rapido:
         print(f"plataformas: revisadas ({sum(1 for f in filas if f[4] == 'sí')} de {len(filas)} shows en Apple Podcasts)")

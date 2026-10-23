@@ -367,6 +367,11 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    archivos ni feed: así salió `ravyitzchakyosef` (18/10/2026). En los anuncios armados con
    `armarMensaje`, `conPlataformas` mete Apple/Amazon/SoundCloud DESPUÉS de Spotify y ANTES
    del grupo de WhatsApp (orden pedido: Spotify, Apple, WhatsApp).
+   `--quitar-grupo=show:parte del nombre` (paso [53]) quita un grupo de los anuncios de un show
+   (su link en `anunciar.<show>.invite` y el grupo en `grupos_registrados.json`): ofirmalka
+   anunciaba también en el grupo de Pinto (23/10/2026). `plataformas.py` avisa al chat del
+   "!reporte" si un grupo lo usan exactamente dos shows; `diagnostico.py` dice a qué grupos
+   anuncia el show y quién más los usa.
    Amud Yomi (paso [52], siempre): `daf_diario.js` del usuario manda el amud de MAÑANA;
    `amud_cuando` le pone arriba "📅 Mañana · Tomorrow · מחר" (o "Hoy · Today · היום" si la
    fecha del renglón es hoy). Con respaldo y `node --check`; si el archivo cambió, no lo toca.
