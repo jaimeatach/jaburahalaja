@@ -177,9 +177,24 @@ def titulo_de(remoto):
     modulo = partes[-2] if len(partes) >= 2 else ""
     if modulo in ("שיעורים", "audios", "audio"):                 # subcarpeta genérica
         modulo = partes[-3] if len(partes) >= 3 else ""
+    # (oct/2026) ש״מ junta muchas melajot y el robot las guarda todas en la carpeta del siman
+    # ("כותב ומוחק"): si el shiur es de otra (תופר, קורע…), esa va adelante y no la carpeta.
+    if norm(modulo) in ("גוזז", "כותב ומוחק"):
+        for melaja, patron in TEMAS_340:
+            if re.search(patron, base, re.I):
+                modulo = "" if melaja in base else melaja
+                break
     if modulo and not re.match(r"^שיעורים", modulo) and modulo not in base:
         return f"{modulo} · {base}"
     return base
+
+
+TEMAS_340 = [
+    ("תופר", r"תופר|תפירה|לתפור|zipper|velcro|velkro|cierre|costura|coser"),
+    ("קורע", r"קורע|קריעה|לקרוע|rasgar"),
+    ("מעמר", r"מעמר|meamer"),
+    ("מדבק", r"מדבק|הדבקה|סלוטייפ|pegar"),
+]
 
 
 MIME = {".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".mp4": "audio/mp4", ".aac": "audio/aac",

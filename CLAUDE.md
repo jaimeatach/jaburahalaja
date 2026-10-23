@@ -88,6 +88,13 @@ El contenido de la jabura vive en un ítem de archive.org, no en Supabase Storag
   quedan en el primer saif por no tratar de un saif concreto.
 - Los módulos que comparten siman se unen: מעבד·טוחן·לש en שכ״א y
   גוזז·כותב ומוחק en ש״מ, cada uno con `groups` para resolver la numeración.
+- ש״מ junta muchas melajot (texto del ש״ע, ya consultable en Sefaria: §1-2 גוזז · §3 מוחק ·
+  §4 כותב · §5 רושם · §6-7 תופר · §8 מוכין · §9-10 מעמר · §11-12 לש · §13 קורע · §14 מדבק/מפרק)
+  y el robot guarda todo en la carpeta `כותב ומוחק`. `CAT_TEMAS` (por siman) ubica un shiur de
+  título libre en el saif de lo que trata, por palabras en hebreo/español/transliteradas
+  (`catSaifPorTema`, después de `CAT_SAIF`); `arcSaifimPorTema` (admin, con el auto-import)
+  mueve los ya importados que quedaron en el saif 1. En el feed, `titulo_de` pone adelante
+  la melajá del título (`TEMAS_340`: "תופר · …") en vez de la carpeta.
 - `הלכות מוקצה`: la carpeta "שיעורים מוקצה" que Saúl comparte aparte (31
   shiurim numerados al FINAL del nombre, `tail:true`). Sus ítems son objetos
   `{ t, s, saif }`: cada uno va a su propio siman (רע״ט, ש״ח–שי״ב) y a su saif
