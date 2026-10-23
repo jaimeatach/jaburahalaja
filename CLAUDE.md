@@ -412,6 +412,19 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    (no por los mp3) y el robot baja el audio del anuncio de archive.org, así que no dependen
    de la carpeta. Nunca la jabura (G:, Drive compartido de Saúl) ni nada fuera de C:\OTZAR.
    Con `limpieza_auto.json` `mantenimiento.py` (`limpieza`) lo corre una vez al día.
+16. Rab Yohanan Grilak (`grilak`, paso [54], oct/2026): show nuevo, sin Spotify ni Apple al
+   arrancar. Mandan los shiurim CON título al grupo del Rab (9tm8c1qB6sG9zg7BzgN9ff; Otzar ya es
+   miembro), que es fuente y anuncio (más los generales); también mandarán shiurim viejos. Se arma
+   solo la primera vez que corre el instalador (`GRILAK` + `show_nuevo`; `--grilak` lo repite).
+   Nombre "Rab Yohanan Grilak · הרב יוחנן גרילק", títulos con "Rab Yohanan Grilak ·" al frente,
+   foto del Rab recortada cuadrada y centrada en `canales/grilak.json` + `.b64` (paso [50]).
+   Feed: `https://rabmeireliyahu.github.io/grilak/feed.xml`; el usuario lo da de alta una vez en
+   Spotify for Creators y en Apple Podcasts Connect. Hasta entonces el anuncio queda en pausa con
+   `buscar_spotify`: `plataformas.py` (`buscar_spotify`/`activar_spotify`) busca el show por su
+   nombre exacto con las llaves del robot y, al aparecer, pone el link, quita la pausa, marca como
+   anunciado todo lo viejo del feed salvo el último y avisa al chat del "!reporte". Apple se
+   encuentra solo como los demás. `--grilak-spotify=LINK` lo activa a mano (mismo marcado).
+   El instalador ya baja todo de `main` (`REFS`): la rama vriig5 quedó vieja tras unirse.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre

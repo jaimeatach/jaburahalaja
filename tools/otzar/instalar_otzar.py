@@ -29,6 +29,7 @@ Instalador de un solo paso para la PC de Otzar (correr desde C:\\OTZAR):
     python instalar_otzar.py --tawil [--tawil-rss=RSS] [--tawil-numero=TEL]   # Rab Yosef Tawil: chat directo, temas, anuncio en su día
     python instalar_otzar.py --amazon=show:LINK --soundcloud=show:LINK --spotify-espera=torahanytime:6
     python instalar_otzar.py --revisar                       # en qué plataformas está cada show y qué le falta
+    python instalar_otzar.py --grilak [--grilak-spotify=LINK]  # Rab Yohanan Grilak (se arma solo la primera vez)
 
 Los shows (nacach, peretz…) viven en C:\\OTZAR; el robot en C:\\robotwhats. Los busca solo.
 
@@ -68,8 +69,9 @@ for flujo in (sys.stdout, sys.stderr):
     except Exception:
         pass
 
-# rama donde vive esta versión del instalador; "main" de respaldo
-REFS = ("claude/shiurim-halachot-shabbat-vriig5", "main")
+# rama donde vive esta versión del instalador (la de trabajo se une a main por PR;
+# la vieja claude/shiurim-halachot-shabbat-vriig5 quedó atrás y traería archivos viejos)
+REFS = ("main",)
 RAW = f"https://raw.githubusercontent.com/jaimeatach/jaburahalaja/{REFS[0]}/tools/"
 VER = "--ver" in sys.argv
 BASE = Path(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--base=")), r"C:\OTZAR"))
@@ -1616,12 +1618,12 @@ REGLAS_TITULO = {"isaaccredi": {"quitar_lineas": r"^\s*\d+\s*(siman|סימן|hal
                                "unir_lineas": ", ", "sufijo_titulo": "- Sr. Isaac Credi"}}
 # nombre del Rab al frente del titulo (va a grupos generales)
 PREFIJOS = {"tefila": "Rab Tofi Cherem ·", "nacach": "Rab Ezra Nacach ·", "efshar": "Rab Igal Snertz ·", "credi": "David Credi ·",
-            "hilu": "Rab Joshua Hilu ·", "ofirmalka": "הרב אופיר מלכא ·"}
+            "hilu": "Rab Joshua Hilu ·", "ofirmalka": "הרב אופיר מלכא ·", "grilak": "Rab Yohanan Grilak ·"}
 # shows que NO van a cierto grupo general (vacío: todos van al 6 y al 3)
 SIN_GRUPO = {}
 TITULOS_DEFECTO = {"tefila": "Clase de Tefilá · Rab Tofi Cherem", "hilu": "Shiur · Rab Joshua Hilu", "nacach": "Shiur · Rab Ezra Nacach",
                    "efshar": "Shiur · Rab Igal Snertz", "ofirmalka": "הרב אופיר מלכא · שיעור", "credi": "Shiur · David Credi",
-                   "isaaccredi": "Halajot Yalkut Yosef - Sr. Isaac Credi"}
+                   "isaaccredi": "Halajot Yalkut Yosef - Sr. Isaac Credi", "grilak": "Shiur · Rab Yohanan Grilak"}
 FEED_JABURA = "https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/feed.xml"
 
 
@@ -1984,7 +1986,7 @@ def sin_atrasos_config():
     paso(16, "Sin atrasos: cada show anuncia solo sus últimos N")
     cfg = json.loads(rw.read_text(encoding="utf-8"))
     an = cfg.setdefault("anunciar", {})
-    defectos = {"nacach": 2, "peretz": 2, "ofirmalka": 2, "tefila": 2, "hilu": 2, "credi": 2, "isaaccredi": 2, "jabura": 3}
+    defectos = {"nacach": 2, "peretz": 2, "ofirmalka": 2, "tefila": 2, "hilu": 2, "credi": 2, "isaaccredi": 2, "grilak": 2, "jabura": 3}
     cambios = 0
     for show, n in defectos.items():
         if show in an and (an[show].get("sin_filtro_fecha") or an[show].get("curso")):
@@ -4761,12 +4763,115 @@ def pausar_anuncio():
             print("   → reinicia el robot (cierra su ventana y abre ROBOT_WHATSAPP.bat)")
 
 
+# ── 54. Rab Yohanan Grilak (oct/2026) ─────────────────────────────────────────
+#   Show nuevo, todavía sin Spotify ni Apple. Mandan los shiurim CON título al grupo del
+#   Rab (fuente) y ahí mismo se anuncia, más los grupos generales. Se arma solo la primera
+#   vez que corre el instalador (o con --grilak). Nombre, descripción y foto (centrada en el
+#   Rab, en base64) salen de canales/grilak.json en el paso [50].
+#   Mientras no esté en Spotify, el anuncio queda en pausa con "buscar_spotify": plataformas.py
+#   busca el show por su nombre cada 3 h y, al encontrarlo, pone el link, quita la pausa y
+#   marca como anunciado lo viejo (solo sale el último). --grilak-spotify=LINK lo hace a mano.
+GRILAK = {
+    "nombre": "Rab Yohanan Grilak · הרב יוחנן גרילק",
+    "grupo": "https://chat.whatsapp.com/9tm8c1qB6sG9zg7BzgN9ff",
+}
+
+
+def grilak():
+    pedido = any(a == "--grilak" or a.startswith("--grilak-") for a in sys.argv)
+    if (BASE / "grilak" / "config.json").exists() and not pedido:
+        return
+    arg = lambda k: next((a.split("=", 1)[1] for a in sys.argv if a.startswith(f"--{k}=")), "").strip()
+    spot = arg("grilak-spotify").split("?")[0]
+    rw = (ROBOT or BASE) / "config_whatsapp.json"
+    try:
+        previo = json.loads(rw.read_text(encoding="utf-8")).get("anunciar", {}).get("grilak") or {}
+    except Exception:
+        previo = {}
+    # show_nuevo le quita la pausa; aquí se sabe si ya estaba anunciando
+    ya_anunciaba = str(previo.get("spotify", "")).startswith("http") and not previo.get("pausado")
+    viejo = sys.argv[:]
+    sys.argv = [a for a in sys.argv if not a.startswith("--nuevo")] + \
+        ["--nuevo=grilak", "--nuevo-nombre=" + GRILAK["nombre"], "--nuevo-grupo=" + GRILAK["grupo"]] + \
+        (["--nuevo-spotify=" + spot] if spot.startswith("http") else [])
+    try:
+        show_nuevo()
+    finally:
+        sys.argv = viejo
+    paso(54, "Rab Yohanan Grilak: audios con título de su grupo → archive.org, feed, Spotify y Apple")
+    if not rw.exists():
+        aviso("no encuentro config_whatsapp.json del robot")
+        return
+    cfg = json.loads(rw.read_text(encoding="utf-8"))
+    antes = json.dumps(cfg, sort_keys=True)
+    an = cfg.setdefault("anunciar", {}).setdefault("grilak", {})
+    try:
+        c = json.loads((BASE / "grilak" / "config.json").read_text(encoding="utf-8"))
+    except Exception:
+        c = {}
+    user, repo = c.get("github_user", "rabmeireliyahu"), c.get("github_repo", "grilak")
+    feed = f"https://{user}.github.io/{repo}/feed.xml"
+    tiene = str(an.get("spotify", "")).startswith("http")
+    if tiene and not ya_anunciaba:
+        # se activa a mano: lo viejo que ya está en el feed queda como anunciado salvo el último
+        try:
+            with urllib.request.urlopen(urllib.request.Request(
+                    f"https://raw.githubusercontent.com/{user}/{repo}/main/feed.xml",
+                    headers={"User-Agent": "instalar-otzar"}), timeout=40) as r:
+                xml = r.read().decode("utf-8", "replace")
+            from email.utils import parsedate_to_datetime
+            pares = []
+            for it in re.findall(r"<item>([\s\S]*?)</item>", xml):
+                g = re.search(r"<guid[^>]*>(.*?)</guid>", it)
+                d = re.search(r"<pubDate>(.*?)</pubDate>", it)
+                try:
+                    cuando = parsedate_to_datetime(d.group(1).strip()).timestamp() if d else 0
+                except Exception:
+                    cuando = 0
+                if g:
+                    pares.append((cuando, g.group(1).replace("&amp;", "&")))
+            guids = [g for _, g in sorted(pares)][:-1]
+            estado_p = (ROBOT or BASE) / "estado_anuncios.json"
+            try:
+                e = json.loads(estado_p.read_text(encoding="utf-8"))
+            except Exception:
+                e = {}
+            previos = e.get("grilak") or []
+            e["grilak"] = (previos + [g for g in guids if g not in previos])[-2000:]
+            respaldar(estado_p)
+            escribir(estado_p, json.dumps(e, ensure_ascii=False, indent=2))
+            ok(f"{len(guids)} shiur(im) viejo(s) quedan como ya anunciados; sale solo el último")
+        except Exception as ex:                             # noqa: BLE001
+            aviso(f"no pude leer el feed para marcar lo viejo ({ex})")
+    if tiene:
+        an.pop("buscar_spotify", None)
+        an["pausado"] = False
+        ok(f"Spotify: {an['spotify']} → el robot anuncia en su grupo y en los generales")
+    else:
+        an["buscar_spotify"] = True
+        an["pausado"] = True
+        ok("anuncio en pausa hasta que el show salga en Spotify (se busca solo cada 3 h)")
+    if json.dumps(cfg, sort_keys=True) != antes:
+        respaldar(rw)
+        escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+    ok(f"feed del show: {feed}")
+    if tiene:
+        return
+    print("   → 1) reinicia el robot: al arrancar dice 'escucha grilak: ...' con el nombre del grupo")
+    print("        (si no aparece, manda dentro del grupo del Rab:  !otzar grilak)")
+    print("   → 2) cuando llegue el PRIMER shiur y se publique (ANUNCIAR o el piloto), da de alta el feed UNA vez:")
+    print(f"        · Spotify for Creators → Agregar podcast existente → pega {feed}")
+    print("          (manda un código a rabmeireliyahu@gmail.com)")
+    print(f"        · Apple: https://podcastsconnect.apple.com → + → Nuevo show → 'Agregar un show con un feed RSS' → {feed}")
+    print("   → 3) nada más: el link de Spotify y el de Apple se encuentran solos y el robot empieza a anunciar")
+
+
 # ── 50. Encabezado del show igual al de Spotify (nombre, descripción, autor, foto) ──
 #   tools/otzar/canales/<show>.json + la foto ORIGINAL en base64 (.b64): así el filtro de
 #   la PC no la "tapa" (la portada de Tawil salió con la cara en negro). Se sube al repo del
 #   show con nombre fechado (Spotify solo vuelve a bajar la foto si cambia la URL) y queda en
 #   config.json → "canal"; mantenimiento.py (canal_feed) lo vuelve a poner en el feed siempre.
-CANALES = ["tawil", "credi"]
+CANALES = ["tawil", "credi", "grilak"]
 
 
 def canales_shows():
@@ -4996,6 +5101,7 @@ def main():
     tefila_feed_inicial()
     tefila_rescate()
     show_nuevo()
+    grilak()
     portada()
     restaurar()
     quitar()

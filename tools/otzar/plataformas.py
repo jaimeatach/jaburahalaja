@@ -11,6 +11,7 @@ en C:\\robotwhats\\plataformas.json y el robot pone el link del EPISODIO en Appl
 cada anuncio. Amazon Music y SoundCloud no tienen API pública: se ponen a mano una
 vez (instalar_otzar.py --amazon=show:LINK / --soundcloud=show:LINK) y va el link del show.
 """
+import base64
 import json
 import re
 import sys
@@ -98,6 +99,49 @@ def buscar_apple(titulo, feeds):
     return "", ""
 
 
+def buscar_spotify(titulo):
+    """Link del show en Spotify con EXACTAMENTE este nombre (llaves del robot), o ""."""
+    l = [x.strip() for x in (ROBOT / "spotify_keys.txt").read_text(encoding="utf-8-sig").splitlines() if x.strip()]
+    auth = base64.b64encode(f"{l[0]}:{l[1]}".encode()).decode()
+    req = urllib.request.Request("https://accounts.spotify.com/api/token", data=b"grant_type=client_credentials",
+                                 headers={"Authorization": "Basic " + auth, "Content-Type": "application/x-www-form-urlencoded"})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        tok = json.loads(r.read().decode())["access_token"]
+    q = urllib.parse.quote(titulo[:100])
+    req = urllib.request.Request(f"https://api.spotify.com/v1/search?type=show&market=MX&limit=10&q={q}",
+                                 headers={"Authorization": "Bearer " + tok})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        res = (json.loads(r.read().decode()).get("shows") or {}).get("items") or []
+    for sh in res:
+        if sh and norm(sh.get("name")) == norm(titulo):
+            return "https://open.spotify.com/show/" + sh["id"]
+    return ""
+
+
+def activar_spotify(cfgw, show, link, guids):
+    """El show recién apareció en Spotify: se pone el link, se quita la pausa y lo que ya
+    estaba en el feed queda como anunciado salvo el último (así no salen los viejos en tropel)."""
+    datos = cfgw["anunciar"][show]
+    datos.update({"spotify": link, "sin_spotify": False, "pausado": False})
+    datos.pop("buscar_spotify", None)
+    rw = ROBOT / "config_whatsapp.json"
+    rw.with_name(rw.name + ".bak_" + time.strftime("%Y%m%d%H%M%S")).write_bytes(rw.read_bytes())
+    rw.write_text(json.dumps(cfgw, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    estado_p = ROBOT / "estado_anuncios.json"
+    e = leer_json(estado_p)
+    previos = e.get(show) or []
+    e[show] = (previos + [g for g in guids[:-1] if g not in previos])[-2000:]
+    if estado_p.exists():
+        estado_p.with_name(estado_p.name + ".bak_" + time.strftime("%Y%m%d%H%M%S")).write_bytes(estado_p.read_bytes())
+    estado_p.write_text(json.dumps(e, ensure_ascii=False, indent=2), encoding="utf-8")
+    try:
+        (ROBOT / "avisos").mkdir(exist_ok=True)
+        (ROBOT / "avisos" / f"{time.strftime('%Y%m%d%H%M%S')}_spotify_{show}.txt").write_text(
+            f"✅ Otzar: {show} ya está en Spotify ({link}); el robot empieza a anunciarlo.", encoding="utf-8")
+    except OSError:
+        pass
+
+
 def main():
     rapido = "--rapido" in sys.argv
     destino = ROBOT / "plataformas.json"
@@ -117,6 +161,7 @@ def main():
         prev = previo.get(show) or {}
         info = {k: v for k, v in prev.items() if k in ("amazon", "soundcloud")}
         titulo, n_items, ultimo = cfg_show.get("titulo", show), 0, None
+        guids = []
         try:
             x = bajar(leer)
             m = re.search(r"<channel>[\s\S]*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</title>", x)
@@ -133,8 +178,29 @@ def main():
                 except Exception:
                     pass
             ultimo = max(fechas) if fechas else None
+            pares = []
+            for it in items:
+                g = re.search(r"<guid[^>]*>(.*?)</guid>", it)
+                d = re.search(r"<pubDate>(.*?)</pubDate>", it)
+                try:
+                    cuando = parsedate_to_datetime(d.group(1).strip()).timestamp() if d else 0
+                except Exception:
+                    cuando = 0
+                if g:
+                    pares.append((cuando, g.group(1).replace("&amp;", "&")))
+            guids = [g for _, g in sorted(pares)]          # del más viejo al más nuevo
         except Exception as ex:
             problemas.append(f"{show}: no pude leer su feed ({ex})")
+        # (oct/2026) show nuevo que aún no está en Spotify ("buscar_spotify", p. ej. grilak):
+        # se busca por el nombre de su feed; al aparecer se activa solo
+        if datos.get("buscar_spotify") and not str(datos.get("spotify", "")).startswith("http") and n_items:
+            try:
+                link = buscar_spotify(titulo)
+                if link:
+                    activar_spotify(cfgw, show, link, guids)
+                    problemas.append(f"{show}: apareció en Spotify ({link}); anuncio activado")
+            except Exception as ex:
+                problemas.append(f"{show}: no pude buscarlo en Spotify ({ex})")
         apple_id, apple_url = "", ""
         if not rapido or not prev.get("apple_id"):
             try:
