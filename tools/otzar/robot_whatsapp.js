@@ -845,7 +845,8 @@ function tituloPorTema(show, texto, carpeta) {
   const lista = temasDe(show).filter(t => t.desde <= n);
   const t = lista[lista.length - 1];
   if (!t) log(`TEMAS ${show}: no hay tema para el dia ${n}; se guarda como "#${n}". Avisa el tema de la semana.`);
-  const titulo = t ? `#${n}- ${t.tema} (${n - t.desde + 1})` : `#${n}`;
+  const _fijo = titulosFijos(show)[n];
+  const titulo = _fijo ? `#${n}- ${_fijo}` : (t ? `#${n}- ${t.tema} (${n - t.desde + 1})` : `#${n}`);
   let fecha = 0;
   const dm = plano.match(/\b(domingo|lunes|martes|miercoles|jueves|viernes|sabado)\b/);
   if (dm) {
@@ -927,10 +928,22 @@ function dedicatoriaDe(show, tit) {
   return d ? por[d] : '';
 }
 // el titulo del anuncio sale del tema: "#22- Encendido de Velas (2)" (asi lo quieren en el grupo)
+// (oct/2026) titulo propio de cada shiur, confirmado por el usuario: {"n": 40, "titulo": "..."} en
+// temas/<show>.json; manda sobre el tema de la semana (ya no "Encendido de Velas (20)")
+function titulosFijos(show) {
+  let local = [];
+  try { local = JSON.parse(fs.readFileSync(_archivoTemas(show), 'utf8')); } catch (e) {}
+  const por = {};
+  for (const t of [].concat(_temasRemotos[show] || [], Array.isArray(local) ? local : []))
+    if (t && Number(t.n) && t.titulo) por[Number(t.n)] = String(t.titulo).trim();
+  return por;
+}
 function tituloDeTema(show, tit) {
   const n = numeroDe(tit);
   const esc = (CFG.escuchar || {})[show] || {};
   if (!n || !esc.temas) return tit;
+  const fijo = titulosFijos(show)[n];
+  if (fijo) return `#${n}- ${fijo}`;
   const t = temasDe(show).filter(x => x.desde <= n).pop();
   return t ? `#${n}- ${t.tema} (${n - t.desde + 1})` : String(tit).replace(/^\s*#\s*(\d+)\s*-?\s*/, '#$1- ');
 }

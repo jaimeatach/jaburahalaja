@@ -517,6 +517,89 @@ def sin_fechas_futuras(cfgw):
             log(f"fechas [{show}]: no pude subir el feed ({ex})")
 
 
+def titulos_fijos(cfgw):
+    """(oct/2026) Shows con "temas" (Tawil): cada shiur lleva SU título, el que el usuario
+    confirma ({"n": 40, "titulo": "Recibir Shabat…"} en tools/otzar/temas/<show>.json, o en
+    <show>\\temas.json de la PC, que manda). Si el robot guardó el audio con el número
+    equivocado (el mensaje "Dia N" no venía pegado a su audio), "archivo" dice cuál es:
+    {"n": 40, "archivo": "#39- Encendido de Velas (19) (2).mp3"}; el número verdadero es el
+    que dice el Rab al principio del audio. Cambia título y descripción en el feed, nunca el
+    guid (Spotify lo toma como el mismo episodio). No toca los títulos que no están en la lista."""
+    import base64
+    import html as _html
+    for show, datos in (cfgw.get("escuchar") or {}).items():
+        if not (isinstance(datos, dict) and datos.get("temas")):
+            continue
+        lista = []
+        for rama in ("claude/shiurim-halachot-shabbat-vriig5", "main"):
+            t = bajar(f"https://raw.githubusercontent.com/jaimeatach/jaburahalaja/{rama}/tools/otzar/temas/{show}.json")
+            try:
+                lista = json.loads(t) if t else []
+            except ValueError:
+                lista = []
+            if isinstance(lista, list) and lista:
+                break
+        local = leer_json(BASE / show / "temas.json", [])
+        lista = (lista if isinstance(lista, list) else []) + (local if isinstance(local, list) else [])
+        fijos = {int(x["n"]): str(x["titulo"]).strip() for x in lista if isinstance(x, dict) and x.get("n") and x.get("titulo")}
+        por_archivo = {str(x["archivo"]): int(x["n"]) for x in lista if isinstance(x, dict) and x.get("n") and x.get("archivo")}
+        if not (fijos or por_archivo):
+            continue
+        c = leer_json(BASE / show / "config.json")
+        tok = next((p for p in (BASE / show / "github_token.txt", BASE / "jabura" / "github_token.txt") if p.exists()), None)
+        if not tok:
+            continue
+        cab = {"Authorization": "token " + tok.read_text(encoding="utf-8").strip(),
+               "User-Agent": "otzar-mantenimiento", "Accept": "application/vnd.github+json"}
+        base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}/contents/feed.xml"
+        try:
+            with urllib.request.urlopen(urllib.request.Request(base, headers=cab), timeout=60) as r:
+                sha = json.loads(r.read().decode())["sha"]
+            with urllib.request.urlopen(urllib.request.Request(base, headers=dict(cab, Accept="application/vnd.github.raw")), timeout=120) as r:
+                feed = r.read().decode("utf-8", "replace")
+        except Exception as ex:
+            log(f"títulos [{show}]: no pude leer el feed ({ex})")
+            continue
+        cambios = []
+
+        def arreglar(m):
+            it = m.group(1)
+            g = re.search(r"<guid[^>]*>([\s\S]*?)</guid>", it)
+            tt = re.search(r"<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?</title>", it)
+            if not tt:
+                return m.group(0)
+            actual = _html.unescape(tt.group(1)).strip()
+            guid = _html.unescape(g.group(1)).strip() if g else ""
+            n = por_archivo.get(guid) or por_archivo.get(guid.rsplit("/", 1)[-1])
+            if not n:
+                mn = re.match(r"\s*#\s*(\d+)", actual)
+                n = int(mn.group(1)) if mn else 0
+            if not n or (n not in fijos and guid not in por_archivo):
+                return m.group(0)
+            nuevo_t = f"#{n}- {fijos[n]}" if n in fijos else re.sub(r"^\s*#\s*\d+", f"#{n}", actual)
+            if nuevo_t == actual:
+                return m.group(0)
+            esc = _html.escape(nuevo_t, quote=False)
+            nuevo = re.sub(r"<title>[\s\S]*?</title>", lambda _m: f"<title>{esc}</title>", it, count=1)
+            nuevo = re.sub(r"<description>[\s\S]*?</description>", lambda _m: f"<description>{esc}</description>", nuevo, count=1)
+            cambios.append(f"{actual} → {nuevo_t}")
+            return f"<item>{nuevo}</item>"
+
+        nuevo_feed = re.sub(r"<item>([\s\S]*?)</item>", arreglar, feed)
+        if not cambios:
+            continue
+        try:
+            cuerpo = {"message": "títulos de cada shiur (confirmados)", "sha": sha,
+                      "content": base64.b64encode(nuevo_feed.encode("utf-8")).decode()}
+            req = urllib.request.Request(base, data=json.dumps(cuerpo).encode(), headers=cab, method="PUT")
+            with urllib.request.urlopen(req, timeout=120):
+                pass
+            for x in cambios:
+                log(f"títulos [{show}]: {x}")
+        except Exception as ex:
+            log(f"títulos [{show}]: no pude subir el feed ({ex})")
+
+
 def ids_spotify(cfgw):
     """Shows rescatados de Spotify for Creators ("ids_spotify" en su config.json, lo
     pone instalar_otzar.py): cada episodio viejo conserva en el feed el MISMO guid y
@@ -666,6 +749,7 @@ def main():
     espejo()
     parasha_semanal(cfgw)
     ids_spotify(cfgw)
+    titulos_fijos(cfgw)
     sin_fechas_futuras(cfgw)
     canal_feed(cfgw)
     soundcloud()

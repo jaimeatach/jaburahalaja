@@ -1558,8 +1558,36 @@ function appleCorto(u) {
   if (i < 0) i = texto.lastIndexOf('\\n\\n📢');
   return i >= 0 ? texto.slice(0, i) + '\\n' + extra + texto.slice(i) : texto + '\\n' + extra;
 """),
+    # (oct/2026) Tawil: cada shiur con SU título confirmado ({"n": 40, "titulo": ...} en temas/tawil.json)
+    ("""function tituloDeTema(show, tit) {
+  const n = numeroDe(tit);
+  const esc = (CFG.escuchar || {})[show] || {};
+  if (!n || !esc.temas) return tit;
+  const t = temasDe(show).filter(x => x.desde <= n).pop();
+""", """// (oct/2026) titulo propio de cada shiur, confirmado por el usuario: {"n": 40, "titulo": "..."} en
+// temas/<show>.json; manda sobre el tema de la semana (ya no "Encendido de Velas (20)")
+function titulosFijos(show) {
+  let local = [];
+  try { local = JSON.parse(fs.readFileSync(_archivoTemas(show), 'utf8')); } catch (e) {}
+  const por = {};
+  for (const t of [].concat(_temasRemotos[show] || [], Array.isArray(local) ? local : []))
+    if (t && Number(t.n) && t.titulo) por[Number(t.n)] = String(t.titulo).trim();
+  return por;
+}
+function tituloDeTema(show, tit) {
+  const n = numeroDe(tit);
+  const esc = (CFG.escuchar || {})[show] || {};
+  if (!n || !esc.temas) return tit;
+  const fijo = titulosFijos(show)[n];
+  if (fijo) return `#${n}- ${fijo}`;
+  const t = temasDe(show).filter(x => x.desde <= n).pop();
+"""),
+    ("""  const titulo = t ? `#${n}- ${t.tema} (${n - t.desde + 1})` : `#${n}`;
+""", """  const _fijo = titulosFijos(show)[n];
+  const titulo = _fijo ? `#${n}- ${_fijo}` : (t ? `#${n}- ${t.tema} (${n - t.desde + 1})` : `#${n}`);
+"""),
 ]
-MARCAS_ROBOT = ("PARCHE LID", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
+MARCAS_ROBOT = ("PARCHE LID", "function titulosFijos(show)", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
                 "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema", "temas_cache.json", "la lista del repo al dia antes de contestar", "NUNCA en Shabat ni Yom Tov", "nunca fecha futura en el archivo", "function bloqueoSagrado", "AVISOS AL ADMIN", "!reporte\" / \"!estado", "function appleCorto", "async function acortarLink", "AL FINAL el grupo de WhatsApp")

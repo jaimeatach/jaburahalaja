@@ -320,6 +320,19 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    título corregido. Spotify del show:
    1gVVXZw6fNyrcqadB5pmLC; para que lea nuestro feed sin perder #1-#26 hace falta
    su RSS de Spotify for Creators (`--tawil-rss=https://anchor.fm/s/1171db72c/podcast/rss`).
+   Títulos por shiur (28/10/2026; el usuario no quiere "Encendido de Velas (20)"): desde el #39
+   cada shiur lleva SU título, corto y sencillo como los #1-#20 que puso el usuario
+   ("#41- Boi Kalá y la Neshamá Yeterá"). Van en `temas/tawil.json` como
+   `{"n": 41, "titulo": ..., "archivo": "<guid del audio>"}`: el robot los usa en el anuncio
+   (`titulosFijos`, manda sobre el tema de la semana) y `mantenimiento.py` (`titulos_fijos`)
+   los pone en el feed sin cambiar el guid. `archivo` corrige el número: el robot empareja el
+   mensaje "Dia N" con el audio equivocado (el 27/10 guardó dos "#39" y corrió 40-44 uno).
+   El número verdadero es el que dice el Rab al principio ("Día 40, …"): se saca transcribiendo
+   los primeros 75 s de cada mp3 de archive.org (ítem rab-tawil) con faster-whisper (modelo
+   small, español) desde el entorno de desarrollo. Flujo: llegan audios → transcribo → propongo
+   títulos al usuario → él confirma (una semana antes) → los escribo. Los títulos ya publicados
+   no se tocan (el usuario lo pidió); #35-#38 tienen el archivo con otro número pero el título
+   del feed ya es el correcto.
    Estadísticas: al rescatar, podcast_bot pone guids nuevos (nombre del archivo; así
    quedaron hilu y credi). `guids_originales` (paso [45], `--guids-originales=show`,
    automático con `--tawil-rss`) le devuelve a cada episodio rescatado el guid y la
