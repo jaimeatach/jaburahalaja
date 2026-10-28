@@ -527,8 +527,11 @@ def titulos_fijos(cfgw):
     guid (Spotify lo toma como el mismo episodio). No toca los títulos que no están en la lista."""
     import base64
     import html as _html
+    # (oct/2026) también los shows nuevos (grillak…): {"archivo": guid, "titulo": "..."} pone el
+    # título exacto que verifiqué escuchando el audio, y {"anunciar": true} quita la pausa del
+    # anuncio (el show nuevo espera en pausa hasta que sus títulos estén revisados).
     for show, datos in (cfgw.get("escuchar") or {}).items():
-        if not (isinstance(datos, dict) and datos.get("temas")):
+        if not isinstance(datos, dict):
             continue
         lista = []
         for rama in ("claude/shiurim-halachot-shabbat-vriig5", "main"):
@@ -543,7 +546,17 @@ def titulos_fijos(cfgw):
         lista = (lista if isinstance(lista, list) else []) + (local if isinstance(local, list) else [])
         fijos = {int(x["n"]): str(x["titulo"]).strip() for x in lista if isinstance(x, dict) and x.get("n") and x.get("titulo")}
         por_archivo = {str(x["archivo"]): int(x["n"]) for x in lista if isinstance(x, dict) and x.get("n") and x.get("archivo")}
-        if not (fijos or por_archivo):
+        exactos = {str(x["archivo"]): str(x["titulo"]).strip() for x in lista
+                   if isinstance(x, dict) and not x.get("n") and x.get("archivo") and x.get("titulo")}
+        an = (cfgw.get("anunciar") or {}).get(show)
+        if any(isinstance(x, dict) and x.get("anunciar") is True for x in lista) and isinstance(an, dict) and an.get("pausado"):
+            an["pausado"] = False
+            try:
+                (ROBOT / "config_whatsapp.json").write_text(json.dumps(cfgw, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+                log(f"títulos [{show}]: revisados; el robot ya lo anuncia")
+            except OSError as ex:
+                log(f"títulos [{show}]: no pude quitar la pausa ({ex})")
+        if not (fijos or por_archivo or exactos):
             continue
         c = leer_json(BASE / show / "config.json")
         tok = next((p for p in (BASE / show / "github_token.txt", BASE / "jabura" / "github_token.txt") if p.exists()), None)
@@ -570,6 +583,15 @@ def titulos_fijos(cfgw):
                 return m.group(0)
             actual = _html.unescape(tt.group(1)).strip()
             guid = _html.unescape(g.group(1)).strip() if g else ""
+            exacto = exactos.get(guid) or exactos.get(guid.rsplit("/", 1)[-1])
+            if exacto:
+                if exacto == actual:
+                    return m.group(0)
+                esc = _html.escape(exacto, quote=False)
+                nuevo = re.sub(r"<title>[\s\S]*?</title>", lambda _m: f"<title>{esc}</title>", it, count=1)
+                nuevo = re.sub(r"<description>[\s\S]*?</description>", lambda _m: f"<description>{esc}</description>", nuevo, count=1)
+                cambios.append(f"{actual} → {exacto}")
+                return f"<item>{nuevo}</item>"
             n = por_archivo.get(guid) or por_archivo.get(guid.rsplit("/", 1)[-1])
             if not n:
                 mn = re.match(r"\s*#\s*(\d+)", actual)

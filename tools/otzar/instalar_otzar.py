@@ -4176,10 +4176,15 @@ def rescatar():
         pend = {}
     for show in shows_:
         fuente = (reg.get("escucha:" + show) or (reg.get("peretz") if show == "peretz" else None) or {})
-        if not fuente.get("id"):
+        invite = ((cfgw.get("escuchar") or {}).get(show) or {}).get("invite") or ""
+        if not fuente.get("id") and not str(invite).startswith("http"):
             aviso(f"{show}: no tiene grupo fuente registrado; no se puede rescatar")
             continue
-        pend[show] = {"desde": desde}
+        # (oct/2026) show nuevo: el grupo todavía no está registrado, pero el robot lo ubica por
+        # su link al arrancar y el rescate espera a tenerlo; 200 mensajes (títulos + audios)
+        pend[show] = {"desde": desde, "cuantos": 200 if not fuente.get("id") else 50}
+        if not fuente.get("id"):
+            fuente = {"nombre": "su grupo (lo ubica el robot por el link al arrancar)"}
         if ((cfgw.get("escuchar") or {}).get(show) or {}).get("guardar_documentos"):
             pend[show]["documentos"] = True             # también los PDF/Word (mekorot)
         ok(f"{show}: el robot pedirá a WhatsApp los mensajes de \"{fuente.get('nombre', '?')}\" desde {desde[:10]}")

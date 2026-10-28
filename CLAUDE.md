@@ -338,6 +338,12 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    despierta a la sesión fija "Títulos Tawil (automático)", que ya tiene el repo y hace todo
    esto sola: audios sin título desde el #39 → "Día N" → título → `temas/tawil.json` → push a
    esta rama. Si un título queda mal, el usuario lo dice y se corrige la línea del json.
+   Shows nuevos con títulos revueltos (28/10/2026, Rab Grillak: mandaron los títulos y después
+   los audios): se crean con `--nuevo=… --nuevo-grupo=… --rescatar=show:60 --pausar=show` (el
+   rescate ya sirve aunque el grupo aún no esté registrado: el robot lo ubica por el link y pide
+   200 mensajes). Cuando los audios están en archive.org, se escucha el principio de cada uno y
+   se escribe `temas/<show>.json` con `{"archivo": guid, "titulo": ...}` (título exacto) y
+   `{"anunciar": true}`: `titulos_fijos` corrige el feed y quita la pausa del anuncio solo.
    Estadísticas: al rescatar, podcast_bot pone guids nuevos (nombre del archivo; así
    quedaron hilu y credi). `guids_originales` (paso [45], `--guids-originales=show`,
    automático con `--tawil-rss`) le devuelve a cada episodio rescatado el guid y la
