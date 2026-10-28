@@ -2127,7 +2127,7 @@ async function anunciarPrueba(show, sinLimpiar) {
   const m = it.match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/);
   const tit = (m?m[1]:'').trim() || 'Shiur';
   const spotShow = linkShowSpotify(show, datos);
-  const wa = (invitesDeShow(datos)[0]) || '';
+  const wa = datos.whatsapp_link || (invitesDeShow(datos)[0]) || '';   // (oct/2026) el grupo del Rab aunque no se anuncie ahi
   const diag = {};
   const epLink = spotShow ? await linkEpisodio(spotShow, tit, diag) : null;
   // BLINDAJE: sin link exacto de Spotify NO se manda nada
@@ -2369,7 +2369,7 @@ async function anunciarInterno(esVigilante) {
     if (!frescos.length) { log(`${show}: nada nuevo reciente.`); continue; }
 
     const spotShow = linkShowSpotify(show, datos);
-    const wa = (invitesDeShow(datos)[0]) || '';
+    const wa = datos.whatsapp_link || (invitesDeShow(datos)[0]) || '';   // (oct/2026) link del grupo del Rab (anuncio por lote)
     const tope = topeDeShow(show);
     if (frescos.length > tope) log(`${show}: ${frescos.length} frescos, mando ${tope} (tope de este show).`);
     const deHoy = enOrden ? frescos.slice(0, tope) : frescos.slice(0, tope).reverse();

@@ -344,6 +344,10 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    200 mensajes). Cuando los audios están en archive.org, se escucha el principio de cada uno y
    se escribe `temas/<show>.json` con `{"archivo": guid, "titulo": ...}` (título exacto) y
    `{"anunciar": true}`: `titulos_fijos` corrige el feed y quita la pausa del anuncio solo.
+   `{"silenciar": [guid, …]}` los marca como ya anunciados (lo viejo de un show nuevo no sale).
+   Grillak anuncia SOLO en su grupo y solo lo nuevo (los 37 rescatados, silenciados); Davidsohn
+   solo en los generales 3 y 6, con el link de su grupo en el mensaje: `--quitar-grupo` del
+   grupo del Rab deja `whatsapp_link` (el robot lo usa antes que el primer invite).
    Estadísticas: al rescatar, podcast_bot pone guids nuevos (nombre del archivo; así
    quedaron hilu y credi). `guids_originales` (paso [45], `--guids-originales=show`,
    automático con `--tawil-rss`) le devuelve a cada episodio rescatado el guid y la

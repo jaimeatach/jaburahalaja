@@ -1586,8 +1586,19 @@ function tituloDeTema(show, tit) {
 """, """  const _fijo = titulosFijos(show)[n];
   const titulo = _fijo ? `#${n}- ${_fijo}` : (t ? `#${n}- ${t.tema} (${n - t.desde + 1})` : `#${n}`);
 """),
+    # (oct/2026) "whatsapp_link": el link del grupo del Rab en el mensaje aunque no se anuncie en él (Davidsohn)
+    ("""  const wa = (invitesDeShow(datos)[0]) || '';
+  const diag = {};
+""", """  const wa = datos.whatsapp_link || (invitesDeShow(datos)[0]) || '';   // (oct/2026) el grupo del Rab aunque no se anuncie ahi
+  const diag = {};
+"""),
+    ("""    const wa = (invitesDeShow(datos)[0]) || '';
+    const tope = topeDeShow(show);
+""", """    const wa = datos.whatsapp_link || (invitesDeShow(datos)[0]) || '';   // (oct/2026) link del grupo del Rab (anuncio por lote)
+    const tope = topeDeShow(show);
+"""),
 ]
-MARCAS_ROBOT = ("PARCHE LID", "function titulosFijos(show)", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
+MARCAS_ROBOT = ("PARCHE LID", "function titulosFijos(show)", "const wa = datos.whatsapp_link ||", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
                 "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema", "temas_cache.json", "la lista del repo al dia antes de contestar", "NUNCA en Shabat ni Yom Tov", "nunca fecha futura en el archivo", "function bloqueoSagrado", "AVISOS AL ADMIN", "!reporte\" / \"!estado", "function appleCorto", "async function acortarLink", "AL FINAL el grupo de WhatsApp")
@@ -4992,6 +5003,12 @@ def quitar_grupo():
             aviso(f"{show}: no supe cuál de sus links es el de '{texto}'; no toco el config (mándame la salida)")
             continue
         an["invite"] = quedan if len(quedan) != 1 else quedan[0]
+        propio = str(((cfg.get("escuchar") or {}).get(show) or {}).get("invite") or "").split("?")[0]
+        if propio and propio in fuera:          # se quitó el grupo del Rab: su link sigue en el mensaje
+            an["whatsapp_link"] = propio
+            an["sin_whatsapp"] = False
+        if quedan and all(x.split("?")[0] == propio for x in quedan):
+            an["sin_whatsapp"] = True           # solo se anuncia en el grupo del Rab: no repetir su link
         ids = {g.get("id") for g in quitar}
         resto = [g for g in grupos(show) if g.get("id") not in ids]
         if resto:

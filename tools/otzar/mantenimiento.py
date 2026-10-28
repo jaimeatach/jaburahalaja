@@ -556,6 +556,21 @@ def titulos_fijos(cfgw):
                 log(f"títulos [{show}]: revisados; el robot ya lo anuncia")
             except OSError as ex:
                 log(f"títulos [{show}]: no pude quitar la pausa ({ex})")
+        # {"silenciar": [guid, ...]}: episodios que NO se anuncian nunca (lo viejo de un show nuevo:
+        # el usuario quiere que salga solo lo que llegue de ahora en adelante)
+        silenciar = [str(g) for x in lista if isinstance(x, dict) and isinstance(x.get("silenciar"), list) for g in x["silenciar"]]
+        if silenciar:
+            estado_p = ROBOT / "estado_anuncios.json"
+            est = leer_json(estado_p)
+            previos = est.get(show) or []
+            nuevos_s = [g for g in silenciar if g not in previos]
+            if nuevos_s:
+                est[show] = (previos + nuevos_s)[-2000:]
+                try:
+                    estado_p.write_text(json.dumps(est, ensure_ascii=False, indent=2), encoding="utf-8")
+                    log(f"títulos [{show}]: {len(nuevos_s)} episodio(s) viejos marcados para no anunciarse")
+                except OSError as ex:
+                    log(f"títulos [{show}]: no pude marcar los viejos ({ex})")
         if not (fijos or por_archivo or exactos):
             continue
         c = leer_json(BASE / show / "config.json")
