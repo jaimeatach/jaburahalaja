@@ -548,6 +548,9 @@ def titulos_fijos(cfgw):
         por_archivo = {str(x["archivo"]): int(x["n"]) for x in lista if isinstance(x, dict) and x.get("n") and x.get("archivo")}
         exactos = {str(x["archivo"]): str(x["titulo"]).strip() for x in lista
                    if isinstance(x, dict) and not x.get("n") and x.get("archivo") and x.get("titulo")}
+        # "fecha": "2025-09-04" → la fecha real del shiur (en Spotify salen en su orden, no todos "hoy")
+        fechas_x = {str(x["archivo"]): str(x["fecha"]) for x in lista
+                    if isinstance(x, dict) and not x.get("n") and x.get("archivo") and x.get("fecha")}
         an = (cfgw.get("anunciar") or {}).get(show)
         if any(isinstance(x, dict) and x.get("anunciar") is True for x in lista) and isinstance(an, dict) and an.get("pausado"):
             an["pausado"] = False
@@ -600,11 +603,20 @@ def titulos_fijos(cfgw):
             guid = _html.unescape(g.group(1)).strip() if g else ""
             exacto = exactos.get(guid) or exactos.get(guid.rsplit("/", 1)[-1])
             if exacto:
-                if exacto == actual:
-                    return m.group(0)
                 esc = _html.escape(exacto, quote=False)
                 nuevo = re.sub(r"<title>[\s\S]*?</title>", lambda _m: f"<title>{esc}</title>", it, count=1)
                 nuevo = re.sub(r"<description>[\s\S]*?</description>", lambda _m: f"<description>{esc}</description>", nuevo, count=1)
+                f_x = fechas_x.get(guid) or fechas_x.get(guid.rsplit("/", 1)[-1])
+                if f_x:
+                    try:
+                        import datetime as _dt
+                        from email.utils import format_datetime as _fd
+                        cuando = _dt.datetime.strptime(f_x[:10], "%Y-%m-%d").replace(hour=12, tzinfo=_dt.timezone.utc)
+                        nuevo = re.sub(r"<pubDate>[\s\S]*?</pubDate>", lambda _m: f"<pubDate>{_fd(cuando, usegmt=True)}</pubDate>", nuevo, count=1)
+                    except ValueError:
+                        pass
+                if nuevo == it:
+                    return m.group(0)
                 cambios.append(f"{actual} → {exacto}")
                 return f"<item>{nuevo}</item>"
             n = por_archivo.get(guid) or por_archivo.get(guid.rsplit("/", 1)[-1])
