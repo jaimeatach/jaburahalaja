@@ -4342,10 +4342,11 @@ def bajar_texto(nombre):
 
 
 # ── 43. plataformas por show ──────────────────────────────────────────────────
-#   --amazon=show:LINK[,show:LINK]  --soundcloud=show:LINK  --apple=show:LINK
+#   --amazon=show:LINK[,show:LINK]  --soundcloud=show:LINK  --apple=show:LINK  --spotify=show:LINK
 #   --spotify-espera=show:HORAS     (si Spotify no toma el episodio en N horas, sale con el link del show)
 def plataformas_links():
-    claves = {"amazon": "amazon", "soundcloud": "soundcloud", "apple": "apple", "spotify-espera": "spotify_espera_horas"}
+    claves = {"amazon": "amazon", "soundcloud": "soundcloud", "apple": "apple", "spotify-espera": "spotify_espera_horas",
+              "spotify": "spotify"}      # (oct/2026) --spotify=grillak:LINK: el show ya está en Spotify (lee nuestro feed)
     pedidos = []
     for flag, campo in claves.items():
         v = next((a.split("=", 1)[1] for a in sys.argv if a.startswith(f"--{flag}=")), "")
@@ -4368,6 +4369,8 @@ def plataformas_links():
             aviso(f"{show}: no está en anunciar")
             continue
         an[campo] = float(valor) if campo == "spotify_espera_horas" else valor.split("?")[0] if "spotify" in valor else valor
+        if campo == "spotify":
+            an["sin_spotify"] = False          # ya hay show: el anuncio busca el link exacto del episodio
         ok(f"{show}: {campo} = {an[campo]}")
     if json.dumps(cfg, sort_keys=True) != antes and not VER:
         respaldar(rw)
