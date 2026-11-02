@@ -71,10 +71,27 @@ def _bloqueo_piloto():
     return sencillo
 
 
+def _pid_vivo(pid):
+    if os.name != "nt":
+        try:
+            os.kill(pid, 0)
+            return True
+        except OSError:
+            return False
+    try:                                             # en Windows os.kill MATA: se pregunta a tasklist
+        r = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/NH"], capture_output=True, text=True, timeout=20)
+        return str(pid) in (r.stdout or "")
+    except Exception:                                # noqa: BLE001
+        return True
+
+
 def otra_carga_viva():
     try:
-        return LOCK.exists() and time.time() - LOCK.stat().st_mtime < 5 * 60
-    except OSError:
+        if not (LOCK.exists() and time.time() - LOCK.stat().st_mtime < 5 * 60):
+            return False
+        pid = int(LOCK.read_text(encoding="utf-8").strip() or 0)
+        return pid != os.getpid() and _pid_vivo(pid)   # ventana cerrada a mano: su candado no cuenta
+    except (OSError, ValueError):
         return False
 
 
@@ -92,8 +109,10 @@ def una_vuelta():
     por_bajar = bajados = None
     otra = False
     try:
+        # PYTHONUTF8: con la salida por tubería, Windows usa cp1252 y el bot truena con el hebreo
         proc = subprocess.Popen([sys.executable, "podcast_bot.py"], cwd=str(D), stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace")
+                                stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace",
+                                env=dict(os.environ, PYTHONUTF8="1", PYTHONIOENCODING="utf-8"))
         for ln in proc.stdout:
             ln = ln.rstrip()
             print(ln, flush=True)
@@ -138,6 +157,11 @@ def terminar():
 
 
 def main():
+    for flujo in (sys.stdout, sys.stderr):
+        try:
+            flujo.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:                            # noqa: BLE001
+            pass
     if not SHOW or not (D / "podcast_bot.py").exists():
         print(f"no encuentro {D / 'podcast_bot.py'}")
         return
