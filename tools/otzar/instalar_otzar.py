@@ -5425,6 +5425,256 @@ def anunciar_en():
         print("   → reinicia el robot para que lo tome.")
 
 
+# ── 57. --shalom-bait  (nov/2026) ─────────────────────────────────────────────
+#   Curso SHALOM BAIT de Efshar Letaken (Rab Igal Snertz): 1 clase por semana, sube el domingo
+#   y sale a WhatsApp el lunes con título + Spotify + Apple + audio. El código del curso lo hizo
+#   otra sesión en el repo rabmeireliyahu/efshar (herramientas/): shalom_bait.py (revisar /
+#   preparar / semana) y whatsapp/shalom_bait_whatsapp_setup.py (parches al robot + entrada
+#   "shalombait"). Este paso lo deja corriendo de un tirón:
+#     1. baja esos scripts a C:\OTZAR\efshar y al robot
+#     2. parcha el robot y crea la entrada (solo si el robot aún no tiene el parche "SB:semana")
+#     3. grupos POR NOMBRE: los 2 de Rab Snertz (los de efshar/mishlei que no son generales) + el
+#        "3 …" y el "6 …"; si no salen exactamente 2 + 1 + 1, NO deja nada listo para mandar
+#     4. preparar (convierte las clases desde G:) y sube la clase 1 (semana --forzar --sin-portada)
+#     5. comprueba que "Shalom Bait 1" está en el feed publicado
+#     6. reinicia el robot (para que lea la entrada) y le da la orden de anunciar
+#   Las semanas siguientes las sube mantenimiento.py (shalom_bait_semanal) el domingo.
+SB_REPO = "https://raw.githubusercontent.com/rabmeireliyahu/efshar/{ref}/herramientas/{ruta}"
+SB_REFS = ("claude/peaceful-maxwell-a9zajy", "main")
+SB_FEED = "https://rabmeireliyahu.github.io/efshar/feed.xml"
+
+
+def _sb_bajar(ruta, destino, solo_si_falta=False):
+    if solo_si_falta and destino.exists():
+        return True
+    for ref in SB_REFS:
+        try:
+            req = urllib.request.Request(SB_REPO.format(ref=ref, ruta=ruta) + f"?t={int(time.time())}",
+                                         headers={"User-Agent": "instalar-otzar"})
+            with urllib.request.urlopen(req, timeout=60) as r:
+                datos = r.read()
+            if len(datos) < 200:
+                continue
+            if destino.exists() and destino.read_bytes() == datos:
+                ok(f"{destino.name}: ya estaba al día ({ref})")
+                return True
+            if destino.exists():
+                respaldar(destino)
+            destino.write_bytes(datos)
+            ok(f"{destino.name}: bajado de rabmeireliyahu/efshar ({ref})")
+            return True
+        except Exception:                                   # noqa: BLE001
+            continue
+    aviso(f"no pude bajar {ruta} de rabmeireliyahu/efshar")
+    return False
+
+
+def _sb_feed_tiene(n=None):
+    try:
+        req = urllib.request.Request(SB_FEED + f"?t={int(time.time())}", headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=60) as r:
+            feed = r.read().decode("utf-8", "replace")
+    except Exception:                                       # noqa: BLE001
+        return None
+    tits = re.findall(r"<title>(?:<!\[CDATA\[)?\s*(Shalom Bait[^<\]]*)", feed)
+    if n is None:
+        return tits
+    return [t for t in tits if re.match(rf"Shalom Bait\s+{n}\b", t)]
+
+
+def _sb_grupos(reg, an):
+    """-> (snertz, g3, g6) con las entradas de grupos_registrados (id, nombre, invite)."""
+    def grupos(sh):
+        r = reg.get(sh) or {}
+        return r.get("grupos") or ([r] if r.get("id") else [])
+    todos = {}
+    for k, v in reg.items():
+        if isinstance(v, dict) and not k.startswith(("escucha:", "dm:")):
+            for g in grupos(k):
+                if g.get("id"):
+                    todos.setdefault(g["id"], g)
+    es3 = lambda g: re.match(r"^\W*3(?!\d)", str(g.get("nombre", "")))
+    es6 = lambda g: re.match(r"^\W*6(?!\d)", str(g.get("nombre", "")))
+    g3 = [g for g in todos.values() if es3(g)]
+    g6 = [g for g in todos.values() if es6(g)]
+    gen = {g.get("id") for g in grupos("nacach")}
+    snertz = {}
+    for sh in ("efshar", "mishlei"):
+        for g in grupos(sh):
+            if g.get("id") and not es3(g) and not es6(g) and g["id"] not in gen:
+                snertz.setdefault(g["id"], g)
+    return list(snertz.values()), g3, g6
+
+
+def _sb_reiniciar_robot():
+    """Cierra el robot que corre (node con robot_whatsapp.js) y lo vuelve a abrir, para que lea
+    la entrada nueva. Si su ventana lo relanza sola, no abre otro (dos robots se roban la sesión)."""
+    lock = ROBOT / "robot.lock"
+    ps = ("Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | "
+          "Where-Object { $_.CommandLine -like '*robot_whatsapp*' } | "
+          "ForEach-Object { Stop-Process -Id $_.ProcessId -Force; $_.ProcessId }")
+    try:
+        r = subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, text=True, timeout=60)
+        cerrados = [x for x in (r.stdout or "").split() if x.strip().isdigit()]
+    except Exception as ex:                                 # noqa: BLE001
+        aviso(f"no pude cerrar el robot ({ex}); ciérralo y ábrelo tú")
+        return False
+    t0 = time.time()
+    if cerrados:
+        ok(f"robot cerrado (proceso {', '.join(cerrados)})")
+    print("   · espero 45 s por si su ventana lo vuelve a abrir sola…", flush=True)
+    time.sleep(45)
+    try:
+        relanzado = lock.exists() and lock.stat().st_mtime > t0
+    except OSError:
+        relanzado = False
+    if not relanzado:
+        bat = next((ROBOT / n for n in ("ROBOT_WHATSAPP.bat", "ROBOT.bat", "INICIAR_ROBOT.bat") if (ROBOT / n).exists()), None)
+        bat = bat or next(iter(sorted(ROBOT.glob("ROBOT*.bat"))), None)
+        try:
+            lock.unlink()
+        except OSError:
+            pass
+        if bat:
+            subprocess.Popen(["cmd", "/c", "start", "ROBOT", "/d", str(ROBOT), str(bat)], cwd=str(ROBOT))
+        else:
+            subprocess.Popen(["cmd", "/c", "start", "ROBOT", "/d", str(ROBOT), "cmd", "/k", "node robot_whatsapp.js"], cwd=str(ROBOT))
+        ok("robot abierto de nuevo")
+    else:
+        ok("su ventana lo volvió a abrir sola")
+    for _ in range(30):                                     # hasta 5 min a que diga "ROBOT LISTO"
+        time.sleep(10)
+        try:
+            if lock.exists() and time.time() - lock.stat().st_mtime < 40 and lock.stat().st_mtime > t0:
+                return True
+        except OSError:
+            pass
+    aviso("el robot no avisó que arrancó (robot.lock); revisa su ventana")
+    return False
+
+
+def shalom_bait():
+    if "--shalom-bait" not in sys.argv:
+        return
+    paso(57, "Shalom Bait (Efshar Letaken): clase 1 al feed y a WhatsApp")
+    if VER:
+        print("   (prueba en seco: no bajo, no subo ni anuncio nada)")
+        return
+    ef = BASE / "efshar"
+    if not ef.is_dir() or not ROBOT:
+        aviso(f"no encuentro {ef} o el robot")
+        return
+    # 1) scripts
+    if not _sb_bajar("shalom_bait.py", ef / "shalom_bait.py"):
+        return
+    _sb_bajar("goteo.py", ef / "goteo.py", solo_si_falta=True)
+    _sb_bajar("whatsapp/shalom_bait_whatsapp_setup.py", ROBOT / "shalom_bait_whatsapp_setup.py")
+    env = dict(os.environ, PYTHONUTF8="1", PYTHONIOENCODING="utf-8")
+    # 2) robot + entrada (el setup de la otra sesión; solo la primera vez)
+    rw, rg = ROBOT / "config_whatsapp.json", ROBOT / "grupos_registrados.json"
+    cfg = json.loads(rw.read_text(encoding="utf-8"))
+    robot_txt = (ROBOT / "robot_whatsapp.js").read_text(encoding="utf-8", errors="replace")
+    if "SB:semana" not in robot_txt or "shalombait" not in (cfg.get("anunciar") or {}):
+        print("   --- shalom_bait_whatsapp_setup.py ---", flush=True)
+        r = subprocess.run([sys.executable, "shalom_bait_whatsapp_setup.py"], cwd=str(ROBOT), env=env)
+        if r.returncode != 0 and "SB:semana" not in (ROBOT / "robot_whatsapp.js").read_text(encoding="utf-8", errors="replace"):
+            # el parche no entró en este robot: la copia del repo ES el robot con todo (Mishlei,
+            # subir por link, Shalom Bait); se pone entera, con respaldo, y se repite el setup
+            print("   · el parche no entró; pongo la copia completa del robot (con respaldo) y repito", flush=True)
+            respaldar(ROBOT / "robot_whatsapp.js")
+            if bajar("otzar/robot_whatsapp.js", ROBOT / "robot_whatsapp.js"):
+                chk = subprocess.run(["node", "--check", str(ROBOT / "robot_whatsapp.js")], capture_output=True, text=True)
+                if chk.returncode != 0:
+                    aviso("node --check falló con la copia del repo: " + (chk.stderr or chk.stdout).strip()[:300])
+                    return
+                r = subprocess.run([sys.executable, "shalom_bait_whatsapp_setup.py"], cwd=str(ROBOT), env=env)
+        if r.returncode != 0:
+            aviso("el setup del robot no terminó bien (mira arriba); no sigo")
+            return
+        cfg = json.loads(rw.read_text(encoding="utf-8"))
+    else:
+        ok("robot: ya tenía los parches de Shalom Bait y la entrada \"shalombait\"")
+    an_todo = cfg.get("anunciar") or {}
+    sb = an_todo.get("shalombait")
+    if not isinstance(sb, dict):
+        aviso("no quedó la entrada \"shalombait\" en config_whatsapp.json; no sigo")
+        return
+    # 3) grupos por nombre
+    reg = json.loads(rg.read_text(encoding="utf-8")) if rg.exists() else {}
+    snertz, g3, g6 = _sb_grupos(reg, an_todo)
+    print("   · grupos de Rab Snertz: " + (" + ".join(g.get("nombre", "?") for g in snertz) or "(ninguno)"))
+    print("   · grupo 3: " + (" + ".join(g.get("nombre", "?") for g in g3) or "(ninguno)"))
+    print("   · grupo 6: " + (" + ".join(g.get("nombre", "?") for g in g6) or "(ninguno)"))
+    grupos_ok = len(snertz) == 2 and len(g3) == 1 and len(g6) == 1
+    elegidos = snertz + g3 + g6
+    if grupos_ok:
+        invites = [g["invite"] for g in elegidos if g.get("invite")]
+        sb["invite"] = invites if len(invites) != 1 else invites[0]
+        sb["pausado"] = False
+        reg["shalombait"] = {"id": elegidos[0]["id"], "nombre": elegidos[0].get("nombre"),
+                             "grupos": [dict(g) for g in elegidos]}
+        ok("shalombait anuncia SOLO en: " + " · ".join(g.get("nombre", "?") for g in elegidos))
+    else:
+        sb["pausado"] = True
+        aviso("no salieron exactamente 2 grupos de Rab Snertz + el 3 + el 6: dejo \"shalombait\" en PAUSA "
+              "(no se manda a nadie). Mándame esta salida y lo ajusto.")
+    efs = an_todo.get("efshar") or {}
+    if str(efs.get("spotify", "")).startswith("http"):
+        sb["spotify"] = efs["spotify"]          # las clases están en el feed de Efshar: su Spotify
+    sb["apple_esperar"] = False                 # hoy sale aunque Apple aún no tenga el episodio (va el link del show)
+    sb["spotify_espera_horas"] = 2              # si Spotify tarda más de 2 h, sale con el link del show
+    respaldar(rw)
+    escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+    if grupos_ok:
+        respaldar(rg)
+        escribir(rg, json.dumps(reg, ensure_ascii=False, indent=2) + "\n")
+    # 4) clases: revisar (Rab y tema) + preparar si hace falta + subir la 1
+    print("   --- shalom_bait.py revisar ---", flush=True)
+    subprocess.run([sys.executable, "shalom_bait.py", "revisar"], cwd=str(ef), env=env)
+    try:
+        g = json.loads((ef / "goteo.json").read_text(encoding="utf-8"))
+    except Exception:                                       # noqa: BLE001
+        g = {}
+    listos = list((ef / "shalom_bait_listo").glob("*.mp3")) if (ef / "shalom_bait_listo").is_dir() else []
+    if Path(g.get("carpeta_origen", "")).name.lower() != "shalom_bait_listo" or not listos:
+        print("   --- shalom_bait.py preparar (convierte las clases; tarda unos minutos) ---", flush=True)
+        r = subprocess.run([sys.executable, "shalom_bait.py", "preparar"], cwd=str(ef), env=env)
+        if r.returncode != 0:
+            aviso("preparar no terminó bien (mira arriba: Rab, ffmpeg o la unidad G:); no subo nada")
+            return
+    ya = _sb_feed_tiene()
+    if ya is None:
+        aviso("no pude leer el feed de Efshar; sigo")
+        ya = []
+    if not ya:
+        print("   --- shalom_bait.py semana --forzar --sin-portada ---", flush=True)
+        r = subprocess.run([sys.executable, "shalom_bait.py", "semana", "--forzar", "--sin-portada"], cwd=str(ef), env=env)
+        if r.returncode != 0:
+            aviso("no se subió la clase (mira arriba); no anuncio nada")
+            return
+    else:
+        ok(f"el feed ya tiene {len(ya)} clase(s) de Shalom Bait: {ya[-1]}")
+    # 5) comprobar el feed publicado
+    clase1 = []
+    for _ in range(18):                                     # hasta 3 min a que Pages lo publique
+        clase1 = _sb_feed_tiene(1) or []
+        if clase1:
+            break
+        time.sleep(10)
+    if not clase1:
+        aviso("el feed publicado todavía NO tiene \"Shalom Bait 1\"; no anuncio nada. Mándame esta salida.")
+        return
+    ok(f"en el feed: {clase1[0]}")
+    # 6) robot: leer la entrada nueva y anunciar
+    if not grupos_ok:
+        aviso("la clase está en el feed, pero \"shalombait\" quedó en pausa por los grupos: no se manda")
+        return
+    if _sb_reiniciar_robot():
+        (ROBOT / "comando.txt").write_text("anunciar\n", encoding="utf-8")
+        ok("orden de anunciar enviada: sale cuando Spotify tenga el episodio (máx. 2 h; el robot reintenta solo)")
+        print("   · en la ventana del robot verás \"shalombait: …\" cuando la mande")
+
+
 def main():
     print("=== Instalador Otzar · jabura + nacach ===")
     print("Base:", BASE, "(prueba en seco)" if VER else "")
@@ -5488,6 +5738,7 @@ def main():
     guids_originales_flag()
     plataformas_links()
     anunciar_en()
+    shalom_bait()
     revisar_todo()
     print("\nListo." if not VER else "\nPrueba en seco terminada: no se cambió nada.")
 

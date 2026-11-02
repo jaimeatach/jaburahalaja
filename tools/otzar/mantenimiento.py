@@ -621,6 +621,88 @@ def titulo_de_mensaje(texto):
     return (f"{parasha} · {tema}" if parasha else tema), fecha
 
 
+def shalom_bait_semanal(cfgw):
+    """(nov/2026) Curso Shalom Bait de Efshar Letaken (lo instala instalar_otzar.py --shalom-bait):
+    - la clase de la semana sube sola: shalom_bait.py semana auto (domingo a miércoles, 1 por semana,
+      nunca dos en 6 días); el robot la manda el lunes (anunciar.shalombait, dia_semana 1).
+    - portada: si aparece C:\\OTZAR\\efshar\\portadas\\portada_shalombait.jpeg y no está en internet,
+      se sube; y en cuanto está, las clases ya subidas toman esa imagen en el feed."""
+    import base64
+    import html as _html
+    ef = BASE / "efshar"
+    sbp = ef / "shalom_bait.py"
+    if not sbp.exists() or not isinstance((cfgw.get("anunciar") or {}).get("shalombait"), dict):
+        return
+    env = dict(__import__("os").environ, PYTHONUTF8="1", PYTHONIOENCODING="utf-8")
+    pages = "https://rabmeireliyahu.github.io/efshar"
+    port = "portada_shalombait.jpeg"
+
+    def en_internet(url):
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, method="HEAD", headers={"User-Agent": "otzar"}), timeout=25) as r:
+                return r.status == 200
+        except Exception:
+            return False
+    hay_portada = en_internet(f"{pages}/{port}")
+    local = next((p for p in (ef / "portadas" / port, ef / port) if p.is_file()), None)
+    if local and not hay_portada:
+        log(f"Shalom Bait: subo la portada {local}")
+        subprocess.run([sys.executable, "podcast_bot.py", "portada", str(local), port], cwd=str(ef), env=env)
+        for _ in range(9):
+            time.sleep(10)
+            if en_internet(f"{pages}/{port}"):
+                hay_portada = True
+                break
+    # la clase de la semana
+    try:
+        r = subprocess.run([sys.executable, "shalom_bait.py", "semana", "auto", "--sin-portada"], cwd=str(ef), env=env,
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=1800)
+        for ln in [x for x in (r.stdout or "").splitlines() if x.strip()][-6:]:
+            log(f"Shalom Bait: {ln.strip()}")
+    except Exception as ex:
+        log(f"Shalom Bait: no pude correr shalom_bait.py ({ex})")
+    # la portada de la serie en las clases que ya están en el feed
+    if not hay_portada:
+        return
+    tok = ef / "github_token.txt"
+    if not tok.exists():
+        return
+    c = leer_json(ef / "config.json")
+    cab = {"Authorization": "token " + tok.read_text(encoding="utf-8").strip(),
+           "User-Agent": "otzar-mantenimiento", "Accept": "application/vnd.github+json"}
+    base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', 'efshar')}/contents/feed.xml"
+    try:
+        with urllib.request.urlopen(urllib.request.Request(base, headers=cab), timeout=60) as rr:
+            sha = json.loads(rr.read().decode())["sha"]
+        with urllib.request.urlopen(urllib.request.Request(base, headers=dict(cab, Accept="application/vnd.github.raw")), timeout=120) as rr:
+            feed = rr.read().decode("utf-8", "replace")
+    except Exception as ex:
+        log(f"Shalom Bait: no pude leer el feed ({ex})")
+        return
+    img = f'<itunes:image href="{pages}/{port}"/>'
+    cambios = []
+
+    def poner(m):
+        it = m.group(1)
+        t = re.search(r"<title>(?:<!\[CDATA\[)?\s*(.*?)\s*(?:\]\]>)?</title>", it, re.S)
+        if not t or not _html.unescape(t.group(1)).startswith("Shalom Bait") or img in it:
+            return m.group(0)
+        nuevo = re.sub(r"<itunes:image[^>]*/>", img, it, count=1) if "<itunes:image" in it else it.rstrip() + "\n      " + img + "\n    "
+        cambios.append(_html.unescape(t.group(1)))
+        return f"<item>{nuevo}</item>"
+    nuevo_feed = re.sub(r"<item>([\s\S]*?)</item>", poner, feed)
+    if not cambios:
+        return
+    try:
+        cuerpo = {"message": "Shalom Bait: portada de la serie", "sha": sha,
+                  "content": base64.b64encode(nuevo_feed.encode("utf-8")).decode()}
+        with urllib.request.urlopen(urllib.request.Request(base, data=json.dumps(cuerpo).encode(), headers=cab, method="PUT"), timeout=120):
+            pass
+        log(f"Shalom Bait: portada de la serie puesta en {len(cambios)} clase(s): {', '.join(cambios)}")
+    except Exception as ex:
+        log(f"Shalom Bait: no pude subir el feed ({ex})")
+
+
 def titulos_fijos(cfgw):
     """(oct/2026) Shows con "temas" (Tawil): cada shiur lleva SU título, el que el usuario
     confirma ({"n": 40, "titulo": "Recibir Shabat…"} en tools/otzar/temas/<show>.json, o en
@@ -954,6 +1036,7 @@ def main():
     correo()
     titulos_jabura()
     publicar()
+    shalom_bait_semanal(cfgw)
     espejo()
     parasha_semanal(cfgw)
     ids_spotify(cfgw)

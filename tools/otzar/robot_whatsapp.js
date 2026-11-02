@@ -697,6 +697,34 @@ function _plataformasDe(show) {
   return { apple, apple_id: id, amazon: String(d.amazon || p.amazon || ''), soundcloud: String(d.soundcloud || p.soundcloud || '') };
 }
 const _appleCache = {};
+// <<SB:apple-fn  (nov/2026, Shalom Bait)
+// El "lookup" de Apple solo trae los 200 episodios MAS VIEJOS: un episodio nuevo nunca esta ahi y el
+// anuncio salia con el link GENERAL del show. Aqui se busca por titulo con el buscador PUBLICO de
+// Apple (solo cuenta si es del show y el titulo coincide). "apple_nombre" en anunciar.<show> ayuda.
+const _appleBuscaCache = {};
+async function appleBuscarEpisodio(show, titulo) {
+  const pl = _plataformasDe(show);
+  if (!pl.apple_id) return '';
+  const k = pl.apple_id + '|' + normTitulo(titulo);
+  const c = _appleBuscaCache[k];
+  if (c && Date.now() - c.t < 3 * 60000) return c.v;
+  const pais = (String(pl.apple).match(/podcasts\.apple\.com\/([a-z]{2})\//i) || [])[1] || 'us';
+  const nombre = String(((CFG.anunciar || {})[show] || {}).apple_nombre || '');
+  const objetivo = normTitulo(titulo);
+  let v = '';
+  for (const q of [...new Set([`${titulo} ${nombre}`.trim(), `${nombre} ${titulo}`.trim(), titulo])]) {
+    try {
+      const url = 'https://itunes.apple.com/search?' + new URLSearchParams({ term: q, media: 'podcast', entity: 'podcastEpisode', limit: '25', country: pais }).toString();
+      const j = JSON.parse(await Promise.race([fetchTexto(url), new Promise((_, no) => setTimeout(() => no(new Error('tardo')), 20000))]));
+      const r = (j.results || []).find(x => String(x.collectionId) === pl.apple_id && x.trackId && normTitulo(x.trackName) === objetivo);
+      if (r) { v = `https://podcasts.apple.com/podcast/id${r.collectionId}?i=${r.trackId}`; break; }
+    } catch (e) {}
+    await new Promise(res => setTimeout(res, 400));
+  }
+  _appleBuscaCache[k] = { t: Date.now(), v };
+  return v;
+}
+// SB:apple-fn>>
 async function linkApple(show, titulo) {
   const pl = _plataformasDe(show);
   if (!pl.apple_id) return pl.apple;
@@ -710,6 +738,7 @@ async function linkApple(show, titulo) {
     const k = normTitulo(titulo);
     const ep = c.lista.find(r => normTitulo(r.trackName) === k) ||
       c.lista.find(r => { const n = normTitulo(r.trackName); return n && k && Math.min(n.length, k.length) > 12 && (n.includes(k) || k.includes(n)); });
+    if (!ep) { const _b = await appleBuscarEpisodio(show, titulo); if (_b) return _b; }   // SB:apple-busca
     // (oct/2026) link corto: sin el nombre del episodio adentro (Apple lo abre igual)
     if (ep && ep.collectionId && ep.trackId) return `https://podcasts.apple.com/podcast/id${ep.collectionId}?i=${ep.trackId}`;
     if (ep && ep.trackViewUrl) return appleCorto(ep.trackViewUrl.replace(/&uo=\d+$/, ''));
@@ -1111,6 +1140,83 @@ async function procesarMensaje(m) {
     return null;
   }
   const directo = chatDirecto();
+
+  // === SUBIR POR LINK (oct/2026): el editor manda el link de YouTube por PRIVADO al robot ===
+  //   1 sola vez:  "!editor <clave>"  -> queda registrado como editor
+  //   despues:     pega el link de YouTube y listo (baja -> Archive -> feed -> Spotify)
+  //   config_whatsapp.json -> "subir_por_link": { "clave": "...", "carpeta": "C:\\OTZAR\\ravyitzchakyosef" }
+  // (20/oct) tambien en el GRUPO de subida ("subir_por_link.grupo_invite"): ahi cualquiera manda el link
+  let _enGrupoLink = false;
+  if (esGrupo && CFG.subir_por_link && CFG.subir_por_link.grupo_invite && /youtu\.?be/i.test(String(textoDe(m) || ''))) {
+    try {
+      if (!global.__grupoLinkId) {
+        const _cod = codigoDeInvite(CFG.subir_por_link.grupo_invite);
+        let _inf = null;
+        try { _inf = _cod ? await sock.groupGetInviteInfo(_cod) : null; } catch (e) {}
+        if (_inf && _inf.id) { global.__grupoLinkId = _inf.id; log(`SUBIR POR LINK: grupo de subida = "${_inf.subject}" ${_inf.id}`); }
+      }
+      if (global.__grupoLinkId) _enGrupoLink = (jid === global.__grupoLinkId);
+      else {
+        const _md = await sock.groupMetadata(jid).catch(() => null);
+        const _s = String((_md && _md.subject) || '').toLowerCase();
+        if (/yosef|יוסף/.test(_s) && /shiur|שיעור/.test(_s)) { global.__grupoLinkId = jid; _enGrupoLink = true; log(`SUBIR POR LINK: grupo de subida (por nombre) = "${_md.subject}" ${jid}`); }
+      }
+    } catch (e) { log('SUBIR POR LINK grupo: ' + (e.message || e)); }
+  }
+  if ((!esGrupo || _enGrupoLink) && !(m.key && m.key.fromMe) && CFG.subir_por_link && CFG.subir_por_link.clave) {
+    const _txtL = String(textoDe(m) || '').trim();
+    const _spl = CFG.subir_por_link;
+    const _regL = leerRegistro();
+    const _eds = Array.isArray(_regL.editores_link) ? _regL.editores_link : [];
+    const _mEd = /^!editor\s+(\S+)/i.exec(_txtL);
+    if (_mEd) {
+      if (_mEd[1] === String(_spl.clave)) {
+        if (!_eds.includes(jid)) { _eds.push(jid); _regL.editores_link = _eds; guardarRegistro(_regL); }
+        log(`SUBIR POR LINK: nuevo editor ${jid}`);
+        try { await sock.sendMessage(jid, { text: '✅ Listo, ya eres editor del Rab Yitzjak Yosef.\nMándame el link de YouTube del shiur y yo lo subo a Spotify.' }); } catch (e) {}
+      } else {
+        try { await sock.sendMessage(jid, { text: '❌ Clave incorrecta.' }); } catch (e) {}
+      }
+      return;
+    }
+    const _mYt = /(https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?\S*v=|shorts\/|live\/)|youtu\.be\/)\S+)/i.exec(_txtL);
+    if (_mYt && (_eds.includes(jid) || _enGrupoLink)) {
+      const _url = _mYt[1];
+      global.__colaLink = global.__colaLink || Promise.resolve();
+      try { await sock.sendMessage(jid, { text: '⏳ Recibido. Lo estoy bajando y subiendo, tarda unos minutos...' }); } catch (e) {}
+      log(`SUBIR POR LINK: ${_url} (de ${jid})`);
+      global.__colaLink = global.__colaLink.then(() => new Promise((res) => {
+        const { spawn } = require('child_process');
+        const _dir = _spl.carpeta || 'C:\\OTZAR\\ravyitzchakyosef';
+        let _out = '';
+        let _p;
+        try {
+          _p = spawn('python', [path.join(_dir, 'subir_por_link.py'), _url], {
+            cwd: _dir, windowsHide: true,
+            env: Object.assign({}, process.env, { PYTHONIOENCODING: 'utf-8', PYTHONUTF8: '1' }),
+          });
+        } catch (e) { _out = 'RESULTADO_ERROR|no pude correr python: ' + e.message; }
+        const _cerrar = async () => {
+          const _ln = _out.split(/\r?\n/).filter(x => x.startsWith('RESULTADO_')).pop() || 'RESULTADO_ERROR|se corto sin respuesta';
+          const _ok = _ln.startsWith('RESULTADO_OK|');
+          const _t = _ln.split('|').slice(1).join('|');
+          log(`SUBIR POR LINK: ${_ok ? 'OK' : 'ERROR'} ${_t}`);
+          const _msg = _ok
+            ? `✅ Subido: ${_t}\nEn Spotify aparece en un rato (a veces hasta unas horas).`
+            : `❌ No se pudo: ${_t}`;
+          try { await sock.sendMessage(jid, { text: _msg }); } catch (e) {}
+          res();
+        };
+        if (!_p) { _cerrar(); return; }
+        _p.stdout.on('data', d => { _out += d.toString('utf8'); });
+        _p.stderr.on('data', d => { _out += d.toString('utf8'); });
+        const _tope = setTimeout(() => { try { _p.kill(); } catch (e) {} }, 60 * 60000);
+        _p.on('close', () => { clearTimeout(_tope); _cerrar(); });
+        _p.on('error', (e) => { _out += '\nRESULTADO_ERROR|' + e.message; });
+      })).catch(e => log('SUBIR POR LINK error: ' + (e.message || e)));
+      return;
+    }
+  }
 
   // === "!tema <show> <dia> <tema>" (oct/2026), en chat privado con el robot ===
   if (!esGrupo) {
@@ -2228,6 +2334,30 @@ async function anunciarInterno(esVigilante) {
   for (const [show, datos] of Object.entries(CFG.anunciar || {})) {
     if ((CFG.anunciar[show] || {}).pausado) { log(`${show}: EN PAUSA, no se anuncia (pausado en el config).`); continue; }
     if ((CFG.anunciar[show] || {}).no_shabat && diaSinEnvio(new Date())) { log(`${show}: hoy es Shabat o Yom Tov, no se manda.`); continue; }
+    // "desde": "2026-09-21" -> este show no anuncia nada antes de esa fecha
+    // (sirve para arrancar un curso un dia fijo aunque ya este subido).
+    const desde = String((CFG.anunciar[show] || {}).desde || '').slice(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(desde) && hoyTexto() < desde) {
+      log(`${show}: empieza el ${desde}, hoy todavia no se anuncia.`);
+      continue;
+    }
+    // <<SB:semana  (sep/2026, Shalom Bait)
+    // "dia_semana": 1 (0=domingo, 1=lunes ... 6=sabado) -> este show sale UNA vez por
+    // semana, ese dia. "dias_gracia": 3 -> si ese dia no salio (sin link, feriado,
+    // no se dio el boton), sale en el siguiente ANUNCIAR de los N dias que siguen.
+    // Nunca dos veces en menos de 6 dias (necesita "uno_por_dia": true).
+    const _ds = (CFG.anunciar[show] || {}).dia_semana;
+    if (Number.isInteger(_ds) && _ds >= 0 && _ds <= 6) {
+      const _gr = Math.max(0, Math.min(6, parseInt((CFG.anunciar[show] || {}).dias_gracia, 10) || 0));
+      const _desdeDia = (new Date().getDay() - _ds + 7) % 7;
+      const _ult = leerUltimos()[show];
+      const _dias = _ult ? Math.round((Date.parse(hoyTexto() + 'T00:00:00') - Date.parse(_ult + 'T00:00:00')) / 86400000) : 999;
+      if (_desdeDia > _gr || _dias < 6) {
+        log(`${show}: sale 1 vez por semana (${['domingo','lunes','martes','miercoles','jueves','viernes','sabado'][_ds]}); hoy no toca.`);
+        continue;
+      }
+    }
+    // SB:semana>>
     if ((CFG.anunciar[show] || {}).uno_por_dia && yaMandoHoy(show)) {
       log(`${show}: ya se mando hoy, toca manana (uno_por_dia).`);
       continue;
@@ -2338,6 +2468,13 @@ async function anunciarInterno(esVigilante) {
     // SOLO anuncia los episodios cuyo titulo contenga ese texto. Sirve cuando
     // un mismo feed trae varias series y solo se quiere difundir una.
     const filtroTit = (CFG.anunciar && CFG.anunciar[show] || {}).filtro_titulo;
+    // EXCLUIR POR TITULO (sep/2026, Mishlei): con "excluir_titulo": "texto" este
+    // show NO anuncia los episodios cuyo titulo contenga ese texto (se marcan
+    // vistos en silencio). Es el espejo de filtro_titulo: sirve para que un
+    // curso que se suelta de a uno al dia en OTRA entrada del config (misma
+    // feed, "filtro_titulo") no salga tambien por la entrada normal del show.
+    const excluirTit = (CFG.anunciar && CFG.anunciar[show] || {}).excluir_titulo;
+    const _excl = [].concat(excluirTit || []).filter(Boolean);   // SB:excl (lista o texto)
     const limite = Date.now() - DIAS_FRESCO * 86400000;
     // === candado sin titulo (otzar) ===
     const _RX_SIN_TITULO = /^Shiur\s+(OtzarHaTorah[_ ]Subidas|[A-Za-z .]+)\s+\d{1,2}-\d{1,2}-\d{4}/i;
@@ -2351,7 +2488,8 @@ async function anunciarInterno(esVigilante) {
     let silenciados = 0;
     let fuera = 0;
     for (const ep of nuevos) {
-      if (filtroTit && !(ep.tit || '').includes(filtroTit)) {
+      if ((filtroTit && !(ep.tit || '').includes(filtroTit)) ||
+          (_excl.some(x => (ep.tit || '').includes(x)))) {
         marcarAnunciado(show, ep.guid);
         estado[show].push(ep.guid);
         fuera++;
@@ -2363,7 +2501,7 @@ async function anunciarInterno(esVigilante) {
         silenciados++;
       } else frescos.push(ep);
     }
-    if (fuera) log(`${show}: ${fuera} episodio(s) fuera del filtro "${filtroTit}", no se anuncian.`);
+    if (fuera) log(`${show}: ${fuera} episodio(s) fuera del filtro "${filtroTit || ('sin ' + _excl.join(' / '))}", no se anuncian.`);
     if (silenciados) log(`${show}: ${silenciados} episodio(s) viejo(s) marcados sin anunciar.`);
     if (sinFiltro) log(`${show}: modo catalogo, ${frescos.length} pendiente(s) por soltar.`);
     if (!frescos.length) { log(`${show}: nada nuevo reciente.`); continue; }
@@ -2497,6 +2635,26 @@ async function anunciarInterno(esVigilante) {
         continue; // NO se marca: el proximo ANUNCIAR lo reintenta
       }
       const _plat = await bloquePlataformas(show, ep.tit);
+      // <<SB:apple-espera  (nov/2026, Shalom Bait)
+      // "apple_esperar": true en anunciar.<show>: no se anuncia con el link GENERAL del show de Apple;
+      // se espera (el vigilante reintenta) a que Apple tenga el episodio. El ULTIMO dia de gracia
+      // (dia_semana + dias_gracia) sale con el link del show para no quedarse sin anunciar.
+      if (datos.apple_esperar) {
+        const _exApple = await appleBuscarEpisodio(show, ep.tit);
+        if (!_exApple) {
+          const _dsA = datos.dia_semana;
+          const _grA = Math.max(0, Math.min(6, parseInt(datos.dias_gracia, 10) || 0));
+          const _ultimoDia = Number.isInteger(_dsA) && ((new Date().getDay() - _dsA + 7) % 7) >= _grA;
+          if (_ultimoDia) {
+            log(`${show}: Apple aun no tiene "${ep.tit.slice(0, 40)}"; es el ultimo dia de gracia: sale con el link del show de Apple.`);
+          } else {
+            pendientes++;
+            log(`${show}: "${ep.tit.slice(0, 45)}" sin link de Apple todavia; el vigilante lo reintenta solo.`);
+            continue; // NO se marca: el proximo ANUNCIAR lo reintenta
+          }
+        }
+      }
+      // SB:apple-espera>>
       const texto = datos.plantilla
         ? armarPlantilla(datos, { dedicatoria: dedicatoriaDe(show, ep.tit), titulo: tituloAnuncio(show, ep.tit), spotify: epLink, whatsapp: datos.whatsapp_link || wa, fecha: ep.fecha || Date.now(), plataformas: _plat })
         : conPlataformas(armarMensaje(tituloAnuncio(show, ep.tit), epLink, wa, show, datos.app ? (ep.link || datos.app) : ''), _plat);

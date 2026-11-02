@@ -485,6 +485,23 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    Anuncio (paso [56], `--anunciar-en=show:LINK`): grupo L63l5BGRA0eCMSgpM7M2M1, título + Spotify,
    solo lo nuevo (`solo_ultimos` 1); queda en pausa (`esperando_spotify`) hasta que `--spotify=show:LINK`
    ponga el link, y entonces se prende solo.
+18. Shalom Bait (Efshar Letaken, Rab Igal Snertz; nov/2026): el curso (8 semanas, 1 clase por semana) lo
+   programó otra sesión en el repo rabmeireliyahu/efshar (rama claude/peaceful-maxwell-a9zajy,
+   herramientas/): shalom_bait.py (revisar/preparar/semana; las clases salen de G:\…\Tikun - Shalom Bait) y
+   whatsapp/shalom_bait_whatsapp_setup.py (parches SB:excl/SB:semana/SB:apple* al robot + entrada
+   "shalombait": curso, filtro_titulo, dia_semana 1, dias_gracia 3). Su robot_whatsapp.js ES el robot del
+   usuario completo (lo nuestro + Mishlei + "subir por link" de Benny + Shalom Bait): desde el 2/11 es la
+   copia de tools/otzar (antes la nuestra no tenía esos parches y el reemplazo de emergencia los borraba).
+   Paso [57] `--shalom-bait`: baja los scripts, corre el setup (si falta SB:semana; si no entra, pone la
+   copia del repo), grupos POR NOMBRE (los de efshar/mishlei que no son de nacach = Rab Snertz, exactamente
+   2, + el "3 …" y el "6 …"; si no cuadra, la entrada queda en pausa), Spotify de efshar, apple_esperar
+   false (que salga hoy), spotify_espera_horas 2; preparar si hace falta; semana --forzar --sin-portada si el
+   feed no tiene ninguna; espera a ver "Shalom Bait 1" en el feed publicado; reinicia el robot (node con
+   robot_whatsapp.js; no abre otro si su ventana lo relanza) y escribe comando.txt. Cada semana:
+   mantenimiento.py (`shalom_bait_semanal`) corre `semana auto --sin-portada` (domingo a miércoles, 1 por
+   semana) y, si aparece C:\OTZAR\efshar\portadas\portada_shalombait.jpeg, la sube y la pone en las
+   clases ya publicadas (<itunes:image> por item). El audio solo existe en G: (no en archive.org): la subida
+   solo puede correr en la PC.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre
