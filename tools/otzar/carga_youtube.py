@@ -239,7 +239,8 @@ def main():
             terminar()
             return
         log(f"vuelta lista: {bajados or 0} nuevo(s), faltan {por_bajar if por_bajar is not None else '?'}")
-        time.sleep(60 if bajados else 5 * 60)        # sin internet o sin nada: espera un poco más
+        # YouTube no dio la lista (sin internet, o pide calma después de muchas descargas): 20 min
+        time.sleep(60 if bajados else (20 * 60 if por_bajar is None else 5 * 60))
 
 
 if __name__ == "__main__":

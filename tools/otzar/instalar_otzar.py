@@ -5106,6 +5106,19 @@ _PARCHES_YT = [
     ('''           "-o", str(CARPETA / (((_PREFIJO + " · ") if _PREFIJO and not _nombra(titulo, _PREFIJO) else "") + "%(title)s.%(ext)s")), url]''',
      '''           *(["--replace-in-metadata", "title", CFG["quitar_del_titulo"], ""] if CFG.get("quitar_del_titulo") else []),
            "-o", str(CARPETA / (((_PREFIJO + " · ") if _PREFIJO and not _nombra(titulo, _PREFIJO) else "") + "%(title).170B.%(ext)s")), url]'''),
+    # 5) si YouTube no da la lista del canal, que se vea el error (antes salía "0 en el canal" sin más)
+    ('''                           errors="replace", timeout=90)
+    except Exception as e:
+        log(f"{_reloj()} lista plana: {e}"); return []
+    out = []
+''',
+     '''                           errors="replace", timeout=240)
+    except Exception as e:
+        log(f"{_reloj()} lista plana: {e}"); return []
+    if not (r.stdout or "").strip():   # === otzar: que se vea por que YouTube no dio la lista ===
+        log(f"{_reloj()} YouTube no dio la lista: " + " | ".join((r.stderr or "sin respuesta").strip().splitlines()[-3:])[:400])
+    out = []
+'''),
     # 3) candado: si el piloto y una ventana a mano lo corren a la vez, el segundo no hace nada
     ('''def main():
     cmd = sys.argv[1].lower() if len(sys.argv) > 1 else "robot"''',
