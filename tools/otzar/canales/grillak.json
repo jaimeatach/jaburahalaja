@@ -1,0 +1,12 @@
+{
+ "nota": "(nov/2026) Portada de Rab Grillak (no tenía: el feed apuntaba a una portada.jpg que no existía y Spotify no completaba el redirect). 1400x1400. Si el usuario manda una foto del Rab, se cambia aquí.",
+ "title": "Rab Grillak",
+ "description": "Mensaje semanal de la Parashá del Rab Grillak. Otzar HaTorah - אוצר התורה",
+ "author": "Rab Grillak",
+ "categoria": [
+  "Religion & Spirituality",
+  "Judaism"
+ ],
+ "portada_b64": "grillak_portada.b64",
+ "portada_sha256": "a029ef28557490510b1210f544b8089c209c86b3db905ea4f1f610571b13f250"
+}
