@@ -598,6 +598,7 @@ def titulos_fijos(cfgw):
             log(f"títulos [{show}]: no pude leer el feed ({ex})")
             continue
         cambios = []
+        apartar = []
 
         def arreglar(m):
             it = m.group(1)
@@ -610,8 +611,9 @@ def titulos_fijos(cfgw):
             ln = re.search(r'<enclosure[^>]*length="(\d+)"', it)
             if guid in quitar or (ln and 0 < int(ln.group(1)) < 150000):
                 # no es un shiur (menos de ~10 s: un "gracias", un "hola"): fuera del feed
-                cambios.append(f"{actual} → (quitado del feed: no es un shiur)")
+                cambios.append(f"{actual} → (quitado del feed: no es un shiur o está repetido)")
                 silenciar.append(guid)
+                apartar.append(guid.rsplit("/", 1)[-1])
                 return ""
             exacto = exactos.get(guid) or exactos.get(guid.rsplit("/", 1)[-1])
             if not exacto:
@@ -678,6 +680,22 @@ def titulos_fijos(cfgw):
                 log(f"títulos [{show}]: {x}")
         except Exception as ex:
             log(f"títulos [{show}]: no pude subir el feed ({ex})")
+            continue
+        # lo quitado sale también de la carpeta del show (a la papelera, 14 días): si no, el
+        # podcast_bot lo volvería a meter al feed en la próxima corrida. Ya está en archive.org.
+        if apartar:
+            import shutil
+            dest = BASE / "_papelera" / time.strftime("%Y-%m-%d") / show
+            nombres = set(apartar)
+            for f in list((BASE / show).rglob("*")):
+                if f.name in nombres:
+                    if f.is_file() and "_papelera" not in f.parts:
+                        try:
+                            dest.mkdir(parents=True, exist_ok=True)
+                            shutil.move(str(f), str(dest / f.name))
+                            log(f"títulos [{show}]: {f.name} apartado a {dest}")
+                        except OSError as ex:
+                            log(f"títulos [{show}]: no pude apartar {f.name} ({ex})")
 
 
 def ids_spotify(cfgw):

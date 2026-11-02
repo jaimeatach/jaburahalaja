@@ -7,5 +7,18 @@
   {"archivo": "Que tu tefila sea con vida y sabor.mp3", "titulo": "Que tu tefilá sea con vida y sabor"},
   {"archivo": "Que la comunicación sea común.mp3", "titulo": "Que la comunicación sea común"},
   {"quitar": ["Hola metí a mi Papá para que mande sus shiurimpor acá.mp3"], "nota": "nota de voz de 5 s (gracias por ayudar), no es un shiur"},
+  {"nota": "(2/nov/2026) Los 15 del 1/nov venían revueltos: 5 audios estaban dos veces con títulos distintos. Escuché el principio de cada uno: cada audio lleva el título de lo que dice el Rab, los repetidos salen del feed, y van con fechas anteriores a los nuevos del grupo (en Spotify quedan abajo). No se anuncian (son viejos)."},
+  {"archivo": "Como sentir amor por Hashem.mp3", "titulo": "Cómo sentir amor por Hashem", "fecha": "2026-10-17"},
+  {"archivo": "¿Como expresar amor por Hashem en la práctica.mp3", "titulo": "¿Cómo expresar amor por Hashem en la práctica?", "fecha": "2026-10-18"},
+  {"archivo": "El mazal, el destino de la persona.mp3", "titulo": "¿Dónde se esconde el yétzer hará?", "fecha": "2026-10-19"},
+  {"archivo": "¿En donde se encuentra el yetzer hará en la persona.mp3", "titulo": "El yétzer hará vive en la fantasía", "fecha": "2026-10-20"},
+  {"archivo": "Los tres explosivos.mp3", "titulo": "Los tres explosivos de tu corazón", "fecha": "2026-10-21"},
+  {"archivo": "La envidia, la forma equivocada de ver la vida.mp3", "titulo": "La envidia (1)", "fecha": "2026-10-22"},
+  {"archivo": "La hermana de la envidia, si el lo tiene yo también.mp3", "titulo": "La envidia (2): la forma equivocada de ver la vida", "fecha": "2026-10-23"},
+  {"archivo": "El ayin hará ¿superstición o realidad.mp3", "titulo": "El ayin hará: ¿superstición o realidad?", "fecha": "2026-10-24"},
+  {"archivo": "Motivación, motivo de acción.mp3", "titulo": "El mazal, el destino de la persona", "fecha": "2026-10-25"},
+  {"archivo": "La envidia el deseo interno de ser la otra persona.mp3", "titulo": "La hermana de la envidia: si él lo tiene, yo también", "fecha": "2026-10-26"},
+  {"quitar": ["Envidia 1.mp3", "Mazal tov.mp3", "Ayin hará superstición o realidad.mp3", "La envidia 2.mp3", "Los tres explosivos de tu corazón.mp3"], "nota": "mismo audio que otro episodio (md5 igual en archive.org)"},
+  {"silenciar": ["Como sentir amor por Hashem.mp3", "¿Como expresar amor por Hashem en la práctica.mp3", "El mazal, el destino de la persona.mp3", "¿En donde se encuentra el yetzer hará en la persona.mp3", "Los tres explosivos.mp3", "La envidia, la forma equivocada de ver la vida.mp3", "La hermana de la envidia, si el lo tiene yo también.mp3", "El ayin hará ¿superstición o realidad.mp3", "Motivación, motivo de acción.mp3", "La envidia el deseo interno de ser la otra persona.mp3"]},
   {"anunciar": true}
 ]
