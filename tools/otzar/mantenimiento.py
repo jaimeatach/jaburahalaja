@@ -487,32 +487,66 @@ def sin_fechas_futuras(cfgw):
         except Exception as ex:
             log(f"fechas [{show}]: no pude leer el feed ({ex})")
             continue
-        futuros = []
-        for m in re.finditer(r"<item>([\s\S]*?)</item>", feed):
-            d = re.search(r"<pubDate>([\s\S]*?)</pubDate>", m.group(1))
-            try:
-                cuando = parsedate_to_datetime(d.group(1).strip()) if d else None
-            except Exception:
-                cuando = None
-            if cuando and not cuando.tzinfo:          # "-0000" llega sin zona: es UTC
-                cuando = cuando.replace(tzinfo=_dt.timezone.utc)
-            if cuando and cuando > ahora:
-                t = re.search(r"<title>(?:<!\[CDATA\[)?\s*#\s*(\d+)", m.group(1))
-                futuros.append((int(t.group(1)) if t else 0, cuando, m.group(1)))
-        if not futuros:
+        # (nov/2026) EN ORDEN DE NÚMERO: Spotify ponía #39 arriba de #40 (llegaron juntos, con un
+        # segundo de diferencia). Cada "#N" queda al menos 1 hora después del anterior, nunca en el
+        # futuro (Spotify/Apple no muestran fechas futuras; el anuncio sale en su día igual), y el
+        # feed va del más nuevo al más viejo. Los rescatados de Spotify (ids_spotify) no se tocan.
+        protegidos = {str(v[0]) for v in (c.get("ids_spotify") or {}).values() if isinstance(v, (list, tuple)) and v}
+        bloques = [m.group(0) for m in re.finditer(r"<item>[\s\S]*?</item>", feed)]
+        if not bloques:
             continue
-        futuros.sort(key=lambda x: (x[0], x[1]))
-        nuevo = feed
-        for i, (_n, _c, it) in enumerate(futuros):
-            fecha = format_datetime(ahora - _dt.timedelta(minutes=len(futuros) - i), usegmt=True)
-            nuevo = nuevo.replace(it, re.sub(r"<pubDate>[\s\S]*?</pubDate>", f"<pubDate>{fecha}</pubDate>", it, count=1), 1)
+
+        def _cuando(it):
+            d = re.search(r"<pubDate>([\s\S]*?)</pubDate>", it)
+            try:
+                x = parsedate_to_datetime(d.group(1).strip()) if d else None
+            except Exception:
+                x = None
+            if x and not x.tzinfo:                    # "-0000" llega sin zona: es UTC
+                x = x.replace(tzinfo=_dt.timezone.utc)
+            return x
+        numerados = []
+        for it in bloques:
+            t = re.search(r"<title>(?:<!\[CDATA\[)?\s*#\s*(\d+)", it)
+            g = re.search(r"<guid[^>]*>([\s\S]*?)</guid>", it)
+            cu = _cuando(it)
+            if t and cu and (g.group(1).strip() if g else "") not in protegidos:
+                numerados.append([int(t.group(1)), cu, it])
+        numerados.sort(key=lambda x: (x[0], x[1]))
+        hora = _dt.timedelta(hours=1)
+        nuevas = []
+        for k, (_n, cu, _it) in enumerate(numerados):
+            x = min(cu, ahora)
+            if nuevas and x < nuevas[-1] + hora:
+                x = nuevas[-1] + hora
+            nuevas.append(x)
+        for k in range(len(nuevas) - 1, -1, -1):        # lo que se pasó de ahora se recorre hacia atrás
+            tope = ahora if k == len(nuevas) - 1 else nuevas[k + 1] - _dt.timedelta(minutes=1)
+            if nuevas[k] > tope:
+                nuevas[k] = tope
+        cambio_it = {}
+        movidos = 0
+        for (_n, cu, it), x in zip(numerados, nuevas):
+            if abs((x - cu).total_seconds()) >= 1:
+                cambio_it[it] = re.sub(r"<pubDate>[\s\S]*?</pubDate>",
+                                       lambda _m: f"<pubDate>{format_datetime(x.astimezone(_dt.timezone.utc), usegmt=True)}</pubDate>",
+                                       it, count=1)
+                movidos += 1
+        lista = [cambio_it.get(it, it) for it in bloques]
+        minimo = _dt.datetime(1970, 1, 1, tzinfo=_dt.timezone.utc)
+        lista.sort(key=lambda it: _cuando(it) or minimo, reverse=True)   # el más nuevo arriba
+        ini = feed.find(bloques[0])
+        fin = feed.rfind(bloques[-1]) + len(bloques[-1])
+        nuevo = feed[:ini] + "\n    ".join(lista) + feed[fin:]
+        if nuevo == feed:
+            continue
         try:
-            cuerpo = {"message": "episodios visibles ya (el anuncio sale en su día)", "sha": sha,
+            cuerpo = {"message": "episodios en orden de número (y visibles ya; el anuncio sale en su día)", "sha": sha,
                       "content": base64.b64encode(nuevo.encode("utf-8")).decode()}
             req = urllib.request.Request(base, data=json.dumps(cuerpo).encode(), headers=cab, method="PUT")
             with urllib.request.urlopen(req, timeout=120):
                 pass
-            log(f"fechas [{show}]: {len(futuros)} episodio(s) con fecha futura → hoy (ya se ven en Spotify/Apple; el anuncio sale en su día)")
+            log(f"fechas [{show}]: en orden de número ({movidos} fecha(s) acomodadas, ninguna en el futuro)")
         except Exception as ex:
             log(f"fechas [{show}]: no pude subir el feed ({ex})")
 

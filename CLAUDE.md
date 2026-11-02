@@ -305,6 +305,9 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    En Spotify/Apple se ven YA: el robot no pone fecha futura al archivo y
    `mantenimiento.py` (`sin_fechas_futuras`) cambia por la de hoy cualquier pubDate futuro
    de los shows con `calendario` (en orden de número, mismo guid); solo el ANUNCIO espera su día.
+   Orden por número (nov/2026; Spotify ponía #39 arriba de #40: llegaron juntos, 1 s de diferencia):
+   `sin_fechas_futuras` deja cada "#N" al menos 1 h después del anterior, nunca en el futuro, y el feed
+   del más nuevo al más viejo; no toca los rescatados de Spotify (`ids_spotify`). El robot ordena por fecha.
    Va con el audio (`sin_audio: false`). El título del anuncio sale del tema
    ("#22- Encendido de Velas (2)", `tituloDeTema`). La dedicatoria cambia cada semana:
    `{"desde": N, "dedicatoria": "..."}` en `temas/tawil.json` (`dedicatoriaDe`); sin
