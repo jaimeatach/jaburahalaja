@@ -349,6 +349,11 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    `{"quitar": [guid]}` y cualquier audio < 150 KB de un show con temas salen del feed y no se
    anuncian (la nota de voz "gracias" de Davidsohn). Grillak va en hebreo ("פרשת X · tema", por fecha).
    Davidsohn y Grillak llevan el nombre del Rab en el anuncio (`SUFIJOS_ANUNCIO`).
+   `{"mensaje_rab": true}` (Grillak, nov/2026): el robot guarda el audio con el mensaje entero
+   ("📢 Mensaje del Rab Grilak … 🗓️ Fecha Jueves 29 de octubre de 2026 … 📖 Tema חסד לאברהם — Jésed
+   LeAbra"); `titulo_de_mensaje` lo deja "פרשת וירא · חסד לאברהם": solo hebreo (sin nikud ni fonética),
+   la parashá del Shabat de esa fecha (`_parasha_heb`, con parasha_youtube.py) y esa fecha en el feed.
+   Contra los 31 viejos: 20 iguales al título revisado, 2 con parashá doble, 9 sin "Tema" (no se tocan).
    Segundo grupo (paso [54], `--grupo-extra=show:LINK`, nov/2026): Grillak sube el shiur a veces
    al grupo del kollel Or Israel (9tm8c1qB6sG9zg7BzgN9ff) y a veces al suyo; los dos son fuente
    (`escuchar.grillak_extra`, copia con otro link y la misma carpeta; el robot tiene una fuente por

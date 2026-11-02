@@ -517,6 +517,76 @@ def sin_fechas_futuras(cfgw):
             log(f"fechas [{show}]: no pude subir el feed ({ex})")
 
 
+_MESES = {"enero": 1, "febrero": 2, "marzo": 3, "abril": 4, "mayo": 5, "junio": 6, "julio": 7, "agosto": 8,
+          "septiembre": 9, "setiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12}
+_PARASHA_MOD = []
+
+
+def _parasha_heb(fecha):
+    """"פרשת וירא" del Shabat de esa semana (diáspora), con parasha_youtube.py (hebcal/pyluach/API)."""
+    import datetime as _dt
+    import importlib.util
+    if not _PARASHA_MOD:
+        p = BASE / "jabura" / "parasha_youtube.py"
+        argv = sys.argv
+        try:
+            sys.argv = [str(p)]
+            spec = importlib.util.spec_from_file_location("parasha_otzar", p)
+            m = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(m)
+            _PARASHA_MOD.append(m)
+        except Exception as ex:
+            log(f"títulos: no pude cargar parasha_youtube.py ({ex})")
+            _PARASHA_MOD.append(None)
+        finally:
+            sys.argv = argv
+    m = _PARASHA_MOD[0]
+    if not m:
+        return ""
+    for fn in (m.parasha_por_node, m.parasha_por_pyluach, m.parasha_por_hebcal_api):
+        try:
+            r = fn(fecha if isinstance(fecha, _dt.date) else _dt.date.fromisoformat(str(fecha)))
+            if r and r.get("nombres"):
+                claves = m.claves_de(r["nombres"]) or [m.canonica("-".join(r["nombres"]))]
+                heb = [m.PARASHIOT[k][1] for k in claves if k in m.PARASHIOT]
+                if heb:
+                    return "פרשת " + "-".join(heb)
+        except Exception:
+            continue
+    return ""
+
+
+def titulo_de_mensaje(texto):
+    """(nov/2026) Grillak: el robot guarda el audio con TODO el mensaje ("📢 Mensaje del Rab
+    Grilak … 🗓️ Fecha Jueves 29 de octubre de 2026 — י״ח חשוון … 📖 Tema חסד לאברהם — Jésed
+    LeAbra"). Sale "פרשת וירא · חסד לאברהם": solo hebreo (el usuario no quiere la fonética), la
+    parashá del mensaje o la de esa semana. Devuelve (titulo, fecha ISO) o ("", "")."""
+    t = re.sub(r"\.(mp3|m4a|ogg|opus)$", "", str(texto or ""), flags=re.I)
+    if "mensaje del rab" not in t.lower():
+        return "", ""
+    fecha = ""
+    md = re.search(r"(\d{1,2})\s+de\s+([a-záéíóú]+)\s+(?:de\s+|del\s+)?(\d{4})", t, re.I)
+    if md and md.group(2).lower() in _MESES:
+        fecha = f"{md.group(3)}-{_MESES[md.group(2).lower()]:02d}-{int(md.group(1)):02d}"
+    corte = r"(?=📜|🎧|📢|🎙|📝|📖|Parash|$)"
+    mt = re.search(r"Tema\s*[:：]?\s*(.+?)" + corte, t, re.S)
+    tema = ""
+    if mt:
+        x = re.sub(r"^מסר\s+פר\S*\s+[^—–]+[—–]\s*", "", mt.group(1).strip())
+        heb = [p for p in re.split(r"\s+[—–-]\s+", x)
+               if re.search(r"[\u05D0-\u05EA]", p) and not re.search(r"[A-Za-zÁÉÍÓÚáéíóúÑñ]", p)]
+        tema = re.sub(r"[\u0591-\u05C7]", "", heb[0] if heb else "")      # sin nikud, como los demás
+        tema = re.sub(r"[“”״\"]", "", tema).strip(" '.,—–-")
+    mp = re.search(r"Parash[aá]\s*[:：]?\s*([\u05D0-\u05EA][\u05D0-\u05EA\s\-־]*[\u05D0-\u05EA])", t)
+    # la de la fecha (hebcal) manda: el nombre del archivo a veces viene cortado ("ויקר", "אמו")
+    parasha = _parasha_heb(fecha) if fecha else ""
+    if not parasha and mp:
+        parasha = "פרשת " + re.sub(r"\s*[-־]\s*", "-", mp.group(1).strip())
+    if not tema:
+        return "", ""
+    return (f"{parasha} · {tema}" if parasha else tema), fecha
+
+
 def titulos_fijos(cfgw):
     """(oct/2026) Shows con "temas" (Tawil): cada shiur lleva SU título, el que el usuario
     confirma ({"n": 40, "titulo": "Recibir Shabat…"} en tools/otzar/temas/<show>.json, o en
@@ -552,6 +622,7 @@ def titulos_fijos(cfgw):
         # que puso el robot contiene ese texto ("20 de agosto de 2026"), toma este título y fecha
         por_texto = [(str(x["contiene"]).lower(), str(x["titulo"]).strip(), str(x.get("fecha") or ""))
                      for x in lista if isinstance(x, dict) and x.get("contiene") and x.get("titulo")]
+        por_mensaje = any(isinstance(x, dict) and x.get("mensaje_rab") for x in lista)
         # "quitar": audios que NO son shiurim (un "gracias" de 5 segundos) salen del feed
         quitar = {str(g) for x in lista if isinstance(x, dict) and isinstance(x.get("quitar"), list) for g in x["quitar"]}
         # "fecha": "2025-09-04" → la fecha real del shiur (en Spotify salen en su orden, no todos "hoy")
@@ -625,6 +696,11 @@ def titulos_fijos(cfgw):
                         if f_x2:
                             fechas_x[guid] = f_x2
                         break
+            if not exacto and por_mensaje:
+                # {"mensaje_rab": true}: el título que puso el robot es el mensaje entero
+                exacto, f_m = titulo_de_mensaje(actual if "mensaje del rab" in actual.lower() else "")
+                if exacto and f_m:
+                    fechas_x[guid] = f_m
             if exacto:
                 esc = _html.escape(exacto, quote=False)
                 nuevo = re.sub(r"<title>[\s\S]*?</title>", lambda _m: f"<title>{esc}</title>", it, count=1)
