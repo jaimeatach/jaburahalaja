@@ -5297,8 +5297,32 @@ def youtube_nuevo():
         if st in (200, 201):
             ok("GitHub Pages prendido")
         print(f"   → RSS para Spotify for Creators (\"add an existing podcast\" / RSS): {pages}/feed.xml")
-        print(f"   → los primeros {canal['revisar_ultimos']}: el piloto (lo de ACTUALIZAR) baja hasta 15 min por vuelta;")
-        print(f"     para ir más rápido, en otra ventana:  cd /d {d} && for /l %i in (1,1,40) do python podcast_bot.py")
+        _carga_youtube(clave, d)
+
+
+def _carga_youtube(clave, d):
+    """La carga inicial (los últimos N) corre sin parar en su propia ventana (minimizada) y, si
+    se apaga la PC, vuelve a arrancar al prenderla (carpeta Inicio de Windows). Al terminar,
+    carga_youtube.py se quita de Inicio y baja la revisión a los últimos 20."""
+    if (d / "CARGA_TERMINADA.txt").exists():
+        ok(f"{clave}: la carga inicial ya había terminado; lo nuevo lo baja ACTUALIZAR")
+        return
+    script = BASE / "jabura" / "carga_youtube.py"
+    if not bajar("otzar/carga_youtube.py", script) or VER:
+        return
+    py = sys.executable
+    inicio = Path(os.environ.get("APPDATA", "")) / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
+    linea = f'start "CARGA {clave}" /min /d "{d}" "{py}" "{script}" {clave}'
+    if inicio.is_dir():
+        (inicio / f"OTZAR_carga_{clave}.cmd").write_text(
+            "\r\n".join(["@echo off", f"rem Otzar: carga inicial de {clave} (se quita sola al terminar)",
+                           "timeout /t 120 /nobreak >nul", linea]) + "\r\n", encoding="utf-8")
+        ok(f"si se apaga o reinicia la PC, la carga de {clave} sigue sola al prenderla (a los 2 min)")
+    else:
+        aviso(f"no encontré la carpeta Inicio de Windows ({inicio}); la carga no se reabre sola al prender")
+    subprocess.Popen(linea, shell=True, cwd=str(d))
+    ok(f"carga de {clave} corriendo en su ventana \"CARGA {clave}\" (minimizada): no para hasta tener todo")
+    print(f"   · avance: {d / 'carga.log'} · al terminar deja {d / 'CARGA_TERMINADA.txt'}")
 
 
 def main():
