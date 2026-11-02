@@ -1,6 +1,6 @@
 {
- "nota": "(nov/2026) Portada y nombre de Rab Yohanan Grillak como lo pidió el usuario: estante de sefarim, hebreo y español, solo 'shiurim', sin Otzar. Sin portada Spotify no completaba el redirect.",
- "title": "Rab Yohanan Grillak",
+ "nota": "(nov/2026) Portada que mandó el usuario (foto del Rab con su nombre en hebreo), solo agrandada a 3000x3000 sin tocar nada más. En base64 para que el filtro de la PC no le tape la cara. Nombre del show en español y hebreo.",
+ "title": "Rab Yohanan Grillak · הרב יוחנן גרילק",
  "description": "Shiurim del Rab Yohanan Grillak · שיעורים מהרב יוחנן גרילק",
  "author": "Rab Yohanan Grillak",
  "categoria": [
@@ -8,5 +8,5 @@
   "Judaism"
  ],
  "portada_b64": "grillak_portada.b64",
- "portada_sha256": "b734312cf87ddb6ee49c6215944f51cdf3cc57ad3bdace1cacd3e5d72e69de45"
+ "portada_sha256": "34cd60d711a373ec0f84dc2f42369adee147da8382e492e422e51611f300f37f"
 }
