@@ -473,6 +473,15 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    `%(title).170B` y `--replace-in-metadata` (`quitar_del_titulo`: el nombre del Rab al final de cada
    título); sin `prefijo`, porque el bot lo decidía con el título en INGLÉS que da la lista de YouTube
    (traducción automática) y lo repetía. `nombres_cortos` en la carga acorta los que ya bajaron largos.
+17. Rab Itzjak Yosef (nov/2026): Benny Cattan manda el link de YouTube por WhatsApp y un módulo del
+   usuario (no está en el repo) lo baja y lo agrega a NUESTRO feed (rabmeireliyahu.github.io/
+   ravyitzchakyosef/feed.xml, 64 shiurim limpios, el 2/11). El 2/11 el show de Spotify
+   3dNq8BgToKoChJjKw2XCkK (el de los seguidores) salía "no disponible" y el RSS de Creators
+   (anchor 1186949fc) daba 404: el cambio de host a Creators quedó a medias. Hay que reclamar el MISMO
+   show con nuestro RSS (cuenta del correo del feed, rabmeireliyahu@gmail.com) para no perder seguidores.
+   Anuncio (paso [56], `--anunciar-en=show:LINK`): grupo L63l5BGRA0eCMSgpM7M2M1, título + Spotify,
+   solo lo nuevo (`solo_ultimos` 1); queda en pausa (`esperando_spotify`) hasta que `--spotify=show:LINK`
+   ponga el link, y entonces se prende solo.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre

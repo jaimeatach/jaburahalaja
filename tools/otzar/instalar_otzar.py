@@ -5353,6 +5353,60 @@ def _carga_youtube(clave, d):
     print(f"   · avance: {d / 'carga.log'} · al terminar deja {d / 'CARGA_TERMINADA.txt'}")
 
 
+# ── 56. --anunciar-en=show:LINK[,LINK]  (nov/2026) ────────────────────────────
+#   Un show que NO toma audios de WhatsApp (Rab Itzjak Yosef: Benny manda el link de YouTube y
+#   otro módulo lo sube a nuestro feed) y se anuncia en un grupo: título + link de Spotify.
+#   Queda en pausa hasta tener el link del show en Spotify ("esperando_spotify"); en cuanto
+#   --spotify=show:LINK lo pone (aunque sea en otra corrida), aquí se quita la pausa.
+#   Solo sale lo nuevo: solo_ultimos 1 (lo que ya está en el feed se memoriza, salvo el último).
+def anunciar_en():
+    if not ROBOT:
+        return
+    rw = ROBOT / "config_whatsapp.json"
+    try:
+        cfg = json.loads(rw.read_text(encoding="utf-8"))
+    except Exception:                                       # noqa: BLE001
+        return
+    an_todo = cfg.setdefault("anunciar", {})
+    cambio = False
+    for pedido in [a.split("=", 1)[1] for a in sys.argv if a.startswith("--anunciar-en=")]:
+        show, _, links = pedido.partition(":")
+        show = re.sub(r"[^a-z0-9_]", "", show.strip().lower())
+        invites = [x.strip().split("?")[0] for x in links.split(",") if "chat.whatsapp.com/" in x]
+        if not show or not invites:
+            aviso(f"{pedido}: falta el show o el link del grupo")
+            continue
+        paso(56, f"{show}: anunciar en {len(invites)} grupo(s)")
+        an = an_todo.setdefault(show, {})
+        previos = an.get("invite") if isinstance(an.get("invite"), list) else ([an["invite"]] if an.get("invite") else [])
+        todos = previos + [x for x in invites if x not in [p.split("?")[0] for p in previos]]
+        an["invite"] = todos if len(todos) > 1 else todos[0]
+        for k, v in {"idioma": "he", "max_anuncios": 2, "en_orden": True, "sin_audio": True,
+                     "sin_whatsapp": True, "link_audio": False, "solo_ultimos": 1,
+                     "spotify_espera_horas": 3}.items():
+            an.setdefault(k, v)
+        if not str(an.get("spotify", "")).startswith("http"):
+            an["spotify"] = "PENDIENTE"
+            an["sin_spotify"] = True
+            an["pausado"] = True
+            an["esperando_spotify"] = True
+            print(f"   · {show}: en pausa hasta tener su link de Spotify (--spotify={show}:LINK)")
+        cambio = True
+        ok(f"{show}: anuncia en " + ", ".join(todos))
+    # los que esperaban su Spotify y ya lo tienen: se prenden
+    for show, an in an_todo.items():
+        if isinstance(an, dict) and an.get("esperando_spotify") and str(an.get("spotify", "")).startswith("http"):
+            an.pop("esperando_spotify", None)
+            an["pausado"] = False
+            an["sin_spotify"] = False
+            cambio = True
+            ok(f"{show}: ya tiene Spotify ({an['spotify']}); se anuncia desde ahora")
+    if cambio and not VER:
+        respaldar(rw)
+        escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+        print("   → reinicia el robot para que lo tome.")
+
+
 def main():
     print("=== Instalador Otzar · jabura + nacach ===")
     print("Base:", BASE, "(prueba en seco)" if VER else "")
@@ -5415,6 +5469,7 @@ def main():
     youtube_nuevo()
     guids_originales_flag()
     plataformas_links()
+    anunciar_en()
     revisar_todo()
     print("\nListo." if not VER else "\nPrueba en seco terminada: no se cambió nada.")
 
