@@ -218,6 +218,13 @@ def main():
             time.sleep(15 * 60)
             continue
         nombres_cortos()
+        candado_bot = D / "corriendo.lock"         # el del bot de una ventana que se cerró a mano
+        try:
+            if candado_bot.exists() and not _pid_vivo(int(candado_bot.read_text(encoding="utf-8").strip() or 0)):
+                candado_bot.unlink()
+                log("candado viejo del bot (ventana cerrada) quitado")
+        except (OSError, ValueError):
+            pass
         por_bajar, bajados, otra = una_vuelta()
         if otra:
             time.sleep(5 * 60)                       # el piloto lo está corriendo; espero

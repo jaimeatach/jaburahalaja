@@ -5144,11 +5144,30 @@ def _feed_sin_cache():
         return r.read().decode("utf-8")
 
 
+def _pid_vivo(pid):
+    # ventana cerrada a mano: su candado queda, pero el proceso ya no existe
+    try:
+        pid = int(pid)
+    except ValueError:
+        return False
+    if os.name != "nt":
+        try:
+            os.kill(pid, 0)
+            return True
+        except OSError:
+            return False
+    try:   # en Windows os.kill MATA: se pregunta a tasklist
+        r = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/NH"], capture_output=True, text=True, timeout=20)
+        return str(pid) in (r.stdout or "")
+    except Exception:
+        return True
+
+
 def _candado():
     import atexit
     p = Path("corriendo.lock")
     try:
-        if p.exists() and time.time() - p.stat().st_mtime < 30 * 60:
+        if p.exists() and time.time() - p.stat().st_mtime < 30 * 60 and _pid_vivo(p.read_text(encoding="utf-8").strip()):
             log("Ya hay otra ventana bajando este show; esta no hace nada. ===")
             sys.exit(0)
         p.write_text(str(os.getpid()), encoding="utf-8")
