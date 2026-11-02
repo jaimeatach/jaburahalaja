@@ -5030,6 +5030,50 @@ def quitar_grupo():
         print("   → reinicia el robot para que lo tome.")
 
 
+# ── 54. --grupo-extra=show:LINK  (nov/2026) ───────────────────────────────────
+#   Un segundo grupo que es FUENTE y ANUNCIO del show: Grillak a veces sube el shiur al
+#   grupo del kollel Or Israel y a veces al de "Shiurim Rab Grillak"; de los dos se toma el
+#   audio (a la misma carpeta) y en los dos se manda el anuncio con los links.
+#   El robot solo tiene una fuente por show, así que el segundo grupo entra como
+#   escuchar.<show>_extra (copia de escuchar.<show> con otro link, misma carpetaDestino):
+#   mantenimiento lo salta (no tiene carpeta propia en C:\OTZAR) y el audio cae en el show.
+def grupo_extra():
+    pedidos = [a.split("=", 1)[1] for a in sys.argv if a.startswith("--grupo-extra=")]
+    if not pedidos or not ROBOT:
+        return
+    paso(54, "Segundo grupo (fuente y anuncio) de un show")
+    rw = ROBOT / "config_whatsapp.json"
+    cfg = json.loads(rw.read_text(encoding="utf-8"))
+    esc_todo = cfg.setdefault("escuchar", {})
+    cambio = False
+    for pedido in pedidos:
+        show, _, link = pedido.partition(":")
+        show, link = show.strip().lower(), link.strip().split("?")[0]
+        esc, an = esc_todo.get(show), (cfg.get("anunciar") or {}).get(show)
+        if not isinstance(esc, dict) or not isinstance(an, dict) or "chat.whatsapp.com/" not in link:
+            aviso(f"{pedido}: no encuentro el show en el robot o el link no es de un grupo")
+            continue
+        clave = show + "_extra"
+        extra = {k: v for k, v in esc.items() if k not in ("invite", "nombre")}
+        extra["invite"] = link
+        extra["extra_de"] = show
+        if esc_todo.get(clave) != extra:
+            esc_todo[clave] = extra
+            cambio = True
+        invites = [x for x in (an.get("invite") if isinstance(an.get("invite"), list) else [an.get("invite")])
+                   if isinstance(x, str) and x.startswith("http")]
+        if not any(x.split("?")[0] == link for x in invites):
+            invites.append(link)
+            an["invite"] = invites if len(invites) != 1 else invites[0]
+            cambio = True
+        ok(f"{show}: toma audios también de {link} (a {esc.get('carpetaDestino')}) y anuncia ahí")
+        print(f"   · el número del robot tiene que estar DENTRO de ese grupo")
+    if cambio and not VER:
+        respaldar(rw)
+        escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+        print("   → reinicia el robot para que lo tome.")
+
+
 def main():
     print("=== Instalador Otzar · jabura + nacach ===")
     print("Base:", BASE, "(prueba en seco)" if VER else "")
@@ -5088,6 +5132,7 @@ def main():
     quitar_del_robot()
     amud_cuando()
     quitar_grupo()
+    grupo_extra()
     guids_originales_flag()
     plataformas_links()
     revisar_todo()
