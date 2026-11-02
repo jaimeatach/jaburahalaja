@@ -5119,6 +5119,11 @@ _PARCHES_YT = [
         log(f"{_reloj()} YouTube no dio la lista: " + " | ".join((r.stderr or "sin respuesta").strip().splitlines()[-3:])[:400])
     out = []
 '''),
+    # 6) shiurim de más de una hora tardan más de 4 min en bajar y se saltaban en cada vuelta
+    ('''TOPE_VIDEO_SEG = 4 * 60
+''',
+     '''TOPE_VIDEO_SEG = 12 * 60   # === otzar: shiurim largos (con 4 min se saltaban siempre) ===
+'''),
     # 3) candado: si el piloto y una ventana a mano lo corren a la vez, el segundo no hace nada
     ('''def main():
     cmd = sys.argv[1].lower() if len(sys.argv) > 1 else "robot"''',
