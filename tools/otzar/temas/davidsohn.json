@@ -6,5 +6,6 @@
   {"archivo": "Lo s obstáculos de la tefila.mp3", "titulo": "Los obstáculos de la tefilá"},
   {"archivo": "Que tu tefila sea con vida y sabor.mp3", "titulo": "Que tu tefilá sea con vida y sabor"},
   {"archivo": "Que la comunicación sea común.mp3", "titulo": "Que la comunicación sea común"},
+  {"quitar": ["Hola metí a mi Papá para que mande sus shiurimpor acá.mp3"], "nota": "nota de voz de 5 s (gracias por ayudar), no es un shiur"},
   {"anunciar": true}
 ]

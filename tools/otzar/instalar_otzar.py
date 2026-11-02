@@ -1648,7 +1648,8 @@ NOMBRES_FUENTE = {"tefila": "Clases Tefila Habitat", "jabura": "Mekorot", "nacac
 # shows que toman audios de un grupo (por nombre) aunque el config solo tuviera chat directo
 FUENTES_NUEVAS = {"nacach": "Shiurim jajam ezra nacach"}
 # nombre del Rab en el MENSAJE del anuncio, para shows cuyo feed no lo trae (van a grupos generales)
-SUFIJOS_ANUNCIO = {"efshar": "· Rab Igal Snertz", "mishlei": "· Rab Igal Snertz"}
+SUFIJOS_ANUNCIO = {"efshar": "· Rab Igal Snertz", "mishlei": "· Rab Igal Snertz",
+                   "davidsohn": "· Rab Tzvi Jaim Davidsohn", "grillak": "· הרב יוחנן גרילק"}
 # reglas de título al guardar (escuchar.<show>): Isaac Credi manda "1151 Siman 639" en la
 # primera línea y luego el tema en 1-2 líneas; sale "tema1, tema2 - Sr. Isaac Credi"
 REGLAS_TITULO = {"isaaccredi": {"quitar_lineas": r"^\s*\d+\s*(siman|סימן|halaja|halajot)?\s*\d*\s*$",

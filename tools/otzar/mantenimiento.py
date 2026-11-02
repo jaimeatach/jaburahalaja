@@ -548,6 +548,12 @@ def titulos_fijos(cfgw):
         por_archivo = {str(x["archivo"]): int(x["n"]) for x in lista if isinstance(x, dict) and x.get("n") and x.get("archivo")}
         exactos = {str(x["archivo"]): str(x["titulo"]).strip() for x in lista
                    if isinstance(x, dict) and not x.get("n") and x.get("archivo") and x.get("titulo")}
+        # "contiene": para lo que todavía no llega (el guid no se sabe): si el título o el archivo
+        # que puso el robot contiene ese texto ("20 de agosto de 2026"), toma este título y fecha
+        por_texto = [(str(x["contiene"]).lower(), str(x["titulo"]).strip(), str(x.get("fecha") or ""))
+                     for x in lista if isinstance(x, dict) and x.get("contiene") and x.get("titulo")]
+        # "quitar": audios que NO son shiurim (un "gracias" de 5 segundos) salen del feed
+        quitar = {str(g) for x in lista if isinstance(x, dict) and isinstance(x.get("quitar"), list) for g in x["quitar"]}
         # "fecha": "2025-09-04" → la fecha real del shiur (en Spotify salen en su orden, no todos "hoy")
         fechas_x = {str(x["archivo"]): str(x["fecha"]) for x in lista
                     if isinstance(x, dict) and not x.get("n") and x.get("archivo") and x.get("fecha")}
@@ -574,8 +580,8 @@ def titulos_fijos(cfgw):
                     log(f"títulos [{show}]: {len(nuevos_s)} episodio(s) viejos marcados para no anunciarse")
                 except OSError as ex:
                     log(f"títulos [{show}]: no pude marcar los viejos ({ex})")
-        if not (fijos or por_archivo or exactos):
-            continue
+        if show == "jabura" or not lista or not (BASE / show / "config.json").exists():
+            continue                      # solo shows con temas/<show>.json; la jabura tiene su publicador
         c = leer_json(BASE / show / "config.json")
         tok = next((p for p in (BASE / show / "github_token.txt", BASE / "jabura" / "github_token.txt") if p.exists()), None)
         if not tok:
@@ -601,7 +607,22 @@ def titulos_fijos(cfgw):
                 return m.group(0)
             actual = _html.unescape(tt.group(1)).strip()
             guid = _html.unescape(g.group(1)).strip() if g else ""
+            ln = re.search(r'<enclosure[^>]*length="(\d+)"', it)
+            if guid in quitar or (ln and 0 < int(ln.group(1)) < 150000):
+                # no es un shiur (menos de ~10 s: un "gracias", un "hola"): fuera del feed
+                cambios.append(f"{actual} → (quitado del feed: no es un shiur)")
+                silenciar.append(guid)
+                return ""
             exacto = exactos.get(guid) or exactos.get(guid.rsplit("/", 1)[-1])
+            if not exacto:
+                plano_t = (actual + " " + guid).lower().replace(":", " ")
+                plano_t = re.sub(r"\s+", " ", plano_t)
+                for txt, tit_x, f_x2 in por_texto:
+                    if re.sub(r"\s+", " ", txt.replace(":", " ")) in plano_t:
+                        exacto = tit_x
+                        if f_x2:
+                            fechas_x[guid] = f_x2
+                        break
             if exacto:
                 esc = _html.escape(exacto, quote=False)
                 nuevo = re.sub(r"<title>[\s\S]*?</title>", lambda _m: f"<title>{esc}</title>", it, count=1)
@@ -634,7 +655,17 @@ def titulos_fijos(cfgw):
             cambios.append(f"{actual} → {nuevo_t}")
             return f"<item>{nuevo}</item>"
 
+        n_sil = len(silenciar)
         nuevo_feed = re.sub(r"<item>([\s\S]*?)</item>", arreglar, feed)
+        if len(silenciar) > n_sil:                # lo quitado del feed tampoco se anuncia nunca
+            estado_p = ROBOT / "estado_anuncios.json"
+            est = leer_json(estado_p)
+            previos = est.get(show) or []
+            est[show] = (previos + [g for g in silenciar[n_sil:] if g not in previos])[-2000:]
+            try:
+                estado_p.write_text(json.dumps(est, ensure_ascii=False, indent=2), encoding="utf-8")
+            except OSError:
+                pass
         if not cambios:
             continue
         try:
