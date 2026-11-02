@@ -345,6 +345,10 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    se escribe `temas/<show>.json` con `{"archivo": guid, "titulo": ...}` (título exacto) y
    `{"anunciar": true}`: `titulos_fijos` corrige el feed y quita la pausa del anuncio solo.
    `{"silenciar": [guid, …]}` los marca como ya anunciados (lo viejo de un show nuevo no sale).
+   `{"contiene": "20 de agosto de 2026", "titulo", "fecha"}` titula lo que aún no llega (sin guid);
+   `{"quitar": [guid]}` y cualquier audio < 150 KB de un show con temas salen del feed y no se
+   anuncian (la nota de voz "gracias" de Davidsohn). Grillak va en hebreo ("פרשת X · tema", por fecha).
+   Davidsohn y Grillak llevan el nombre del Rab en el anuncio (`SUFIJOS_ANUNCIO`).
    Grillak anuncia SOLO en su grupo y solo lo nuevo (los 37 rescatados, silenciados); Davidsohn
    solo en los generales 3 y 6, con el link de su grupo en el mensaje: `--quitar-grupo` del
    grupo del Rab deja `whatsapp_link` (el robot lo usa antes que el primer invite).
