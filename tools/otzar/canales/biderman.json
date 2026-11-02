@@ -13,7 +13,7 @@
  "youtube": {
   "url": "https://www.youtube.com/@TheBeautyOfJudaism/videos",
   "nombre": "היופי שביהדות",
-  "prefijo": "הרב ירחמיאל יוסף בידרמן",
-  "revisar_ultimos": 300
+  "revisar_ultimos": 300,
+  "quitar_del_titulo": "\\s*[|｜●–-]?\\s*הרב ירחמיאל יוסף בידרמן\\s*שליט\\S*\\s*$"
  }
 }

@@ -469,6 +469,10 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    (si se apaga la PC sigue al prender). Corre podcast_bot.py vuelta tras vuelta (nada en Shabat/Yom Tov,
    `bloqueo` del piloto) hasta "0 por bajar" (o 3 vueltas sin bajar nada); entonces se quita de Inicio,
    baja `revisar_ultimos` a 20 y deja `CARGA_TERMINADA.txt`. Avance en `<show>\carga.log`.
+   archive.org rechaza nombres de más de 230 bytes (hebreo = 2 bytes por letra): el parche 4 baja con
+   `%(title).170B` y `--replace-in-metadata` (`quitar_del_titulo`: el nombre del Rab al final de cada
+   título); sin `prefijo`, porque el bot lo decidía con el título en INGLÉS que da la lista de YouTube
+   (traducción automática) y lo repetía. `nombres_cortos` en la carga acorta los que ya bajaron largos.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre

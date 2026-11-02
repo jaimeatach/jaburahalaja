@@ -5101,6 +5101,11 @@ _PARCHES_YT = [
     with urllib.request.urlopen(req) as r:
         feed_txt = r.read().decode("utf-8")''',
      '''    feed_txt = _feed_sin_cache()   # === otzar: sin caché de Pages ==='''),
+    # 4) nombre corto: archive.org no acepta nombres de más de 230 bytes (en hebreo cada letra
+    #    pesa 2) y el nombre del Rab al final de cada título de YouTube sobra (quitar_del_titulo)
+    ('''           "-o", str(CARPETA / (((_PREFIJO + " · ") if _PREFIJO and not _nombra(titulo, _PREFIJO) else "") + "%(title)s.%(ext)s")), url]''',
+     '''           *(["--replace-in-metadata", "title", CFG["quitar_del_titulo"], ""] if CFG.get("quitar_del_titulo") else []),
+           "-o", str(CARPETA / (((_PREFIJO + " · ") if _PREFIJO and not _nombra(titulo, _PREFIJO) else "") + "%(title).170B.%(ext)s")), url]'''),
     # 3) candado: si el piloto y una ventana a mano lo corren a la vez, el segundo no hace nada
     ('''def main():
     cmd = sys.argv[1].lower() if len(sys.argv) > 1 else "robot"''',
@@ -5157,12 +5162,14 @@ def _candado():
 def _parche_youtube(texto):
     """Los 3 parches de arriba sobre una copia del podcast_bot de YouTube. Devuelve el texto
     nuevo o None si alguno no entra (el bot del modelo es de otra versión)."""
-    if "_fecha_youtube(ruta" in texto:
-        return texto
     for viejo, nuevo in _PARCHES_YT:
+        if nuevo in texto:
+            continue                                # ya puesto
         if texto.count(viejo) != 1:
             return None
         texto = texto.replace(viejo, nuevo)
+    if "def _fecha_youtube(" in texto:
+        return texto
     pos = texto.find("def agregar_items_al_feed(")
     if pos == -1:
         return None
@@ -5218,6 +5225,8 @@ def youtube_nuevo():
         if yt.get("prefijo"):
             canal["prefijo"] = yt["prefijo"]
         c["canales_youtube"] = [canal]
+        if yt.get("quitar_del_titulo"):
+            c["quitar_del_titulo"] = yt["quitar_del_titulo"]
         c["revisar_ultimos"] = canal["revisar_ultimos"]
         if json.dumps(c, sort_keys=True) != antes and not VER:
             if cfgp.exists():

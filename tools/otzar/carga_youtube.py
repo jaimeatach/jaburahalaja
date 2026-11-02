@@ -104,6 +104,41 @@ def refrescar_lock():
         time.sleep(60)
 
 
+def nombres_cortos():
+    """archive.org rechaza nombres de más de 230 bytes (en hebreo cada letra pesa 2) y un mp3 así
+    atora a todos los que vienen detrás. Los que ya bajaron largos se acortan aquí: sin el nombre
+    del Rab repetido al frente (" · ") ni al final (quitar_del_titulo) y a lo más 200 bytes."""
+    try:
+        c = json.loads((D / "config.json").read_text(encoding="utf-8"))
+    except Exception:                                # noqa: BLE001
+        c = {}
+    quitar = c.get("quitar_del_titulo") or ""
+    for p in sorted((D / "episodios").glob("*.mp3")):
+        if len(p.name.encode("utf-8")) <= 200:
+            continue
+        n = p.stem
+        if " · " in n[:60]:
+            antes, resto = n.split(" · ", 1)
+            if antes.split()[-1] in resto:           # "הרב X · … | הרב X שליט״א": el de adelante sobra
+                n = resto
+        if quitar:
+            try:
+                n = re.sub(quitar, "", n).strip()
+            except re.error:
+                pass
+        while len((n + ".mp3").encode("utf-8")) > 200:
+            n = n[:-1]
+        n = n.strip(" .")
+        nuevo = p.with_name(n + ".mp3")
+        if nuevo.exists():
+            nuevo = p.with_name(n[:-4] + f" ({int(time.time()) % 1000}).mp3")
+        try:
+            p.rename(nuevo)
+            log(f"nombre acortado para archive.org: {nuevo.name}")
+        except OSError as e:
+            log(f"no pude acortar {p.name[:60]}… ({e})")
+
+
 def una_vuelta():
     """Corre podcast_bot.py una vez. Devuelve (por_bajar, bajados, otra_ventana)."""
     por_bajar = bajados = None
@@ -182,6 +217,7 @@ def main():
             log(f"{b}: no se baja nada; sigo después")
             time.sleep(15 * 60)
             continue
+        nombres_cortos()
         por_bajar, bajados, otra = una_vuelta()
         if otra:
             time.sleep(5 * 60)                       # el piloto lo está corriendo; espero
