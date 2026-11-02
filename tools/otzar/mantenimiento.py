@@ -557,7 +557,7 @@ def _parasha_heb(fecha):
 
 
 def titulo_de_mensaje(texto):
-    """(nov/2026) Grillak: el robot guarda el audio con TODO el mensaje ("📢 Mensaje del Rab
+    """(nov/2026) Grilak: el robot guarda el audio con TODO el mensaje ("📢 Mensaje del Rab
     Grilak … 🗓️ Fecha Jueves 29 de octubre de 2026 — י״ח חשוון … 📖 Tema חסד לאברהם — Jésed
     LeAbra"). Sale "פרשת וירא · חסד לאברהם": solo hebreo (el usuario no quiere la fonética), la
     parashá del mensaje o la de esa semana. Devuelve (titulo, fecha ISO) o ("", "")."""

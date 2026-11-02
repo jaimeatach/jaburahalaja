@@ -338,7 +338,7 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    despierta a la sesión fija "Títulos Tawil (automático)", que ya tiene el repo y hace todo
    esto sola: audios sin título desde el #39 → "Día N" → título → `temas/tawil.json` → push a
    esta rama. Si un título queda mal, el usuario lo dice y se corrige la línea del json.
-   Shows nuevos con títulos revueltos (28/10/2026, Rab Grillak: mandaron los títulos y después
+   Shows nuevos con títulos revueltos (28/10/2026, Rab Grilak: mandaron los títulos y después
    los audios): se crean con `--nuevo=… --nuevo-grupo=… --rescatar=show:60 --pausar=show` (el
    rescate ya sirve aunque el grupo aún no esté registrado: el robot lo ubica por el link y pide
    200 mensajes). Cuando los audios están en archive.org, se escucha el principio de cada uno y
@@ -347,18 +347,18 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    `{"silenciar": [guid, …]}` los marca como ya anunciados (lo viejo de un show nuevo no sale).
    `{"contiene": "20 de agosto de 2026", "titulo", "fecha"}` titula lo que aún no llega (sin guid);
    `{"quitar": [guid]}` y cualquier audio < 150 KB de un show con temas salen del feed y no se
-   anuncian (la nota de voz "gracias" de Davidsohn). Grillak va en hebreo ("פרשת X · tema", por fecha).
-   Davidsohn y Grillak llevan el nombre del Rab en el anuncio (`SUFIJOS_ANUNCIO`).
-   `{"mensaje_rab": true}` (Grillak, nov/2026): el robot guarda el audio con el mensaje entero
+   anuncian (la nota de voz "gracias" de Davidsohn). Grilak va en hebreo ("פרשת X · tema", por fecha).
+   Davidsohn y Grilak llevan el nombre del Rab en el anuncio (`SUFIJOS_ANUNCIO`).
+   `{"mensaje_rab": true}` (Grilak, nov/2026): el robot guarda el audio con el mensaje entero
    ("📢 Mensaje del Rab Grilak … 🗓️ Fecha Jueves 29 de octubre de 2026 … 📖 Tema חסד לאברהם — Jésed
    LeAbra"); `titulo_de_mensaje` lo deja "פרשת וירא · חסד לאברהם": solo hebreo (sin nikud ni fonética),
    la parashá del Shabat de esa fecha (`_parasha_heb`, con parasha_youtube.py) y esa fecha en el feed.
    Contra los 31 viejos: 20 iguales al título revisado, 2 con parashá doble, 9 sin "Tema" (no se tocan).
-   Segundo grupo (paso [54], `--grupo-extra=show:LINK`, nov/2026): Grillak sube el shiur a veces
+   Segundo grupo (paso [54], `--grupo-extra=show:LINK`, nov/2026): Grilak sube el shiur a veces
    al grupo del kollel Or Israel (9tm8c1qB6sG9zg7BzgN9ff) y a veces al suyo; los dos son fuente
    (`escuchar.grillak_extra`, copia con otro link y la misma carpeta; el robot tiene una fuente por
    show) y en los dos se anuncia con los links. El robot tiene que estar dentro del grupo.
-   Grillak anuncia SOLO en su grupo y solo lo nuevo (los 37 rescatados, silenciados); Davidsohn
+   Grilak anuncia SOLO en su grupo y solo lo nuevo (los 37 rescatados, silenciados); Davidsohn
    solo en los generales 3 y 6, con el link de su grupo en el mensaje: `--quitar-grupo` del
    grupo del Rab deja `whatsapp_link` (el robot lo usa antes que el primer invite).
    Estadísticas: al rescatar, podcast_bot pone guids nuevos (nombre del archivo; así

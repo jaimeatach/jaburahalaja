@@ -5031,8 +5031,8 @@ def quitar_grupo():
 
 
 # ── 54. --grupo-extra=show:LINK  (nov/2026) ───────────────────────────────────
-#   Un segundo grupo que es FUENTE y ANUNCIO del show: Grillak a veces sube el shiur al
-#   grupo del kollel Or Israel y a veces al de "Shiurim Rab Grillak"; de los dos se toma el
+#   Un segundo grupo que es FUENTE y ANUNCIO del show: Grilak a veces sube el shiur al
+#   grupo del kollel Or Israel y a veces al de "Shiurim Rab Grilak"; de los dos se toma el
 #   audio (a la misma carpeta) y en los dos se manda el anuncio con los links.
 #   El robot solo tiene una fuente por show, así que el segundo grupo entra como
 #   escuchar.<show>_extra (copia de escuchar.<show> con otro link, misma carpetaDestino):
