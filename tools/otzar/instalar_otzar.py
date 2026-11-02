@@ -5442,6 +5442,44 @@ def anunciar_en():
 SB_REPO = "https://raw.githubusercontent.com/rabmeireliyahu/efshar/{ref}/herramientas/{ruta}"
 SB_REFS = ("claude/peaceful-maxwell-a9zajy", "main")
 SB_FEED = "https://rabmeireliyahu.github.io/efshar/feed.xml"
+# orden revisado de las clases (nov/2026): son 11 (2 venían repetidas en .mp4 con otro acento o
+# sin espacio), todas del Rab Igal Snertz, temas con acentos. Formato de shalom_bait.py:
+# archivo | tema | rab  ("#" = no se sube). Si el usuario edita el archivo, ya no se toca.
+SB_RAB = "Rab Igal Snertz"
+SB_ORDEN = [
+    ("1. Shalom Bait - para que existe el matrimonio.mp3", "Para qué existe el matrimonio"),
+    ("2. Shalom Bait - Los desafios de la pareja.mp3", "Los desafíos de la pareja"),
+    ("3. Shalom Bait - El escenario ideal.mp3", "El escenario ideal"),
+    ("4. Shalom Bait - Crear el sentimiento.mp3", "Crear el sentimiento"),
+    ("5. Shalom Bait - La mala interpretacion.mp3", "La mala interpretación"),
+    ("6. Shalom Bait - Trabajar para ser mejor.mp3", "Trabajar para ser mejor"),
+    ("7. Shalom Bait - El factor sopresa.mp3", "El factor sorpresa"),
+    ("8. Shalom Bait - La paz llega tras la guerra.mp3", "La paz llega tras la guerra"),
+    ("9. Shalom Bait - La buena comunicacion.mp3", "La buena comunicación"),
+    ("10. Shalom Bait - El bienestar espiritual.mp3", "El bienestar espiritual"),
+    ("11. Shalom Bait - El critico y el positivo.mp4", "El crítico y el positivo"),
+]
+SB_FUERA = [("2. Shalom Bait - Los desafíos de la pareja.mp4", "la 2 repetida en video"),
+            ("6. Shalom Bait- Trabajar para ser mejor.mp4", "la 6 repetida en video")]
+SB_MARCA = "# (orden revisado por Otzar, nov/2026)"
+
+
+def _sb_orden(ef):
+    p = ef / "shalom_bait_orden.txt"
+    actual = p.read_text(encoding="utf-8-sig", errors="replace") if p.exists() else ""
+    lineas = [ln.split("|") for ln in actual.splitlines() if ln.strip() and not ln.lstrip().startswith("#") and ln.count("|") >= 2]
+    if SB_MARCA in actual or (lineas and all(x[-1].strip() for x in lineas)):
+        ok("shalom_bait_orden.txt ya tiene el Rab en todas las clases (o lo editaste tú): no lo toco")
+        return
+    L = [SB_MARCA,
+         "# Formato:  archivo | tema | rab     (# al inicio = no se sube; la de arriba es la 1)", ""]
+    L += [f"{a} | {t} | {SB_RAB}" for a, t in SB_ORDEN]
+    L += ["", "# --- Excluidas (no se suben) ---"]
+    L += [f"# {a} | {motivo} | {SB_RAB}" for a, motivo in SB_FUERA]
+    if p.exists():
+        respaldar(p)
+    p.write_text("\n".join(L) + "\n", encoding="utf-8")
+    ok(f"shalom_bait_orden.txt: 11 clases del {SB_RAB}, temas con acentos, las 2 repetidas fuera")
 
 
 def _sb_bajar(ruta, destino, solo_si_falta=False):
@@ -5629,6 +5667,7 @@ def shalom_bait():
         respaldar(rg)
         escribir(rg, json.dumps(reg, ensure_ascii=False, indent=2) + "\n")
     # 4) clases: revisar (Rab y tema) + preparar si hace falta + subir la 1
+    _sb_orden(ef)
     print("   --- shalom_bait.py revisar ---", flush=True)
     subprocess.run([sys.executable, "shalom_bait.py", "revisar"], cwd=str(ef), env=env)
     try:
