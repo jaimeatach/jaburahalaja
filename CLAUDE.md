@@ -448,6 +448,17 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    (no por los mp3) y el robot baja el audio del anuncio de archive.org, así que no dependen
    de la carpeta. Nunca la jabura (G:, Drive compartido de Saúl) ni nada fuera de C:\OTZAR.
    Con `limpieza_auto.json` `mantenimiento.py` (`limpieza`) lo corre una vez al día.
+16. Show nuevo de YouTube (paso [55], `--youtube-nuevo=clave`, nov/2026): todo sale de
+   `tools/otzar/canales/<clave>.json` (title, description, author, idioma, categoria, portada en
+   base64 + sha256 y `youtube`: url, prefijo, revisar_ultimos). Arma `C:\OTZAR\<clave>` con el
+   podcast_bot de los shows de YouTube más 3 parches SOLO para ese show (`_parche_youtube`): el mp3
+   toma la fecha en que se subió el video (`%(timestamp)s` → `os.utime`), así la carga inicial del
+   más nuevo al más viejo sale en orden en Spotify; el feed entre lotes se lee de la API de GitHub
+   (Pages cachea 10 min y un lote borraba el anterior); y `corriendo.lock` para que piloto y una
+   ventana a mano no corran a la vez. config con `solo_agregar`, repo + Pages + portada + feed con
+   encabezado. El piloto lo toma solo (15 min por vuelta). Así entró `biderman`: הרב ירחמיאל יוסף
+   בידרמן שליט"א, @TheBeautyOfJudaism (היופי שביהדות), los últimos 300; el logo del canal mide
+   98x98 en YouTube, la portada es esa imagen agrandada a 3000 con limpieza y enfoque. No se anuncia.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre

@@ -1,0 +1,19 @@
+{
+ "nota": "(nov/2026) Show de YouTube @TheBeautyOfJudaism (היופי שביהדות). Portada = el logo del canal; el original de YouTube mide 98x98, así que se agrandó a 3000x3000 limpiando el ruido y enfocando. En base64 por el filtro de la PC.",
+ "title": "הרב ירחמיאל יוסף בידרמן שליט\"א · היופי שביהדות",
+ "description": "שיעורים מהרב ירחמיאל יוסף בידרמן שליט\"א, מהערוץ היופי שביהדות. Otzar HaTorah - אוצר התורה",
+ "author": "הרב ירחמיאל יוסף בידרמן שליט\"א",
+ "categoria": [
+  "Religion & Spirituality",
+  "Judaism"
+ ],
+ "idioma": "he",
+ "portada_b64": "biderman_portada.b64",
+ "portada_sha256": "ae0c92b121663da3892934c912e8ee19816fc379175b25558935b4c43d318522",
+ "youtube": {
+  "url": "https://www.youtube.com/@TheBeautyOfJudaism/videos",
+  "nombre": "היופי שביהדות",
+  "prefijo": "הרב ירחמיאל יוסף בידרמן",
+  "revisar_ultimos": 300
+ }
+}

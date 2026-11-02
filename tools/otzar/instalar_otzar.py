@@ -5074,6 +5074,233 @@ def grupo_extra():
         print("   → reinicia el robot para que lo tome.")
 
 
+# ── 55. --youtube-nuevo=clave  (nov/2026) ─────────────────────────────────────
+#   Show nuevo que sale de un canal de YouTube (Rab Biderman, @TheBeautyOfJudaism). Todo
+#   viene de tools/otzar/canales/<clave>.json: nombre, descripción, autor, idioma, portada
+#   (base64 + sha256, por el filtro) y "youtube" (url, prefijo, revisar_ultimos).
+#   Arma C:\OTZAR\<clave> con el podcast_bot de los shows de YouTube + 3 parches solo para
+#   este show (ver _parche_youtube), config.json con solo_agregar, repo + Pages + portada +
+#   feed con su encabezado. El piloto (lo de ACTUALIZAR) lo toma solo: cada vuelta baja hasta
+#   15 min de videos, del más nuevo al más viejo, hasta tener los últimos revisar_ultimos.
+_PARCHES_YT = [
+    # 1) fecha real de YouTube: el mp3 toma la fecha en que se subió el video (no la de la
+    #    descarga); así, aunque se bajen del más nuevo al más viejo, en Spotify salen en orden.
+    (r'"--print", "after_move:__OTZAR_OK__%(id)s\t%(filepath)s",',
+     r'"--print", "after_move:__OTZAR_OK__%(id)s\t%(timestamp|0)s\t%(upload_date|0)s\t%(filepath)s",'),
+    ('''                v, ruta = ln[len("__OTZAR_OK__"):].split("\\t", 1)
+                if Path(ruta).exists(): _ids_ok[v] = ruta; ok = True''',
+     '''                v, _ts, _ud, ruta = ln[len("__OTZAR_OK__"):].split("\\t", 3)
+                if Path(ruta).exists():
+                    _ids_ok[v] = ruta; ok = True
+                    _fecha_youtube(ruta, _ts, _ud)   # === otzar: fecha del video ==='''),
+    # 2) feed sin caché: entre un lote y otro se lee el feed de la API de GitHub (Pages tarda
+    #    hasta 10 min en refrescar y un lote podía borrar lo que subió el anterior).
+    ('''    url_feed = f"{URL_FEED_BASE}/feed.xml"
+    log(f"Bajando feed actual: {url_feed}")
+    req = urllib.request.Request(url_feed, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req) as r:
+        feed_txt = r.read().decode("utf-8")''',
+     '''    feed_txt = _feed_sin_cache()   # === otzar: sin caché de Pages ==='''),
+    # 3) candado: si el piloto y una ventana a mano lo corren a la vez, el segundo no hace nada
+    ('''def main():
+    cmd = sys.argv[1].lower() if len(sys.argv) > 1 else "robot"''',
+     '''def main():
+    cmd = sys.argv[1].lower() if len(sys.argv) > 1 else "robot"
+    if cmd == "robot":
+        _candado()   # === otzar ==='''),
+]
+_FUNCIONES_YT = '''
+
+# === otzar (nov/2026): fecha del video, feed sin caché y candado ===
+def _fecha_youtube(ruta, ts, ud):
+    try:
+        t = int(ts) if str(ts).isdigit() and int(ts) > 0 else 0
+        if not t and str(ud).isdigit() and len(str(ud)) == 8:
+            t = datetime(int(ud[:4]), int(ud[4:6]), int(ud[6:]), 12, 0).timestamp()
+        if t:
+            os.utime(ruta, (t, t))
+    except Exception as e:
+        log(f"fecha del video: {e}")
+
+
+def _feed_sin_cache():
+    tok = Path(TOKEN_FILE)
+    if tok.exists():
+        try:
+            api = f"https://api.github.com/repos/{CFG['github_user']}/{CFG['github_repo']}/contents/feed.xml"
+            req = urllib.request.Request(api, headers={"Authorization": "token " + tok.read_text(encoding="utf-8").strip(),
+                                                       "User-Agent": "robot-podcast", "Accept": "application/vnd.github.raw"})
+            with urllib.request.urlopen(req, timeout=120) as r:
+                return r.read().decode("utf-8")
+        except Exception as e:
+            log(f"feed por la API: {e}; lo leo de Pages")
+    req = urllib.request.Request(f"{URL_FEED_BASE}/feed.xml", headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req) as r:
+        return r.read().decode("utf-8")
+
+
+def _candado():
+    import atexit
+    p = Path("corriendo.lock")
+    try:
+        if p.exists() and time.time() - p.stat().st_mtime < 30 * 60:
+            log("Ya hay otra ventana bajando este show; esta no hace nada. ===")
+            sys.exit(0)
+        p.write_text(str(os.getpid()), encoding="utf-8")
+        atexit.register(lambda: p.exists() and p.unlink())
+    except OSError:
+        pass
+
+'''
+
+
+def _parche_youtube(texto):
+    """Los 3 parches de arriba sobre una copia del podcast_bot de YouTube. Devuelve el texto
+    nuevo o None si alguno no entra (el bot del modelo es de otra versión)."""
+    if "_fecha_youtube(ruta" in texto:
+        return texto
+    for viejo, nuevo in _PARCHES_YT:
+        if texto.count(viejo) != 1:
+            return None
+        texto = texto.replace(viejo, nuevo)
+    pos = texto.find("def agregar_items_al_feed(")
+    if pos == -1:
+        return None
+    return texto[:pos] + _FUNCIONES_YT.lstrip("\n") + "\n" + texto[pos:]
+
+
+def youtube_nuevo():
+    import hashlib
+    for clave in _arg_lista("youtube-nuevo"):
+        clave = re.sub(r"[^a-z0-9]", "", clave)
+        try:
+            datos = json.loads(bajar_texto(f"otzar/canales/{clave}.json"))
+        except Exception as ex:                             # noqa: BLE001
+            aviso(f"{clave}: no pude bajar canales/{clave}.json ({ex})")
+            continue
+        yt = datos.get("youtube") or {}
+        paso(55, f"Show nuevo de YouTube: {datos.get('title', clave)}")
+        d = BASE / clave
+        # el podcast_bot de los shows de YouTube (el que más shows usan), con los parches
+        modelo, texto = None, None
+        for m in ("chazaq", "torahanytime", "musar", "dafyomi", "krohn", "ravasherweiss"):
+            p = BASE / m / "podcast_bot.py"
+            if p.exists() and "PAUSADO por instalar_otzar" not in p.read_text(encoding="utf-8", errors="replace")[:200]:
+                texto = _parche_youtube(p.read_text(encoding="utf-8"))
+                if texto:
+                    modelo = BASE / m
+                    break
+        if not modelo:
+            aviso("no encontré un podcast_bot.py de YouTube que acepte los parches; mándame la salida")
+            continue
+        if not VER:
+            d.mkdir(parents=True, exist_ok=True)
+            bot = d / "podcast_bot.py"
+            if bot.exists() and bot.read_text(encoding="utf-8") != texto:
+                respaldar(bot)
+            escribir(bot, texto)
+            tok_src = next((p for p in (modelo / "github_token.txt", BASE / "jabura" / "github_token.txt") if p.exists()), None)
+            if tok_src and not (d / "github_token.txt").exists():
+                shutil.copy2(tok_src, d / "github_token.txt")
+        ok(f"podcast_bot.py (de {modelo.name}) con fecha real del video, feed sin caché y candado")
+        cfgp = d / "config.json"
+        c = json.loads(cfgp.read_text(encoding="utf-8")) if cfgp.exists() else {}
+        base_cfg = json.loads((modelo / "config.json").read_text(encoding="utf-8"))
+        antes = json.dumps(c, sort_keys=True)
+        c.update({"titulo": datos["title"], "descripcion": datos["description"], "autor": datos["author"],
+                  "idioma": datos.get("idioma", "he"), "solo_agregar": True})
+        c.setdefault("email", base_cfg.get("email", "rabmeireliyahu@gmail.com"))
+        c.setdefault("archive_id", "rab-" + clave)
+        c.setdefault("github_user", "rabmeireliyahu")
+        c.setdefault("github_repo", clave)
+        canal = {"url": yt.get("url"), "nombre": yt.get("nombre") or clave,
+                 "revisar_ultimos": int(yt.get("revisar_ultimos", 20))}
+        if yt.get("prefijo"):
+            canal["prefijo"] = yt["prefijo"]
+        c["canales_youtube"] = [canal]
+        c["revisar_ultimos"] = canal["revisar_ultimos"]
+        if json.dumps(c, sort_keys=True) != antes and not VER:
+            if cfgp.exists():
+                respaldar(cfgp)
+            escribir(cfgp, json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+        ok(f"config.json: {canal['url']} · los últimos {canal['revisar_ultimos']} · archive.org {c['archive_id']}")
+        cab = _cab_github(d)
+        if not cab or VER:
+            if not cab:
+                aviso("falta github_token.txt")
+            continue
+        base = f"https://api.github.com/repos/{c['github_user']}/{c['github_repo']}"
+        pages = f"https://{c['github_user']}.github.io/{c['github_repo']}"
+
+        def gh(metodo, url, cuerpo=None):
+            req = urllib.request.Request(url, data=json.dumps(cuerpo).encode() if cuerpo is not None else None,
+                                         headers=cab, method=metodo)
+            try:
+                with urllib.request.urlopen(req, timeout=60) as r:
+                    t = r.read().decode()
+                    return r.status, (json.loads(t) if t.strip() else {})
+            except urllib.error.HTTPError as e:
+                return e.code, {}
+            except Exception as e:                          # noqa: BLE001
+                return 0, {"message": str(e)}
+        st, _ = gh("GET", base)
+        if st == 404:
+            st, _ = gh("POST", "https://api.github.com/user/repos",
+                       {"name": c["github_repo"], "description": datos["title"], "private": False, "auto_init": False})
+            ok("repo creado" if st in (200, 201) else f"no pude crear el repo ({st})")
+            try:
+                _gh_put(base, cab, "README.md", f"# {clave}\n{datos['title']}\n".encode(), "readme")
+            except Exception:                               # noqa: BLE001
+                pass
+        # portada: la del repo (base64 + sha256), nunca bajada como imagen en esta PC
+        try:
+            img = base64.b64decode(bajar_texto(f"otzar/canales/{datos['portada_b64']}"))
+        except Exception as ex:                             # noqa: BLE001
+            img = b""
+            aviso(f"no pude bajar la portada ({ex})")
+        if img and hashlib.sha256(img).hexdigest() == datos.get("portada_sha256"):
+            st, j = gh("GET", f"{base}/contents/portada.jpg")
+            try:
+                _gh_put(base, cab, "portada.jpg", img, "portada", j.get("sha") if st == 200 else None)
+                ok("portada subida (3000x3000)")
+            except Exception as ex:                         # noqa: BLE001
+                aviso(f"portada: {ex}")
+        elif img:
+            aviso("la portada llegó alterada (¿filtro?); no la subo")
+        st, _ = gh("GET", f"{base}/contents/feed.xml")
+        if st == 404:
+            from xml.sax.saxutils import escape
+            cat = datos.get("categoria") or ["Religion & Spirituality", "Judaism"]
+            cats = (f'<itunes:category text="{escape(cat[0])}"><itunes:category text="{escape(cat[1])}"/></itunes:category>'
+                    if len(cat) > 1 else f'<itunes:category text="{escape(cat[0])}"/>')
+            xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>{escape(c['titulo'])}</title>
+    <description>{escape(c['descripcion'])}</description>
+    <link>{pages}</link>
+    <language>{c['idioma']}</language>
+    <itunes:author>{escape(c['autor'])}</itunes:author>
+    <itunes:owner><itunes:name>{escape(c['autor'])}</itunes:name><itunes:email>{c['email']}</itunes:email></itunes:owner>
+    <itunes:image href="{pages}/portada.jpg"/>
+    {cats}
+    <itunes:explicit>false</itunes:explicit>
+  </channel>
+</rss>
+"""
+            try:
+                _gh_put(base, cab, "feed.xml", xml.encode("utf-8"), "feed inicial")
+                ok("feed inicial creado")
+            except Exception as ex:                         # noqa: BLE001
+                aviso(f"no pude crear el feed ({ex})")
+        st, _ = gh("POST", f"{base}/pages", {"source": {"branch": "main", "path": "/"}})
+        if st in (200, 201):
+            ok("GitHub Pages prendido")
+        print(f"   → RSS para Spotify for Creators (\"add an existing podcast\" / RSS): {pages}/feed.xml")
+        print(f"   → los primeros {canal['revisar_ultimos']}: el piloto (lo de ACTUALIZAR) baja hasta 15 min por vuelta;")
+        print(f"     para ir más rápido, en otra ventana:  cd /d {d} && for /l %i in (1,1,40) do python podcast_bot.py")
+
+
 def main():
     print("=== Instalador Otzar · jabura + nacach ===")
     print("Base:", BASE, "(prueba en seco)" if VER else "")
@@ -5133,6 +5360,7 @@ def main():
     amud_cuando()
     quitar_grupo()
     grupo_extra()
+    youtube_nuevo()
     guids_originales_flag()
     plataformas_links()
     revisar_todo()
