@@ -467,6 +467,7 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    encabezado. El piloto lo toma solo (15 min por vuelta). Así entró `biderman`: הרב ירחמיאל יוסף
    בידרמן שליט"א, @TheBeautyOfJudaism (היופי שביהדות), los últimos 300; el logo del canal mide
    98x98 en YouTube, la portada es esa imagen agrandada a 3000 con limpieza y enfoque. No se anuncia.
+   Spotify del show: 1OjW9J8D1TQ4pvQ6pbhUvG (3/11/2026; el feed ya tenía 304 shiurim).
    Carga inicial sin parar (`tools/otzar/carga_youtube.py`, en `C:\OTZAR\jabura\`): el paso [55] la
    arranca en su ventana minimizada "CARGA <show>" y deja `OTZAR_carga_<show>.cmd` en Inicio de Windows
    (si se apaga la PC sigue al prender). Corre podcast_bot.py vuelta tras vuelta (nada en Shabat/Yom Tov,
