@@ -503,6 +503,17 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    semana) y, si aparece C:\OTZAR\efshar\portadas\portada_shalombait.jpeg, la sube y la pone en las
    clases ya publicadas (<itunes:image> por item). El audio solo existe en G: (no en archive.org): la subida
    solo puede correr en la PC.
+19. Series fuera de un show (paso [58], `--sacar-series=musar`, nov/2026): `SERIES_FUERA` en el
+   instalador (musar: "עמוד היומי" de Rab Elimelej Biderman y "שער הביטחון" de Rab Igal Cohen). Quita del
+   feed lo que ya estaba (54 el 4/11; los mp3 quedan en archive.org), pone `excluir_titulo` en el canal de
+   ese Rab (con las grafías en inglés: la lista plana de YouTube trae títulos traducidos), `excluir_titulo`
+   en anunciar.<show> (el robot no las manda) y `quitar_del_feed` [[rab, regex]] en el config del show:
+   mantenimiento.py (`quitar_del_feed`) las vuelve a sacar si se cuelan y las marca como anunciadas.
+   Portadas para Apple (paso [59], siempre): Apple no publica sin portada cuadrada 1400-3000. El 4/11:
+   ahavatjesed, golan, krohn y meital tenían portada.jpg en 404 y ravmeir era 1280x720.
+   `canales/portadas_fijas.json` (base64 + sha256 en canales/portadas/): se sube como portada.jpg y como
+   portada_<fecha>.jpg con el feed apuntando ahí (`portada_fechada`); `portada_sha256` en el config evita
+   repetir. Hechas: ravmeir (recorte al centro) y meital (foto del canal @harabanitmeital).
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre

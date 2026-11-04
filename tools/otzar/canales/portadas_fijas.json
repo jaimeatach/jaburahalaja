@@ -1,0 +1,12 @@
+{
+ "ravmeir": {
+  "b64": "portadas/ravmeir.b64",
+  "sha256": "b09103ba5f10db9f2499df62d3cd524d856e0577c047db76942f5d56aaef53c8",
+  "nota": "la anterior era 1280x720 (Apple solo acepta cuadradas): recorte al centro, 1400x1400"
+ },
+ "meital": {
+  "b64": "portadas/meital.b64",
+  "sha256": "1b2f0ce56d9e682933e184aea557397e7d9b45927b2c6df96851638e35765723",
+  "nota": "foto del canal de YouTube @harabanitmeital, 1400x1400 (antes no tenía portada: 404)"
+ }
+}

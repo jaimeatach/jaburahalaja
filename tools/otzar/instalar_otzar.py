@@ -5714,6 +5714,164 @@ def shalom_bait():
         print("   · en la ventana del robot verás \"shalombait: …\" cuando la mande")
 
 
+# ── 58. --sacar-series=musar  (nov/2026) ──────────────────────────────────────
+#   Series que el usuario ya no quiere en un show: se quitan del feed (lo que ya estaba),
+#   no se vuelven a bajar de YouTube (excluir_titulo del canal de ese Rab, con las grafías en
+#   inglés que da la lista de YouTube) y el robot nunca las anuncia (excluir_titulo del anuncio).
+#   "quitar_del_feed" en el config.json del show: mantenimiento.py las vuelve a sacar si se cuela una.
+SERIES_FUERA = {
+    "musar": [
+        {"rab": "בידרמן", "canal": "biderman", "nombre": "Amud Yomi de Rab Elimelej Biderman",
+         "feed": r"עמוד\s*ה?יומי", "youtube": r"עמוד\s*ה?יומי|Amud\s*Ha?\s*Yomi|Daily\s*Amud|Daily\s*Page",
+         "anuncio": ["עמוד היומי", "עמוד יומי"]},
+        {"rab": "יגאל כהן", "canal": "yigal", "nombre": "Shaar HaBitajón de Rab Igal Cohen",
+         "feed": r"שער\s*הבי?טחון", "youtube": r"שער\s*הבי?טחון|Sha'?ar\s*Ha?\s*Bitach?j?on|Gate\s*of\s*(Trust|Faith)",
+         "anuncio": ["שער הביטחון", "שער הבטחון"]},
+    ],
+}
+
+
+def sacar_series():
+    shows = _arg_lista("sacar-series")
+    if not shows:
+        return
+    for show in shows:
+        series = SERIES_FUERA.get(show)
+        if not series:
+            aviso(f"{show}: no tengo series para sacar")
+            continue
+        paso(58, f"{show}: fuera " + " y ".join(s["nombre"] for s in series))
+        d = BASE / show
+        cfgp = d / "config.json"
+        if not cfgp.exists():
+            aviso(f"no existe {cfgp}")
+            continue
+        c = json.loads(cfgp.read_text(encoding="utf-8"))
+        # 1) no volver a bajarlas: excluir en el canal de ese Rab (o en todo el show si no lo encuentro)
+        canales = c.get("canales_youtube") or []
+        for s in series:
+            puesto = False
+            for k, ch in enumerate(canales):
+                if not isinstance(ch, dict):
+                    canales[k] = ch = {"url": ch}
+                quien = (str(ch.get("nombre", "")) + " " + str(ch.get("url", "")) + " " + str(ch.get("prefijo", ""))).lower()
+                if s["canal"] in quien or s["rab"] in quien:
+                    viejo = ch.get("excluir_titulo") or ""
+                    if s["youtube"] not in viejo:
+                        ch["excluir_titulo"] = f"{viejo}|{s['youtube']}" if viejo else s["youtube"]
+                    puesto = True
+                    print(f"   · canal \"{ch.get('nombre') or ch.get('url')}\": ya no baja {s['nombre']}")
+            if not puesto:
+                viejo = c.get("excluir_titulo") or ""
+                if s["youtube"] not in viejo:
+                    c["excluir_titulo"] = f"{viejo}|{s['youtube']}" if viejo else s["youtube"]
+                print(f"   · (no encontré el canal de {s['rab']}; lo excluyo en todo el show)")
+        c["canales_youtube"] = canales
+        # 2) que mantenimiento las saque del feed si alguna se cuela
+        qf = c.get("quitar_del_feed") or []
+        for s in series:
+            par = [s["rab"], s["feed"]]
+            if par not in qf:
+                qf.append(par)
+        c["quitar_del_feed"] = qf
+        if not VER:
+            respaldar(cfgp)
+            escribir(cfgp, json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+        # 3) el robot no las anuncia
+        if ROBOT and (ROBOT / "config_whatsapp.json").exists():
+            rw = ROBOT / "config_whatsapp.json"
+            cfg = json.loads(rw.read_text(encoding="utf-8"))
+            an = (cfg.get("anunciar") or {}).get(show)
+            if isinstance(an, dict):
+                ex = an.get("excluir_titulo") or []
+                ex = [ex] if isinstance(ex, str) else list(ex)
+                for s in series:
+                    ex += [x for x in s["anuncio"] if x not in ex]
+                an["excluir_titulo"] = ex
+                if not VER:
+                    respaldar(rw)
+                    escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+                ok(f"robot: {show} ya no anuncia " + ", ".join(ex))
+        # 4) lo que ya está en el feed, fuera (los mp3 quedan en archive.org)
+        cab = _cab_github(d)
+        if not cab:
+            aviso("falta github_token.txt")
+            continue
+        base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}"
+        try:
+            feed, sha = _gh_texto(base, cab, "feed.xml")
+        except Exception as e:                              # noqa: BLE001
+            aviso(f"no pude leer el feed: {e}")
+            continue
+        quitados = []
+
+        def fuera(m):
+            it = m.group(0)
+            t = re.search(r"<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?</title>", it)
+            tit = html.unescape(t.group(1)) if t else ""
+            for s in series:
+                if s["rab"] in tit and re.search(s["feed"], tit):
+                    quitados.append(tit)
+                    return ""
+            return it
+        nuevo = re.sub(r"[ \t]*<item>[\s\S]*?</item>\n?", fuera, feed)
+        if quitados and not VER:
+            _gh_put(base, cab, "feed.xml", nuevo.encode("utf-8"), f"fuera {len(quitados)} episodios de series que ya no van", sha)
+        for s in series:
+            n = sum(1 for t in quitados if s["rab"] in t and re.search(s["feed"], t))
+            ok(f"{s['nombre']}: {n} episodio(s) quitados del feed (los mp3 quedan en archive.org)")
+        print("   → Spotify y Apple los quitan cuando releen el feed (una o dos horas)")
+
+
+# ── 59. portadas que Apple acepta (nov/2026; siempre) ────────────────────────
+#   Apple no publica un show sin portada cuadrada de 1400 a 3000 px. tools/otzar/canales/portadas_fijas.json
+#   lista las portadas arregladas (base64 + sha256, por el filtro de la PC): se sube como portada.jpg
+#   y como portada_<fecha>.jpg con el feed apuntando ahí (Spotify y Apple la vuelven a leer). Queda el
+#   sha256 en el config.json del show para no repetir.
+def portadas_fijas():
+    try:
+        mapa = json.loads(bajar_texto("otzar/canales/portadas_fijas.json"))
+    except Exception:                                       # noqa: BLE001
+        return
+    import hashlib
+    for show, datos in mapa.items():
+        d = BASE / show
+        cfgp = d / "config.json"
+        if not cfgp.exists() or not isinstance(datos, dict):
+            continue
+        c = json.loads(cfgp.read_text(encoding="utf-8"))
+        if c.get("portada_sha256") == datos.get("sha256"):
+            continue
+        paso(59, f"{show}: portada que Apple acepta")
+        try:
+            img = base64.b64decode(bajar_texto(f"otzar/canales/{datos['b64']}"))
+        except Exception as ex:                             # noqa: BLE001
+            aviso(f"{show}: no pude bajar la portada ({ex})")
+            continue
+        if hashlib.sha256(img).hexdigest() != datos.get("sha256"):
+            aviso(f"{show}: la portada llegó alterada (¿filtro?); no la subo")
+            continue
+        cab = _cab_github(d)
+        if not cab or VER:
+            continue
+        base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', show)}"
+        try:
+            sha_v = None
+            try:
+                sha_v = _gh_get(base, cab, "portada.jpg").get("sha")
+            except Exception:                               # noqa: BLE001
+                pass
+            _gh_put(base, cab, "portada.jpg", img, "portada cuadrada (Apple)", sha_v)
+        except Exception as ex:                             # noqa: BLE001
+            aviso(f"{show}: no pude subir portada.jpg ({ex})")
+            continue
+        if portada_fechada(show, c, cab, img):
+            c["portada_sha256"] = datos["sha256"]
+            respaldar(cfgp)
+            escribir(cfgp, json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+            ok(f"{show}: {datos.get('nota', 'portada nueva')}")
+
+
 def main():
     print("=== Instalador Otzar · jabura + nacach ===")
     print("Base:", BASE, "(prueba en seco)" if VER else "")
@@ -5778,6 +5936,8 @@ def main():
     plataformas_links()
     anunciar_en()
     shalom_bait()
+    sacar_series()
+    portadas_fijas()
     revisar_todo()
     print("\nListo." if not VER else "\nPrueba en seco terminada: no se cambió nada.")
 

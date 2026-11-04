@@ -621,6 +621,71 @@ def titulo_de_mensaje(texto):
     return (f"{parasha} · {tema}" if parasha else tema), fecha
 
 
+def quitar_del_feed():
+    """(nov/2026) "quitar_del_feed": [["rab", "regex"], …] en el config.json de un show (lo pone
+    instalar_otzar.py --sacar-series): si una de esas series se cuela al feed (YouTube cambió el
+    título, o la subió otro canal), aquí sale y queda marcada para no anunciarse."""
+    import base64
+    import html as _html
+    for d in sorted(p for p in BASE.iterdir() if p.is_dir()):
+        c = leer_json(d / "config.json")
+        reglas = [r for r in (c.get("quitar_del_feed") or []) if isinstance(r, list) and len(r) == 2]
+        if not reglas:
+            continue
+        tok = next((p for p in (d / "github_token.txt", BASE / "jabura" / "github_token.txt") if p.exists()), None)
+        if not tok:
+            continue
+        cab = {"Authorization": "token " + tok.read_text(encoding="utf-8").strip(),
+               "User-Agent": "otzar-mantenimiento", "Accept": "application/vnd.github+json"}
+        base = f"https://api.github.com/repos/{c.get('github_user', 'rabmeireliyahu')}/{c.get('github_repo', d.name)}/contents/feed.xml"
+        try:
+            with urllib.request.urlopen(urllib.request.Request(base, headers=cab), timeout=60) as r:
+                sha = json.loads(r.read().decode())["sha"]
+            with urllib.request.urlopen(urllib.request.Request(base, headers=dict(cab, Accept="application/vnd.github.raw")), timeout=180) as r:
+                feed = r.read().decode("utf-8", "replace")
+        except Exception as ex:
+            log(f"quitar del feed [{d.name}]: no pude leer el feed ({ex})")
+            continue
+        fuera, guids = [], []
+
+        def filtro(m):
+            it = m.group(0)
+            t = re.search(r"<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?</title>", it)
+            tit = _html.unescape(t.group(1)) if t else ""
+            for rab, rx in reglas:
+                try:
+                    if rab in tit and re.search(rx, tit):
+                        g = re.search(r"<guid[^>]*>([\s\S]*?)</guid>", it)
+                        if g:
+                            guids.append(_html.unescape(g.group(1)).strip())
+                        fuera.append(tit)
+                        return ""
+                except re.error:
+                    continue
+            return it
+        nuevo = re.sub(r"[ \t]*<item>[\s\S]*?</item>\n?", filtro, feed)
+        if not fuera:
+            continue
+        try:
+            cuerpo = {"message": f"fuera {len(fuera)} episodio(s) de series que ya no van", "sha": sha,
+                      "content": base64.b64encode(nuevo.encode("utf-8")).decode()}
+            with urllib.request.urlopen(urllib.request.Request(base, data=json.dumps(cuerpo).encode(), headers=cab, method="PUT"), timeout=180):
+                pass
+            log(f"quitar del feed [{d.name}]: {len(fuera)} fuera: " + "; ".join(x[:60] for x in fuera[:5]))
+        except Exception as ex:
+            log(f"quitar del feed [{d.name}]: no pude subir el feed ({ex})")
+            continue
+        estado_p = ROBOT / "estado_anuncios.json"
+        est = leer_json(estado_p)
+        if isinstance(est, dict):
+            previos = est.get(d.name) or []
+            est[d.name] = (previos + [g for g in guids if g not in previos])[-2000:]
+            try:
+                estado_p.write_text(json.dumps(est, ensure_ascii=False, indent=2), encoding="utf-8")
+            except OSError:
+                pass
+
+
 def shalom_bait_semanal(cfgw):
     """(nov/2026) Curso Shalom Bait de Efshar Letaken (lo instala instalar_otzar.py --shalom-bait):
     - la clase de la semana sube sola: shalom_bait.py semana auto (domingo a miércoles, 1 por semana,
@@ -1037,6 +1102,7 @@ def main():
     titulos_jabura()
     publicar()
     shalom_bait_semanal(cfgw)
+    quitar_del_feed()
     espejo()
     parasha_semanal(cfgw)
     ids_spotify(cfgw)
