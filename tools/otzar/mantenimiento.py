@@ -209,11 +209,64 @@ def correo():
         subprocess.run([sys.executable, str(script), f"--base={BASE}"])
 
 
-def publicar():
+SELLO = ".ultima_publicacion"                 # (nov/2026) modo rápido: cuándo se publicó cada show
+
+
+def _lo_mas_nuevo(carpetas):
+    mayor = 0.0
+    for c in carpetas:
+        try:
+            for f in Path(c).iterdir():
+                if f.is_file() and not f.name.startswith("."):
+                    mayor = max(mayor, f.stat().st_mtime)
+        except Exception:
+            continue
+    return mayor
+
+
+def _fuentes(show, cfgw, c):
+    """Carpetas de donde toma audios un show: audios_whatsapp, la del robot y la del correo."""
+    out = [BASE / show / "audios_whatsapp"]
+    for clave, d in (cfgw.get("escuchar") or {}).items():
+        if isinstance(d, dict) and d.get("carpetaDestino") and (clave == show or clave.startswith(show + "_")):
+            out.append(Path(d["carpetaDestino"]))
+    if c.get("correo_carpeta"):
+        out.append(Path(c["correo_carpeta"]))
+    return out
+
+
+def _hay_nuevo(carpeta_show, fuentes):
+    try:
+        sello = (carpeta_show / SELLO).stat().st_mtime
+    except OSError:
+        return True
+    return _lo_mas_nuevo(fuentes) > sello
+
+
+def _sellar(carpeta_show, inicio):
+    try:
+        (carpeta_show / SELLO).write_text(time.strftime("%Y-%m-%d %H:%M:%S"), encoding="utf-8")
+        import os
+        os.utime(carpeta_show / SELLO, (inicio, inicio))     # lo que llegue mientras corre, entra la próxima
+    except Exception:
+        pass
+
+
+def publicar(cfgw=None, rapido=False):
+    """Devuelve los shows que se publicaron. Rápido: solo los que tienen audio nuevo desde su
+    última publicación (los demás los revisa el mantenimiento completo, cada hora)."""
+    cfgw = cfgw or {}
+    hechos = set()
     jab = BASE / "jabura"
     if (jab / "jabura_publicar.py").exists():
-        log("--- Jabura: subiendo shiurim nuevos ---")
-        subprocess.run([sys.executable, "jabura_publicar.py"], cwd=str(jab))
+        fuentes = [Path(d["carpetaDestino"]) for k, d in (cfgw.get("escuchar") or {}).items()
+                   if k == "jabura" and isinstance(d, dict) and d.get("carpetaDestino")]
+        if not rapido or _hay_nuevo(jab, fuentes):
+            log("--- Jabura: subiendo shiurim nuevos ---")
+            t0 = time.time()
+            if subprocess.run([sys.executable, "jabura_publicar.py"], cwd=str(jab)).returncode == 0:
+                _sellar(jab, t0)
+            hechos.add("jabura")
     for show in sorted(BASE.iterdir()):
         cfgp, bot = show / "config.json", show / "podcast_bot.py"
         if not (show.is_dir() and cfgp.exists() and bot.exists()):
@@ -223,9 +276,15 @@ def publicar():
             continue
         if (show / "PAUSADO.txt").exists() or (show / "PAUSADOS.txt").exists():
             continue
+        if rapido and not _hay_nuevo(show, _fuentes(show.name, cfgw, c)):
+            continue
         log(f"--- {show.name}: publicando lo que dejó el robot ---")
         arreglar_mp3_falsos(show)
-        subprocess.run([sys.executable, "podcast_bot.py"], cwd=str(show))
+        t0 = time.time()
+        if subprocess.run([sys.executable, "podcast_bot.py"], cwd=str(show)).returncode == 0:
+            _sellar(show, t0)
+        hechos.add(show.name)
+    return hechos
 
 
 # ── 3. espejo nacash ─────────────────────────────────────────────────────────
@@ -312,13 +371,17 @@ def fiestas_pasadas(cfgw):
 
 
 # ── 4. sin atrasos ───────────────────────────────────────────────────────────
-def sin_atrasos(cfgw):
+def sin_atrasos(cfgw, solo=None):
+    """solo: en el modo rápido, solo los shows que se acaban de publicar (y los que nunca se han
+    memorizado: un show recién prendido no debe soltar todo su feed)."""
     estado_p = ROBOT / "estado_anuncios.json"
     e = leer_json(estado_p)
     cambio = False
     for show, datos in (cfgw.get("anunciar") or {}).items():
         n = datos.get("solo_ultimos")
         if not isinstance(n, int) or n < 1 or datos.get("pausado"):
+            continue
+        if solo is not None and show not in solo and show in e:
             continue
         if datos.get("sin_filtro_fecha") or datos.get("curso"):
             continue                      # curso en orden desde el 1: NUNCA se memoriza nada
@@ -1096,11 +1159,39 @@ def main():
     if "--fiestas" in sys.argv:          # solo marcar las fiestas pasadas, sin publicar nada
         fiestas_pasadas(cfgw)
         return 0
+    # (nov/2026) RÁPIDO: si el completo corrió hace menos de una hora (o --rapido), solo se publica
+    # el show al que le llegó algo y lo indispensable para anunciarlo; lo demás (SoundCloud, Apple,
+    # parashá, fiestas, limpieza, espejo, encabezados) lo hace el completo, una vez por hora.
+    # --completo lo fuerza. Así del grupo al anuncio pasa poco tiempo (el resto es lo que tarde Spotify).
+    sello_c = BASE / "jabura" / ".mantenimiento_completo"
+    try:
+        hace = time.time() - sello_c.stat().st_mtime
+    except OSError:
+        hace = 1e9
+    rapido = "--completo" not in sys.argv and ("--rapido" in sys.argv or hace < 3600)
+    if rapido:
+        t0 = time.time()
+        log(f"mantenimiento RÁPIDO (el completo fue hace {int(hace // 60)} min)")
+        alinear_y_marcar(cfgw)
+        rescatar_sin_titulo(cfgw)
+        correo()
+        titulos_jabura()
+        hechos = publicar(cfgw, rapido=True)
+        if "nacach" in hechos:
+            espejo()
+        ids_spotify(cfgw)
+        titulos_fijos(cfgw)
+        sin_fechas_futuras(cfgw)
+        sin_atrasos(cfgw, solo=hechos)
+        log(f"mantenimiento rápido listo en {int(time.time() - t0)} s ({', '.join(sorted(hechos)) or 'nada nuevo'}); "
+            "ahora el robot anuncia.")
+        return 0
+    t_completo = time.time()
     alinear_y_marcar(cfgw)
     rescatar_sin_titulo(cfgw)
     correo()
     titulos_jabura()
-    publicar()
+    publicar(cfgw)
     shalom_bait_semanal(cfgw)
     quitar_del_feed()
     espejo()
@@ -1114,7 +1205,11 @@ def main():
     fiestas_pasadas(cfgw)
     sin_atrasos(cfgw)
     limpieza()
-    log("mantenimiento listo; ahora el robot anuncia.")
+    try:
+        sello_c.write_text(time.strftime("%Y-%m-%d %H:%M:%S"), encoding="utf-8")
+    except Exception:
+        pass
+    log(f"mantenimiento completo listo en {int(time.time() - t_completo)} s; ahora el robot anuncia.")
     return 0
 
 

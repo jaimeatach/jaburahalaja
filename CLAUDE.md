@@ -431,6 +431,16 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    (`bloqueoSagrado` en `anunciarInterno`, también para el botón y el vigilante). `PILOTO_PAUSA.txt`
    lo pausa; ajustes en `jabura\piloto.json`; log en `C:\OTZAR\piloto.log`. Necesita la PC
    prendida: para que funcione con la PC apagada hay que llevarlo a un servidor.
+   Más rápido (4/11, el usuario: "que desde que mandan el shiur al grupo a que lo mando tarde muy poco"):
+   `mantenimiento.py` sin argumentos es RÁPIDO si el completo corrió hace < 1 h (`jabura\.mantenimiento_completo`):
+   solo publica los shows con audio nuevo desde su `.ultima_publicacion` (fuentes: audios_whatsapp, la
+   carpetaDestino del robot, correo_carpeta) + alinear, títulos fijos, ids, fechas y `sin_atrasos` de esos shows
+   (y de los nunca memorizados); lo demás (SoundCloud, Apple, parashá, fiestas, limpieza, encabezados) lo hace
+   el completo cada hora. `--completo` / `--rapido` lo fuerzan. ANUNCIAR.bat lo aprovecha sin cambiar. El piloto
+   corre YouTube en un hilo aparte (antes un audio de WhatsApp esperaba hasta que terminaran los ~20 shows de
+   YouTube) y mientras tanto el mantenimiento va en rápido; da la orden de anunciar cada 5 min (antes 15). Lo que
+   queda de espera es lo que tarde Spotify en tomar el episodio (el robot no anuncia sin su link exacto, salvo
+   `spotify_espera_horas`).
 14. Vigilancia y mudanza (oct/2026): el piloto vuelve a abrir el robot si `robot.lock` no
    se refresca en 3 min (máx. una vez cada 10 min), escribe `C:\OTZAR\piloto_reporte.txt`
    y deja avisos en `<robot>\avisos\*.txt` (reporte de las 7:00, disco < 5 GB, mantenimiento

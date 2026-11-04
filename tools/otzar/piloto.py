@@ -7,7 +7,7 @@ Cada 5 minutos:
      (lo mismo que ANUNCIAR.bat: sube a archive.org, arma el feed, Spotify lo toma de ahí).
      Aunque no haya nada nuevo, el mantenimiento corre una vez por hora (correo, parashá...).
   2. Cada 30 minutos: los shows de YouTube (lo del botón ACTUALIZAR): baja y publica lo nuevo.
-  3. Después de publicar, y cada 15 minutos, le da la orden "anunciar" al robot. El robot
+  3. Después de publicar, y cada 5 minutos, le da la orden "anunciar" al robot. El robot
      solo manda lo que ya tiene su link exacto de Spotify (si todavía no, lo reintenta en la
      siguiente vuelta), y nunca repite.
 Vigila al robot (si se cierra lo vuelve a abrir), deja cada mañana un reporte para el chat que
@@ -21,6 +21,7 @@ import json
 import os
 import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -39,7 +40,7 @@ ESTADO = JAB / "piloto_estado.json"
 REPORTE = BASE / "piloto_reporte.txt"      # lo lee el robot con "!estado"
 AVISOS = ROBOT / "avisos"                  # el robot los manda al chat de "!reporte"
 AUDIO = (".m4a", ".mp3", ".ogg", ".opus", ".aac", ".wav", ".amr", ".pdf", ".doc", ".docx")
-AJUSTES = {"cada_min": 5, "mantenimiento_min": 60, "youtube_min": 30, "anuncio_min": 15,
+AJUSTES = {"cada_min": 5, "mantenimiento_min": 60, "youtube_min": 30, "anuncio_min": 5,
            "desde": "05:30", "hasta": "22:00", "youtube": True, "timeout_show_min": 20,
            "vigilar_robot": True, "reporte_hora": "07:00", "disco_minimo_gb": 5}
 # Yom Tov de la diáspora (sale de @hebcal/core; lo mismo que usa el robot)
@@ -166,12 +167,14 @@ def correr(cmd, cwd, minutos, etiqueta):
     return False
 
 
-def mantenimiento():
+def mantenimiento(rapido=False):
+    """rapido: solo el show al que le llegó algo (lo decide mantenimiento.py; aquí se fuerza mientras
+    YouTube corre en paralelo, para no tocar a la vez los feeds de los shows de YouTube)."""
     if not (JAB / "mantenimiento.py").exists():
         log("no está C:\\OTZAR\\jabura\\mantenimiento.py (corre el instalador)")
         return False
     log("=== MANTENIMIENTO: subir a archive.org y armar los feeds ===")
-    return correr([sys.executable, "mantenimiento.py"], JAB, 45, "mantenimiento")
+    return correr([sys.executable, "mantenimiento.py"] + (["--rapido"] if rapido else []), JAB, 45, "mantenimiento")
 
 
 def shows_youtube():
@@ -368,6 +371,9 @@ def otro_piloto_vivo():
     return False
 
 
+_yt = {"hilo": None}
+
+
 def main():
     if otro_piloto_vivo():
         print("Ya hay otro PILOTO abierto (piloto.lock reciente). Cierra esta ventana.")
@@ -401,22 +407,31 @@ def main():
             log("de vuelta: sigo con lo de siempre")
             avisado = ""
         hubo = False
+        # (nov/2026) YouTube corre en paralelo (antes, mientras bajaba YouTube, un audio de WhatsApp
+        # esperaba hasta media hora). Al terminar, se anuncia lo que bajó.
+        yt_vivo = _yt["hilo"] is not None and _yt["hilo"].is_alive()
+        if _yt["hilo"] is not None and not yt_vivo:
+            _yt["hilo"], hubo = None, True
         nuevo, cual = lo_mas_nuevo()
         if nuevo > ultimo_audio + 1:
             log(f"audio nuevo del robot: {cual}")
             # que el robot termine de escribirlo
-            time.sleep(20)
-            bien = mantenimiento()
+            time.sleep(10)
+            nuevo = max(nuevo, lo_mas_nuevo()[0])
+            bien = mantenimiento(rapido=yt_vivo)
             est["mant_ok"], est["mant_fallos"] = bien, (0 if bien else est.get("mant_fallos", 0) + 1)
             hubo = hubo or bien
-            ultimo_audio, ult_mant = nuevo, time.time()
-        elif time.time() - ult_mant > a["mantenimiento_min"] * 60:
+            ultimo_audio = nuevo
+            if not yt_vivo:
+                ult_mant = time.time()
+        elif time.time() - ult_mant > a["mantenimiento_min"] * 60 and not yt_vivo:
             bien = mantenimiento()
             est["mant_ok"], est["mant_fallos"] = bien, (0 if bien else est.get("mant_fallos", 0) + 1)
             ult_mant, hubo = time.time(), True
-        if a.get("youtube", True) and time.time() - ult_yt > a["youtube_min"] * 60:
-            youtube(a)
-            ult_yt, hubo = time.time(), True
+        if a.get("youtube", True) and time.time() - ult_yt > a["youtube_min"] * 60 and not yt_vivo:
+            _yt["hilo"] = threading.Thread(target=youtube, args=(a,), daemon=True)
+            _yt["hilo"].start()
+            ult_yt = time.time()
         if en_horario(dt.datetime.now(), a) and (hubo or time.time() - ult_anuncio > a["anuncio_min"] * 60):
             recogio = anunciar()
             est["anuncio_fallos"] = 0 if recogio else est.get("anuncio_fallos", 0) + 1
