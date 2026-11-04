@@ -1,0 +1,20 @@
+{
+ "nota": "(nov/2026) Rav Efraim Kachlon (Yoru Mishpatecha). Mezcla mucha política: excluir_titulo (hebreo e inglés, la lista plana puede venir traducida) y 10 min mínimo.",
+ "title": "הרב אפרים כחלון",
+ "author": "הרב אפרים כחלון",
+ "categoria": [
+  "Religion & Spirituality",
+  "Judaism"
+ ],
+ "idioma": "he",
+ "description": "שיעורי אמונה, יסודות התורה ועבודת השם מאת הרב אפרים כחלון. Otzar HaTorah - אוצר התורה.",
+ "youtube": {
+  "url": "https://www.youtube.com/channel/UC5PoXpwCMBfuq1HbsnSWjmA/videos",
+  "nombre": "הרב אפרים כחלון",
+  "revisar_ultimos": 600,
+  "min_minutos": 10,
+  "excluir_titulo": "חרדים|חרדי\\b|בחירות|איראן|טילים|שמאל|ימין|גיוס|לגייס|גיוס|כלא|ממשלה|כנסת|נתניהו|ביבי|לפיד|ערבים|ג'יהאד|דעווה|שלטון|בג\"?ץ|מלחמה|חמאס|חיזבאללה|טראמפ|פוליטי|מפלג|חייל|election|Iran|missile|\\bleft(ist)?\\b|\\bright[- ]wing\\b|draft|enlist|prison|jail|government|Knesset|Netanyahu|Bibi|Lapid|Arab|jihad|Hamas|Hezbollah|Trump|politic|party|army|soldier|Haredi|Charedi|ultra-Orthodox"
+ },
+ "portada_b64": "kachlon_portada.b64",
+ "portada_sha256": "5032916290cb6945b9f9c18546906b30b589291c0bb247b3ce23d514bfa0fdf8"
+}

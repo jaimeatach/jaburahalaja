@@ -5124,6 +5124,36 @@ _PARCHES_YT = [
 ''',
      '''TOPE_VIDEO_SEG = 12 * 60   # === otzar: shiurim largos (con 4 min se saltaban siempre) ===
 '''),
+    # 7) (nov/2026) duración en la lista: "min_minutos" por canal (sin canciones ni clips) y
+    #    "sin_repetir": no baja un video con la MISMA duración (±3 s) que uno ya bajado de otro canal
+    #    (Rav Yechezkel Ozer: Musayof sube los mismos shiurim que su canal).
+    ('''           "--print", "%(id)s\\t%(title)s", url]''',
+     '''           "--print", "%(id)s\\t%(duration|0)s\\t%(title)s", url]   # === otzar: con duración ==='''),
+    ('''        vid, tit = l.split("\\t", 1)
+        vid, tit = vid.strip(), tit.strip()
+        if not vid or vid == "NA": continue''',
+     '''        _p = l.split("\\t", 2)   # === otzar: id, duración, título ===
+        vid, _dur, tit = _p if len(_p) == 3 else (_p[0], "0", _p[1])
+        vid, tit = vid.strip(), tit.strip()
+        if not vid or vid == "NA": continue
+        try:
+            _DUR[vid] = float(_dur or 0)
+        except ValueError:
+            _DUR[vid] = 0.0
+        if _MIN_SEG and 0 < _DUR[vid] < _MIN_SEG: continue        # === otzar: min_minutos ===
+        if not _SIN_REPETIR:
+            _PRIMARIOS[vid] = _DUR[vid]                            # lo del canal principal "aparta" su duración
+        elif _dur_repetida(_DUR[vid]): continue                    # === otzar: sin_repetir ==='''),
+    ('''        _PREFIJO = (ch.get("prefijo") if isinstance(ch, dict) else None) or ""
+''',
+     '''        _PREFIJO = (ch.get("prefijo") if isinstance(ch, dict) else None) or ""
+        _min_y_repetir(ch)   # === otzar: min_minutos / sin_repetir ===
+'''),
+    ('''            if _bajar_uno(vid, tit):
+                _publicar_lote()        # uno baja, uno sube''',
+     '''            if _bajar_uno(vid, tit):
+                _guardar_dur(vid)       # === otzar: para sin_repetir ===
+                _publicar_lote()        # uno baja, uno sube'''),
     # 3) candado: si el piloto y una ventana a mano lo corren a la vez, el segundo no hace nada
     ('''def main():
     cmd = sys.argv[1].lower() if len(sys.argv) > 1 else "robot"''',
@@ -5193,6 +5223,41 @@ def _candado():
     except OSError:
         pass
 
+
+
+# === otzar (nov/2026): min_minutos y sin_repetir por canal ===
+_DUR, _PRIMARIOS, _MIN_SEG, _SIN_REPETIR = {}, {}, 0, False
+_DUR_ARCH = Path("duraciones.json")
+
+
+def _min_y_repetir(ch):
+    global _MIN_SEG, _SIN_REPETIR
+    ch = ch if isinstance(ch, dict) else {}
+    _MIN_SEG = int(float(ch.get("min_minutos", CFG.get("min_minutos", 0)) or 0) * 60)
+    _SIN_REPETIR = bool(ch.get("sin_repetir"))
+
+
+def _durs_bajadas():
+    try:
+        return json.loads(_DUR_ARCH.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _dur_repetida(d):
+    if not d:
+        return False
+    otras = list(_durs_bajadas().values()) + list(_PRIMARIOS.values())   # bajados + los del canal principal
+    return any(abs(float(x) - d) <= 3 for x in otras if x)
+
+
+def _guardar_dur(vid):
+    try:
+        b = _durs_bajadas()
+        b[vid] = _DUR.get(vid, 0)
+        _DUR_ARCH.write_text(json.dumps(b), encoding="utf-8")
+    except Exception:
+        pass
 '''
 
 
@@ -5264,7 +5329,13 @@ def youtube_nuevo():
         if yt.get("excluir_titulo"):                       # (nov/2026) series/temas que no se bajan
             canal["excluir_titulo"] = yt["excluir_titulo"]
         # (nov/2026) "urls": varias listas del mismo canal (Rabbi Taylor: solo las de Torá, no las de política)
-        c["canales_youtube"] = [dict(canal, url=u) for u in yt["urls"]] if yt.get("urls") else [canal]
+        for k in ("min_minutos", "filtro_titulo"):          # (nov/2026) sin clips cortos / solo ciertos títulos
+            if yt.get(k):
+                canal[k] = yt[k]
+        if yt.get("canales"):                               # varios canales, cada uno con sus filtros
+            c["canales_youtube"] = [dict(canal, **x) for x in yt["canales"]]
+        else:
+            c["canales_youtube"] = [dict(canal, url=u) for u in yt["urls"]] if yt.get("urls") else [canal]
         if yt.get("quitar_del_titulo"):
             c["quitar_del_titulo"] = yt["quitar_del_titulo"]
         c["revisar_ultimos"] = canal["revisar_ultimos"]

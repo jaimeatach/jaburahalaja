@@ -1,0 +1,21 @@
+{
+ "nota": "(nov/2026) Rav Reuven Elbaz, Rosh Yeshivat Or HaJaim. Canal 'חובבי אור החיים' (no oficial, 1.4K videos, quieto desde mayo/2026): solo shiurim (filtro) de 15 min o más; sin canciones ni clips.",
+ "title": "הרב ראובן אלבז שליט״א · אור החיים",
+ "author": "הרב ראובן אלבז שליט״א",
+ "categoria": [
+  "Religion & Spirituality",
+  "Judaism"
+ ],
+ "idioma": "he",
+ "description": "שיעורי המוסר השבועיים וביאורים על פרשת השבוע מאת ראש ישיבת אור החיים, הרב ראובן אלבז שליט״א. Otzar HaTorah - אוצר התורה.",
+ "youtube": {
+  "url": "https://www.youtube.com/channel/UCOAadJ9oU_GNK9BImoxLbNA/videos",
+  "nombre": "אור החיים",
+  "revisar_ultimos": 1500,
+  "min_minutos": 15,
+  "filtro_titulo": "שיעור|ביאור|פרשת|מוסר|דרשה|lesson|lecture|class|shiur|portion|parash|musar|sermon|explan",
+  "quitar_del_titulo": "^\\s*הרב (ראובן )?אלבז\\s*[–-]\\s*"
+ },
+ "portada_b64": "reuvenelbaz_portada.b64",
+ "portada_sha256": "2ef2f0cb27bbe8b1340a7181e9c25ea58ee70e37cad62e95069b7d2b5bfe61d4"
+}

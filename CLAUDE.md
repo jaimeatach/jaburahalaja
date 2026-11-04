@@ -492,6 +492,12 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    `pinchastaylor` (Jabad, inglés): su canal sube casi pura política, así que `youtube.urls` = solo sus listas de
    Torá (una entrada de `canales_youtube` por lista) y `youtube.excluir_titulo` con nombres de políticos. Portadas =
    la foto del canal a 1400 (yt3.googleusercontent.com `=s1400`).
+   Y (4/11) `yechezkelozer` (su canal + Musayof @musayof-livestream filtrado por su nombre), `reuvenelbaz` (canal
+   no oficial de Or HaJaim, solo shiurim), `lugasi` (solo los de 20+ min) y `kachlon` (sin política). Parche 7 de
+   `_PARCHES_YT`: la lista plana trae la duración; por canal `min_minutos` (sin canciones ni clips), `filtro_titulo` y
+   `sin_repetir` (no baja un video con la misma duración ±3 s que uno ya bajado o listado en el canal principal:
+   Musayof sube los mismos shiurim que el canal de Rav Ozer; `duraciones.json` en la carpeta del show).
+   `youtube.canales` en canales/<clave>.json: lista de {url, filtros} (uno por canal_youtube).
 17. Rab Itzjak Yosef (nov/2026): Benny Cattan manda el link de YouTube por WhatsApp y un módulo del
    usuario (no está en el repo) lo baja y lo agrega a NUESTRO feed (rabmeireliyahu.github.io/
    ravyitzchakyosef/feed.xml, 64 shiurim limpios, el 2/11). El 2/11 el show de Spotify

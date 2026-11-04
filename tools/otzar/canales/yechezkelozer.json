@@ -1,0 +1,33 @@
+{
+ "nota": "(nov/2026) Rav Yechezkel Ozer (Beitar Illit). Su canal + el de Musayof (@musayof-livestream) filtrado por su nombre; Musayof sube los MISMOS shiurim que su canal, así que ese canal va con sin_repetir (misma duración ±3 s = repetido).",
+ "title": "הרב יחזקאל עוזר שליט״א",
+ "author": "הרב יחזקאל עוזר שליט״א",
+ "categoria": [
+  "Religion & Spirituality",
+  "Judaism"
+ ],
+ "idioma": "he",
+ "description": "שיעורים בפרשת השבוע, במועדים ובאמונה מאת הרב יחזקאל עוזר שליט״א. Otzar HaTorah - אוצר התורה.",
+ "youtube": {
+  "url": "https://www.youtube.com/channel/UCbwaNiW2kYuT4ECYVr4YkKg/videos",
+  "nombre": "הרב יחזקאל עוזר",
+  "revisar_ultimos": 600,
+  "min_minutos": 15,
+  "quitar_del_titulo": "^\\s*הרב יחזקאל עוזר\\s*(שליט\\S*)?\\s*[•|–-]\\s*",
+  "canales": [
+   {
+    "url": "https://www.youtube.com/channel/UCbwaNiW2kYuT4ECYVr4YkKg/videos",
+    "revisar_ultimos": 600
+   },
+   {
+    "url": "https://www.youtube.com/channel/UCzfDH06s9l74j37DvqMUycg/videos",
+    "nombre": "מוסאיוף · הרב יחזקאל עוזר",
+    "revisar_ultimos": 1500,
+    "filtro_titulo": "עוזר|Ozer|Uzer|Oser|Ozair|Ozar",
+    "sin_repetir": true
+   }
+  ]
+ },
+ "portada_b64": "yechezkelozer_portada.b64",
+ "portada_sha256": "b07d77b853d43389fb51527f706877557ae0152e83b85996fbc86d9f09b27b14"
+}

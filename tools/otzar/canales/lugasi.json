@@ -1,0 +1,20 @@
+{
+ "nota": "(nov/2026) Rav Israel Nissim Lugasi (Ahavat Israel), canal oficial: solo los shiurim de 20 min o más (el semanal); los clips cortos no.",
+ "title": "הרב ישראל נסים לוגסי שליט״א",
+ "author": "הרב ישראל נסים לוגסי שליט״א",
+ "categoria": [
+  "Religion & Spirituality",
+  "Judaism"
+ ],
+ "idioma": "he",
+ "description": "השיעור המרכזי השבועי ושיעורי אמונה ומוסר מאת הרב ישראל נסים לוגסי שליט״א. Otzar HaTorah - אוצר התורה.",
+ "youtube": {
+  "url": "https://www.youtube.com/channel/UCxNUR-6PmmAPNw0r1wxZeTg/videos",
+  "nombre": "הרב ישראל נסים לוגסי",
+  "revisar_ultimos": 1600,
+  "min_minutos": 20,
+  "quitar_del_titulo": "^\\s*(השיעור המרכזי של\\s*)?(כבוד\\s*)?הרב ישראל [ני]סים לוגסי\\s*(שליט\\S*)?\\s*:?\\s*"
+ },
+ "portada_b64": "lugasi_portada.b64",
+ "portada_sha256": "6e46b487b7dcc4386e7b658766e211af0225b8fab2982740003ec5de0a829617"
+}
