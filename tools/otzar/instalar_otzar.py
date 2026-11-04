@@ -5823,6 +5823,46 @@ def sacar_series():
         print("   → Spotify y Apple los quitan cuando releen el feed (una o dos horas)")
 
 
+# ── 60. --drive-sammy[=RUTA]  (nov/2026) ─────────────────────────────────────
+#   Todos los shiurim de todos los podcasts (menos Daf Yomi y Shawat) en un Google Drive para
+#   Sammy, por tema como el de Rab Shweke (Parashá, Jaguim, Halajá por Shulján Aruj, Musar por Rab,
+#   Tanaj, Shmirat HaLashon). El plan (carpeta y nombre de cada shiur) es drive_sammy_plan.json.gz;
+#   drive_sammy.py copia de C:\OTZAR lo que ya está ahí y baja lo demás de archive.org, en su ventana
+#   "DRIVE SAMMY" (minimizada) y, si se apaga la PC, sigue al prenderla hasta terminar.
+#   Sin RUTA: "Mi unidad\Shiurim Otzar HaTorah" del Google Drive para PC.
+def drive_sammy():
+    pedido = next((a for a in sys.argv if a == "--drive-sammy" or a.startswith("--drive-sammy=")), None)
+    if not pedido:
+        return
+    paso(60, "Drive para Sammy (todos los shiurim por tema)")
+    d = BASE / "jabura"
+    d.mkdir(parents=True, exist_ok=True)
+    script = d / "drive_sammy.py"
+    if not (bajar("otzar/drive_sammy.py", script) and bajar("otzar/drive_sammy_plan.json.gz", d / "drive_sammy_plan.json.gz")):
+        return
+    if VER:
+        return
+    ruta = pedido.split("=", 1)[1].strip().strip('"') if "=" in pedido else ""
+    extra = f' "--destino={ruta}"' if ruta else ""
+    py = sys.executable
+    r = subprocess.run([py, str(script), "--revisar"] + ([f"--destino={ruta}"] if ruta else []),
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=900)
+    print((r.stdout or "").rstrip())
+    if "no encontré Google Drive" in (r.stdout or ""):
+        aviso("instala Google Drive para PC (drive.google.com/download) con la cuenta donde va a quedar, "
+              "o corre con --drive-sammy=RUTA")
+        return
+    linea = f'start "DRIVE SAMMY" /min /d "{d}" "{py}" "{script}"{extra}'
+    inicio = Path(os.environ.get("APPDATA", "")) / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
+    if inicio.is_dir():
+        (inicio / "OTZAR_drive_sammy.cmd").write_text(
+            "\r\n".join(["@echo off", "rem Otzar: shiurim al Drive de Sammy (se quita solo al terminar)",
+                           "timeout /t 180 /nobreak >nul", linea]) + "\r\n", encoding="utf-8")
+        ok("si se apaga la PC, sigue sola al prenderla (a los 3 min)")
+    subprocess.Popen(linea, shell=True, cwd=str(d))
+    ok("corriendo en su ventana \"DRIVE SAMMY\" (minimizada). Avance: C:\\OTZAR\\drive_sammy.log")
+
+
 # ── 59. portadas que Apple acepta (nov/2026; siempre) ────────────────────────
 #   Apple no publica un show sin portada cuadrada de 1400 a 3000 px. tools/otzar/canales/portadas_fijas.json
 #   lista las portadas arregladas (base64 + sha256, por el filtro de la PC): se sube como portada.jpg
@@ -5938,6 +5978,7 @@ def main():
     shalom_bait()
     sacar_series()
     portadas_fijas()
+    drive_sammy()
     revisar_todo()
     print("\nListo." if not VER else "\nPrueba en seco terminada: no se cambió nada.")
 

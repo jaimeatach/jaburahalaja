@@ -514,6 +514,17 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    `canales/portadas_fijas.json` (base64 + sha256 en canales/portadas/): se sube como portada.jpg y como
    portada_<fecha>.jpg con el feed apuntando ahí (`portada_fechada`); `portada_sha256` en el config evita
    repetir. Hechas: ravmeir (recorte al centro) y meital (foto del canal @harabanitmeital).
+20. Drive para Sammy (paso [60], `--drive-sammy[=RUTA]`, nov/2026): todos los shiurim de todos los shows
+   (menos dafyomi y shawat, y sin las series sacadas de musar) en un Google Drive por tema, como el de Rab
+   Shweke: `1. Parashá/<libro>/<NN parashá>`, `2. Jaguim/<fiesta>`, `3. Halajá/<Óraj Jaim|Yoré Deá|Even
+   HaEzer|Jóshen Mishpat|Varios temas>/<tema por siman del ש״ע>` (Mishná Berurá y Yalkut Yosef enteros en
+   `00.`), `4. Musar y Emuná/<Rab>`, `5. Tanaj`, `6. Shmirat HaLashon y Ahavat Jésed`. El 4/11: 9,911 shiurim,
+   184 GB. El plan (carpeta + nombre de cada uno) es `tools/otzar/drive_sammy_plan.json.gz`, armado aquí con
+   `tools/otzar/drive_sammy_armar/` (`juntar.py` lee los feeds → `clasificar.py` + `rabs.py`, nombres de los
+   Rabanim; luego gzip de plan_drive.json). En la PC `drive_sammy.py` copia de C:\OTZAR lo que ya está (mismo
+   nombre y tamaño) y baja lo demás de archive.org a "Mi unidad\Shiurim Otzar HaTorah" (detecta Google Drive
+   para PC), sin Shabat, con candado, reanudable, Inicio de Windows hasta terminar, ÍNDICE.txt arriba.
+   Para lo nuevo: volver a armar el plan y correr el paso otra vez (salta lo que ya está).
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre
