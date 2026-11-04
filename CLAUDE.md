@@ -523,7 +523,8 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    ahavatjesed, golan, krohn y meital tenían portada.jpg en 404 y ravmeir era 1280x720.
    `canales/portadas_fijas.json` (base64 + sha256 en canales/portadas/): se sube como portada.jpg y como
    portada_<fecha>.jpg con el feed apuntando ahí (`portada_fechada`); `portada_sha256` en el config evita
-   repetir. Hechas: ravmeir (recorte al centro) y meital (foto del canal @harabanitmeital).
+   repetir. Hechas: ravmeir (recorte al centro), meital (foto del canal @harabanitmeital) y ahavatjesed
+   (el Jafetz Jaim, foto de 1923 coloreada, Wikimedia CC BY-SA 4.0; 4/11).
 20. Drive para Sammy (paso [60], `--drive-sammy[=RUTA]`, nov/2026): todos los shiurim de todos los shows
    (menos dafyomi = Daf Yomi de Vaserman/Jabrutouch y shawat, ya ordenados por masejet; y sin las series sacadas de musar) en un Google Drive por tema, como el de Rab
    Shweke: `1. Parashá/<libro>/<NN parashá>`, `2. Jaguim/<fiesta>`, `3. Halajá/<Óraj Jaim|Yoré Deá|Even

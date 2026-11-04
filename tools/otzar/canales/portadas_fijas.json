@@ -8,5 +8,10 @@
   "b64": "portadas/meital.b64",
   "sha256": "1b2f0ce56d9e682933e184aea557397e7d9b45927b2c6df96851638e35765723",
   "nota": "foto del canal de YouTube @harabanitmeital, 1400x1400 (antes no tenía portada: 404)"
+ },
+ "ahavatjesed": {
+  "b64": "portadas/ahavatjesed.b64",
+  "sha256": "3ed5b098aef2452feef07c3868c53af4781dd200b6da63f1c7fc66cca671c4cb",
+  "nota": "Apple la rechazaba (portada.jpg en 404): el Jafetz Jaim en Vilna, 1923 (foto coloreada por Yonatan Gavant; Wikimedia Commons 'Chofetz Chaim, 1923.jpg', CC BY-SA 4.0), recorte cuadrado 1400x1400"
  }
 }
