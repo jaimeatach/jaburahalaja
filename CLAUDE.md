@@ -528,9 +528,14 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    MEJOR (4/11, el usuario: "se va a tardar mil en meterlos a su Drive"): `tools/otzar/drive_sammy_colab.ipynb`,
    que Sammy abre en Google Colab con SU cuenta: monta su Drive y baja de archive.org directo a "Mi unidad\Shiurim
    Otzar HaTorah" desde los servidores de Google (sin la PC de Otzar ni su internet), 6 a la vez, reanudable
-   (Ejecutar todo otra vez). Lee el plan del raw de esta rama. Van DENTRO de su carpeta "Colelim Mexico"
+   (Ejecutar todo otra vez). Lee el plan del raw de esta rama. Van DENTRO de su carpeta de Kolelim
    (`CARPETA`, se busca por nombre sin acentos/mayúsculas, hasta 2 niveles, en Mi unidad y unidades compartidas)
    o la del link que pegue en la casilla `LINK_DE_TU_CARPETA` (API de Drive: sube de padre en padre hasta la raíz).
+   Al final (4/11): van en `Kolelim…/Shiurim Otzar HaTorah` (`SUBCARPETA`; "Kolelim/Colelim/Kollelim" con o sin
+   "Mexico") y SIN DUPLICAR lo que Sammy ya tiene: el plan lleva el md5 de archive.org (`m`, 9,706 de 9,911; los
+   de anchor no) y el notebook lista con la API de Drive el md5Checksum de todos sus audios (todas sus unidades):
+   lo que ya tiene no se baja («Ya los tenías (no se bajaron).csv»; sin md5 compara por tamaño > 200 KB).
+   Deja también «MD5 de todos los shiurim.csv» (carpeta, archivo, md5, bytes, fecha).
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre
