@@ -8,7 +8,7 @@ acomodados por tema, al estilo del Drive de Rab Shweke:
     2. Jaguim/<fiesta>                     5. Tanaj/<libro o serie>
     3. Halajá/<Óraj Jaim|Yoré Deá|…>/<tema>  6. Shmirat HaLashon y Ahavat Jésed/<Rab>
 
-    python drive_sammy.py                       (destino: "Mi unidad\\Shiurim Otzar HaTorah" de Google Drive)
+    python drive_sammy.py                       (destino: C:\\PARA SAMMY\\Shiurim Otzar HaTorah)
     python drive_sammy.py --destino=D:\\Carpeta  (otra carpeta)
     python drive_sammy.py --revisar             (solo dice cuánto falta, no baja nada)
 
@@ -26,7 +26,6 @@ import importlib.util
 import json
 import os
 import shutil
-import string
 import subprocess
 import sys
 import threading
@@ -67,28 +66,13 @@ def gb(n):
 
 
 def hallar_destino():
+    """Por defecto una carpeta normal en C: (fuera de C:\\OTZAR, para que ningún robot la toque):
+    queda armada para dársela a Sammy, que la sube a SU Google Drive. --destino=RUTA para otra
+    (un disco externo, o "G:\\Mi unidad\\…" si hay Google Drive para PC con su cuenta)."""
     for a in sys.argv[1:]:
         if a.startswith("--destino="):
             return Path(a.split("=", 1)[1].strip('"'))
-    candidatos = []
-    for letra in string.ascii_uppercase:
-        for mi in ("Mi unidad", "My Drive"):
-            p = Path(f"{letra}:\\") / mi
-            try:
-                if p.is_dir():
-                    candidatos.append(p)
-            except OSError:
-                pass
-    home = Path.home()
-    for mi in ("Mi unidad", "My Drive", "Google Drive"):
-        if (home / mi).is_dir():
-            candidatos.append(home / mi)
-    if not candidatos:
-        return None
-    if len(candidatos) > 1:
-        log("hay más de un Google Drive: " + " · ".join(str(c) for c in candidatos) + f" — uso {candidatos[0]}"
-            " (para otro: --destino=RUTA)")
-    return candidatos[0] / CARPETA
+    return Path(r"C:\PARA SAMMY") / CARPETA
 
 
 def largo(p):
@@ -172,7 +156,7 @@ def terminar(destino, n):
     FIN.write_text(f"Drive para Sammy terminado {dt.datetime.now():%d/%m/%Y %H:%M}: {n} shiurim en {destino}\n",
                    encoding="utf-8")
     log(f"=== TERMINADO: {n} shiurim en {destino}. Ya no se abre al prender la PC. "
-        "Comparte esa carpeta con Sammy desde drive.google.com (clic derecho → Compartir). ===")
+        "Para Sammy: cópiala a un disco externo, o que él la arrastre a su \"Mi unidad\" (Google Drive para PC). ===")
 
 
 def _pid_vivo(pid):
@@ -225,12 +209,14 @@ def una_vuelta(falta, destino, bloqueo, idx):
                 break
             log(f"{b}: no se baja nada; sigo después")
             time.sleep(15 * 60)
-        while shutil.disk_usage("C:\\" if os.name == "nt" else "/").free < MIN_LIBRE_C:
+        while not str(destino).upper().startswith("C:") and \
+                shutil.disk_usage("C:\\" if os.name == "nt" else "/").free < MIN_LIBRE_C:
             log(f"C: con menos de {gb(MIN_LIBRE_C)} libres (Drive aún está subiendo): espero 20 min")
             time.sleep(20 * 60)
-        if shutil.disk_usage(destino).free < MIN_LIBRE_DRIVE + (x["b"] or 0):
-            log("el Drive se llenó: hace falta más espacio en la cuenta de Google. Paro aquí; "
-                "con más espacio se vuelve a abrir (o al prender la PC) y sigue donde se quedó.")
+        minimo = MIN_LIBRE_C if str(destino).upper().startswith("C:") else MIN_LIBRE_DRIVE   # que no se llene C:
+        if shutil.disk_usage(destino).free < minimo + (x["b"] or 0):
+            log(f"{destino.drive or destino} se llenó. Paro aquí; con más espacio se vuelve a abrir "
+                "(o al prender la PC) y sigue donde se quedó.")
             return errores, True
         dest = destino.joinpath(*x["r"], x["n"])
         tmp = TMP / "bajando.part"                  # se baja en C: y ya completo pasa al Drive (no sube pedazos)
@@ -283,10 +269,6 @@ def main():
         return
     plan = json.loads(gzip.decompress(PLAN.read_bytes()).decode("utf-8"))
     destino = hallar_destino()
-    if destino is None:
-        log("no encontré Google Drive en esta PC (\"Mi unidad\"). Instala Google Drive para PC con la cuenta "
-            "donde va a quedar, o di dónde: --destino=RUTA")
-        return
     destino.mkdir(parents=True, exist_ok=True)
     arbol = {}
     for x in plan:
@@ -303,11 +285,10 @@ def main():
     falta = pendientes(plan, destino)
     falta_b = sum(x["b"] or 0 for x in falta)
     libre = shutil.disk_usage(destino).free
-    log(f"=== DRIVE PARA SAMMY → {destino}: {len(plan)} shiurim ({gb(total_b)}); faltan {len(falta)} "
-        f"({gb(falta_b)}); libre en ese Drive: {gb(libre)} ===")
+    log(f"=== SHIURIM PARA SAMMY → {destino}: {len(plan)} shiurim ({gb(total_b)}); faltan {len(falta)} "
+        f"({gb(falta_b)}); libre en ese disco: {gb(libre)} ===")
     if falta_b > libre:
-        log(f"OJO: el Drive tiene {gb(libre)} libres y faltan {gb(falta_b)}. Hace falta un plan de Google "
-            "con más espacio (200 GB o más); mientras, bajo lo que quepa.")
+        log(f"OJO: ese disco tiene {gb(libre)} libres y faltan {gb(falta_b)}; bajo lo que quepa.")
     if REVISAR:
         por = {}
         for x in falta:
@@ -316,7 +297,7 @@ def main():
             print(f"   {k}: faltan {por[k]}")
         return
     if otra_ventana():
-        print("ya hay otra ventana pasando los shiurim al Drive; esta se cierra")
+        print("ya hay otra ventana acomodando los shiurim; esta se cierra")
         return
     threading.Thread(target=refrescar_lock, daemon=True).start()
     bloqueo = bloqueo_piloto()

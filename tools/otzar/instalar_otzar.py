@@ -5829,7 +5829,8 @@ def sacar_series():
 #   Tanaj, Shmirat HaLashon). El plan (carpeta y nombre de cada shiur) es drive_sammy_plan.json.gz;
 #   drive_sammy.py copia de C:\OTZAR lo que ya está ahí y baja lo demás de archive.org, en su ventana
 #   "DRIVE SAMMY" (minimizada) y, si se apaga la PC, sigue al prenderla hasta terminar.
-#   Sin RUTA: "Mi unidad\Shiurim Otzar HaTorah" del Google Drive para PC.
+#   Sin RUTA: C:\PARA SAMMY\Shiurim Otzar HaTorah (carpeta normal, fuera de C:\OTZAR, armada para
+#   dársela a Sammy, que la pone en SU Google Drive); --drive-sammy=RUTA para un disco externo u otra.
 def drive_sammy():
     pedido = next((a for a in sys.argv if a == "--drive-sammy" or a.startswith("--drive-sammy=")), None)
     if not pedido:
@@ -5848,10 +5849,6 @@ def drive_sammy():
     r = subprocess.run([py, str(script), "--revisar"] + ([f"--destino={ruta}"] if ruta else []),
                        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=900)
     print((r.stdout or "").rstrip())
-    if "no encontré Google Drive" in (r.stdout or ""):
-        aviso("instala Google Drive para PC (drive.google.com/download) con la cuenta donde va a quedar, "
-              "o corre con --drive-sammy=RUTA")
-        return
     linea = f'start "DRIVE SAMMY" /min /d "{d}" "{py}" "{script}"{extra}'
     inicio = Path(os.environ.get("APPDATA", "")) / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
     if inicio.is_dir():
