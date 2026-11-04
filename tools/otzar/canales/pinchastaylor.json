@@ -1,0 +1,28 @@
+{
+ "nota": "(nov/2026) Rabbi Pinchas Taylor (Jabad), @pinchastaylor (338K). Lo nuevo del canal es casi todo política: SOLO sus listas de Torá (Torah Portions, Full Lectures, Courses, Moshiach, Deep Thoughts, Q and A) y excluir_titulo para nombres de políticos.",
+ "title": "Rabbi Pinchas Taylor",
+ "description": "Torah portions, lectures and deep thoughts on faith, Moshiach and Jewish life from Rabbi Pinchas Taylor. Otzar HaTorah.",
+ "author": "Rabbi Pinchas Taylor",
+ "categoria": [
+  "Religion & Spirituality",
+  "Judaism"
+ ],
+ "idioma": "en",
+ "youtube": {
+  "url": "https://www.youtube.com/playlist?list=PLA6nj7xIB3mtvVQT0FHCDbHgSpvTeM4VY",
+  "urls": [
+   "https://www.youtube.com/playlist?list=PLA6nj7xIB3mtvVQT0FHCDbHgSpvTeM4VY",
+   "https://www.youtube.com/playlist?list=PLA6nj7xIB3mufFJk2X6jS6zCh6VCBc5X3",
+   "https://www.youtube.com/playlist?list=PLA6nj7xIB3mvFzE8rsUp5oo5ZcWqbVaws",
+   "https://www.youtube.com/playlist?list=PLA6nj7xIB3mt3tFrRQcEPWBhlm1CKcrUx",
+   "https://www.youtube.com/playlist?list=PLA6nj7xIB3mvYbVzGjSc7vTOX3JPxo8Gs",
+   "https://www.youtube.com/playlist?list=PLA6nj7xIB3mt_TlrKFExgBZHLKqd8bkzA"
+  ],
+  "nombre": "Rabbi Pinchas Taylor",
+  "revisar_ultimos": 150,
+  "quitar_del_titulo": "\\s*[|｜–-]\\s*Rabbi\\s+Pinchas\\s+Taylor\\s*$",
+  "excluir_titulo": "Trump|Biden|Obama|Kamala|Harris|Hanson|Glenn Beck|O'?Reilly|Gorka|Gingrich|Keane|Democrat|Republican|election|Musk|Tucker|Carlson|Shapiro|Knowles|Fox News"
+ },
+ "portada_b64": "pinchastaylor_portada.b64",
+ "portada_sha256": "f19b05e06f3e69299f63db7944ab85919158a00928cf5a11b25b644c25e2f4e7"
+}

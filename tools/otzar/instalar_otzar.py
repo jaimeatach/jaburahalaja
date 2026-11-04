@@ -5261,7 +5261,10 @@ def youtube_nuevo():
                  "revisar_ultimos": int(yt.get("revisar_ultimos", 20))}
         if yt.get("prefijo"):
             canal["prefijo"] = yt["prefijo"]
-        c["canales_youtube"] = [canal]
+        if yt.get("excluir_titulo"):                       # (nov/2026) series/temas que no se bajan
+            canal["excluir_titulo"] = yt["excluir_titulo"]
+        # (nov/2026) "urls": varias listas del mismo canal (Rabbi Taylor: solo las de Torá, no las de política)
+        c["canales_youtube"] = [dict(canal, url=u) for u in yt["urls"]] if yt.get("urls") else [canal]
         if yt.get("quitar_del_titulo"):
             c["quitar_del_titulo"] = yt["quitar_del_titulo"]
         c["revisar_ultimos"] = canal["revisar_ultimos"]
@@ -5269,7 +5272,7 @@ def youtube_nuevo():
             if cfgp.exists():
                 respaldar(cfgp)
             escribir(cfgp, json.dumps(c, ensure_ascii=False, indent=2) + "\n")
-        ok(f"config.json: {canal['url']} · los últimos {canal['revisar_ultimos']} · archive.org {c['archive_id']}")
+        ok(f"config.json: {' + '.join(x['url'] for x in c['canales_youtube'])} · los últimos {canal['revisar_ultimos']} · archive.org {c['archive_id']}")
         cab = _cab_github(d)
         if not cab or VER:
             if not cab:

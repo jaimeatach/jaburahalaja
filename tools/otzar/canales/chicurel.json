@@ -1,0 +1,19 @@
+{
+ "nota": "(nov/2026) Rabino Moisés Chicurel, @RabinoMoisésChicurel (36K, ~420 videos). Portada = la foto del canal (1400).",
+ "title": "Rabino Moisés Chicurel",
+ "description": "Judaísmo, Torá y filosofía para la vida. Clases del Rabino Moisés Chicurel, Rabino Principal de la Comunidad Judía de Madrid y antes de la Comunidad Sefaradí de México. Otzar HaTorah.",
+ "author": "Rabino Moisés Chicurel",
+ "categoria": [
+  "Religion & Spirituality",
+  "Judaism"
+ ],
+ "idioma": "es",
+ "youtube": {
+  "url": "https://www.youtube.com/channel/UC45GqQn9XFh3lcWcVaSvNJw/videos",
+  "nombre": "Rabino Moisés Chicurel",
+  "revisar_ultimos": 300,
+  "quitar_del_titulo": "\\s*[|｜–-]\\s*(Rab(ino|bi)?\\.?\\s*)?Mois[eé]s\\s+Chicurel\\s*$"
+ },
+ "portada_b64": "chicurel_portada.b64",
+ "portada_sha256": "63d44475d6649d043a51dcf0448fbad5d4d0fff42f31d05a5241a07610eff53e"
+}

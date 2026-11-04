@@ -487,6 +487,11 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    `%(title).170B` y `--replace-in-metadata` (`quitar_del_titulo`: el nombre del Rab al final de cada
    título); sin `prefijo`, porque el bot lo decidía con el título en INGLÉS que da la lista de YouTube
    (traducción automática) y lo repetía. `nombres_cortos` en la carga acorta los que ya bajaron largos.
+   Más shows así (4/11): `chicurel` (Rabino Moisés Chicurel, español), `yitzchakcohen` (Rav Yitzchak Cohen,
+   Shaarei Zohar / Matok MiDvash, hebreo; `quitar_del_titulo` quita "- שיעור תורה מפי הרב יצחק כהן…") y
+   `pinchastaylor` (Jabad, inglés): su canal sube casi pura política, así que `youtube.urls` = solo sus listas de
+   Torá (una entrada de `canales_youtube` por lista) y `youtube.excluir_titulo` con nombres de políticos. Portadas =
+   la foto del canal a 1400 (yt3.googleusercontent.com `=s1400`).
 17. Rab Itzjak Yosef (nov/2026): Benny Cattan manda el link de YouTube por WhatsApp y un módulo del
    usuario (no está en el repo) lo baja y lo agrega a NUESTRO feed (rabmeireliyahu.github.io/
    ravyitzchakyosef/feed.xml, 64 shiurim limpios, el 2/11). El 2/11 el show de Spotify

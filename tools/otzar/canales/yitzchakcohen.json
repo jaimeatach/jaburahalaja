@@ -1,0 +1,19 @@
+{
+ "nota": "(nov/2026) Rav Yitzchak Cohen, Shaarei Zohar / Matok MiDvash, @Rabbi_Yitzchak_Cohen (42K, ~1,600 videos). Portada = el logo del canal (1400).",
+ "title": "הרב יצחק כהן שליט״א · שערי זהר",
+ "description": "שיעורי תורה בספר הזוהר הקדוש על פי מתוק מדבש, ושיעורים בענייני השבוע והמועדים, מאת הרה״ג יצחק כהן שליט״א. Otzar HaTorah - אוצר התורה.",
+ "author": "הרב יצחק כהן שליט״א",
+ "categoria": [
+  "Religion & Spirituality",
+  "Judaism"
+ ],
+ "idioma": "he",
+ "youtube": {
+  "url": "https://www.youtube.com/channel/UCIGLyVKzUvrQSu13xg26E-Q/videos",
+  "nombre": "שערי זהר",
+  "revisar_ultimos": 300,
+  "quitar_del_titulo": "\\s*[-–]\\s*שיעור תורה מפי הרב יצחק כהן.*$"
+ },
+ "portada_b64": "yitzchakcohen_portada.b64",
+ "portada_sha256": "19948b0e7ee8e30cea2836be2517aa1520f382d2ac48b6baad4cc76e8466030d"
+}
