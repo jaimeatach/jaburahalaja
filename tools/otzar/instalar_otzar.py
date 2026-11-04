@@ -5140,10 +5140,14 @@ _PARCHES_YT = [
             _DUR[vid] = float(_dur or 0)
         except ValueError:
             _DUR[vid] = 0.0
-        if _MIN_SEG and 0 < _DUR[vid] < _MIN_SEG: continue        # === otzar: min_minutos ===
-        if not _SIN_REPETIR:
-            _PRIMARIOS[vid] = _DUR[vid]                            # lo del canal principal "aparta" su duración
-        elif _dur_repetida(_DUR[vid]): continue                    # === otzar: sin_repetir ==='''),
+        if _MIN_SEG and 0 < _DUR[vid] < _MIN_SEG: continue        # === otzar: min_minutos ==='''),
+    ('''        out.append((vid, tit))
+    return out''',
+     '''        if not _SIN_REPETIR:            # === otzar: sin_repetir (después de los filtros: solo los de ESTE Rab) ===
+            _PRIMARIOS[vid] = _DUR.get(vid, 0)
+        elif _dur_repetida(_DUR.get(vid, 0)): continue
+        out.append((vid, tit))
+    return out'''),
     ('''        _PREFIJO = (ch.get("prefijo") if isinstance(ch, dict) else None) or ""
 ''',
      '''        _PREFIJO = (ch.get("prefijo") if isinstance(ch, dict) else None) or ""

@@ -1,0 +1,45 @@
+{
+ "nota": "(nov/2026) Rav Lior Glazer. Su 'canal oficial' (@glazerland, 22K) sube también a otros rabinos: filtro por su nombre. Más Musayof y dos canales que suben sus shiurim (הגיע זמן הגאולה, כולל חזון עובדיה בן זכאי), con sin_repetir.",
+ "title": "הרב ליאור גלזר שליט״א",
+ "author": "הרב ליאור גלזר שליט״א",
+ "categoria": [
+  "Religion & Spirituality",
+  "Judaism"
+ ],
+ "idioma": "he",
+ "description": "שיעורים בפרשת השבוע, אמונה ומוסר מאת הרב ליאור גלזר שליט״א. Otzar HaTorah - אוצר התורה.",
+ "youtube": {
+  "url": "https://www.youtube.com/channel/UCPN5dUxxNyashiA9YTg-d-A/videos",
+  "nombre": "הרב ליאור גלזר",
+  "revisar_ultimos": 1500,
+  "min_minutos": 15,
+  "filtro_titulo": "גלזר|Glazer|Glaser",
+  "quitar_del_titulo": "^\\s*(ה?רב\\s*)?ליאור\\s+גלזר\\s*(שליט\\S*)?\\s*[•|–:-]?\\s*",
+  "canales": [
+   {
+    "url": "https://www.youtube.com/channel/UCPN5dUxxNyashiA9YTg-d-A/videos",
+    "revisar_ultimos": 1500
+   },
+   {
+    "url": "https://www.youtube.com/channel/UCzfDH06s9l74j37DvqMUycg/videos",
+    "nombre": "מוסאיוף · הרב ליאור גלזר",
+    "revisar_ultimos": 1500,
+    "sin_repetir": true
+   },
+   {
+    "url": "https://www.youtube.com/channel/UCr4vEHpoUQQuYXGVpgYd6tA/videos",
+    "nombre": "הגיע זמן הגאולה · הרב ליאור גלזר",
+    "revisar_ultimos": 800,
+    "sin_repetir": true
+   },
+   {
+    "url": "https://www.youtube.com/channel/UCn2y_95ph3aCIQ87Fp7Z_0w/videos",
+    "nombre": "חזון עובדיה בן זכאי · הרב ליאור גלזר",
+    "revisar_ultimos": 800,
+    "sin_repetir": true
+   }
+  ]
+ },
+ "portada_b64": "glazer_portada.b64",
+ "portada_sha256": "c374e1ffa931103ff2d68dfbd2f6ac83401d4e4e418d843b919013cb1395a2a9"
+}

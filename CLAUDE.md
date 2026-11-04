@@ -498,6 +498,9 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    `sin_repetir` (no baja un video con la misma duración ±3 s que uno ya bajado o listado en el canal principal:
    Musayof sube los mismos shiurim que el canal de Rav Ozer; `duraciones.json` en la carpeta del show).
    `youtube.canales` en canales/<clave>.json: lista de {url, filtros} (uno por canal_youtube).
+   `yarchi` (HaGaon HaDayan Rav Aharon Yarchi: su canal + Musayof) y `glazer` (Rav Lior Glazer: su canal @glazerland
+   sube también a otros rabinos → filtro por su nombre en todos; + Musayof, "הגיע זמן הגאולה" y "כולל חזון עובדיה בן
+   זכאי", con sin_repetir). El registro de duraciones del canal principal va DESPUÉS de los filtros (solo los de ese Rab).
 17. Rab Itzjak Yosef (nov/2026): Benny Cattan manda el link de YouTube por WhatsApp y un módulo del
    usuario (no está en el repo) lo baja y lo agrega a NUESTRO feed (rabmeireliyahu.github.io/
    ravyitzchakyosef/feed.xml, 64 shiurim limpios, el 2/11). El 2/11 el show de Spotify

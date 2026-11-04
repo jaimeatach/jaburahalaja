@@ -1,0 +1,33 @@
+{
+ "nota": "(nov/2026) HaGaon HaDayan Rav Aharon Yarchi: su canal (shiurim en Musayof, Yazdim, Jazón Yaakov) + Musayof filtrado por su nombre, sin_repetir (misma duración = mismo shiur). 15 min mínimo: los clips cortos (polémicas) no.",
+ "title": "הגאון הדיין הרב אהרן ירחי שליט״א",
+ "author": "הרב אהרן ירחי שליט״א",
+ "categoria": [
+  "Religion & Spirituality",
+  "Judaism"
+ ],
+ "idioma": "he",
+ "description": "שיעורי הלכה, פרשת השבוע ומוסר מאת הגאון הדיין הרב אהרן ירחי שליט״א, בבתי הכנסת מוסאיוף, יזדים וחזון יעקב. Otzar HaTorah - אוצר התורה.",
+ "youtube": {
+  "url": "https://www.youtube.com/channel/UCBDxu077Vlzg04XWxtJ-bGg/videos",
+  "nombre": "הרב אהרן ירחי",
+  "revisar_ultimos": 800,
+  "min_minutos": 15,
+  "quitar_del_titulo": "^\\s*(הגאון\\s*)?(ה?רב\\s*|ר'\\s*)?אהר[ו]?ן\\s+ירחי\\s*(שליט\\S*)?\\s*[•|–-]\\s*",
+  "canales": [
+   {
+    "url": "https://www.youtube.com/channel/UCBDxu077Vlzg04XWxtJ-bGg/videos",
+    "revisar_ultimos": 800
+   },
+   {
+    "url": "https://www.youtube.com/channel/UCzfDH06s9l74j37DvqMUycg/videos",
+    "nombre": "מוסאיוף · הרב אהרן ירחי",
+    "revisar_ultimos": 1500,
+    "filtro_titulo": "ירחי|Yarchi|Yerachi|Yarhi|Yarchy",
+    "sin_repetir": true
+   }
+  ]
+ },
+ "portada_b64": "yarchi_portada.b64",
+ "portada_sha256": "c2abd13880bc0b67e9c8157d43a20f8e3d91505323d09d82b6a2c60bfd58a886"
+}
