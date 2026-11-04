@@ -529,7 +529,8 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    que Sammy abre en Google Colab con SU cuenta: monta su Drive y baja de archive.org directo a "Mi unidad\Shiurim
    Otzar HaTorah" desde los servidores de Google (sin la PC de Otzar ni su internet), 6 a la vez, reanudable
    (Ejecutar todo otra vez). Lee el plan del raw de esta rama. Van DENTRO de su carpeta "Colelim Mexico"
-   (`CARPETA`, se busca por nombre sin acentos/mayúsculas, hasta 2 niveles, en Mi unidad y unidades compartidas).
+   (`CARPETA`, se busca por nombre sin acentos/mayúsculas, hasta 2 niveles, en Mi unidad y unidades compartidas)
+   o la del link que pegue en la casilla `LINK_DE_TU_CARPETA` (API de Drive: sube de padre en padre hasta la raíz).
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre
