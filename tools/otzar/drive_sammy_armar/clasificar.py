@@ -153,6 +153,8 @@ def carpeta(x):
             return ["5. Tanaj", v, rab_de(x)]
     pa = parasha_de(x["t"])
     jag = next((n for n, rx in JAGUIM if re.search(rx, t, re.I) or re.search(rx, tl, re.I)), None)
+    t = re.sub(r"מוצאי שבת|מוצ[\"״]?ש(?![א-ת])|שבת שובה|שבת הגדול|שבת זכור|שבת חזון|שבת נחמו", " ", t)
+    tl = re.sub(r"motza[eé]i shab\w*|shabb?[ao]s shuva|shabbat shuva|shabbat hagadol", " ", tl)
     es_halaja = show in HALAJA_SHOWS or re.search(HALAJA_PAL, t + " " + tl, re.I)
     if es_halaja and (show in HALAJA_SHOWS or not pa):
         tema = next(((sec, tem) for sec, tem, rx in HALAJA_TEMAS if re.search(rx, t, re.I) or re.search(rx, tl, re.I)), None)
@@ -181,14 +183,86 @@ def nombre_archivo(x, ruta):
     return limpiar(base) + (ext if ext in (".mp3", ".m4a", ".ogg", ".wav") else ".mp3")
 
 
+SHABAT_SUB = [
+    ("01. Erev Shabat y Kabalat Shabat", r"ערב שבת|הכנה לשבת|הכנות לשבת|קבלת שבת|תוספת שבת|preparativ|erev shab|horarios|kabalat shab"),
+    ("02. Encendido de velas", r"נרות|הדלקת|לאור הנר|\bנר\b|velas|candle|ner shab"),
+    ("03. Kidush y Havdalá", r"קידוש|הבדלה|kidush|kiddush|havdal"),
+    ("04. Seudot de Shabat", r"סעודה|סעודות|לחם משנה|כיסוי החלות|זמירות|עונג שבת|seud|zemirot|oneg"),
+    ("05. Bishul y comida caliente", r"בישול|חימום|פלטה|הטמנה|סיר|bishul|plata|calentar|hot food|cholent|jamin"),
+    ("06. Muktzé", r"מוקצה|טלטול|muktz|muktse"),
+    ("07. Melajot", r"מלאכ|בורר|טוחן|לש |כותב|מוחק|קושר|צובע|בונה|סותר|צידה|תולש|קוצר|מכה בפטיש|כיבוי|הבערה|ממרח|סחיטה|melaj|melach|borer|trabajos prohibidos|acciones prohibidas"),
+    ("08. Electricidad", r"חשמל|electric|eléctric|elevador|elevator|מעלית"),
+    ("09. Amirá LeNojrí", r"אמירה לנכרי|לגוי|נכרי|goy|nojri|gentile"),
+    ("10. Eruvín y Hotzaá", r"עירוב|הוצאה|רשות הרבים|eruv|hotza|cargar"),
+    ("11. Refuá y pikúaj néfesh en Shabat", r"רפואה|חולה|תרופ|פיקוח נפש|medicin|enfermo|doctor"),
+]
+SHABAT_SIMAN = [(242, 252, "01. Erev Shabat y Kabalat Shabat"), (253, 259, "05. Bishul y comida caliente"),
+                (260, 270, "02. Encendido de velas"), (271, 273, "03. Kidush y Havdalá"), (274, 300, "04. Seudot de Shabat"),
+                (301, 307, "09. Amirá LeNojrí"), (308, 312, "06. Muktzé"), (313, 344, "07. Melajot"),
+                (345, 365, "10. Eruvín y Hotzaá")]
+MUSAR_TEMAS = [
+    ("01. Emuná y Bitajón", r"אמונה|ביטחון|בטחון|השגחה|hashgaj|emun[aá]|bitaj|bitach|faith|trust in hashem|fe en|confianza"),
+    ("02. Tefilá", r"תפילה|תפלה|להתפלל|תהילים|tefil|prayer|rezo|rezar|tehilim"),
+    ("03. Teshuvá", r"תשובה|חזרה בתשובה|teshuv|repent|arrepent"),
+    ("04. Shalom Bait, pareja y familia", r"שלום בית|זוגיות|נישואין|אשתו|בעל ואשה|זיווג|shalom bait|shalom bayit|marriage|matrimonio|pareja|esposa|marido|wife|husband|zivug|shiduj|shidduch"),
+    ("05. Jinuj y padres e hijos", r"חינוך|ילדים|הורים|כיבוד אב|jinuj|chinuch|parenting|children|hijos|padres"),
+    ("06. Midot (gaavá, kaas, envidia…)", r"מידות|גאווה|ענווה|כעס|קנאה|שנאה|גאוה|מידה|middot|midot|anger|enojo|ira|humildad|humility|arrogan|envidia|jealous|ego"),
+    ("07. Shmirat Einaim y kedushá", r"שמירת עיניים|שמירת העיניים|קדושה|צניעות|יצר הרע|kedush|tzniut|tsniut|einaim|yetzer|yetser"),
+    ("08. Torá y limud", r"לימוד תורה|תלמוד תורה|ללמוד|limud|torah study|estudio de tor"),
+    ("09. Parnasá", r"פרנסה|עושר|כסף|ממון|parnas|money|dinero|riqueza|business|negocio"),
+    ("10. Simjá y avodat Hashem", r"שמחה|simj|simch|happiness|alegr|felicidad"),
+    ("11. Sufrimiento, salud y refuá", r"ייסורים|יסורים|סבל|רפואה|חולה|refu|sufrimiento|suffering|illness|enfermedad|salud"),
+    ("12. Mashíaj y Gueulá", r"משיח|גאולה|mashiach|mashiaj|moshiach|geul|gueul|redemption|redenci"),
+    ("13. Historias y relatos", r"סיפור|מעשה ב|story|stories|historia|relato|cuento"),
+]
+ELUL_SUB = [("1. Elul y Selijot", r"אלול|סליחות|elul|selij|selich"),
+            ("3. Aseret Yemé Teshuvá", r"עשרת ימי תשובה|10 d[ií]as de teshuba|ten days of repentance|shuva|שובה"),
+            ("2. Rosh Hashaná", r".")]
+GEM = {c: v for c, v in zip("אבגדהוזחטיכלמנסעפצקרשת", [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400])}
+
+
+def gematria(s):
+    return sum(GEM.get(c, 0) for c in s)
+
+
+def sub_de(lista, x):
+    t = norm(x["t"]); tl = plano_lat(x["t"])
+    return next((n for n, rx in lista if re.search(rx, t, re.I) or re.search(rx, tl, re.I)), None)
+
+
+def afinar(rutas, todo):
+    """Carpetas que quedaron muy llenas se dividen otra vez (para que todo quede bien ordenado)."""
+    cuenta = collections.Counter(tuple(r) for r in rutas)
+    con_tema = collections.Counter(tuple(r) for r, x in zip(rutas, todo) if sub_de(MUSAR_TEMAS, x))
+    cubre = {k: con_tema[k] / n for k, n in cuenta.items()}     # Musar por tema solo si casi todo tiene tema claro
+    for r, x in zip(rutas, todo):
+        clave = tuple(r)
+        if clave == ("2. Jaguim", "01. Elul, Selijot y Rosh Hashaná"):
+            r.append(sub_de(ELUL_SUB, x))
+        elif clave == ("3. Halajá", "1. Óraj Jaim", "07. Moadim (Jaguim en halajá)"):
+            r.append(next((n for n, rx in JAGUIM if re.search(rx, norm(x["t"]), re.I) or re.search(rx, plano_lat(x["t"]), re.I)),
+                          "12. Varios"))
+        elif clave == ("3. Halajá", "1. Óraj Jaim", "06. Shabat (242-344)"):
+            m = re.search(r"סימן\s+([א-ת\"״׳']+)", norm(x["t"]))
+            n = gematria(m.group(1)) if m else 0
+            r.append(next((nom for a, b, nom in SHABAT_SIMAN if a <= n <= b), None) or sub_de(SHABAT_SUB, x) or "12. Varios")
+        elif clave[-1].startswith("00. Yalkut Yosef"):
+            m = re.search(r"שיעור\s+([א-ת\"״׳']+)", norm(x["t"]))
+            n = gematria(m.group(1)) if m else 0
+            r.append(f"Shiurim {((n - 1) // 100) * 100 + 1:03d}-{((n - 1) // 100 + 1) * 100:03d}" if n else "Varios")
+        elif cuenta[clave] > 60 and clave[0] == "4. Musar y Emuná" and cubre.get(clave, 0) >= 0.6:
+            r.append(sub_de(MUSAR_TEMAS, x) or "14. Varios temas")
+    return rutas
+
+
 if __name__ == "__main__":
     todo = json.load(open(AQUI / "todos_shiurim.json"))
     plan, usados = [], set()
     arbol = collections.Counter()
     todo = [x for x in todo if not any(x['show'] == sh and re.search(rx, x['t'], re.I) for sh, rx in FUERA)]
     print('shiurim:', len(todo), 'GB:', round(sum(x['b'] or 0 for x in todo)/1e9, 1))
-    for x in todo:
-        ruta = [limpiar(p, 120) for p in carpeta(x)]
+    rutas = afinar([[limpiar(p, 120) for p in carpeta(x)] for x in todo], todo)
+    for x, ruta in zip(todo, rutas):
         nom = nombre_archivo(x, ruta)
         clave = "/".join(ruta + [nom]).lower()
         k = 2

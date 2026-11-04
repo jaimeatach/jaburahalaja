@@ -536,6 +536,11 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    de anchor no) y el notebook lista con la API de Drive el md5Checksum de todos sus audios (todas sus unidades):
    lo que ya tiene no se baja («Ya los tenías (no se bajaron).csv»; sin md5 compara por tamaño > 200 KB).
    Deja también «MD5 de todos los shiurim.csv» (carpeta, archivo, md5, bytes, fecha).
+   Subcarpetas (`afinar` en clasificar.py): Elul/Selijot · Rosh Hashaná · Aseret Yemé Teshuvá; Halajá de Shabat
+   por tema (por número de siman si lo dice, si no por palabras); Moadim de halajá por jag; Yalkut Yosef de 100
+   en 100; Musar por tema solo si ≥60% del Rab tiene tema claro (si no, por Rab). "מוצאי שבת"/"שבת שובה" no hacen
+   al shiur de Shabat. 226 carpetas el 4/11. Al rearmar: juntar.py → clasificar.py → pasar `m`/`b` (md5 de
+   archive.org) del plan anterior por url → gzip. El notebook lee el plan de la rama: no cambia su link.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre
