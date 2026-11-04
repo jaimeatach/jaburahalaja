@@ -525,6 +525,10 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    nombre y tamaño) y baja lo demás de archive.org a `C:\PARA SAMMY\Shiurim Otzar HaTorah` (carpeta normal: el usuario no
    tiene Drive en la PC; Sammy la sube a SU Google Drive; `=RUTA` para disco externo), sin Shabat, con candado, reanudable, Inicio de Windows hasta terminar, ÍNDICE.txt arriba.
    Para lo nuevo: volver a armar el plan y correr el paso otra vez (salta lo que ya está).
+   MEJOR (4/11, el usuario: "se va a tardar mil en meterlos a su Drive"): `tools/otzar/drive_sammy_colab.ipynb`,
+   que Sammy abre en Google Colab con SU cuenta: monta su Drive y baja de archive.org directo a "Mi unidad\Shiurim
+   Otzar HaTorah" desde los servidores de Google (sin la PC de Otzar ni su internet), 6 a la vez, reanudable
+   (Ejecutar todo otra vez). Lee el plan del raw de esta rama.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre
