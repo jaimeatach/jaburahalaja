@@ -580,8 +580,9 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    `instalar` una vez; disparador viernes 12:00) arma el Form tipo cuestionario con nombre, calificación y explicación,
    lo guarda en la carpeta "Exámenes Rab Yosef Tawil" y le manda el link por correo. Shas: los podcasts de cada masejet
    están en Anchor (Spotify for Creators), no en C:\OTZAR: `shas_unido.py` pide pegar su RSS o su link de Apple
-   (los guarda en `shas_rss.txt`). Los 30 RSS (5/11) están en `tools/otzar/shas_rss.txt`: 2,208 shiurim; faltan las masejtot שבת, פסחים,
-   ראש השנה, קידושין, שבועות, תמורה y תמיד (sus podcasts no estaban en la lista) y algunos dapim sueltos que no están en sus feeds. Kachlon (5/11): solo títulos de Torá (`filtro_titulo`) y `quitar_del_feed`
+   (los guarda en `shas_rss.txt`). Los 37 RSS (5/11) están en `tools/otzar/shas_rss.txt`: 2,696 shiurim, las 37 masejtot
+   con Guemará; faltan solo dapim sueltos que no están en sus feeds (ב״מ לא; ב״ב נ, קכה, קנו, קסא, קסח; סנהדרין טו, צא, קא;
+   מכות ג; מעילה לג). Kachlon (5/11): solo títulos de Torá (`filtro_titulo`) y `quitar_del_feed`
    (lo pasa el paso [55] desde canales/kachlon.json) sacó lo de política/noticias que ya se había colado.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
