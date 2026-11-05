@@ -566,6 +566,15 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    en 100; Musar por tema solo si ≥60% del Rab tiene tema claro (si no, por Rab). "מוצאי שבת"/"שבת שובה" no hacen
    al shiur de Shabat. 226 carpetas el 4/11. Al rearmar: juntar.py → clasificar.py → pasar `m`/`b` (md5 de
    archive.org) del plan anterior por url → gzip. El notebook lee el plan de la rama: no cambia su link.
+21. Shas unido (5/11/2026): `tools/otzar/shas_unido.py` junta en UN feed (rabmeireliyahu.github.io/shas) los
+   podcasts de una masejet cada uno de Rav Naftali Vasserman (מחוברים לתורה) sin tocarlos: busca en C:\OTZAR los
+   shows cuyo config nombra a וסרמן/מחוברים לתורה y una masejet (o `--rss=archivo`), ordena masejet por masejet
+   (orden del Shas) y daf por daf ("דף י"א ע"ב", "Daf 23b"; la הקדמה antes del daf ב), `itunes:type serial` con
+   fechas seguidas desde 2015 (el primero, el más viejo), mismos mp3, guid "shas-<guid>". `--ver` = prueba en seco.
+   Examen semanal de Tawil: cada viernes la tarea "Examen Tawil" despierta a la sesión de Títulos Tawil, que transcribe
+   las clases de la semana y escribe `tools/otzar/examenes/tawil_<viernes>.txt` (6 preguntas de opción múltiple:
+   3 fáciles, 1 media, 1 medio difícil, 1 muy difícil) y `..._respuestas.txt`; en la PC `examen_tawil.py` lo muestra
+   y lo copia para pegarlo en WhatsApp el Motzaei Shabat (`respuestas` da la clave).
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre
