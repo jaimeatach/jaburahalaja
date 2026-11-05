@@ -21,6 +21,7 @@ import re
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from email.utils import format_datetime, parsedate_to_datetime
@@ -67,9 +68,17 @@ def log(m):
 
 
 def leer(url, crudo=False):
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=120) as r:
-        b = r.read()
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=120) as r:
+            b = r.read()
+    except urllib.error.HTTPError as e:
+        if e.code != 403:
+            raise
+        import subprocess   # Spotify le cierra la puerta a Python; con curl (viene en Windows) sí abre
+        b = subprocess.run(["curl", "-sL", "--ssl-no-revoke", url], capture_output=True, timeout=120).stdout
+        if not b:
+            raise
     return b if crudo else b.decode("utf-8", "replace")
 
 
@@ -154,8 +163,21 @@ def rss_de(link):
             return (j.get("results") or [{}])[0].get("feedUrl")
         except Exception:
             return None
-    if "open.spotify.com" in link:
-        log("  ✗ el link de Spotify no trae el RSS: cópialo de Spotify for Creators (Configuración → Disponibilidad → RSS)")
+    if "open.spotify.com/show/" in link:
+        # Spotify no da el RSS: se toma el nombre del podcast y se busca ese mismo nombre en Apple
+        try:
+            pag = leer(link.split("?")[0])
+            nombre = html.unescape(re.search(r"<title>([^<|]+)", pag).group(1)).strip()
+            j = json.loads(leer("https://itunes.apple.com/search?media=podcast&limit=50&term="
+                                + urllib.parse.quote(nombre)))
+            for r in j.get("results") or []:
+                if (r.get("collectionName") or "").strip() == nombre and r.get("feedUrl"):
+                    log(f"  ✓ {nombre}: RSS encontrado por Apple")
+                    return r["feedUrl"]
+            log(f"  ✗ {nombre}: no está en Apple, así que no veo su RSS. Pega su RSS de Spotify for Creators\n"
+                "    (creators.spotify.com → el podcast → Configuración → Disponibilidad → RSS → Copiar).")
+        except Exception as e:
+            log(f"  ✗ no pude leer {link}: {e}")
         return None
     return link if link.startswith("http") else None
 
@@ -168,7 +190,7 @@ def pedir_links():
         if prev:
             log(f"Uso los {len(prev)} links guardados en {guardado.resolve()} (bórralo para pegar otros).")
             return [r for r in (rss_de(x) for x in prev) if r]
-    log("Pega el RSS de cada masejet (anchor.fm/s/…/podcast/rss) o su link de Apple Podcasts,\n"
+    log("Pega el link de Spotify de cada masejet (o su RSS anchor.fm/s/…/podcast/rss, o su link de Apple),\n"
         "uno por renglón, en el orden que sea. Cuando termines, deja un renglón vacío y Enter.")
     links = []
     while True:
