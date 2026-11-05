@@ -1,5 +1,5 @@
 {
- "nota": "(nov/2026) Rav Efraim Kachlon (Yoru Mishpatecha). Mezcla mucha política: excluir_titulo (hebreo e inglés, la lista plana puede venir traducida) y 10 min mínimo.",
+ "nota": "(nov/2026) Rav Efraim Kachlon (Yoru Mishpatecha). Su canal es casi todo actualidad: SOLO entran títulos de Torá (filtro_titulo: parashá, halajá, Yesodot HaTorá, jaguim, emuná…) y nunca los de política/noticias (excluir_titulo); quitar_del_feed saca del feed lo que ya se había colado (5/11: de 198 quedaban ~90).",
  "title": "הרב אפרים כחלון",
  "author": "הרב אפרים כחלון",
  "categoria": [
@@ -13,8 +13,19 @@
   "nombre": "הרב אפרים כחלון",
   "revisar_ultimos": 600,
   "min_minutos": 10,
-  "excluir_titulo": "חרדים|חרדי\\b|בחירות|איראן|טילים|שמאל|ימין|גיוס|לגייס|גיוס|כלא|ממשלה|כנסת|נתניהו|ביבי|לפיד|ערבים|ג'יהאד|דעווה|שלטון|בג\"?ץ|מלחמה|חמאס|חיזבאללה|טראמפ|פוליטי|מפלג|חייל|election|Iran|missile|\\bleft(ist)?\\b|\\bright[- ]wing\\b|draft|enlist|prison|jail|government|Knesset|Netanyahu|Bibi|Lapid|Arab|jihad|Hamas|Hezbollah|Trump|politic|party|army|soldier|Haredi|Charedi|ultra-Orthodox"
+  "excluir_titulo": "ממשל|בג[\"״׳']?ץ|בן[ -]?גביר|איזנקוט|גנץ|לפיד|ביבי|נתניהו|סמוטריץ|הפסקת אש|צה[\"״]?ל|טיל|איראן|חמאס|חיזבאללה|עזה|חטופ|בחירות|כנסת|ח[\"״]כ|שמאל|ימין|גיוס|לגייס|גיוס|ערבים|ג'יהאד|דעווה|שלטון|מפלג|פוליטי|תקשורת|עיתונ|עולם התורה|חרדים|חרדי\\b|השואה|טראמפ|מלחמ|חייל|צבא|מחאה|הפגנ|שר ה|ראש הממשלה|כלא|משטרה|שופט|election|Iran|missile|Hamas|Hezbollah|Gaza|hostage|ceasefire|Knesset|Netanyahu|Bibi|Lapid|Gantz|Eisenkot|Ben[ -]?Gvir|Smotrich|Supreme Court|government|draft|enlist|army|soldier|IDF|war|Trump|Arab|jihad|politic|Haredi|Charedi|ultra-Orthodox|Holocaust|protest|police|prison|left[- ]wing|right[- ]wing|minister|יועמ|ליברמן|רצח|רוצח|טרור|נוצרי|נזירה|terror|murder",
+  "filtro_titulo": "פרשת|פרשה|יסודות התורה|הלכ|מצו|שבת|תפיל|אמונה|ביטחון|בטחון|השם|תורה|ספירת|העומר|ל[\"״]ג|ראש חודש|ראש השנה|כיפור|סוכות|חנוכה|פורים|פסח|שבועות|תשעה באב|אלול|כשרות|ברכ|תשובה|משיח|גאולה|צדיק|רבי |מוסר|דין|מותר|אסור|יראת|עבודת|נשמה|גן עדן|גיהנום|קבלה|זוהר|רמב[\"״]ם|גמרא|משנה|תהלים|תהילים|חסד|צדקה|שלום בית|חינוך|ציצית|תפילין|מזוזה|קידוש|הבדלה|נר|מקווה|טהר|ענווה|גאווה|כעס|לשון הרע|Parsha|Torah|halach|mitzv|Shabbat|prayer|faith"
  },
  "portada_b64": "kachlon_portada.b64",
- "portada_sha256": "5032916290cb6945b9f9c18546906b30b589291c0bb247b3ce23d514bfa0fdf8"
+ "portada_sha256": "5032916290cb6945b9f9c18546906b30b589291c0bb247b3ce23d514bfa0fdf8",
+ "quitar_del_feed": [
+  [
+   "",
+   "ממשל|בג[\"״׳']?ץ|בן[ -]?גביר|איזנקוט|גנץ|לפיד|ביבי|נתניהו|סמוטריץ|הפסקת אש|צה[\"״]?ל|טיל|איראן|חמאס|חיזבאללה|עזה|חטופ|בחירות|כנסת|ח[\"״]כ|שמאל|ימין|גיוס|לגייס|גיוס|ערבים|ג'יהאד|דעווה|שלטון|מפלג|פוליטי|תקשורת|עיתונ|עולם התורה|חרדים|חרדי\\b|השואה|טראמפ|מלחמ|חייל|צבא|מחאה|הפגנ|שר ה|ראש הממשלה|כלא|משטרה|שופט|election|Iran|missile|Hamas|Hezbollah|Gaza|hostage|ceasefire|Knesset|Netanyahu|Bibi|Lapid|Gantz|Eisenkot|Ben[ -]?Gvir|Smotrich|Supreme Court|government|draft|enlist|army|soldier|IDF|war|Trump|Arab|jihad|politic|Haredi|Charedi|ultra-Orthodox|Holocaust|protest|police|prison|left[- ]wing|right[- ]wing|minister|יועמ|ליברמן|רצח|רוצח|טרור|נוצרי|נזירה|terror|murder"
+  ],
+  [
+   "",
+   "^(?!.*(?:פרשת|פרשה|יסודות התורה|הלכ|מצו|שבת|תפיל|אמונה|ביטחון|בטחון|השם|תורה|ספירת|העומר|ל[\"״]ג|ראש חודש|ראש השנה|כיפור|סוכות|חנוכה|פורים|פסח|שבועות|תשעה באב|אלול|כשרות|ברכ|תשובה|משיח|גאולה|צדיק|רבי |מוסר|דין|מותר|אסור|יראת|עבודת|נשמה|גן עדן|גיהנום|קבלה|זוהר|רמב[\"״]ם|גמרא|משנה|תהלים|תהילים|חסד|צדקה|שלום בית|חינוך|ציצית|תפילין|מזוזה|קידוש|הבדלה|נר|מקווה|טהר|ענווה|גאווה|כעס|לשון הרע|Parsha|Torah|halach|mitzv|Shabbat|prayer|faith))"
+  ]
+ ]
 }

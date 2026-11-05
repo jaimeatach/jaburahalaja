@@ -5343,6 +5343,8 @@ def youtube_nuevo():
         if yt.get("quitar_del_titulo"):
             c["quitar_del_titulo"] = yt["quitar_del_titulo"]
         c["revisar_ultimos"] = canal["revisar_ultimos"]
+        if datos.get("quitar_del_feed"):                   # (5/11) lo que se coló: mantenimiento lo saca del feed
+            c["quitar_del_feed"] = datos["quitar_del_feed"]
         if json.dumps(c, sort_keys=True) != antes and not VER:
             if cfgp.exists():
                 respaldar(cfgp)

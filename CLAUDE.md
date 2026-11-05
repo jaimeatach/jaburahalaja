@@ -575,6 +575,13 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    las clases de la semana y escribe `tools/otzar/examenes/tawil_<viernes>.txt` (6 preguntas de opción múltiple:
    3 fáciles, 1 media, 1 medio difícil, 1 muy difícil) y `..._respuestas.txt`; en la PC `examen_tawil.py` lo muestra
    y lo copia para pegarlo en WhatsApp el Motzaei Shabat (`respuestas` da la clave).
+   El examen va en Google Forms (5/11): la tarea escribe también `tawil_<viernes>.json` (preguntas, 4 opciones, índice
+   correcto, puntos 1/2/3/4 por dificultad, explicación) y `tools/otzar/apps_script_examen.gs` (Apps Script del usuario,
+   `instalar` una vez; disparador viernes 12:00) arma el Form tipo cuestionario con nombre, calificación y explicación,
+   lo guarda en la carpeta "Exámenes Rab Yosef Tawil" y le manda el link por correo. Shas: los podcasts de cada masejet
+   están en Anchor (Spotify for Creators), no en C:\OTZAR: `shas_unido.py` pide pegar su RSS o su link de Apple
+   (los guarda en `shas_rss.txt`). Kachlon (5/11): solo títulos de Torá (`filtro_titulo`) y `quitar_del_feed`
+   (lo pasa el paso [55] desde canales/kachlon.json) sacó lo de política/noticias que ya se había colado.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre

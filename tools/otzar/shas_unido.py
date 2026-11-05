@@ -8,6 +8,8 @@ Todo el Shas de Rav Naftali Vasserman (מחוברים לתורה) en UN solo pod
                                          daf) y publica rabmeireliyahu.github.io/shas/feed.xml
     python shas_unido.py --ver           solo dice qué encontró y en qué orden, sin publicar
     python shas_unido.py --rss=archivo   usa los RSS de ese archivo (uno por línea) en vez de buscar
+    Si no encuentra nada en C:\\OTZAR (los de Anchor), pide pegar el RSS o el link de Apple de cada masejet
+    y los guarda en shas_rss.txt para la próxima vez.
 
 No borra ni cambia los podcasts de cada masejet: el nuevo feed apunta a los MISMOS mp3 (archive.org).
 Volver a correrlo agrega lo nuevo que haya salido en cada masejet.
@@ -142,6 +144,46 @@ def candidatos():
     return feeds
 
 
+def rss_de(link):
+    """RSS de Anchor/Spotify for Creators tal cual; un link de Apple Podcasts → su RSS (API de iTunes)."""
+    link = link.strip().strip('"')
+    m = re.search(r"podcasts\.apple\.com/.*?id(\d{6,})", link)
+    if m:
+        try:
+            j = json.loads(leer(f"https://itunes.apple.com/lookup?id={m.group(1)}"))
+            return (j.get("results") or [{}])[0].get("feedUrl")
+        except Exception:
+            return None
+    if "open.spotify.com" in link:
+        log("  ✗ el link de Spotify no trae el RSS: cópialo de Spotify for Creators (Configuración → Disponibilidad → RSS)")
+        return None
+    return link if link.startswith("http") else None
+
+
+def pedir_links():
+    """Pega los links (RSS de Anchor o link de Apple), uno por renglón; se guardan en shas_rss.txt."""
+    guardado = Path("shas_rss.txt")
+    if guardado.exists():
+        prev = [x.strip() for x in guardado.read_text(encoding="utf-8").splitlines() if x.strip()]
+        if prev:
+            log(f"Uso los {len(prev)} links guardados en {guardado.resolve()} (bórralo para pegar otros).")
+            return [r for r in (rss_de(x) for x in prev) if r]
+    log("Pega el RSS de cada masejet (anchor.fm/s/…/podcast/rss) o su link de Apple Podcasts,\n"
+        "uno por renglón, en el orden que sea. Cuando termines, deja un renglón vacío y Enter.")
+    links = []
+    while True:
+        try:
+            x = input("> ").strip()
+        except EOFError:
+            break
+        if not x:
+            break
+        links += [y for y in re.split(r"\s+", x) if y]
+    if links:
+        guardado.write_text("\n".join(links) + "\n", encoding="utf-8")
+    return [r for r in (rss_de(x) for x in links) if r]
+
+
 def armar(feeds):
     porm, imagen, sin_masejet = {}, "", []
     for url in feeds:
@@ -270,8 +312,9 @@ def main():
             pass
     feeds = candidatos()
     if not feeds:
-        log("No encontré en C:\\OTZAR podcasts de una masejet de Rav Vasserman (מחוברים לתורה).\n"
-            "Pon sus RSS en un archivo (uno por línea) y corre: python shas_unido.py --rss=archivo.txt")
+        feeds = pedir_links()
+    if not feeds:
+        log("Sin links no hay nada que juntar.")
         return 1
     log(f"=== Shas unido: {len(feeds)} podcast(s) de masejet ===")
     lista, imagen = armar(feeds)
