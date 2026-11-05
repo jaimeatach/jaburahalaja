@@ -35,8 +35,8 @@ for a in sys.argv[1:]:
 VER = "--ver" in sys.argv
 USUARIO, REPO = "rabmeireliyahu", "shas"
 PAGES = f"https://{USUARIO}.github.io/{REPO}"
-TITULO = "ש״ס בבלי · הרב נפתלי וסרמן · מחוברים לתורה"
-DESCRIPCION = ("כל הש״ס בבלי, מסכת אחר מסכת ודף אחר דף, בשיעורים של הרב נפתלי וסרמן (מחוברים לתורה). "
+TITULO = "כל הש״ס · תלמוד בבלי המבואר · דף גמרא ב-10 דקות · הרב נפתלי וסרמן"
+DESCRIPCION = ("כל הש״ס בבלי במקום אחד, מסכת אחר מסכת ודף אחר דף: דף גמרא ב-10 דקות עם הרב נפתלי וסרמן (מחוברים לתורה). "
                "Otzar HaTorah - אוצר התורה.")
 AUTOR = "הרב נפתלי וסרמן"
 
@@ -101,6 +101,16 @@ def daf_de(titulo):
     if m:
         n = sum(GEM.get(c, 0) for c in m.group(1))
         return (n or None), (2 if m.group(2) == "ב" else 1)
+    # "בבא בתרא קעו" (Rav Vasserman): el nombre de la masejet y luego el daf en letras
+    resto = t
+    for heb, _ in sorted(MASEJTOT, key=lambda x: -len(x[0])):
+        resto = re.sub(rf"(?<![א-ת]){heb}(?![א-ת])", " ", resto)
+    resto = re.sub(r"מסכת|[-–|·:,.]", " ", resto).strip()
+    m = re.fullmatch(r"([א-ת][א-ת\"״׳']{0,4})(?:\s*(?:ע[\"״׳']?|עמוד)\s*([אב]))?", resto)
+    if m:
+        n = sum(GEM.get(c, 0) for c in m.group(1))
+        if 2 <= n <= 200:
+            return n, (2 if m.group(2) == "ב" else 1)
     m = re.search(r"\b(?:daf|dapim|page)\s*(\d{1,3})\s*([ab])?", t, re.I) or re.search(r"(?<!\d)(\d{1,3})\s*([ab])?(?!\d)", t)
     if m:
         return int(m.group(1)), (2 if (m.group(2) or "").lower() == "b" else 1)
