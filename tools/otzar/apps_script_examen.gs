@@ -73,7 +73,7 @@ function crearExamenTawil() {
     const it = form.addMultipleChoiceItem();
     it.setTitle((i + 1) + '. ' + p.pregunta)
       .setHelpText('Shiur #' + p.shiur)   // sin decir si es fácil o difícil (lo pidió el usuario)
-      .setPoints(p.puntos || 1)
+      .setPoints(1)                  // todas valen 1 punto (lo pidió el usuario)
       .setRequired(true)
       .setChoices(p.opciones.map((o, j) => it.createChoice(o, j === p.correcta)));
     if (p.explicacion) {
