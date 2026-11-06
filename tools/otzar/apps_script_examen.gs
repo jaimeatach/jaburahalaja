@@ -59,7 +59,12 @@ function crearExamenTawil() {
   }
   const props = PropertiesService.getScriptProperties();
   const ya = props.getProperty(ex.nombre);
-  if (ya) { Logger.log('Ya estaba: ' + ya); return ya; }
+  if (ya) {
+    // ya estaba: solo se le aplican los ajustes (abierto a todos + respuestas al final)
+    const f = formDe_(props.getProperty(ex.nombre + '_id'));
+    if (f) ajustar_(f, ex.datos);
+    Logger.log('Ya estaba: ' + ya); return ya;
+  }
 
   const d = ex.datos;
   const form = FormApp.create(d.titulo);
@@ -68,6 +73,7 @@ function crearExamenTawil() {
       .setCollectEmail(false)
       .setProgressBar(true)
       .setConfirmationMessage('¡Gracias por participar! Tizku lemitzvot 🙏');
+  props.setProperty(ex.nombre + '_id', form.getId());
   form.addTextItem().setTitle('Nombre completo').setRequired(true);
   d.preguntas.forEach((p, i) => {
     const it = form.addMultipleChoiceItem();
@@ -88,6 +94,7 @@ function crearExamenTawil() {
     DriveApp.getFileById(form.getId()).moveTo(carpeta);
   } catch (e) { /* si no se puede mover, queda en Mi unidad */ }
 
+  ajustar_(form, d);
   let link = form.getPublishedUrl();
   try { link = form.shortenFormUrl(link); } catch (e) {}
   props.setProperty(ex.nombre, link);
@@ -116,4 +123,41 @@ function mensajeGrupo_(d, link) {
     'Al terminar verán su calificación y las respuestas correctas.\n\n' +
     '👉 ' + link + '\n\n' +
     '¡Hatzlajá a todos! 🙌';
+}
+
+/** Ajustes que el examen necesita siempre:
+ *  - que lo pueda abrir CUALQUIERA con el link (en una cuenta de empresa, Google lo
+ *    deja por omisión solo para la gente de la empresa y los del grupo no entran);
+ *  - que al terminar se vean las respuestas correctas con su explicación (en el mensaje
+ *    final, así no depende de la opción «publicar calificación» del Form). */
+function ajustar_(form, d) {
+  try { form.setRequireLogin(false); } catch (e) { Logger.log('setRequireLogin: ' + e); }
+  try { form.setLimitOneResponsePerUser(false); } catch (e) {}
+  const L = 'abcd';
+  const lineas = (d.preguntas || []).map((p, i) =>
+    (i + 1) + '. ' + L[p.correcta] + ') ' + p.opciones[p.correcta] + (p.explicacion ? '\n   ' + p.explicacion : ''));
+  form.setConfirmationMessage('¡Gracias por participar! Tizku lemitzvot 🙏\n\n✅ Respuestas correctas:\n\n' + lineas.join('\n\n'));
+}
+
+function formDe_(id) {
+  try { if (id) return FormApp.openById(id); } catch (e) {}
+  // los creados antes de guardar su id: el más nuevo de la carpeta
+  try {
+    const cs = DriveApp.getFoldersByName(CARPETA);
+    if (!cs.hasNext()) return null;
+    const fs = cs.next().getFilesByType(MimeType.GOOGLE_FORMS);
+    let mejor = null;
+    while (fs.hasNext()) { const f = fs.next(); if (!mejor || f.getDateCreated() > mejor.getDateCreated()) mejor = f; }
+    return mejor ? FormApp.openById(mejor.getId()) : null;
+  } catch (e) { return null; }
+}
+
+/** Para arreglar a mano el examen que ya se armó (Ejecutar → arreglarExamen). */
+function arreglarExamen() {
+  const ex = bajarExamen_(); if (!ex) return;
+  const props = PropertiesService.getScriptProperties();
+  const f = formDe_(props.getProperty(ex.nombre + '_id'));
+  if (!f) { Logger.log('No encontré el Form en la carpeta ' + CARPETA); return; }
+  ajustar_(f, ex.datos);
+  Logger.log('Listo: ' + f.getPublishedUrl());
 }
