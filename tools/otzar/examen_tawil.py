@@ -7,7 +7,7 @@ Examen semanal de Rab Yosef Tawil (nov/2026).
                                       (Ctrl+V en WhatsApp); también lo guarda en C:\\OTZAR\\tawil\\
     python examen_tawil.py respuestas  las respuestas (para ti, no para el grupo)
 
-Cada viernes antes de Shabat se arma solo (en el repo, tools/otzar/examenes/tawil_<viernes>.txt):
+Cada jueves se arma solo (en el repo, tools/otzar/examenes/tawil_<viernes>.txt):
 6 preguntas de las clases que salieron esa semana, sacadas de lo que dice el Rab en cada audio:
 3 fáciles, 1 media, 1 medio difícil y 1 muy difícil. Las respuestas van en tawil_<viernes>_respuestas.txt.
 """
@@ -48,16 +48,18 @@ def main():
     proximo = hoy + dt.timedelta(days=(4 - hoy.weekday()) % 7)
     viernes = hoy - dt.timedelta(days=(hoy.weekday() - 4) % 7)
     texto, cual = None, None
-    for f in (proximo, viernes, viernes - dt.timedelta(days=7)):
+    # lleva la fecha del viernes; se acepta también la del jueves (el examen se arma el jueves)
+    for f in (proximo, proximo - dt.timedelta(days=1), viernes, viernes - dt.timedelta(days=1), viernes - dt.timedelta(days=7)):
         nombre = f"tawil_{f:%Y-%m-%d}{'_respuestas' if resp else ''}.txt"
         texto = bajar(nombre)
         if texto:
             cual = nombre
             break
     if not texto:
-        print("Todavía no está el examen de esta semana (se arma el viernes en la mañana).")
+        print("Todavía no está el examen de esta semana (se arma el jueves en la mañana).")
         return 1
-    if cual and not (cual.startswith(f"tawil_{viernes:%Y-%m-%d}") or cual.startswith(f"tawil_{proximo:%Y-%m-%d}")):
+    esta = {f"tawil_{x:%Y-%m-%d}" for x in (proximo, proximo - dt.timedelta(days=1), viernes, viernes - dt.timedelta(days=1))}
+    if cual and not any(cual.startswith(x) for x in esta):
         print(f"(OJO: el de esta semana aún no está; este es {cual})\n")
     print(texto)
     try:

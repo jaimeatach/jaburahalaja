@@ -571,14 +571,15 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    shows cuyo config nombra a וסרמן/מחוברים לתורה y una masejet (o `--rss=archivo`), ordena masejet por masejet
    (orden del Shas) y daf por daf ("דף י"א ע"ב", "Daf 23b"; la הקדמה antes del daf ב), `itunes:type serial` con
    fechas seguidas desde 2015 (el primero, el más viejo), mismos mp3, guid "shas-<guid>". `--ver` = prueba en seco.
-   Examen semanal de Tawil: cada viernes la tarea "Examen Tawil" despierta a la sesión de Títulos Tawil, que transcribe
+   Examen semanal de Tawil: cada JUEVES 9:17 (desde el 6/11; antes viernes) la tarea "Examen Tawil (jueves)" despierta a la sesión de Títulos Tawil, que transcribe
    las clases de la semana y escribe `tools/otzar/examenes/tawil_<viernes>.txt` (6 preguntas de opción múltiple:
    3 fáciles, 1 media, 1 medio difícil, 1 muy difícil) y `..._respuestas.txt`; en la PC `examen_tawil.py` lo muestra
    y lo copia para pegarlo en WhatsApp el Motzaei Shabat (`respuestas` da la clave).
    El examen va en Google Forms (5/11): la tarea escribe también `tawil_<viernes>.json` (preguntas, 4 opciones, índice
    correcto, puntos 1/2/3/4 por dificultad, explicación) y `tools/otzar/apps_script_examen.gs` (Apps Script del usuario,
-   `instalar` una vez; disparador viernes 12:00) arma el Form tipo cuestionario con nombre, calificación y explicación,
-   lo guarda en la carpeta "Exámenes Rab Yosef Tawil" y le manda el link por correo. Shas: los podcasts de cada masejet
+   `instalar` una vez; disparador DIARIO 13:00, nunca en Shabat, cada examen una sola vez; acepta la fecha del viernes o la
+   del jueves) arma el Form tipo cuestionario con nombre, calificación y explicación, lo guarda en la carpeta "Exámenes Rab
+   Yosef Tawil" y le manda por correo el MENSAJE PARA EL GRUPO ya armado ("Este es el examen…" + link, `mensajeGrupo_`). Shas: los podcasts de cada masejet
    están en Anchor (Spotify for Creators), no en C:\OTZAR: `shas_unido.py` pide pegar su RSS o su link de Apple
    (los guarda en `shas_rss.txt`). Los 37 RSS (5/11) están en `tools/otzar/shas_rss.txt`: 2,696 shiurim, las 37 masejtot
    con Guemará; faltan solo dapim sueltos que no están en sus feeds (ב״מ לא; ב״ב נ, קכה, קנו, קסא, קסח; סנהדרין טו, צא, קא;
