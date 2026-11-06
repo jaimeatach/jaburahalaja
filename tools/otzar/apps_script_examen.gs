@@ -95,6 +95,17 @@ function crearExamenTawil() {
   } catch (e) { /* si no se puede mover, queda en Mi unidad */ }
 
   ajustar_(form, d);
+  // hoja con las respuestas y la calificación de todos, junto al Form
+  let hoja = '';
+  try {
+    const ss = SpreadsheetApp.create('Respuestas · ' + d.titulo);
+    form.setDestination(FormApp.DestinationType.SPREADSHEET, ss.getId());
+    try {
+      const cs2 = DriveApp.getFoldersByName(CARPETA);
+      if (cs2.hasNext()) DriveApp.getFileById(ss.getId()).moveTo(cs2.next());
+    } catch (e) {}
+    hoja = ss.getUrl();
+  } catch (e) { Logger.log('hoja: ' + e); }
   let link = form.getPublishedUrl();
   try { link = form.shortenFormUrl(link); } catch (e) {}
   props.setProperty(ex.nombre, link);
@@ -103,7 +114,10 @@ function crearExamenTawil() {
     'Ya quedó el examen de esta semana en Google Forms.\n\n' +
     '👇 MENSAJE PARA EL GRUPO (Motzaei Shabat). Copia desde "Shavua Tov" hasta "Hatzlajá a todos" y pégalo en WhatsApp:\n' +
     '────────────────────────\n' + texto + '\n────────────────────────\n\n' +
-    'Respuestas y calificaciones de cada uno: ' + form.getEditUrl() + '  (pestaña «Respuestas»)\n' +
+    'Las respuestas y la calificación de TODOS:\n' +
+    (hoja ? '  • En una hoja de cálculo: ' + hoja + '\n' : '') +
+    '  • En el Form, pestaña «Respuestas»: ' + form.getEditUrl() + '\n' +
+    'Cada quien, al terminar, ve sus respuestas y las correctas con su explicación.\n' +
     'El Form quedó en tu Drive, carpeta «' + CARPETA + '».';
   MailApp.sendEmail(Session.getEffectiveUser().getEmail(), '📝 Examen Tawil listo para el grupo · ' + (d.shiurim_txt || d.titulo), cuerpo);
   Logger.log(cuerpo);
