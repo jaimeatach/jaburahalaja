@@ -94,7 +94,7 @@ function crearExamenTawil() {
   const texto = mensajeGrupo_(d, link);
   const cuerpo =
     'Ya quedó el examen de esta semana en Google Forms.\n\n' +
-    '👇 MENSAJE PARA EL GRUPO (Motzaei Shabat). Copia desde la línea de abajo hasta "hatzlajá" y pégalo en WhatsApp:\n' +
+    '👇 MENSAJE PARA EL GRUPO (Motzaei Shabat). Copia desde "Shavua Tov" hasta "Hatzlajá a todos" y pégalo en WhatsApp:\n' +
     '────────────────────────\n' + texto + '\n────────────────────────\n\n' +
     'Respuestas y calificaciones de cada uno: ' + form.getEditUrl() + '  (pestaña «Respuestas»)\n' +
     'El Form quedó en tu Drive, carpeta «' + CARPETA + '».';
@@ -103,15 +103,17 @@ function crearExamenTawil() {
   return link;
 }
 
-/** El mensaje que se pega en el grupo de WhatsApp. */
+/** El mensaje que se pega en el grupo de WhatsApp (con el estilo que usa el usuario). */
 function mensajeGrupo_(d, link) {
-  const tema = String(d.descripcion || '').split('. ')[0].replace(/\.$/, '');
-  const m = String(d.titulo || '').match(/#\d+\s*[–-]\s*#\d+/);
-  const rango = m ? 'Shiurim ' + m[0].replace(/\s*[–-]\s*/, ' al ') : '';
-  const n = (d.preguntas || []).length || 6;
-  return '📝 *Examen semanal · Rab Yosef Tawil*\n' +
-    (rango ? rango + (tema ? ' · ' + tema : '') + '\n' : (tema ? tema + '\n' : '')) +
-    '\nEste es el examen de las clases de esta semana. Contéstalo aquí 👇\n' + link + '\n\n' +
-    'Son ' + n + ' preguntas. Pon tu nombre completo; ' +
-    'al terminar ves tu calificación y la explicación de cada respuesta.\n\n¡Mucha hatzlajá! 💪';
+  let tema = String(d.descripcion || '').split('. ')[0].replace(/\.$/, '').trim();
+  if (tema) tema = tema.charAt(0).toLowerCase() + tema.slice(1);
+  const m = String(d.titulo || '').match(/#(\d+)\s*[–-]\s*#(\d+)/);
+  const dias = m ? ' (días ' + m[1] + ' al ' + m[2] + ')' : '';
+  return 'Shavua Tov!\n\n' +
+    'Les compartimos la autoevaluación de esta semana' + (tema ? ' sobre ' + tema : '') + dias + '. ' +
+    'Es un pequeño examen para repasar lo que aprendimos.\n\n' +
+    'Este examen es sin premio. El examen con premio será en Kahoot, una vez al mes.\n\n' +
+    'Al terminar verán su calificación y las respuestas correctas.\n\n' +
+    '👉 ' + link + '\n\n' +
+    '¡Hatzlajá a todos! 🙌';
 }
