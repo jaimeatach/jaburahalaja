@@ -18,7 +18,6 @@
 const RAMA = 'claude/shiurim-halachot-shabbat-vriig5';
 const BASE = 'https://raw.githubusercontent.com/jaimeatach/jaburahalaja/' + RAMA + '/tools/otzar/examenes/';
 const CARPETA = 'Exámenes Rab Yosef Tawil';
-const ETIQUETA = { facil: '🟢 Fácil', media: '🟡 Media', medio_dificil: '🟠 Medio difícil', muy_dificil: '🔴 Muy difícil' };
 
 function instalar() {
   ScriptApp.getProjectTriggers()
@@ -73,7 +72,7 @@ function crearExamenTawil() {
   d.preguntas.forEach((p, i) => {
     const it = form.addMultipleChoiceItem();
     it.setTitle((i + 1) + '. ' + p.pregunta)
-      .setHelpText((ETIQUETA[p.nivel] || '') + ' · Shiur #' + p.shiur + ' · ' + (p.puntos || 1) + (p.puntos > 1 ? ' puntos' : ' punto'))
+      .setHelpText('Shiur #' + p.shiur)   // sin decir si es fácil o difícil (lo pidió el usuario)
       .setPoints(p.puntos || 1)
       .setRequired(true)
       .setChoices(p.opciones.map((o, j) => it.createChoice(o, j === p.correcta)));
@@ -113,6 +112,6 @@ function mensajeGrupo_(d, link) {
   return '📝 *Examen semanal · Rab Yosef Tawil*\n' +
     (rango ? rango + (tema ? ' · ' + tema : '') + '\n' : (tema ? tema + '\n' : '')) +
     '\nEste es el examen de las clases de esta semana. Contéstalo aquí 👇\n' + link + '\n\n' +
-    'Son ' + n + ' preguntas (3 fáciles, 1 media, 1 medio difícil y 1 muy difícil). Pon tu nombre completo; ' +
+    'Son ' + n + ' preguntas. Pon tu nombre completo; ' +
     'al terminar ves tu calificación y la explicación de cada respuesta.\n\n¡Mucha hatzlajá! 💪';
 }
