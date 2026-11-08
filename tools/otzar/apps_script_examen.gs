@@ -119,7 +119,7 @@ function crearExamenTawil(e) {
     'Las respuestas y la calificación de TODOS:\n' +
     (hoja ? '  • En una hoja de cálculo: ' + hoja + '\n' : '') +
     '  • En el Form, pestaña «Respuestas»: ' + form.getEditUrl() + '\n' +
-    'Cada quien, al terminar, ve sus respuestas y las correctas con su explicación.\n' +
+    'Cada quien, al terminar, ve su calificación y cuáles tuvo bien y cuáles no («Ver puntuación»).\n' +
     'El Form quedó en tu Drive, carpeta «' + CARPETA + '».';
   const correo = Session.getEffectiveUser().getEmail() || Session.getActiveUser().getEmail();
   Logger.log('Form listo: ' + link + '  · mandando correo a ' + correo);
@@ -146,15 +146,15 @@ function mensajeGrupo_(d, link) {
 /** Ajustes que el examen necesita siempre:
  *  - que lo pueda abrir CUALQUIERA con el link (en una cuenta de empresa, Google lo
  *    deja por omisión solo para la gente de la empresa y los del grupo no entran);
- *  - que al terminar se vean las respuestas correctas con su explicación (en el mensaje
- *    final, así no depende de la opción «publicar calificación» del Form). */
+ *  - al terminar, solo la calificación (lo pidió el usuario, 8/11): cuáles tuvo bien y
+ *    cuáles no, en «Ver puntuación» del propio Form. */
 function ajustar_(form, d) {
   try { form.setRequireLogin(false); } catch (e) { Logger.log('setRequireLogin: ' + e); }
   try { form.setLimitOneResponsePerUser(false); } catch (e) {}
-  const L = 'abcd';
-  const lineas = (d.preguntas || []).map((p, i) =>
-    (i + 1) + '. ' + L[p.correcta] + ') ' + p.opciones[p.correcta] + (p.explicacion ? '\n   ' + p.explicacion : ''));
-  form.setConfirmationMessage('¡Gracias por participar! Tizku lemitzvot 🙏\n\n✅ Respuestas correctas:\n\n' + lineas.join('\n\n'));
+  // Al final solo la calificación: Google enseña cuáles tuvo bien y cuáles no (con la
+  // explicación de cada una) en «Ver puntuación». No se listan las respuestas aquí.
+  form.setConfirmationMessage('¡Gracias por participar! Tizku lemitzvot 🙏\n\n' +
+    'Toca «Ver puntuación» para ver tu calificación y cuáles tuviste bien y cuáles no.');
 }
 
 function formDe_(id) {
