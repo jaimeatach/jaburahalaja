@@ -175,3 +175,12 @@ function arreglarExamen() {
   ajustar_(f, ex.datos);
   Logger.log('Listo: ' + f.getPublishedUrl());
 }
+
+/** Vuelve a armar el examen de esta semana desde cero (cuando Claude lo corrigió):
+ *  Ejecutar → rehacerExamen. Crea un Form NUEVO y te manda el correo con el link nuevo. */
+function rehacerExamen() {
+  const ex = bajarExamen_(); if (!ex) { Logger.log('No encontré el examen'); return; }
+  const props = PropertiesService.getScriptProperties();
+  props.deleteProperty(ex.nombre); props.deleteProperty(ex.nombre + '_id');
+  return crearExamenTawil();
+}

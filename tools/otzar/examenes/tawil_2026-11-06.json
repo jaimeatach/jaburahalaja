@@ -13,72 +13,72 @@
   {
    "nivel": "facil",
    "shiur": 41,
-   "pregunta": "En la noche de Shabat recibimos una neshamá yeterá. ¿En cuántas partes se divide?",
+   "pregunta": "La neshamá yeterá de Shabat se recibe en 3 partes durante el rezo. ¿En qué momento recibimos el rúaj?",
    "opciones": [
-    "2",
-    "3",
-    "4",
-    "7"
+    "En \"Boí Kalá\" de Lejá Dodí",
+    "En el \"Barejú\" de Arvit",
+    "En \"Ufrós Alenu Sukat Shalomeja\"",
+    "En \"Vaijulú\", después de la Amidá"
    ],
    "correcta": 1,
-   "puntos": 1,
-   "explicacion": "Son 3: néfesh, rúaj y neshamá. El néfesh en \"Boí Kalá\", el rúaj en el Barejú de Arvit y la neshamá en \"Ufrós Alenu Sukat Shalomeja\"."
+   "explicacion": "El néfesh se recibe en \"Boí Kalá\", el rúaj en el \"Barejú\" de Arvit (por eso muchos se paran) y la neshamá en \"Ufrós Alenu Sukat Shalomeja\" de Hashkivenu.",
+   "puntos": 1
   },
   {
    "nivel": "facil",
    "shiur": 43,
-   "pregunta": "¿Qué es el \"Mein Sheva\" que dice el jazán en Arvit de Shabat?",
+   "pregunta": "¿Dónde NO se dice el \"Mein Sheva\" (la berajá corta que dice el jazán después de la Amidá de Arvit de Shabat)?",
    "opciones": [
-    "Un piyut que se canta antes de Lejá Dodí",
-    "Las 7 berajot de la Amidá dichas en forma corta, en una sola berajá",
-    "El Kadish que se dice después de Arvit",
-    "Los 7 pesukim de Vaijulú"
+    "En un Bet HaKnéset fijo",
+    "En un lugar donde se reza fijo todos los días",
+    "En un minián que se hace en una casa, no fijo",
+    "En ningún lado se omite: con minián siempre se dice"
    ],
-   "correcta": 1,
-   "puntos": 1,
-   "explicacion": "Es una repetición corta de las 7 berajot en una sola. Solo se dice en un Bet HaKnéset o lugar donde se reza fijo."
+   "correcta": 2,
+   "explicacion": "El Mein Sheva (las 7 berajot de la Amidá en forma corta) solo se dice en un Bet HaKnéset o en un lugar donde se reza fijo; en un minián de una casa no se dice.",
+   "puntos": 1
   },
   {
    "nivel": "facil",
    "shiur": 44,
-   "pregunta": "Al llegar a la casa del Bet HaKnéset en la noche de Shabat, ¿qué dice el Rab que hay que hacer?",
+   "pregunta": "Llegando del Bet HaKnéset en la noche de Shabat, ¿por qué dice el Rab que hay que hacer Kidush cuanto antes?",
    "opciones": [
-    "Sentarse un rato a platicar y después hacer Kidush",
-    "Esperar a que lleguen todos los invitados",
-    "Decir Shalom Alejem y hacer Kidush cuanto antes",
-    "Primero leer la parashá"
+    "Para no hacer esperar a los invitados",
+    "Por \"Zajor et yom haShabat lekadeshó\": el Kidush va al empezar el Shabat",
+    "Porque así se cumple la mitzvá de Tosefet Shabat",
+    "Porque después de una hora ya no se puede hacer Kidush"
    ],
-   "correcta": 2,
-   "puntos": 1,
-   "explicacion": "\"Zajor et yom haShabat lekadeshó\": el Kidush va cuanto antes, al empezar Shabat (sin hacer de eso una discusión con las visitas)."
+   "correcta": 1,
+   "explicacion": "\"Zajor et yom haShabat lekadeshó\": el Kidush tiene que ir cuanto antes, al empezar Shabat. Se dice Shalom Alejem y enseguida Kidush, sin sentarse primero a platicar (y sin hacer de eso una discusión con las visitas).",
+   "puntos": 1
   },
   {
    "nivel": "media",
    "shiur": 39,
-   "pregunta": "Aquí en México, por las montañas que tapan el sol, ¿cuántos minutos antes de la puesta del sol dice el Rab que ya no se haga ninguna melajá?",
+   "pregunta": "Según el Rab, aquí en México (por las montañas que tapan el sol), ¿qué pasa con los 18 minutos antes de la puesta del sol?",
    "opciones": [
-    "3 minutos",
-    "7 minutos",
-    "18 minutos",
-    "40 minutos"
+    "Desde ahí ya está prohibida toda melajá",
+    "Es lo ideal para estar listos (Tosefet Shabat); el límite para no hacer ninguna melajá es 7 minutos antes",
+    "Solo aplican en Yerushalayim, aquí no",
+    "Es el tiempo para que enciendan las mujeres; los hombres pueden seguir hasta la puesta del sol"
    ],
    "correcta": 1,
-   "puntos": 2,
-   "explicacion": "7 minutos, porque con las montañas el sol se deja de ver antes. Lo ideal es estar listos 18 minutos antes (Tosefet Shabat)."
+   "explicacion": "Lo ideal es estar listos 18 minutos antes (Tosefet Shabat); pero, como aquí las montañas tapan el sol antes, el Rab dijo que ya no se haga ninguna melajá desde 7 minutos antes de la puesta del sol.",
+   "puntos": 1
   },
   {
    "nivel": "medio_dificil",
    "shiur": 40,
-   "pregunta": "Tu Bet HaKnéset (o la mayoría de la ciudad) rezó Arvit temprano y recibió Shabat, pero tú todavía no rezaste. ¿Qué pasa contigo?",
+   "pregunta": "Tu Bet HaKnéset (o la mayoría de la ciudad) ya rezó Arvit temprano y recibió Shabat, pero tú todavía no rezaste Minjá. ¿Qué dice el Rab?",
    "opciones": [
-    "Nada: sigues hasta la puesta del sol como si nada",
-    "Ya recibiste Shabat aunque no quieras: ya no puedes hacer melajot, pero todavía puedes rezar Minjá",
-    "Solo recibes Shabat si dijiste \"Boí Kalá\"",
-    "Solo aplica a las mujeres"
+    "Puedes hacer melajot hasta la puesta del sol, porque tú no recibiste Shabat",
+    "Ya no puedes hacer melajot, pero todavía puedes rezar Minjá",
+    "Ya no puedes hacer melajot ni rezar Minjá: reza directo Arvit",
+    "Puedes hacer melajot, pero ya no puedes rezar Minjá"
    ],
    "correcta": 1,
-   "puntos": 3,
-   "explicacion": "Uno se deja llevar por la mayoría de la ciudad o por su Bet HaKnéset: ya recibió Shabat. No puede hacer melajot, pero sí puede rezar Minjá."
+   "explicacion": "Uno se deja llevar por la mayoría de la ciudad o por su Bet HaKnéset: si ellos recibieron Shabat, uno también, aunque no quiera. Ya no puede hacer melajot (solo pedirle a otro, como se estudió), pero sí puede rezar Minjá.",
+   "puntos": 1
   },
   {
    "nivel": "muy_dificil",
@@ -86,13 +86,13 @@
    "pregunta": "En Arvit de Shabat alguien empezó por error la Amidá de entre semana y se dio cuenta a la mitad de la berajá de \"Atá Jonén\". ¿Qué hace?",
    "opciones": [
     "Regresa al principio de la Amidá",
-    "Sigue la Amidá de entre semana hasta el final",
-    "Termina la berajá de \"Atá Jonén\" y luego regresa a \"Atá Kidashta\"",
-    "Se para en ese momento y empieza \"Atá Kidashta\" sin terminar la berajá"
+    "Termina toda la Amidá de entre semana y después reza la de Shabat",
+    "Termina la berajá de \"Atá Jonén\" y luego sigue con \"Atá Kidashta\"",
+    "Se para ahí mismo y empieza \"Atá Kidashta\" sin terminar la berajá"
    ],
    "correcta": 2,
-   "puntos": 4,
-   "explicacion": "Termina ESA berajá y regresa a \"Atá Kidashta\". Si solo había dicho \"Atá…\", sigue directo con \"Atá Kidashta\". Si terminó toda la Amidá de entre semana, la repite."
+   "explicacion": "Si se acuerda a la mitad de una berajá del medio, termina ESA berajá y luego regresa a \"Atá Kidashta\". Si solo había dicho \"Atá…\", sigue directo con \"Atá Kidashta\", que también empieza con \"Atá\". Si terminó toda la Amidá de entre semana, la tiene que repetir.",
+   "puntos": 1
   }
  ]
 }
