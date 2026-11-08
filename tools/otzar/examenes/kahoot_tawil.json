@@ -1,34 +1,34 @@
 {
  "titulo": "Kahoot · Rab Yosef Tawil · desde el Shiur #23",
- "descripcion": "Velas de Shabat, recibir Shabat, Arvit y Kidush: del shiur #23 (13 de octubre) hasta lo que llegue el jueves 12 de noviembre.",
+ "descripcion": "Velas de Shabat, recibir Shabat, Arvit y Kidush: del shiur #23 (13 de octubre) hasta lo que llegue el jueves 12 de noviembre. 35 preguntas.",
  "preguntas": [
   {
    "nivel": "facil",
    "shiur": 24,
    "tiempo": 20,
-   "pregunta": "¿Por qué se acostumbra prender DOS velas de Shabat?",
+   "pregunta": "Las dos velas son por \"Zajor\" y \"Shamor\". ¿En qué dos parashiot está escrito cada uno?",
    "opciones": [
-    "Por el día y la noche de Shabat",
-    "Por \"Zajor\" y \"Shamor\"",
-    "Por el esposo y la esposa",
-    "Por las dos Lujot (Tablas de la Ley)"
+    "Itró y Ki Tisá",
+    "Itró y Vaetjanán",
+    "Mishpatim y Vaetjanán",
+    "Bereshit y Vaetjanán"
    ],
    "correcta": 2,
-   "explicacion": "Una frente a \"Zajor et yom haShabat\" (Itró) y otra frente a \"Shamor\" (Vaetjanán). Con una sola vela también se cumple."
+   "explicacion": "Los Diez Mandamientos están dos veces: en Itró dice \"Zajor et yom haShabat\" y en Vaetjanán \"Shamor\". Por eso se prenden dos velas."
   },
   {
    "nivel": "facil",
    "shiur": 47,
    "tiempo": 20,
-   "pregunta": "¿Qué dos palabras decimos justo antes de empezar \"Vaijulú\" en el Kidush de la noche?",
+   "pregunta": "Las iniciales de \"Yom HaShishí Vaijulú HaShamáyim\" forman…",
    "opciones": [
-    "\"Savrí maranán\"",
-    "\"Shalom Alejem\"",
-    "\"Boí Kalá\"",
-    "\"Yom HaShishí\""
+    "El Shem Kadosh de 72 letras",
+    "La palabra \"Shabat\"",
+    "El Shem \"Shadai\"",
+    "El Shem de Hashem (Yud-Ke-Vav-Ke)"
    ],
    "correcta": 4,
-   "explicacion": "Decimos \"Yom HaShishí\" (de \"vaiehí bóker yom hashishí\"): sus iniciales con las de Vaijulú HaShamáyim forman el Shem Hashem."
+   "explicacion": "Yom (Yud), HaShishí (He), Vaijulú (Vav), HaShamáyim (He): Yud-Ke-Vav-Ke. Las 72 palabras (35+35+2) son las que recuerdan el Shem de 72 letras."
   },
   {
    "nivel": "facil",
@@ -37,12 +37,12 @@
    "pregunta": "¿Cuál es la parte PRINCIPAL del Kidush de la noche, con la que se cumple la mitzvá?",
    "opciones": [
     "Mekadesh HaShabat",
-    "Vaijulú",
+    "Vaijulú, porque dice que Hashem creó el mundo",
     "Boré perí hagafen",
     "Yom HaShishí"
    ],
    "correcta": 1,
-   "explicacion": "El Kidush tiene 3 partes: Vaijulú, Boré perí hagafen y la principal, Mekadesh HaShabat."
+   "explicacion": "El Kidush tiene 3 partes: Vaijulú (Hashem creó el mundo), Boré perí hagafen y la principal, Mekadesh HaShabat."
   },
   {
    "nivel": "media",
@@ -51,8 +51,8 @@
    "pregunta": "Según el Rab, ¿cuál es la costumbre en México: cuántos minutos antes de la puesta del sol se prenden las velas?",
    "opciones": [
     "18 minutos",
-    "20 minutos",
     "30 minutos",
+    "20 minutos",
     "40 minutos"
    ],
    "correcta": 1,
@@ -64,13 +64,13 @@
    "tiempo": 20,
    "pregunta": "¿Dónde está la mitzvá PRINCIPAL de prender las velas de Shabat?",
    "opciones": [
+    "En el comedor, y una vela con berajá en cada cuarto",
     "En la recámara, donde se duerme",
-    "En la cocina, donde se prepara la comida",
     "En el comedor, donde se come",
-    "En la entrada de la casa"
+    "En la cocina, donde se prepara la comida"
    ],
    "correcta": 3,
-   "explicacion": "La mitzvá principal es en el comedor (\"los ojos comen\"); además, toda la casa tiene que tener luz por Shalom Bait."
+   "explicacion": "La mitzvá principal es en el comedor (\"los ojos comen\"). Toda la casa tiene que tener luz por Shalom Bait, pero nadie más dice berajá."
   },
   {
    "nivel": "media",
@@ -78,13 +78,13 @@
    "tiempo": 30,
    "pregunta": "¿Cómo se asocia el hombre a la mitzvá de las velas, según el Rab?",
    "opciones": [
-    "Diciendo él la berajá por su esposa",
+    "Preparando las velas y diciendo él la berajá por su esposa",
     "Revisando que haya luz en toda la casa y preparando las velas",
     "Prendiendo él una de las dos velas",
-    "Prendiendo una vela extra en el comedor con berajá"
+    "Prendiendo una vela extra en el comedor"
    ],
    "correcta": 2,
-   "explicacion": "La mitzvá es de la mujer y no se le puede robar: el hombre revisa que no quede ningún cuarto oscuro y prepara las velas (aceite, mechas). Por eso hubo una pareja que tuvo dos hijos Talmidé Jajamim."
+   "explicacion": "La mitzvá es de la mujer y no se le puede robar: el hombre revisa que no quede ningún cuarto oscuro y prepara las velas (aceite, mechas). Por eso una pareja tuvo dos hijos Talmidé Jajamim."
   },
   {
    "nivel": "dificil",
@@ -92,9 +92,9 @@
    "tiempo": 30,
    "pregunta": "A la mujer se le apagó una vela MIENTRAS todavía estaba prendiendo las demás. ¿Qué dice el Rab?",
    "opciones": [
+    "Puede volver a prenderla, pero repite la berajá",
     "Ya recibió Shabat: se la tiene que pedir a su esposo",
     "Solo si todavía faltan más de 18 minutos",
-    "Solo si todavía no dijo la berajá",
     "Puede volver a prenderla, porque todavía no terminó"
    ],
    "correcta": 4,
@@ -107,12 +107,12 @@
    "pregunta": "¿Por qué el Rab dice que no se prenden las velas con encendedor?",
    "opciones": [
     "Porque al cerrarlo se apaga el fuego, y ya recibió Shabat",
+    "Porque al prenderlo otra vez se hace una melajá nueva",
     "Porque no se considera fuego de vela",
-    "Porque se tiene que prender con cerillo de madera",
-    "Porque es falta de respeto al Shabat"
+    "Porque se tiene que prender con cerillo de madera"
    ],
    "correcta": 1,
-   "explicacion": "Ella recibe Shabat al prender: cerrar el encendedor es apagar fuego. Por lo mismo, el cerillo no se apaga, se deja que se apague solo."
+   "explicacion": "Ella recibe Shabat al prender: soltar el encendedor es apagar fuego. Por lo mismo, el cerillo no se apaga, se deja que se apague solo."
   },
   {
    "nivel": "dificil",
@@ -120,10 +120,10 @@
    "tiempo": 30,
    "pregunta": "Una mujer recibió Shabat SOLA (no con el tzibur). ¿Hasta cuándo le puede pedir a un goy que prenda una luz necesaria?",
    "opciones": [
+    "Hasta 20 minutos después de la puesta del sol",
     "Solo hasta la puesta del sol",
-    "Hasta 3 minutos antes de la puesta del sol",
     "Hasta 15 minutos después de la puesta del sol",
-    "Hasta 20 minutos después de la puesta del sol"
+    "Hasta 3 minutos antes de la puesta del sol"
    ],
    "correcta": 3,
    "explicacion": "Como recibió Shabat sola, en los primeros 15 minutos después de la puesta del sol le puede pedir solo a un goy (no a un judío) que prenda la luz de Shabat o algo de mitzvá."
@@ -148,13 +148,13 @@
    "tiempo": 30,
    "pregunta": "En Yom Tov, ¿cómo dice el Rab que se prenden las velas?",
    "opciones": [
+    "Prender de una vela ya prendida y luego la berajá",
     "Berajá primero y luego prender con un cerillo nuevo",
     "Prender con un cerillo, taparse los ojos y luego la berajá",
-    "Prender de una vela ya prendida y luego la berajá",
     "Berajá primero y luego prender de una vela ya prendida"
    ],
    "correcta": 4,
-   "explicacion": "En Yom Tov, aunque ya recibió el Yom Tov, se puede prender de un fuego ya prendido: primero la berajá y luego prender, y no con un cerillo sino de una vela prendida desde antes."
+   "explicacion": "En Yom Tov se puede prender de un fuego ya prendido: primero la berajá y luego prender, y no con un cerillo sino de una vela prendida desde antes."
   },
   {
    "nivel": "dificil",
@@ -162,13 +162,13 @@
    "tiempo": 30,
    "pregunta": "En un hotel no dejan prender velas y prendes una luz eléctrica (LED). ¿Qué dice el Rab de la berajá?",
    "opciones": [
-    "Se prende sin berajá; quien quiera decirla, que pregunte a su rabino",
-    "Se dice: la luz eléctrica es como una vela",
-    "Sin velas no hay mitzvá: no se prende nada",
-    "Solo con una linterna de pilas se dice berajá"
+    "Sin berajá; quien quiera decirla, que pregunte a su rabino",
+    "Sin berajá, y no hay ninguna opinión que la permita",
+    "Con berajá, si es una linterna de pilas",
+    "Con berajá: la luz eléctrica es como una vela"
    ],
    "correcta": 1,
-   "explicacion": "Hay quienes prohíben el LED, otros el foco de filamento y otros todo lo que no sea vela (\"ner\"). Se prende sin berajá (safek berajot lehakel); hay rabanim grandes que permiten, así que quien quiera, que pregunte a su rabino."
+   "explicacion": "Unos prohíben el LED (no es fuego), otros el foco de filamento y otros todo lo que no sea vela (\"ner\"). Se prende sin berajá (safek berajot lehakel); hay rabanim grandes que permiten, así que quien quiera, que pregunte a su rabino."
   },
   {
    "nivel": "dificil",
@@ -188,15 +188,15 @@
    "nivel": "dificil",
    "shiur": 33,
    "tiempo": 30,
-   "pregunta": "Una pareja casada vive en casa de los papás, come y duerme ahí. ¿A partir de cuándo ya no tiene que prender?",
+   "pregunta": "Una pareja casada se va a vivir con los papás (comen y duermen ahí). ¿Cuándo ya NO tienen que prender ellos?",
    "opciones": [
-    "Desde el primer Shabat",
-    "Si se quedan más de 30 días",
-    "Si se quedan más de 7 días",
-    "Si se quedan más de un año"
+    "Si se quedan más de 30 días, pero solo si son hijos o nietos",
+    "Si se quedan más de 30 días: ya son como de la familia",
+    "Desde el primer Shabat que duermen ahí",
+    "Si se quedan más de 7 días"
    ],
    "correcta": 2,
-   "explicacion": "Si se quedan más de 30 días comiendo y durmiendo ahí, son \"somej al shuljan baal habáyit\": parte de la familia, y la dueña de la casa los saca de su obligación."
+   "explicacion": "Si van a vivir ahí más de 30 días (comen y duermen ahí), ya son \"somej al shuljan baal habáyit\", como parte de la familia: la mamá los saca con su prendida, como a sus hijos. Vale igual para cualquier pareja invitada, aunque no sean hijos ni nietos."
   },
   {
    "nivel": "dificil",
@@ -204,8 +204,8 @@
    "tiempo": 30,
    "pregunta": "Duermen en su casa pero cenan con los papás y quieren irse enseguida. ¿Qué dice el Rab?",
    "opciones": [
+    "Prenden en su casa con poco aceite: lo importante es prender",
     "Prenden donde cenan, porque ahí se come",
-    "Prenden en su casa con poco aceite: basta la intención",
     "No prenden: salen con la prendida de la mamá",
     "Prenden en su casa con aceite que alcance hasta que regresen"
    ],
@@ -219,8 +219,8 @@
    "pregunta": "El esposo viajó solo y duerme en un cuarto de hotel que es solo suyo. ¿Qué dice el Rab?",
    "opciones": [
     "Prende ahí con berajá, si el hotel lo permite",
+    "Prende ahí, pero sin berajá, por si acaso",
     "No prende: sale con la prendida de su esposa",
-    "Prende ahí sin berajá, por si acaso",
     "Solo prende si su horario es más tarde que el de ella"
    ],
    "correcta": 1,
@@ -232,8 +232,8 @@
    "tiempo": 30,
    "pregunta": "La esposa se fue de viaje y prendió allá; el esposo se quedó en su casa. ¿Qué pasa con él?",
    "opciones": [
+    "Tiene que prender, pero sin berajá",
     "Sale con la prendida de ella: \"ishtó kegufó\"",
-    "Prende, pero sin berajá",
     "Tiene que prender: ella no prendió en su propia casa",
     "No tiene que prender porque se quedó en casa"
    ],
@@ -258,7 +258,7 @@
    "nivel": "dificil",
    "shiur": 38,
    "tiempo": 30,
-   "pregunta": "Varias familias SEFARADÍES rentan juntas una casa en Acapulco y quieren prender en el comedor. ¿Qué hacen?",
+   "pregunta": "Varias familias SEFARADÍES rentan juntas una casa y quieren prender en el comedor. ¿Qué hacen?",
    "opciones": [
     "Cada mujer prende con su propia berajá",
     "Prende solo una familia y las demás no prenden",
@@ -266,7 +266,7 @@
     "Prenden todas a la vez y una dice la berajá por todas"
    ],
    "correcta": 4,
-   "explicacion": "Cada una podría prender con berajá en su propio cuarto. En el comedor, los sefaradim no pueden prender todas con berajá: prenden a la vez y una dice la berajá y saca a las demás."
+   "explicacion": "En su propio cuarto cada una podría prender con berajá. En el comedor, los sefaradim no pueden prender todas con berajá (los ashkenazim sí): prenden a la vez y una dice la berajá y saca a las demás."
   },
   {
    "nivel": "dificil",
@@ -302,9 +302,9 @@
    "tiempo": 30,
    "pregunta": "En el Kidush no escuchaste \"Boré perí hagafen\", pero sí todo lo demás. ¿Qué pasa?",
    "opciones": [
-    "No cumpliste: tienes que volver a hacer Kidush",
-    "Cumpliste, pero sin decir tú la berajá no puedes tomar del vino",
     "Cumpliste y puedes tomar del vino normal",
+    "Cumpliste, pero sin decir tú la berajá no puedes tomar del vino",
+    "No cumpliste: tienes que volver a hacer Kidush",
     "Tienes que decir tú Vaijulú y luego tomar"
    ],
    "correcta": 2,
@@ -330,13 +330,13 @@
    "tiempo": 30,
    "pregunta": "Te quedaste dormido y no hiciste Kidush el viernes en la noche. ¿Qué haces el Shabat en la mañana?",
    "opciones": [
-    "Solo el Kidush del día: el de la noche ya se perdió",
     "El Kidush de la noche completo, con Vaijulú",
+    "Solo el Kidush del día: el de la noche ya se perdió",
     "Los dos: el de la noche y luego el del día",
     "El de la noche (con Mekadesh HaShabat), sin Vaijulú"
    ],
    "correcta": 4,
-   "explicacion": "En la mañana hace el Kidush de la noche, con la berajá de Mekadesh HaShabat pero sin Vaijulú, y ya no necesita hacer además el del día."
+   "explicacion": "En la mañana hace el Kidush de la noche, con Boré perí hagafen y Mekadesh HaShabat pero sin Vaijulú, y ya no necesita hacer además el del día."
   },
   {
    "nivel": "dificil",
@@ -345,12 +345,152 @@
    "pregunta": "Según el Rab, en el Kidush del DÍA, ¿cómo se está?",
    "opciones": [
     "Todos sentados alrededor de la mesa",
-    "Todos parados, como en el de la noche",
+    "Todos parados alrededor de la mesa, como en la noche",
     "Solo el que hace Kidush se para",
     "Como quiera cada uno, no importa"
    ],
    "correcta": 1,
    "explicacion": "En la noche los sefaradim se paran (recibimos a la novia); en el del día, al contrario, todos se sientan alrededor de la mesa para estar juntos y salir de su obligación."
+  },
+  {
+   "nivel": "dificil",
+   "shiur": 30,
+   "tiempo": 30,
+   "pregunta": "A la mujer se le hizo tarde y todavía no reza Minjá. ¿Qué le aconseja el Rab?",
+   "opciones": [
+    "Prender normal: según todos puede rezar Minjá después",
+    "No prender hasta rezar Minjá, aunque se pase la hora",
+    "Prender con tenai: \"no recibo Shabat hasta después de Minjá\"",
+    "Rezar Arvit dos veces en lugar de Minjá"
+   ],
+   "correcta": 3,
+   "explicacion": "Lo ideal es rezar Minjá antes de prender. Si ya prendió hay discusión; por eso, si se le hace tarde, que prenda con tenai (no recibo Shabat hasta después de Minjá) y así según todos puede rezar."
+  },
+  {
+   "nivel": "dificil",
+   "shiur": 28,
+   "tiempo": 30,
+   "pregunta": "Un HOMBRE prende las velas y todavía no rezó Minjá. ¿Qué dice el Rab?",
+   "opciones": [
+    "No recibe Shabat, pero conviene que diga \"recibo Shabat\"",
+    "No recibe Shabat; que no diga \"recibo Shabat\" para no perder Minjá",
+    "Recibe Shabat igual que la mujer",
+    "Recibe Shabat, pero puede seguir haciendo melajot"
+   ],
+   "correcta": 2,
+   "explicacion": "El hombre que prende no recibe Shabat, salvo que diga que lo recibe; si no ha rezado Minjá, que no lo diga para no perder Minjá."
+  },
+  {
+   "nivel": "dificil",
+   "shiur": 26,
+   "tiempo": 30,
+   "pregunta": "¿Cuándo dice el Rab que la mujer ya NO puede hacer tenai (condición) al prender?",
+   "opciones": [
+    "Si prende antes de los 18 minutos antes de la puesta del sol",
+    "Nunca: si hay necesidad, siempre puede hacer tenai",
+    "Solo si ya dijo la berajá",
+    "Si prende antes de los 30 minutos antes de la puesta del sol"
+   ],
+   "correcta": 4,
+   "explicacion": "Cuanto más temprano prende, menos se permite la condición: si prende antes de los 30 minutos está obligada a recibir Shabat. Por eso su mamá, que prendía temprano para ir a cuidar a una señora al hospital, se fue caminando."
+  },
+  {
+   "nivel": "dificil",
+   "shiur": 39,
+   "tiempo": 30,
+   "pregunta": "Aunque no digas \"recibo Shabat\", ¿desde cuándo ya lo recibiste, quieras o no?",
+   "opciones": [
+    "En los últimos 3 minutos antes de la puesta del sol",
+    "En los últimos 7 minutos antes de la puesta del sol",
+    "En los últimos 18 minutos antes de la puesta del sol",
+    "Cuando sale la primera estrella"
+   ],
+   "correcta": 1,
+   "explicacion": "En los últimos 3 minutos antes de la puesta del sol ya recibiste Shabat solo. Aquí en México, como las montañas tapan el sol, que no se haga ninguna melajá desde 7 minutos antes, y lo ideal es estar listo 18 minutos antes."
+  },
+  {
+   "nivel": "dificil",
+   "shiur": 41,
+   "tiempo": 30,
+   "pregunta": "En Arvit de Shabat dijiste \"Hashkivenu\" como entre semana. ¿Qué haces?",
+   "opciones": [
+    "Repites solo el final de Hashkivenu",
+    "Repites Hashkivenu completo",
+    "Nada: no se repite, ya cumpliste",
+    "Lo corriges diciendo \"Ufrós alenu\" en la Amidá"
+   ],
+   "correcta": 3,
+   "explicacion": "Aunque en Shabat cambia Hashkivenu, si se equivocó y lo dijo como entre semana no lo repite: ya cumplió. Pero hay que cuidarse de no equivocarse."
+  },
+  {
+   "nivel": "dificil",
+   "shiur": 43,
+   "tiempo": 30,
+   "pregunta": "Un minián reza fijo solo en las noches, sin Séfer Torá. ¿Se dice ahí \"Mein Sheva\"?",
+   "opciones": [
+    "No: solo se dice en un Bet HaKnéset",
+    "Que pregunten a su rabino: hay quienes lo permiten y quienes no",
+    "Sí: como rezan fijo, siempre se dice",
+    "Sí, pero sin la berajá del final"
+   ],
+   "correcta": 2,
+   "explicacion": "Mein Sheva se dice solo en Bet HaKnéset o donde se reza fijo, no en un minián de casa. En un minián fijo solo de noche, sin Séfer Torá, hay quienes permiten y quienes prohíben: que pregunten a su rabino."
+  },
+  {
+   "nivel": "dificil",
+   "shiur": 44,
+   "tiempo": 30,
+   "pregunta": "Llegan del Bet HaKnéset la noche de Shabat. Según el Rab, ¿qué se hace primero?",
+   "opciones": [
+    "Kidush y después Shalom Alejem",
+    "Netilat Yadáyim y después Kidush",
+    "Sentarse a platicar un rato y luego Kidush",
+    "Shalom Alejem y enseguida Kidush"
+   ],
+   "correcta": 4,
+   "explicacion": "\"Zajor… bijnisató\": el Kidush va en cuanto entra Shabat. Se dice Shalom Alejem y enseguida Kidush, sin sentarse primero en el sillón a platicar (y sin pelear con las visitas)."
+  },
+  {
+   "nivel": "dificil",
+   "shiur": 45,
+   "tiempo": 30,
+   "pregunta": "¿Qué agregaron los Jajamim a la mitzvá del Kidush, sin lo cual no se cumple?",
+   "opciones": [
+    "Hacerlo sobre una copa de vino y con seudá",
+    "Hacerlo sobre una copa de vino; la seudá es aparte",
+    "Hacerlo parado y con una copa de vino",
+    "Decir Vaijulú antes de la berajá"
+   ],
+   "correcta": 1,
+   "explicacion": "Kidush es de la Torá (también las mujeres). Los Jajamim dijeron que va sobre una copa de vino y que después tiene que haber seudá: sin vino y sin seudá no se cumple."
+  },
+  {
+   "nivel": "dificil",
+   "shiur": 46,
+   "tiempo": 30,
+   "pregunta": "¿A quién se le puede dar a hacer el Kidush de la noche para toda la casa, según el Rab?",
+   "opciones": [
+    "A cualquiera mayor de bar mitzvá, aunque tenga 13 años",
+    "A un niño que ya sabe leer bien el Kidush",
+    "Mayor de bar mitzvá al que ya le empieza a salir la barba",
+    "Solo al papá de la casa; nadie más puede"
+   ],
+   "correcta": 3,
+   "explicacion": "Como el Kidush de la noche es de la Torá, no se le da a un menor de bar mitzvá; y aun al que recién cumplió no es conveniente: que ya le empiece a salir la barba. Se acostumbra que lo haga el papá."
+  },
+  {
+   "nivel": "dificil",
+   "shiur": 48,
+   "tiempo": 30,
+   "pregunta": "¿Cuántas veces tiene que decir Vaijulú la MUJER el viernes en la noche?",
+   "opciones": [
+    "Tres veces, igual que el hombre",
+    "Una vez, en el Kidush",
+    "Dos: en la Amidá y en el Kidush",
+    "Ninguna, está exenta"
+   ],
+   "correcta": 2,
+   "explicacion": "El hombre lo dice 3 veces (en la Amidá, después de la Amidá y en el Kidush); la mujer está obligada a una, la del Kidush."
   }
  ]
 }
