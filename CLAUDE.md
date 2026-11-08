@@ -575,6 +575,12 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    las clases de la semana y escribe `tools/otzar/examenes/tawil_<viernes>.txt` (6 preguntas de opción múltiple:
    3 fáciles, 1 media, 1 medio difícil, 1 muy difícil) y `..._respuestas.txt`; en la PC `examen_tawil.py` lo muestra
    y lo copia para pegarlo en WhatsApp el Motzaei Shabat (`respuestas` da la clave).
+   Cómo se hace el examen (8/11, lo pidió el usuario: "siempre hazlos difíciles así y bien escuchado"): 6 preguntas, TODAS
+   de 1 punto y sin decir si son fáciles o difíciles; las 4 opciones se parecen (son cosas que de verdad salen en la clase o
+   que suenan bien: otros momentos del rezo, otros minutos, otra regla cercana), nunca opciones obvias o de relleno; cada
+   pregunta y su respuesta salen de lo que DIJO el Rab, transcribiendo el audio COMPLETO y comprobando la frase exacta. El
+   modelo es tawil_2026-11-06.json (la versión difícil). El mensaje para el grupo es el del usuario ("Shavua Tov! Les
+   compartimos la autoevaluación…", `mensajeGrupo_`); `rehacerExamen` en el Apps Script arma un Form nuevo si se corrige.
    El examen va en Google Forms (5/11): la tarea escribe también `tawil_<viernes>.json` (preguntas, 4 opciones, índice
    correcto, puntos 1/2/3/4 por dificultad, explicación) y `tools/otzar/apps_script_examen.gs` (Apps Script del usuario,
    `instalar` una vez; disparador DIARIO 13:00, nunca en Shabat, cada examen una sola vez; acepta la fecha del viernes o la
