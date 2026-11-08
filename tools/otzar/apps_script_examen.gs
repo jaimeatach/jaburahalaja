@@ -51,8 +51,9 @@ function bajarExamen_() {
 function crearExamenTawil(e) {
   const dia = Number(Utilities.formatDate(new Date(), 'America/Mexico_City', 'u'));
   // Shabat: el disparador automático no hace nada (a mano, p. ej. en Motzaei Shabat, sí corre)
-  if (dia === 6 && e && e.triggerUid) return;
+  if (dia === 6 && e && e.triggerUid) { Logger.log('Shabat: el automático no hace nada'); return; }
   const ex = bajarExamen_();
+  Logger.log(ex ? 'Examen encontrado: ' + ex.nombre : 'No encontré el examen en GitHub');
   if (!ex) {
     if (dia === 5 || !(e && e.triggerUid)) MailApp.sendEmail(Session.getEffectiveUser().getEmail(), 'Examen Tawil: todavía no está',
       'Todavía no está el examen de esta semana en el repo. Avísale a Claude.');
@@ -120,7 +121,9 @@ function crearExamenTawil(e) {
     '  • En el Form, pestaña «Respuestas»: ' + form.getEditUrl() + '\n' +
     'Cada quien, al terminar, ve sus respuestas y las correctas con su explicación.\n' +
     'El Form quedó en tu Drive, carpeta «' + CARPETA + '».';
-  MailApp.sendEmail(Session.getEffectiveUser().getEmail(), '📝 Examen Tawil listo para el grupo · ' + (d.shiurim_txt || d.titulo), cuerpo);
+  const correo = Session.getEffectiveUser().getEmail() || Session.getActiveUser().getEmail();
+  Logger.log('Form listo: ' + link + '  · mandando correo a ' + correo);
+  MailApp.sendEmail(correo, '📝 Examen Tawil listo para el grupo · ' + (d.shiurim_txt || d.titulo), cuerpo);
   Logger.log(cuerpo);
   return link;
 }
