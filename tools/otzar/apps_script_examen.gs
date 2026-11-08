@@ -48,12 +48,13 @@ function bajarExamen_() {
   return null;
 }
 
-function crearExamenTawil() {
+function crearExamenTawil(e) {
   const dia = Number(Utilities.formatDate(new Date(), 'America/Mexico_City', 'u'));
-  if (dia === 6) return;                                   // Shabat: nada
+  // Shabat: el disparador automático no hace nada (a mano, p. ej. en Motzaei Shabat, sí corre)
+  if (dia === 6 && e && e.triggerUid) return;
   const ex = bajarExamen_();
   if (!ex) {
-    if (dia === 5) MailApp.sendEmail(Session.getEffectiveUser().getEmail(), 'Examen Tawil: todavía no está',
+    if (dia === 5 || !(e && e.triggerUid)) MailApp.sendEmail(Session.getEffectiveUser().getEmail(), 'Examen Tawil: todavía no está',
       'Todavía no está el examen de esta semana en el repo. Avísale a Claude.');
     return;
   }
