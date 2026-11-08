@@ -1,6 +1,6 @@
 """Arma el Excel para importar en Kahoot desde un examen en JSON.
 
-Uso: python kahoot_xlsx.py examenes/kahoot_tawil_23-50.json
+Uso: python kahoot_xlsx.py examenes/kahoot_tawil.json
 Deja el .xlsx junto al .json, con el formato de la plantilla de Kahoot
 (encabezados en la fila 8, preguntas desde la fila 9; pregunta máx. 120
 caracteres, respuestas máx. 75, tiempo 5/10/20/30/60/90/120/240 s).
