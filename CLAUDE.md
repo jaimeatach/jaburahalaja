@@ -607,3 +607,15 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    Si un parche del robot no entra, el instalador reemplaza el robot entero
    por `tools/otzar/robot_whatsapp.js` (que es el mismo robot parchado), con
    respaldo `.bak_<fecha>`.
+
+23. Rab Beto Turquie (`turquie`, 9/11/2026): show nuevo con `--nuevo=turquie --nuevo-grupo=…KUkxqCaNubuCJUtWa5jGwc
+   --anunciar-en=…` (anuncio en pausa hasta tener Spotify), portada genérica (Sefer con marco dorado, 3000x3000) en
+   `canales/portadas/turquie.b64` (paso [59]). Los viejos (Zoom 2020-2021, Drive 1CXY6jZ5mJh8FUHujrGUJoOASDmXU_oxe) van en
+   `tools/otzar/drive/turquie.json` (27, ordenados y titulados a mano, solo el audio de cada carpeta) y
+   `drive_a_show.py turquie --lista` los baja del Drive con su fecha real: quedan abajo de los de WhatsApp.
+   Pages de `turquie` y `shas` NO quedó prendido por la API (feed en el repo, 404 en github.io): se prende a mano en
+   Settings → Pages (main, root). Sin Pages, podcast_bot no puede leer el feed y no publica.
+   Estadísticas (`estadisticas_op3.py`): todos los feeds pasan por op3.dev; descargas y horas (descargas × duración)
+   por show y rango, con robots aparte (indexadores/research) y "navegador" separado de "apps". Spotify no pasa por
+   OP3 (guarda su copia): sus números salen de Creators. Shows nuevos no tienen datos hasta que estén en Podcast Index.
+   El reporte de Jeshván 5787 está en el panel (artifact Cff7xbGBWcva1F1xKwtKeZ).
