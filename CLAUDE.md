@@ -591,6 +591,15 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    con Guemará; faltan solo dapim sueltos que no están en sus feeds (ב״מ לא; ב״ב נ, קכה, קנו, קסא, קסח; סנהדרין טו, צא, קא;
    מכות ג; מעילה לג). Kachlon (5/11): solo títulos de Torá (`filtro_titulo`) y `quitar_del_feed`
    (lo pasa el paso [55] desde canales/kachlon.json) sacó lo de política/noticias que ya se había colado.
+22. Videos como audio (9/11/2026): Peretz y Ofir Malka a veces mandan el shiur en VIDEO a su grupo fuente y
+   el robot solo subía audio ("SIN AUDIO … llegó un VIDEO"). Ahora (`videoComoAudio`: peretz, ofirmalka o
+   `"videos_como_audio": true` en escuchar.<show>) el robot baja el video, `videoAAudio` le saca el audio con
+   ffmpeg (aac 96k mono, .m4a) y sigue como cualquier audio: el texto del video es el título. `--rescatar=peretz,ofirmalka`
+   pide también los videos (`"videos": true` en rescatar.json) desde la fecha pedida. Parche del instalador (4 hunks,
+   marcas "function videoComoAudio", "r.videos && contenido(m).videoMessage").
+   Davidsohn (9/11): en 14 días el log no tiene NI UN mensaje de su grupo fuente aunque el robot está dentro y le
+   mandaron audios; se pidió rescate (`--rescatar=davidsohn:14`). Tawil #45 (Día 45) no llegó al robot: se subió a
+   mano a rabmeireliyahu/tawil/audios/dia45.mp3 (GitHub Pages, no archive.org), guid dia45.mp3, silenciado.
 7. Tefila y Hilu anuncian con link del show + audio directo (`sin_spotify`,
    `link_audio`) hasta que el show de Spotify lea nuestro feed; el redirect
    lo hace el usuario en Spotify for Creators y luego corre

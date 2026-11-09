@@ -1597,8 +1597,55 @@ function tituloDeTema(show, tit) {
 """, """    const wa = datos.whatsapp_link || (invitesDeShow(datos)[0]) || '';   // (oct/2026) link del grupo del Rab (anuncio por lote)
     const tope = topeDeShow(show);
 """),
+    # (nov/2026) VIDEO COMO AUDIO: Peretz y Ofir mandan a veces el shiur en video
+    ("""function textoDe(m) {
+  const msg = contenido(m);""", """// === VIDEO COMO AUDIO (nov/2026): Peretz y Ofir Malka a veces mandan el shiur en VIDEO ===
+function videoComoAudio(show) {
+  const e = (CFG.escuchar || {})[show] || {};
+  if (e.videos_como_audio === false) return false;
+  return !!e.videos_como_audio || show === 'peretz' || show === 'ofirmalka';
+}
+function videoAAudio(buf) {
+  try {
+    const os = require('os'), { spawnSync } = require('child_process');
+    const base = path.join(os.tmpdir(), 'otzar_video_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7));
+    fs.writeFileSync(base + '.mp4', buf);
+    const r = spawnSync('ffmpeg', ['-nostdin', '-loglevel', 'error', '-y', '-i', base + '.mp4', '-vn', '-ac', '1', '-c:a', 'aac', '-b:a', '96k', base + '.m4a'],
+      { windowsHide: true, timeout: 15 * 60000 });
+    let out = null;
+    if (r.status === 0 && fs.existsSync(base + '.m4a')) out = fs.readFileSync(base + '.m4a');
+    else log('ffmpeg: ' + String((r.stderr || '') + (r.error ? r.error.message : '')).slice(0, 200));
+    try { fs.unlinkSync(base + '.mp4'); } catch (e) {}
+    try { fs.unlinkSync(base + '.m4a'); } catch (e) {}
+    return out && out.length > 1000 ? out : null;
+  } catch (e) { log('video a audio: ' + (e.message || e)); return null; }
+}
+
+function textoDe(m) {
+  const msg = contenido(m);"""),
+    ("""  // ---- AUDIO (nota de voz, audio o archivo mp3/ogg/m4a adjunto) ----
+  const info = audioDe(m);
+  if (info) {""", """  // ---- AUDIO (nota de voz, audio o archivo mp3/ogg/m4a adjunto) ----
+  // (nov/2026) VIDEO COMO AUDIO: en Peretz / Ofir Malka (o "videos_como_audio": true) un VIDEO en la
+  // fuente se baja, ffmpeg le saca el audio y sigue como cualquier shiur (el texto del video = titulo)
+  let info = audioDe(m);
+  if (!info && esGrupo && destinoAudio && destinoAudio.show && videoComoAudio(destinoAudio.show) && contenido(m).videoMessage)
+    info = { mime: 'audio/mp4', nombre: '', video: true };
+  if (info) {"""),
+    ("""    if (!buffer) { log('No pude bajar el audio tras 3 intentos.'); return; }
+    const ext = extensionDe(info.mime, info.nombre);""", """    if (!buffer) { log('No pude bajar el audio tras 3 intentos.'); return; }
+    if (info.video) {
+      buffer = videoAAudio(buffer);
+      if (!buffer) { log(`VIDEO de ${destinoAudio.show}: no pude sacarle el audio (falta ffmpeg?); no se sube`); return; }
+      info.nombre = 'video.m4a';
+      log(`VIDEO de ${destinoAudio.show} convertido a audio (${(buffer.length / 1048576).toFixed(1)} MB)`);
+    }
+    const ext = extensionDe(info.mime, info.nombre);"""),
+    ("""      (r.documentos && contenido(m).documentMessage && Number(m.messageTimestamp) * 1000 > (Date.parse(r.desde || 0) || 0))));""", """      (r.documentos && contenido(m).documentMessage && Number(m.messageTimestamp) * 1000 > (Date.parse(r.desde || 0) || 0)) ||
+      // (nov/2026) "videos": los VIDEOS (shiur en video, se pasa a audio) desde la fecha pedida
+      (r.videos && contenido(m).videoMessage && Number(m.messageTimestamp) * 1000 > (Date.parse(r.desde || 0) || 0))));"""),
 ]
-MARCAS_ROBOT = ("PARCHE LID", "function titulosFijos(show)", "const wa = datos.whatsapp_link ||", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
+MARCAS_ROBOT = ("PARCHE LID", "function videoComoAudio", "r.videos && contenido(m).videoMessage", "function titulosFijos(show)", "const wa = datos.whatsapp_link ||", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
                 "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema", "temas_cache.json", "la lista del repo al dia antes de contestar", "NUNCA en Shabat ni Yom Tov", "nunca fecha futura en el archivo", "function bloqueoSagrado", "AVISOS AL ADMIN", "!reporte\" / \"!estado", "function appleCorto", "async function acortarLink", "AL FINAL el grupo de WhatsApp")
@@ -4199,6 +4246,8 @@ def rescatar():
             fuente = {"nombre": "su grupo (lo ubica el robot por el link al arrancar)"}
         if ((cfgw.get("escuchar") or {}).get(show) or {}).get("guardar_documentos"):
             pend[show]["documentos"] = True             # también los PDF/Word (mekorot)
+        if show in ("peretz", "ofirmalka") or ((cfgw.get("escuchar") or {}).get(show) or {}).get("videos_como_audio"):
+            pend[show]["videos"] = True                 # (nov/2026) los shiurim que mandaron en VIDEO, como audio
         ok(f"{show}: el robot pedirá a WhatsApp los mensajes de \"{fuente.get('nombre', '?')}\" desde {desde[:10]}")
     if not VER:
         rp.write_text(json.dumps(pend, ensure_ascii=False, indent=2), encoding="utf-8")

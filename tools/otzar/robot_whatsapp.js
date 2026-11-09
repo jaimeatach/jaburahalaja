@@ -421,6 +421,28 @@ function extensionDe(mime, nombre) {
   return '.ogg';
 }
 
+// === VIDEO COMO AUDIO (nov/2026): Peretz y Ofir Malka a veces mandan el shiur en VIDEO ===
+function videoComoAudio(show) {
+  const e = (CFG.escuchar || {})[show] || {};
+  if (e.videos_como_audio === false) return false;
+  return !!e.videos_como_audio || show === 'peretz' || show === 'ofirmalka';
+}
+function videoAAudio(buf) {
+  try {
+    const os = require('os'), { spawnSync } = require('child_process');
+    const base = path.join(os.tmpdir(), 'otzar_video_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7));
+    fs.writeFileSync(base + '.mp4', buf);
+    const r = spawnSync('ffmpeg', ['-nostdin', '-loglevel', 'error', '-y', '-i', base + '.mp4', '-vn', '-ac', '1', '-c:a', 'aac', '-b:a', '96k', base + '.m4a'],
+      { windowsHide: true, timeout: 15 * 60000 });
+    let out = null;
+    if (r.status === 0 && fs.existsSync(base + '.m4a')) out = fs.readFileSync(base + '.m4a');
+    else log('ffmpeg: ' + String((r.stderr || '') + (r.error ? r.error.message : '')).slice(0, 200));
+    try { fs.unlinkSync(base + '.mp4'); } catch (e) {}
+    try { fs.unlinkSync(base + '.m4a'); } catch (e) {}
+    return out && out.length > 1000 ? out : null;
+  } catch (e) { log('video a audio: ' + (e.message || e)); return null; }
+}
+
 function textoDe(m) {
   const msg = contenido(m);
   return msg.conversation
@@ -1089,7 +1111,9 @@ async function rescatarDeHistorial(messages) {
     const desde = Math.max(Date.parse(r.desde || 0) || 0, (carpeta ? _ultimoAudioMs(carpeta) : 0) + 60000);
     const nuevos = delGrupo.filter(m => !_rescateVistos.has(m.key.id) && (Number(m.messageTimestamp) * 1000 > desde ||
       // (oct/2026) "documentos": los PDF/Word (mekorot) desde la fecha pedida, aunque haya un audio despues
-      (r.documentos && contenido(m).documentMessage && Number(m.messageTimestamp) * 1000 > (Date.parse(r.desde || 0) || 0))));
+      (r.documentos && contenido(m).documentMessage && Number(m.messageTimestamp) * 1000 > (Date.parse(r.desde || 0) || 0)) ||
+      // (nov/2026) "videos": los VIDEOS (shiur en video, se pasa a audio) desde la fecha pedida
+      (r.videos && contenido(m).videoMessage && Number(m.messageTimestamp) * 1000 > (Date.parse(r.desde || 0) || 0))));
     const audios = nuevos.filter(m => audioDe(m));
     log(`RESCATE ${show}: llegaron ${delGrupo.length} mensajes de "${fuente.nombre}"; ` +
         `${audios.length} audio(s) sin guardar desde ${new Date(desde).toLocaleString('es-MX')}.`);
@@ -1426,7 +1450,11 @@ async function procesarMensaje(m) {
   const ts = (Number(m.messageTimestamp) || Math.floor(Date.now() / 1000)) * 1000;
 
   // ---- AUDIO (nota de voz, audio o archivo mp3/ogg/m4a adjunto) ----
-  const info = audioDe(m);
+  // (nov/2026) VIDEO COMO AUDIO: en Peretz / Ofir Malka (o "videos_como_audio": true) un VIDEO en la
+  // fuente se baja, ffmpeg le saca el audio y sigue como cualquier shiur (el texto del video = titulo)
+  let info = audioDe(m);
+  if (!info && esGrupo && destinoAudio && destinoAudio.show && videoComoAudio(destinoAudio.show) && contenido(m).videoMessage)
+    info = { mime: 'audio/mp4', nombre: '', video: true };
   if (info) {
     const limpio = { ...m, message: contenido(m) }; // desenvuelto, para que la descarga funcione
     let buffer = null;
@@ -1440,6 +1468,12 @@ async function procesarMensaje(m) {
       }
     }
     if (!buffer) { log('No pude bajar el audio tras 3 intentos.'); return; }
+    if (info.video) {
+      buffer = videoAAudio(buffer);
+      if (!buffer) { log(`VIDEO de ${destinoAudio.show}: no pude sacarle el audio (falta ffmpeg?); no se sube`); return; }
+      info.nombre = 'video.m4a';
+      log(`VIDEO de ${destinoAudio.show} convertido a audio (${(buffer.length / 1048576).toFixed(1)} MB)`);
+    }
     const ext = extensionDe(info.mime, info.nombre);
     const item = { buffer, ext, ts, autor, timer: null, archivoTemp: null,
                    carpeta: destinoAudio.carpeta, show: destinoAudio.show };
