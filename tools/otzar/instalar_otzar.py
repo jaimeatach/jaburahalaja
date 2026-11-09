@@ -1653,8 +1653,19 @@ function textoDe(m) {
     }
     info = { mime: 'audio/mp4', nombre: '', video: true };
   }"""),
+    # (nov/2026) el rescate dice de qué fechas son los mensajes que llegaron y qué traen
+    ("""    log(`RESCATE ${show}: llegaron ${delGrupo.length} mensajes de "${fuente.nombre}"; ` +
+        `${audios.length} audio(s) sin guardar desde ${new Date(desde).toLocaleString('es-MX')}.`);""", """    log(`RESCATE ${show}: llegaron ${delGrupo.length} mensajes de "${fuente.nombre}"; ` +
+        `${audios.length} audio(s) sin guardar desde ${new Date(desde).toLocaleString('es-MX')}.`);
+    {   // (nov/2026) de que fechas son y que traen: para saber si WhatsApp entrega lo nuevo de ese grupo
+      const _f = x => new Date(Number(x.messageTimestamp) * 1000).toLocaleString('es-MX');
+      const _n = k => delGrupo.filter(x => contenido(x)[k]).length;
+      log(`RESCATE ${show}: van del ${_f(delGrupo[0])} al ${_f(delGrupo[delGrupo.length - 1])} · ` +
+          `audios ${delGrupo.filter(x => audioDe(x)).length}, videos ${_n('videoMessage')}, documentos ${_n('documentMessage')}, ` +
+          `sin descifrar ${delGrupo.filter(x => !x.message).length}`);
+    }"""),
 ]
-MARCAS_ROBOT = ("PARCHE LID", "VIDEO repetido de", "function videoComoAudio", "r.videos && contenido(m).videoMessage", "function titulosFijos(show)", "const wa = datos.whatsapp_link ||", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
+MARCAS_ROBOT = ("PARCHE LID", "van del ${_f(delGrupo[0])}", "VIDEO repetido de", "function videoComoAudio", "r.videos && contenido(m).videoMessage", "function titulosFijos(show)", "const wa = datos.whatsapp_link ||", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
                 "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema", "temas_cache.json", "la lista del repo al dia antes de contestar", "NUNCA en Shabat ni Yom Tov", "nunca fecha futura en el archivo", "function bloqueoSagrado", "AVISOS AL ADMIN", "!reporte\" / \"!estado", "function appleCorto", "async function acortarLink", "AL FINAL el grupo de WhatsApp")

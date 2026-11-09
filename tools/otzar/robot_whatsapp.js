@@ -1117,6 +1117,13 @@ async function rescatarDeHistorial(messages) {
     const audios = nuevos.filter(m => audioDe(m));
     log(`RESCATE ${show}: llegaron ${delGrupo.length} mensajes de "${fuente.nombre}"; ` +
         `${audios.length} audio(s) sin guardar desde ${new Date(desde).toLocaleString('es-MX')}.`);
+    {   // (nov/2026) de que fechas son y que traen: para saber si WhatsApp entrega lo nuevo de ese grupo
+      const _f = x => new Date(Number(x.messageTimestamp) * 1000).toLocaleString('es-MX');
+      const _n = k => delGrupo.filter(x => contenido(x)[k]).length;
+      log(`RESCATE ${show}: van del ${_f(delGrupo[0])} al ${_f(delGrupo[delGrupo.length - 1])} · ` +
+          `audios ${delGrupo.filter(x => audioDe(x)).length}, videos ${_n('videoMessage')}, documentos ${_n('documentMessage')}, ` +
+          `sin descifrar ${delGrupo.filter(x => !x.message).length}`);
+    }
     for (const m of nuevos) {
       _rescateVistos.add(m.key.id);
       try { await procesarMensaje(m); } catch (e) { log('RESCATE mensaje: ' + (e.message || e)); }
