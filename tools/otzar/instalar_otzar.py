@@ -1644,8 +1644,17 @@ function textoDe(m) {
     ("""      (r.documentos && contenido(m).documentMessage && Number(m.messageTimestamp) * 1000 > (Date.parse(r.desde || 0) || 0))));""", """      (r.documentos && contenido(m).documentMessage && Number(m.messageTimestamp) * 1000 > (Date.parse(r.desde || 0) || 0)) ||
       // (nov/2026) "videos": los VIDEOS (shiur en video, se pasa a audio) desde la fecha pedida
       (r.videos && contenido(m).videoMessage && Number(m.messageTimestamp) * 1000 > (Date.parse(r.desde || 0) || 0))));"""),
+    # (nov/2026) el video de un shiur que ya salio como audio no se sube dos veces
+    ("""    info = { mime: 'audio/mp4', nombre: '', video: true };""", """  {   // (nov/2026) si ese shiur ya salio como AUDIO (mismo titulo), el video no se sube otra vez
+    const _capV = sinLinks(textoDe(m));
+    if (_capV && titulosVistos(destinoAudio.show, []).has(normTitulo(_capV))) {
+      log(`VIDEO repetido de ${destinoAudio.show} (ya salio como audio): ${_capV.replace(/\\s+/g, ' ').slice(0, 70)}`);
+      return;
+    }
+    info = { mime: 'audio/mp4', nombre: '', video: true };
+  }"""),
 ]
-MARCAS_ROBOT = ("PARCHE LID", "function videoComoAudio", "r.videos && contenido(m).videoMessage", "function titulosFijos(show)", "const wa = datos.whatsapp_link ||", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
+MARCAS_ROBOT = ("PARCHE LID", "VIDEO repetido de", "function videoComoAudio", "r.videos && contenido(m).videoMessage", "function titulosFijos(show)", "const wa = datos.whatsapp_link ||", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
                 "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema", "temas_cache.json", "la lista del repo al dia antes de contestar", "NUNCA en Shabat ni Yom Tov", "nunca fecha futura en el archivo", "function bloqueoSagrado", "AVISOS AL ADMIN", "!reporte\" / \"!estado", "function appleCorto", "async function acortarLink", "AL FINAL el grupo de WhatsApp")

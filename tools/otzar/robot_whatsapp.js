@@ -1454,7 +1454,14 @@ async function procesarMensaje(m) {
   // fuente se baja, ffmpeg le saca el audio y sigue como cualquier shiur (el texto del video = titulo)
   let info = audioDe(m);
   if (!info && esGrupo && destinoAudio && destinoAudio.show && videoComoAudio(destinoAudio.show) && contenido(m).videoMessage)
+  {   // (nov/2026) si ese shiur ya salio como AUDIO (mismo titulo), el video no se sube otra vez
+    const _capV = sinLinks(textoDe(m));
+    if (_capV && titulosVistos(destinoAudio.show, []).has(normTitulo(_capV))) {
+      log(`VIDEO repetido de ${destinoAudio.show} (ya salio como audio): ${_capV.replace(/\s+/g, ' ').slice(0, 70)}`);
+      return;
+    }
     info = { mime: 'audio/mp4', nombre: '', video: true };
+  }
   if (info) {
     const limpio = { ...m, message: contenido(m) }; // desenvuelto, para que la descarga funcione
     let buffer = null;
