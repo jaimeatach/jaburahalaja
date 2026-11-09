@@ -13,5 +13,10 @@
   "b64": "portadas/ahavatjesed.b64",
   "sha256": "3ed5b098aef2452feef07c3868c53af4781dd200b6da63f1c7fc66cca671c4cb",
   "nota": "Apple la rechazaba (portada.jpg en 404): el Jafetz Jaim en Vilna, 1923 (foto coloreada por Yonatan Gavant; Wikimedia Commons 'Chofetz Chaim, 1923.jpg', CC BY-SA 4.0), recorte cuadrado 1400x1400"
+ },
+ "turquie": {
+  "b64": "portadas/turquie.b64",
+  "sha256": "d9786db98a07455e86c0412105fc8c1086b08a28219c41ee112e5676e5cd2ab9",
+  "nota": "portada genérica (Sefer con marco dorado), 3000x3000"
  }
 }

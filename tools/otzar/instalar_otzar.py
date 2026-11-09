@@ -1738,12 +1738,12 @@ REGLAS_TITULO = {"isaaccredi": {"quitar_lineas": r"^\s*\d+\s*(siman|סימן|hal
                                "unir_lineas": ", ", "sufijo_titulo": "- Sr. Isaac Credi"}}
 # nombre del Rab al frente del titulo (va a grupos generales)
 PREFIJOS = {"tefila": "Rab Tofi Cherem ·", "nacach": "Rab Ezra Nacach ·", "efshar": "Rab Igal Snertz ·", "credi": "David Credi ·",
-            "hilu": "Rab Joshua Hilu ·", "ofirmalka": "הרב אופיר מלכא ·"}
+            "hilu": "Rab Joshua Hilu ·", "ofirmalka": "הרב אופיר מלכא ·", "turquie": "Rab Beto Turquie ·"}
 # shows que NO van a cierto grupo general (vacío: todos van al 6 y al 3)
 SIN_GRUPO = {}
 TITULOS_DEFECTO = {"tefila": "Clase de Tefilá · Rab Tofi Cherem", "hilu": "Shiur · Rab Joshua Hilu", "nacach": "Shiur · Rab Ezra Nacach",
                    "efshar": "Shiur · Rab Igal Snertz", "ofirmalka": "הרב אופיר מלכא · שיעור", "credi": "Shiur · David Credi",
-                   "isaaccredi": "Halajot Yalkut Yosef - Sr. Isaac Credi"}
+                   "isaaccredi": "Halajot Yalkut Yosef - Sr. Isaac Credi", "turquie": "Shiur · Rab Beto Turquie"}
 FEED_JABURA = "https://raw.githubusercontent.com/jaimeatach/jaburahalaja/main/feed.xml"
 
 
