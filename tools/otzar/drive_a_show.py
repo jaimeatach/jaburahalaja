@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Sube a un show los shiurim VIEJOS que el Rab mandó en un Google Drive, abajo de todo.
 
+    python drive_a_show.py turquie --lista        usa la lista ya ordenada y titulada del repo
+                                                  (tools/otzar/drive/<show>.json) y baja cada audio del Drive
     python drive_a_show.py turquie --ver          dice qué encontró, en qué orden y con qué título
     python drive_a_show.py turquie                los pone en el show y los publica
     python drive_a_show.py turquie "C:\\ruta"      de esa carpeta o zip (si no, el último
@@ -20,6 +22,7 @@ import re
 import subprocess
 import sys
 import time
+import urllib.request
 import zipfile
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -133,6 +136,78 @@ def titulo(nombre, rab):
     return re.sub(r'[<>:"/\\|?*]', "", t)[:110].strip()
 
 
+REFS = ["claude/shiurim-halachot-shabbat-vriig5", "main"]
+
+
+def lista_repo(show):
+    for ref in REFS:
+        try:
+            req = urllib.request.Request(f"https://raw.githubusercontent.com/jaimeatach/jaburahalaja/{ref}/tools/otzar/drive/{show}.json",
+                                         headers={"User-Agent": "otzar-drive"})
+            with urllib.request.urlopen(req, timeout=30) as r:
+                return json.loads(r.read().decode("utf-8"))
+        except Exception:
+            continue
+    return None
+
+
+def bajar_drive(fid, destino):
+    url = f"https://drive.usercontent.google.com/download?id={fid}&export=download&confirm=t"
+    for i in range(4):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            tmp = destino.with_suffix(destino.suffix + ".parcial")
+            with urllib.request.urlopen(req, timeout=300) as r, open(tmp, "wb") as f:
+                if "text/html" in (r.headers.get("Content-Type") or ""):
+                    raise RuntimeError("Drive devolvió una página, no el audio")
+                while True:
+                    b = r.read(1 << 20)
+                    if not b:
+                        break
+                    f.write(b)
+            if tmp.stat().st_size < 100000:
+                raise RuntimeError("archivo demasiado chico")
+            tmp.replace(destino)
+            return True
+        except Exception as e:
+            print(f"   reintento {i + 1}: {e}")
+            time.sleep(5 * (i + 1))
+    return False
+
+
+def con_lista(show, d, c, carpeta):
+    j = lista_repo(show)
+    if not j:
+        print(f"✖ no encuentro tools/otzar/drive/{show}.json en el repo")
+        return 1
+    L = j["shiurim"]
+    print(f"{len(L)} shiurim del Drive, del más viejo al más nuevo:\n")
+    for i, x in enumerate(L, 1):
+        print(f"{i:3}. {x['fecha'][:10]}  {x['titulo']}")
+    if VER:
+        print("\n(prueba: no se bajó ni cambió nada)")
+        return 0
+    carpeta.mkdir(parents=True, exist_ok=True)
+    hechos = 0
+    for x in L:
+        t = re.sub(r'[<>:"/\\|?*]', "", x["titulo"]).strip()
+        destino = carpeta / (t + x["ext"])
+        if any((carpeta / (t + e)).exists() for e in AUDIO):
+            print(f"   (ya estaba) {t}")
+            continue
+        print(f"   bajando: {t}")
+        if not bajar_drive(x["id"], destino):
+            print(f"   ✖ no pude bajarlo; vuelve a correr el comando (no repite los que ya están)")
+            continue
+        f = time.mktime(datetime.strptime(x["fecha"], "%Y-%m-%d %H:%M").timetuple())
+        os.utime(destino, (f, f))
+        hechos += 1
+    print(f"\n✔ {hechos} nuevos en {carpeta}. Publicando (sube cada uno a archive.org; tarda)…")
+    r = subprocess.run([sys.executable, "podcast_bot.py"], cwd=str(d))
+    print("✔ listo" if r.returncode == 0 else "✖ podcast_bot.py terminó con error; vuelve a correr este mismo comando (no repite).")
+    return 0
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     if not args:
@@ -146,6 +221,8 @@ def main():
         return 1
     carpeta = Path(c.get("carpeta_whatsapp") or (d / "audios_whatsapp"))
     rab = RABS.get(show) or c.get("titulo", "")
+    if "--lista" in sys.argv:
+        return con_lista(show, d, c, carpeta)
     src = fuente(args[1:])
     if not src:
         print("✖ no encuentro el zip del Drive en Descargas (drive-download-….zip). Bájalo del Drive o dame la ruta.")
