@@ -20,18 +20,22 @@ sesión si hace falta.
 5. En la columna de preguntas: **Add question** → **Import spreadsheet** (o "Import" →
    "Spreadsheet"). Sube `kahoot_tawil.xlsx`, revisa la vista previa y aprieta
    **Add questions**. Si queda una pregunta vacía de ejemplo al principio, bórrala.
-6. Revisa que haya el mismo número de preguntas que filas tiene el Excel, que cada una
+6. Revisa que queden 34 preguntas (las mismas que filas tiene el Excel), que cada una
    tenga 4 respuestas y una marcada como correcta. Si Kahoot marca alguna con error, dime
    cuál y su texto.
 7. Título: **Rab Yosef Tawil · Examen Kahoot** (si pide descripción: "Velas de Shabat,
    recibir Shabat, Arvit y Kidush"). Guarda: **Save** / **Done**.
-8. Para que cada quien lo haga desde su celular cuando pueda: abre el kahoot → **Assign**
-   (o "Assign as self-paced" / "Challenge") → fecha límite: el domingo siguiente a las
-   23:00 → crea el link y cópialo. Si "Assign" pide pagar, no pagues: dime que "Assign"
-   no está en la cuenta gratis y dame el link para compartir el kahoot (Share → Copy link).
+8. El examen es el **jueves 12 de noviembre de 2026 a las 9:15 pm (hora de la Ciudad de
+   México)**. Abre el kahoot → **Assign** (o "Assign as self-paced" / "Challenge"):
+   - si deja poner hora de inicio: jueves 12 de noviembre, 21:15, hora de México;
+   - fecha límite: domingo 15 de noviembre de 2026, 23:00, hora de México;
+   - que se vea el puntaje y las respuestas correctas al final, si hay esa opción.
+   Crea el link y cópialo. Si "Assign" pide pagar, no pagues: dime que "Assign" no está en
+   la cuenta gratis y dame el link para compartir el kahoot (Share → Copy link).
+   No lo juegues en vivo ni lo publiques en el grupo: yo mando el mensaje el jueves.
 9. Al final escríbeme solo esto, listo para pegar en el grupo:
 
-   Shavua Tov! 🎉 Les compartimos el Kahoot de los shiurim del Rab Yosef Tawil.
+   ¡Buenas noches! 🎉 Les compartimos el Kahoot de los shiurim del Rab Yosef Tawil.
    Entra aquí y contesta desde tu celular: <LINK>
    ¡Mucha hatzlajá!
 

@@ -1,6 +1,6 @@
 {
  "titulo": "Kahoot · Rab Yosef Tawil · desde el Shiur #23",
- "descripcion": "Velas de Shabat, recibir Shabat, Arvit y Kidush: del shiur #23 (13 de octubre) hasta lo que llegue el jueves 12 de noviembre. 35 preguntas.",
+ "descripcion": "Velas de Shabat, recibir Shabat, Arvit y Kidush: del shiur #23 (13 de octubre) hasta lo que llegue el jueves 12 de noviembre. 34 preguntas.",
  "preguntas": [
   {
    "nivel": "facil",
@@ -50,12 +50,12 @@
    "tiempo": 20,
    "pregunta": "Según el Rab, ¿cuál es la costumbre en México: cuántos minutos antes de la puesta del sol se prenden las velas?",
    "opciones": [
+    "15 minutos",
     "18 minutos",
-    "30 minutos",
-    "20 minutos",
-    "40 minutos"
+    "13 minutos",
+    "20 minutos"
    ],
-   "correcta": 1,
+   "correcta": 2,
    "explicacion": "En México se acostumbra 18 minutos; otros lugares 20 o 40, y hay quienes en México agregan 12 y prenden 30 minutos antes."
   },
   {
@@ -113,20 +113,6 @@
    ],
    "correcta": 1,
    "explicacion": "Ella recibe Shabat al prender: soltar el encendedor es apagar fuego. Por lo mismo, el cerillo no se apaga, se deja que se apague solo."
-  },
-  {
-   "nivel": "dificil",
-   "shiur": 28,
-   "tiempo": 30,
-   "pregunta": "Una mujer recibió Shabat SOLA (no con el tzibur). ¿Hasta cuándo le puede pedir a un goy que prenda una luz necesaria?",
-   "opciones": [
-    "Hasta 20 minutos después de la puesta del sol",
-    "Solo hasta la puesta del sol",
-    "Hasta 15 minutos después de la puesta del sol",
-    "Hasta 3 minutos antes de la puesta del sol"
-   ],
-   "correcta": 3,
-   "explicacion": "Como recibió Shabat sola, en los primeros 15 minutos después de la puesta del sol le puede pedir solo a un goy (no a un judío) que prenda la luz de Shabat o algo de mitzvá."
   },
   {
    "nivel": "dificil",
