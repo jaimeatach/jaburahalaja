@@ -49,7 +49,9 @@ def fuente(args):
     if args:
         return Path(args[0])
     desc = Path(os.environ.get("USERPROFILE", str(Path.home()))) / "Downloads"
-    zips = sorted(desc.glob("drive-download-*.zip"), key=lambda p: p.stat().st_mtime)
+    # solo los que bajaron HOY (hace < 6 h): un zip viejo de Descargas es de otro Drive (pasó con uno de Avot)
+    zips = sorted([z for z in desc.glob("drive-download-*.zip") if time.time() - z.stat().st_mtime < 6 * 3600],
+                  key=lambda p: p.stat().st_mtime)
     if not zips:
         return None
     # Drive parte en varios zip con el mismo sello: drive-download-20261109T180000Z-1-001.zip
