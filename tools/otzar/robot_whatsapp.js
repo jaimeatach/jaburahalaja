@@ -1463,6 +1463,17 @@ async function procesarMensaje(m) {
   if (!info && esGrupo && destinoAudio && destinoAudio.show && videoComoAudio(destinoAudio.show) && contenido(m).videoMessage)
   {   // (nov/2026) si ese shiur ya salio como AUDIO (mismo titulo), el video no se sube otra vez
     const _capV = sinLinks(textoDe(m));
+    if (!_capV) {   // video SIN texto: solo si ese dia no hay ya un audio con el titulo por defecto (Ofir manda audio y video)
+      const _def = ((CFG.escuchar || {})[destinoAudio.show] || {}).titulo_defecto;
+      const _dia = new Date((Number(m.messageTimestamp) || Math.floor(Date.now() / 1000)) * 1000).toLocaleDateString('es-MX').replace(/\//g, '-');
+      let _ya = !_def;
+      if (_def) {
+        const _b = limpiarTitulo(_def + ' ' + _dia);
+        try { _ya = fs.readdirSync(destinoAudio.carpeta).some(f => f.startsWith(_b)); } catch (e) {}
+        if (titulosVistos(destinoAudio.show, []).has(normTitulo(_def + ' ' + _dia))) _ya = true;
+      }
+      if (_ya) { log(`VIDEO sin texto de ${destinoAudio.show}: ${_def ? 'ese dia ya hay audio' : 'no trae titulo'}; no se sube`); return; }
+    }
     if (_capV && titulosVistos(destinoAudio.show, []).has(normTitulo(_capV))) {
       log(`VIDEO repetido de ${destinoAudio.show} (ya salio como audio): ${_capV.replace(/\s+/g, ' ').slice(0, 70)}`);
       return;

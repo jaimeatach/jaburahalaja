@@ -1664,8 +1664,23 @@ function textoDe(m) {
           `audios ${delGrupo.filter(x => audioDe(x)).length}, videos ${_n('videoMessage')}, documentos ${_n('documentMessage')}, ` +
           `sin descifrar ${delGrupo.filter(x => !x.message).length}`);
     }"""),
+    # (nov/2026) video sin texto: no se sube si ese dia ya hay audio (o si el show no tiene titulo por defecto)
+    ("""    const _capV = sinLinks(textoDe(m));
+    if (_capV && titulosVistos(destinoAudio.show, []).has(normTitulo(_capV))) {""", """    const _capV = sinLinks(textoDe(m));
+    if (!_capV) {   // video SIN texto: solo si ese dia no hay ya un audio con el titulo por defecto (Ofir manda audio y video)
+      const _def = ((CFG.escuchar || {})[destinoAudio.show] || {}).titulo_defecto;
+      const _dia = new Date((Number(m.messageTimestamp) || Math.floor(Date.now() / 1000)) * 1000).toLocaleDateString('es-MX').replace(/\\//g, '-');
+      let _ya = !_def;
+      if (_def) {
+        const _b = limpiarTitulo(_def + ' ' + _dia);
+        try { _ya = fs.readdirSync(destinoAudio.carpeta).some(f => f.startsWith(_b)); } catch (e) {}
+        if (titulosVistos(destinoAudio.show, []).has(normTitulo(_def + ' ' + _dia))) _ya = true;
+      }
+      if (_ya) { log(`VIDEO sin texto de ${destinoAudio.show}: ${_def ? 'ese dia ya hay audio' : 'no trae titulo'}; no se sube`); return; }
+    }
+    if (_capV && titulosVistos(destinoAudio.show, []).has(normTitulo(_capV))) {"""),
 ]
-MARCAS_ROBOT = ("PARCHE LID", "van del ${_f(delGrupo[0])}", "VIDEO repetido de", "function videoComoAudio", "r.videos && contenido(m).videoMessage", "function titulosFijos(show)", "const wa = datos.whatsapp_link ||", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
+MARCAS_ROBOT = ("PARCHE LID", "VIDEO sin texto de", "van del ${_f(delGrupo[0])}", "VIDEO repetido de", "function videoComoAudio", "r.videos && contenido(m).videoMessage", "function titulosFijos(show)", "const wa = datos.whatsapp_link ||", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
                 "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema", "temas_cache.json", "la lista del repo al dia antes de contestar", "NUNCA en Shabat ni Yom Tov", "nunca fecha futura en el archivo", "function bloqueoSagrado", "AVISOS AL ADMIN", "!reporte\" / \"!estado", "function appleCorto", "async function acortarLink", "AL FINAL el grupo de WhatsApp")
