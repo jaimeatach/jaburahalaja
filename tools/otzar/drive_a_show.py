@@ -94,7 +94,29 @@ def numero(nombre):
     return None
 
 
+def natural(nombre):
+    """"avot 5, 20 (2)-21" → (5, 20, 2, 21): ordena perek, luego mishná, luego parte."""
+    t = Path(nombre).stem.lower()
+    return [int(x) for x in re.findall(r"\d+", t)] + [t]
+
+
+def _mishna(txt):
+    """'20 (2)-21' → 'Mishná 20 (2ª parte) y 21' · '7- 8' → 'Mishnayot 7-8' · '13' → 'Mishná 13'"""
+    txt = re.sub(r"\s+", " ", txt).strip(" ,.-")
+    txt = re.sub(r"\((\d)\)", lambda m: f"({m.group(1)}ª parte)", txt)
+    partes = [x.strip() for x in re.split(r"\s*-\s*", txt) if x.strip()]
+    if len(partes) == 2 and all(re.fullmatch(r"\d+", x) for x in partes):
+        return f"Mishnayot {partes[0]}-{partes[1]}"
+    if len(partes) == 2:
+        return f"Mishná {partes[0]} y {partes[1]}"
+    return f"Mishná {txt}"
+
+
 def titulo(nombre, rab):
+    m = re.match(r"(?i)\s*(pirk[eé]i?\s+)?avot\s*(\d+)\s*[,:.]\s*(.+)$", Path(nombre).stem)
+    if m:
+        t = f"Pirké Avot · Perek {m.group(2)} · {_mishna(m.group(3))}"
+        return f"{rab} · {t}" if rab else t
     t = Path(nombre).stem
     t = re.sub(r"(?i)^(whatsapp (audio|ptt|video)|aud|ptt|audio|vid)[-_ ]?", "", t)
     t = re.sub(r"^\s*(\d{4}[-_.]\d{1,2}[-_.]\d{1,2}|\d{1,2}[-_.]\d{1,2}[-_.]\d{2,4})\s*[-_.]?\s*", "", t)  # fecha al frente
@@ -133,10 +155,9 @@ def main():
         print("✖ no hay audios ni videos ahí.")
         return 1
     # orden
-    nums = [numero(n) for _, n, _ in lista]
-    if sum(x is not None for x in nums) >= 0.8 * len(lista):
-        lista = [x for _, x in sorted(zip(nums, lista), key=lambda p: (p[0] if p[0] is not None else 99999, p[1][2]))]
-        como = "por el número del nombre"
+    if sum(bool(re.search(r"\d", Path(n).stem)) for _, n, _ in lista) >= 0.8 * len(lista):
+        lista.sort(key=lambda x: (natural(x[1]), x[2]))
+        como = "por los números del nombre (perek, mishná, parte…)"
     else:
         lista.sort(key=lambda x: (x[2], x[1]))
         como = "por la fecha del archivo"
