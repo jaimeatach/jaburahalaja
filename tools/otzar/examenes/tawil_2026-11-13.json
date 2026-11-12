@@ -1,0 +1,98 @@
+{
+  "titulo": "Examen semanal · Rab Yosef Tawil · Shiurim #45–#50",
+  "descripcion": "Las leyes del Kidush de Shabat. 6 preguntas sobre lo que dijo el Rab en las clases de la semana (8 al 13 de noviembre). ¡Mucha hatzlajá!",
+  "shiurim": [
+    45,
+    46,
+    47,
+    48,
+    49,
+    50
+  ],
+  "preguntas": [
+    {
+      "nivel": "facil",
+      "shiur": 46,
+      "pregunta": "Según el Rab, ¿quién puede hacer el Kidush de la noche para que toda la casa cumpla?",
+      "opciones": [
+        "Un niño de 12 años que ya lee bien el Kidush",
+        "Cualquiera que ya cumplió bar mitzvá, aunque sea ese mismo día",
+        "Uno mayor de bar mitzvá a quien ya se le empieza a ver la barba",
+        "Solo el papá de la casa: nadie más lo puede hacer"
+      ],
+      "correcta": 2,
+      "explicacion": "El Kidush de la noche es de la Torá, así que un niño menor de bar mitzvá no sirve para que todos cumplan. Recién cumplido el bar mitzvá tampoco es conveniente: tiene que ser alguien a quien ya le empieza a salir la barba. Se acostumbra en todas las casas de Israel que lo haga el papá.",
+      "puntos": 1
+    },
+    {
+      "nivel": "facil",
+      "shiur": 50,
+      "pregunta": "¿Cómo se hace el Kidush de la MAÑANA de Shabat, según el Rab?",
+      "opciones": [
+        "Parados, igual que en la noche, porque recibimos a la novia",
+        "Sentados: el que dice Kidush y todos los demás, alrededor de la mesa",
+        "El que dice Kidush parado y los demás sentados alrededor de la mesa",
+        "Da igual parados o sentados, con tal de estar alrededor de la mesa"
+      ],
+      "correcta": 1,
+      "explicacion": "En la noche los Sefaradim se paran (recibimos a la novia). En el Kidush del día, davka nos sentamos: el que dice Kidush y los demás, juntos alrededor de la mesa, para cumplir todos.",
+      "puntos": 1
+    },
+    {
+      "nivel": "facil",
+      "shiur": 45,
+      "pregunta": "Según el Rab, ¿qué dos cosas pusieron los Jajamim sin las cuales NO se cumple la mitzvá de Kidush?",
+      "opciones": [
+        "Que se diga sobre un vaso de vino y que lo diga el papá de la casa",
+        "Que se diga sobre un vaso de vino y que antes se diga Vaijulú",
+        "Que se diga sobre un vaso de vino y que después se haga la seudá",
+        "Que haya pan en la mesa y que después se haga la seudá"
+      ],
+      "correcta": 2,
+      "explicacion": "El Kidush es de la Torá, para hombres y mujeres por igual. Los Jajamim agregaron que se haga con un vaso de vino y que después del Kidush haya seudá: sin vino y sin seudá no se cumple la mitzvá.",
+      "puntos": 1
+    },
+    {
+      "nivel": "media",
+      "shiur": 48,
+      "pregunta": "Alguien escuchó Vaijulú y \"Mekadesh HaShabat\", pero NO escuchó la berajá de Boré Perí HaGuefen. ¿Qué pasa?",
+      "opciones": [
+        "Cumplió el Kidush y puede tomar del vino: sale con la berajá del que hizo Kidush",
+        "Cumplió el Kidush, pero para tomar del vino tiene que decir él Boré Perí HaGuefen",
+        "No cumplió: tiene que volver a hacer todo el Kidush",
+        "Cumplió el Kidush, pero tiene que decir Vaijulú después de tomar el vino"
+      ],
+      "correcta": 1,
+      "explicacion": "Si no escuchó Boré Perí HaGuefen, el Kidush sí fue válido, pero no puede tomar del vino; si quiere tomar, tiene que decir otra vez Boré Perí HaGuefen. Lo que invalida el Kidush es no escuchar \"Mekadesh HaShabat\", aunque sea una sola palabra. Vaijulú se dice después solo si fue eso lo que no escuchó.",
+      "puntos": 1
+    },
+    {
+      "nivel": "medio_dificil",
+      "shiur": 47,
+      "pregunta": "El Rab explicó por qué decimos \"Yom HaShishí\" antes de Vaijulú. ¿Cómo se llega a las 72 palabras del Shem de 72?",
+      "opciones": [
+        "Vaijulú (35) + Mekadesh HaShabat (35) + \"Yom HaShishí\" (2)",
+        "Vaijulú (35) + Boré Perí HaGuefen (35) + \"Yom HaShishí\" (2)",
+        "Vaijulú (36) + Mekadesh HaShabat (36), sin contar \"Yom HaShishí\"",
+        "Vaijulú (35) + Mekadesh HaShabat (37), con \"Yom HaShishí\" adentro"
+      ],
+      "correcta": 0,
+      "explicacion": "Vaijulú tiene 35 palabras y la berajá de Mekadesh HaShabat tiene 35; con las dos palabras \"Yom HaShishí\" son 72, como el Shem Kadosh de 72. Además, las iniciales de \"Yom HaShishí Vaijulú HaShamáyim\" forman el Shem de Hashem (Y-H-V-H).",
+      "puntos": 1
+    },
+    {
+      "nivel": "muy_dificil",
+      "shiur": 49,
+      "pregunta": "Alguien se quedó dormido y NO hizo el Kidush de la noche (no estaba enfermo). ¿Qué hace el sábado en la mañana?",
+      "opciones": [
+        "Hace el Kidush de la noche completo, con Vaijulú, y ya no el de la mañana",
+        "Hace primero el Kidush de la mañana y luego el de la noche sin Vaijulú",
+        "Ya no puede reponerlo: solo hace el Kidush de la mañana",
+        "Dice Boré Perí HaGuefen y \"Mekadesh HaShabat\" (sin Vaijulú), y ya no el de la mañana"
+      ],
+      "correcta": 3,
+      "explicacion": "En la mañana tiene que hacer el Kidush de la NOCHE, el de la berajá \"Mekadesh HaShabat\", pero sin Vaijulú: dice Boré Perí HaGuefen y Mekadesh HaShabat. Con eso ya no necesita hacer el Kidush del día.",
+      "puntos": 1
+    }
+  ]
+}
