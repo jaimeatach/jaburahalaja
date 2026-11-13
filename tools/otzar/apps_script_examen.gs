@@ -137,7 +137,7 @@ function mensajeGrupo_(d, link) {
   return 'Shavua Tov!\n\n' +
     'Les compartimos la autoevaluación de esta semana' + (tema ? ' sobre ' + tema : '') + dias + '. ' +
     'Es un pequeño examen para repasar lo que aprendimos.\n\n' +
-    'Este examen es sin premio. El examen con premio será en Kahoot, una vez al mes.\n\n' +
+    'Este examen es sin premio.\n\n' +
     'Al terminar verán su calificación y las respuestas correctas.\n\n' +
     '👉 ' + link + '\n\n' +
     '¡Hatzlajá a todos! 🙌';
