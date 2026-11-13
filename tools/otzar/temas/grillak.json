@@ -1,45 +1,253 @@
 [
-  {"nota": "(nov/2026) Rab Yohanan Grilak: títulos en hebreo (פרשת X · tema) como pidió el usuario, en orden de fecha; los 31 primeros revisados escuchando el audio. Los nuevos (ago-oct 2026) se reconocen por la fecha del mensaje (contiene) y sí se anuncian, solo en su grupo."},
-  {"archivo": "📢 Mensaje del Rav Grilak 🗓️ Fecha Jueves, 4 de septiembre de 2025 📖 Tema וְתַפְסוּ בוֹ אָבִיו וְאִמּוֹ — “Y lo tomarán s.mp3", "titulo": "פרשת כי תצא · ותפסו בו אביו ואמו", "fecha": "2025-09-04"},
-  {"archivo": "📢 Mensaje de Rab Grilak 🗓️ Fecha Jueves, 11 de septiembre de 2025 📖 Tema וְהִשִּׂיגֻךָ כִּי־תִשְׁמַע — Y te alcanzará, p.mp3", "titulo": "פרשת כי תבוא · והשיגוך כי תשמע", "fecha": "2025-09-11"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves, 18 de septiembre de 2025 📖 Tema וְהִתְבָּרֵךְ בִּלְבָבוֹ — Y se bendecirá en s.mp3", "titulo": "פרשת נצבים · והתברך בלבבו", "fecha": "2025-09-18"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves, 30 de octubre de 2025 📖 Tema וַיַּחְשְׁבֶהָ לּוֹ צְדָקָה — Y se lo consideró c.mp3", "titulo": "פרשת לך לך · ויחשבה לו צדקה", "fecha": "2025-10-30"},
-  {"archivo": "📢 Mensaje de Rab Grilak 🗓️ Fecha Jueves, 6 de noviembre de 2025 📖 Tema וירע הדבר בעני אברהם מאוד — “Y el asunto fue muy .mp3", "titulo": "פרשת וירא · וירע הדבר בעיני אברהם מאוד", "fecha": "2025-11-06"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves, 13 de noviembre de 2025 📖 Tema שְׁנֵי חַיֵּי שָׂרָה — Shné Jayéi Sará 📜 Parash.mp3", "titulo": "פרשת חיי שרה · שני חיי שרה", "fecha": "2025-11-13"},
-  {"archivo": "📢 Mensaje de Rab Grilak 🗓️ Fecha Jueves, 20 de noviembre de 2025 📖 Tema “וַיֵּעָתֶר לוֹ ה׳” — “Hashem aceptó su tefilá” .mp3", "titulo": "פרשת תולדות · ויעתר לו ה׳", "fecha": "2025-11-20"},
-  {"archivo": "📢 Mensaje del Rab גרילק 🗓️ Fecha Jueves, 27 de noviembre de 2025 📖 Tema לָמָּה רִמִּיתָנִי — “¿Por qué me engañaste ” 📜 .mp3", "titulo": "פרשת ויצא · למה רמיתני", "fecha": "2025-11-27"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves, 4 de diciembre de 2025 📖 Tema וישלח יעקב — Vayishlach Yaakov 📜 Parashá וישלח —.mp3", "titulo": "פרשת וישלח · וישלח יעקב", "fecha": "2025-12-04"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 11 de diciembre de 2025 📖 Tema נְשָׂאִים נְכֹאת וּצְרִי וָלֹט — 📜 Parashá וַיֵּ.mp3", "titulo": "פרשת וישב · נשאים נכאת וצרי ולט", "fecha": "2025-12-11"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 18 de diciembre de 2025 📖 Tema לָמָה תִּתְרָאוּ — ¿Por qué se miran unos a otro.mp3", "titulo": "פרשת מקץ · למה תתראו", "fecha": "2025-12-18"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 8 de enero de 2026 📖 Tema שלח נא ביד תשלח — Envía, por favor, a quien Tú envíes.mp3", "titulo": "פרשת שמות · שלח נא ביד תשלח", "fecha": "2026-01-08"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 15 de enero de 2026 📖 Tema וְעָלוּ וּבָאוּ… וּבְתַנּוּרֶיךָ “Y subirán y entrar.mp3", "titulo": "פרשת וארא · ועלו ובאו... ובתנוריך", "fecha": "2026-01-15"},
-  {"archivo": "📢 Mensaje de Rab Grilak 🗓️ Fecha Jueves 22 de enero de 2026 — יום חמישי ה׳ בשבט תשפ״ו 📖 Tema אֲשֶׁר הִתְעַלַּלְתִּי — 📜 .mp3", "titulo": "פרשת בא · אשר התעללתי", "fecha": "2026-01-22"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 29 de enero de 2026 יום חמישי יא׳ בשבט תשפ״ו 📖 Tema ״ויעשו כן״ — “Y así lo hici.mp3", "titulo": "פרשת בשלח · ויעשו כן", "fecha": "2026-01-29"},
-  {"archivo": "Mensaje de Rab Grilak 🗓️ Fecha Jueves 5 de febrero de 2026 📖 Tema וַיְסַפֵּר אֶת כָּל הַתְּלָאָה — Y relató todo el esfu.mp3", "titulo": "פרשת יתרו · ויספר את כל התלאה", "fecha": "2026-02-05"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 12 de febrero de 2026 — כ״ד שבט תשפ״ו 📖 Tema כי טוב לו עמך — Porque le es bueno.mp3", "titulo": "פרשת משפטים · כי טוב לו עמך", "fecha": "2026-02-12"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 19 de febrero de 2026 — ב׳ אדר תשפ״ו 📖 Tema מסר פר׳ תרומה — “וצפית אותו זהב” 📜 .mp3", "titulo": "פרשת תרומה · וצפית אותו זהב", "fecha": "2026-02-19"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 26 de febrero de 2026 — ט׳ אדר תשפ״ו 📖 Tema מסר פר׳ תצוה — “מעיל כליל תכלת” 📜 P.mp3", "titulo": "פרשת תצוה · מעיל כליל תכלת", "fecha": "2026-02-26"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 12 de marzo de 2026 — כ״ג אדר תשפ״ו 📖 Tema מסר פר’ ויקהל — בצלאל בן אורי בן חור.mp3", "titulo": "פרשת ויקהל-פקודי · בצלאל בן אורי בן חור", "fecha": "2026-03-12"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves, 19 de marzo de 2026 📖 Tema אשר נשיא יחטא — Cuando un líder peca 📜 Parashá ויקר.mp3", "titulo": "פרשת ויקרא · אשר נשיא יחטא", "fecha": "2026-03-19"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 23 de abril de 2026 📖 Tema מסר פרי אחרי מות — כמעשה ארץ מצרים לא תעשו — Como la.mp3", "titulo": "פרשת אחרי מות · כמעשה ארץ מצרים לא תעשו", "fecha": "2026-04-23"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 30 de abril de 2026 📖 Tema מסר פרי אמור — מקראי קודש אלה הם מועדי 📜 Parashá אמו.mp3", "titulo": "פרשת אמור · מקראי קודש אלה הם מועדי", "fecha": "2026-04-30"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 14 de Mayo de 2026 📖 Tema ואיש על דגלו — “Y cada uno bajo su bandera” 📜 Parashá.mp3", "titulo": "פרשת במדבר · ואיש על דגלו", "fecha": "2026-05-14"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 28 de mayo de 2026 📖 Tema הרואה סוטה בקלקולה — Quien ve a una sotá en su caída .mp3", "titulo": "פרשת נשא · הרואה סוטה בקלקולה", "fecha": "2026-05-28"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 4 de junio de 2026 📖 Tema מסר פרי בהעלותך — ומה בכתובים 📜 Parashá בהעלותך — Beh.mp3", "titulo": "פרשת בהעלותך · ומה בכתובים", "fecha": "2026-06-04"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 18 de junio de 2026 📖 Tema ולא יהיה כקרח ועדתו 📜 Parashá קרח — Koraj 🎧 Se adjun.mp3", "titulo": "פרשת קרח · ולא יהיה כקרח ועדתו", "fecha": "2026-06-18"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Viernes 26 de junio de 2026 📖 Parashá חוקת – Jukat 🎙️ Tema וישלח ה׳ את הנחשים – “Y Has.mp3", "titulo": "פרשת חוקת · וישלח ה׳ את הנחשים", "fecha": "2026-06-26"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Jueves 9 de julio de 2026 – כ״ד תמוז תשפ״ו (24 de Tamuz 5786) 📖 Parashá מטות־מסעי (Matot-Mas.mp3", "titulo": "פרשת מטות-מסעי · ויחנו במדבר סיני", "fecha": "2026-07-09"},
-  {"archivo": "📢 Mensaje del Rab Grilak 🗓️ Jueves 16 de julio de 2026 – ב׳ אב תשפ״ו 📖 Parashá דברים (Devarim) 📝 Tema רב לכם שבת בהר.mp3", "titulo": "פרשת דברים · רב לכם שבת בהר", "fecha": "2026-07-16"},
-  {"archivo": "parshat ekeb.mp3", "titulo": "פרשת עקב · והיה אם שמוע", "fecha": "2026-07-30"},
-  {"contiene": "20 de agosto de 2026", "titulo": "פרשת כי תצא · לא קדמו בלחם ובמים", "fecha": "2026-08-20"},
-  {"contiene": "27 de agosto de 2026", "titulo": "פרשת כי תבוא · ברוך פרי בטנך", "fecha": "2026-08-27"},
-  {"contiene": "2 de septiembre de 2026", "titulo": "פרשת נצבים · והשבות אל לבבך", "fecha": "2026-09-02"},
-  {"contiene": "וישעי", "titulo": "ערב ראש השנה · אורי בראש השנה וישעי ביום הכיפורים", "fecha": "2026-09-10"},
-  {"contiene": "17 de septiembre de 2026", "titulo": "פרשת האזינו · בעצם היום הזה", "fecha": "2026-09-17"},
-  {"contiene": "jueves 1 de octubre de 2026", "titulo": "פרשת וזאת הברכה · שמח זבולון בצאתך", "fecha": "2026-10-01"},
-  {"contiene": "8 de octubre de 2026", "titulo": "פרשת בראשית · נעשה אדם", "fecha": "2026-10-08"},
-  {"silenciar": ["📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves, 19 de marzo de 2026 📖 Tema אשר נשיא יחטא — Cuando un líder peca 📜 Parashá ויקר.mp3", "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 23 de abril de 2026 📖 Tema מסר פרי אחרי מות — כמעשה ארץ מצרים לא תעשו — Como la.mp3", "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 30 de abril de 2026 📖 Tema מסר פרי אמור — מקראי קודש אלה הם מועדי 📜 Parashá אמו.mp3", "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 14 de Mayo de 2026 📖 Tema ואיש על דגלו — “Y cada uno bajo su bandera” 📜 Parashá.mp3", "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 28 de mayo de 2026 📖 Tema הרואה סוטה בקלקולה — Quien ve a una sotá en su caída .mp3", "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 4 de junio de 2026 📖 Tema מסר פרי בהעלותך — ומה בכתובים 📜 Parashá בהעלותך — Beh.mp3", "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 18 de junio de 2026 📖 Tema ולא יהיה כקרח ועדתו 📜 Parashá קרח — Koraj 🎧 Se adjun.mp3", "📢 Mensaje del Rab Grilak 🗓️ Fecha Viernes 26 de junio de 2026 📖 Parashá חוקת – Jukat 🎙️ Tema וישלח ה׳ את הנחשים – “Y Has.mp3", "📢 Mensaje del Rab Grilak 🗓️ Jueves 9 de julio de 2026 – כ״ד תמוז תשפ״ו (24 de Tamuz 5786) 📖 Parashá מטות־מסעי (Matot-Mas.mp3", "📢 Mensaje del Rab Grilak 🗓️ Jueves 16 de julio de 2026 – ב׳ אב תשפ״ו 📖 Parashá דברים (Devarim) 📝 Tema רב לכם שבת בהר.mp3", "parshat ekeb.mp3", "📢 Mensaje del Rav Grilak 🗓️ Fecha Jueves, 4 de septiembre de 2025 📖 Tema וְתַפְסוּ בוֹ אָבִיו וְאִמּוֹ — “Y lo tomarán s.mp3", "📢 Mensaje de Rab Grilak 🗓️ Fecha Jueves, 11 de septiembre de 2025 📖 Tema וְהִשִּׂיגֻךָ כִּי־תִשְׁמַע — Y te alcanzará, p.mp3", "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves, 18 de septiembre de 2025 📖 Tema וְהִתְבָּרֵךְ בִּלְבָבוֹ — Y se bendecirá en s.mp3", "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves, 30 de octubre de 2025 📖 Tema וַיַּחְשְׁבֶהָ לּוֹ צְדָקָה — Y se lo consideró c.mp3", "📢 Mensaje de Rab Grilak 🗓️ Fecha Jueves, 6 de noviembre de 2025 📖 Tema וירע הדבר בעני אברהם מאוד — “Y el asunto fue muy .mp3", "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves, 13 de noviembre de 2025 📖 Tema שְׁנֵי חַיֵּי שָׂרָה — Shné Jayéi Sará 📜 Parash.mp3", "📢 Mensaje de Rab Grilak 🗓️ Fecha Jueves, 20 de noviembre de 2025 📖 Tema “וַיֵּעָתֶר לוֹ ה׳” — “Hashem aceptó su tefilá” .mp3", "📢 Mensaje del Rab גרילק 🗓️ Fecha Jueves, 27 de noviembre de 2025 📖 Tema לָמָּה רִמִּיתָנִי — “¿Por qué me engañaste ” 📜 .mp3", "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves, 4 de diciembre de 2025 📖 Tema וישלח יעקב — Vayishlach Yaakov 📜 Parashá וישלח —.mp3", "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 11 de diciembre de 2025 📖 Tema נְשָׂאִים נְכֹאת וּצְרִי וָלֹט — 📜 Parashá וַיֵּ.mp3", "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 18 de diciembre de 2025 📖 Tema לָמָה תִּתְרָאוּ — ¿Por qué se miran unos a otro.mp3", "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 8 de enero de 2026 📖 Tema שלח נא ביד תשלח — Envía, por favor, a quien Tú envíes.mp3", "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 15 de enero de 2026 📖 Tema וְעָלוּ וּבָאוּ… וּבְתַנּוּרֶיךָ “Y subirán y entrar.mp3", "📢 Mensaje de Rab Grilak 🗓️ Fecha Jueves 22 de enero de 2026 — יום חמישי ה׳ בשבט תשפ״ו 📖 Tema אֲשֶׁר הִתְעַלַּלְתִּי — 📜 .mp3", "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 29 de enero de 2026 יום חמישי יא׳ בשבט תשפ״ו 📖 Tema ״ויעשו כן״ — “Y así lo hici.mp3", "Mensaje de Rab Grilak 🗓️ Fecha Jueves 5 de febrero de 2026 📖 Tema וַיְסַפֵּר אֶת כָּל הַתְּלָאָה — Y relató todo el esfu.mp3", "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 12 de febrero de 2026 — כ״ד שבט תשפ״ו 📖 Tema כי טוב לו עמך — Porque le es bueno.mp3", "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 19 de febrero de 2026 — ב׳ אדר תשפ״ו 📖 Tema מסר פר׳ תרומה — “וצפית אותו זהב” 📜 .mp3", "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 26 de febrero de 2026 — ט׳ אדר תשפ״ו 📖 Tema מסר פר׳ תצוה — “מעיל כליל תכלת” 📜 P.mp3", "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 12 de marzo de 2026 — כ״ג אדר תשפ״ו 📖 Tema מסר פר’ ויקהל — בצלאל בן אורי בן חור.mp3"]},
-  {"mensaje_rab": true, "nota": "(nov/2026) lo que llega con el mensaje entero (📢 Mensaje del Rab Grilak … 📖 Tema …) sale \"פרשת X · tema\": solo hebreo, sin la fonética; la parashá de esa semana por la fecha del mensaje"},
-  {"contiene": "29 de octubre de 2026", "titulo": "פרשת וירא · חסד לאברהם", "fecha": "2026-10-29"},
-  {"anunciar": true}
+ {
+  "nota": "(nov/2026) Rab Yohanan Grilak: títulos en hebreo (פרשת X · tema) como pidió el usuario, en orden de fecha; los 31 primeros revisados escuchando el audio. Los nuevos (ago-oct 2026) se reconocen por la fecha del mensaje (contiene) y sí se anuncian, solo en su grupo."
+ },
+ {
+  "archivo": "📢 Mensaje del Rav Grilak 🗓️ Fecha Jueves, 4 de septiembre de 2025 📖 Tema וְתַפְסוּ בוֹ אָבִיו וְאִמּוֹ — “Y lo tomarán s.mp3",
+  "titulo": "פרשת כי תצא · ותפסו בו אביו ואמו",
+  "fecha": "2025-09-04"
+ },
+ {
+  "archivo": "📢 Mensaje de Rab Grilak 🗓️ Fecha Jueves, 11 de septiembre de 2025 📖 Tema וְהִשִּׂיגֻךָ כִּי־תִשְׁמַע — Y te alcanzará, p.mp3",
+  "titulo": "פרשת כי תבוא · והשיגוך כי תשמע",
+  "fecha": "2025-09-11"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves, 18 de septiembre de 2025 📖 Tema וְהִתְבָּרֵךְ בִּלְבָבוֹ — Y se bendecirá en s.mp3",
+  "titulo": "פרשת נצבים · והתברך בלבבו",
+  "fecha": "2025-09-18"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves, 30 de octubre de 2025 📖 Tema וַיַּחְשְׁבֶהָ לּוֹ צְדָקָה — Y se lo consideró c.mp3",
+  "titulo": "פרשת לך לך · ויחשבה לו צדקה",
+  "fecha": "2025-10-30"
+ },
+ {
+  "archivo": "📢 Mensaje de Rab Grilak 🗓️ Fecha Jueves, 6 de noviembre de 2025 📖 Tema וירע הדבר בעני אברהם מאוד — “Y el asunto fue muy .mp3",
+  "titulo": "פרשת וירא · וירע הדבר בעיני אברהם מאוד",
+  "fecha": "2025-11-06"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves, 13 de noviembre de 2025 📖 Tema שְׁנֵי חַיֵּי שָׂרָה — Shné Jayéi Sará 📜 Parash.mp3",
+  "titulo": "פרשת חיי שרה · שני חיי שרה",
+  "fecha": "2025-11-13"
+ },
+ {
+  "archivo": "📢 Mensaje de Rab Grilak 🗓️ Fecha Jueves, 20 de noviembre de 2025 📖 Tema “וַיֵּעָתֶר לוֹ ה׳” — “Hashem aceptó su tefilá” .mp3",
+  "titulo": "פרשת תולדות · ויעתר לו ה׳",
+  "fecha": "2025-11-20"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab גרילק 🗓️ Fecha Jueves, 27 de noviembre de 2025 📖 Tema לָמָּה רִמִּיתָנִי — “¿Por qué me engañaste ” 📜 .mp3",
+  "titulo": "פרשת ויצא · למה רמיתני",
+  "fecha": "2025-11-27"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves, 4 de diciembre de 2025 📖 Tema וישלח יעקב — Vayishlach Yaakov 📜 Parashá וישלח —.mp3",
+  "titulo": "פרשת וישלח · וישלח יעקב",
+  "fecha": "2025-12-04"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 11 de diciembre de 2025 📖 Tema נְשָׂאִים נְכֹאת וּצְרִי וָלֹט — 📜 Parashá וַיֵּ.mp3",
+  "titulo": "פרשת וישב · נשאים נכאת וצרי ולט",
+  "fecha": "2025-12-11"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 18 de diciembre de 2025 📖 Tema לָמָה תִּתְרָאוּ — ¿Por qué se miran unos a otro.mp3",
+  "titulo": "פרשת מקץ · למה תתראו",
+  "fecha": "2025-12-18"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 8 de enero de 2026 📖 Tema שלח נא ביד תשלח — Envía, por favor, a quien Tú envíes.mp3",
+  "titulo": "פרשת שמות · שלח נא ביד תשלח",
+  "fecha": "2026-01-08"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 15 de enero de 2026 📖 Tema וְעָלוּ וּבָאוּ… וּבְתַנּוּרֶיךָ “Y subirán y entrar.mp3",
+  "titulo": "פרשת וארא · ועלו ובאו... ובתנוריך",
+  "fecha": "2026-01-15"
+ },
+ {
+  "archivo": "📢 Mensaje de Rab Grilak 🗓️ Fecha Jueves 22 de enero de 2026 — יום חמישי ה׳ בשבט תשפ״ו 📖 Tema אֲשֶׁר הִתְעַלַּלְתִּי — 📜 .mp3",
+  "titulo": "פרשת בא · אשר התעללתי",
+  "fecha": "2026-01-22"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 29 de enero de 2026 יום חמישי יא׳ בשבט תשפ״ו 📖 Tema ״ויעשו כן״ — “Y así lo hici.mp3",
+  "titulo": "פרשת בשלח · ויעשו כן",
+  "fecha": "2026-01-29"
+ },
+ {
+  "archivo": "Mensaje de Rab Grilak 🗓️ Fecha Jueves 5 de febrero de 2026 📖 Tema וַיְסַפֵּר אֶת כָּל הַתְּלָאָה — Y relató todo el esfu.mp3",
+  "titulo": "פרשת יתרו · ויספר את כל התלאה",
+  "fecha": "2026-02-05"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 12 de febrero de 2026 — כ״ד שבט תשפ״ו 📖 Tema כי טוב לו עמך — Porque le es bueno.mp3",
+  "titulo": "פרשת משפטים · כי טוב לו עמך",
+  "fecha": "2026-02-12"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 19 de febrero de 2026 — ב׳ אדר תשפ״ו 📖 Tema מסר פר׳ תרומה — “וצפית אותו זהב” 📜 .mp3",
+  "titulo": "פרשת תרומה · וצפית אותו זהב",
+  "fecha": "2026-02-19"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 26 de febrero de 2026 — ט׳ אדר תשפ״ו 📖 Tema מסר פר׳ תצוה — “מעיל כליל תכלת” 📜 P.mp3",
+  "titulo": "פרשת תצוה · מעיל כליל תכלת",
+  "fecha": "2026-02-26"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 12 de marzo de 2026 — כ״ג אדר תשפ״ו 📖 Tema מסר פר’ ויקהל — בצלאל בן אורי בן חור.mp3",
+  "titulo": "פרשת ויקהל-פקודי · בצלאל בן אורי בן חור",
+  "fecha": "2026-03-12"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves, 19 de marzo de 2026 📖 Tema אשר נשיא יחטא — Cuando un líder peca 📜 Parashá ויקר.mp3",
+  "titulo": "פרשת ויקרא · אשר נשיא יחטא",
+  "fecha": "2026-03-19"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 23 de abril de 2026 📖 Tema מסר פרי אחרי מות — כמעשה ארץ מצרים לא תעשו — Como la.mp3",
+  "titulo": "פרשת אחרי מות · כמעשה ארץ מצרים לא תעשו",
+  "fecha": "2026-04-23"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 30 de abril de 2026 📖 Tema מסר פרי אמור — מקראי קודש אלה הם מועדי 📜 Parashá אמו.mp3",
+  "titulo": "פרשת אמור · מקראי קודש אלה הם מועדי",
+  "fecha": "2026-04-30"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 14 de Mayo de 2026 📖 Tema ואיש על דגלו — “Y cada uno bajo su bandera” 📜 Parashá.mp3",
+  "titulo": "פרשת במדבר · ואיש על דגלו",
+  "fecha": "2026-05-14"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 28 de mayo de 2026 📖 Tema הרואה סוטה בקלקולה — Quien ve a una sotá en su caída .mp3",
+  "titulo": "פרשת נשא · הרואה סוטה בקלקולה",
+  "fecha": "2026-05-28"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 4 de junio de 2026 📖 Tema מסר פרי בהעלותך — ומה בכתובים 📜 Parashá בהעלותך — Beh.mp3",
+  "titulo": "פרשת בהעלותך · ומה בכתובים",
+  "fecha": "2026-06-04"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 18 de junio de 2026 📖 Tema ולא יהיה כקרח ועדתו 📜 Parashá קרח — Koraj 🎧 Se adjun.mp3",
+  "titulo": "פרשת קרח · ולא יהיה כקרח ועדתו",
+  "fecha": "2026-06-18"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Fecha Viernes 26 de junio de 2026 📖 Parashá חוקת – Jukat 🎙️ Tema וישלח ה׳ את הנחשים – “Y Has.mp3",
+  "titulo": "פרשת חוקת · וישלח ה׳ את הנחשים",
+  "fecha": "2026-06-26"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Jueves 9 de julio de 2026 – כ״ד תמוז תשפ״ו (24 de Tamuz 5786) 📖 Parashá מטות־מסעי (Matot-Mas.mp3",
+  "titulo": "פרשת מטות-מסעי · ויחנו במדבר סיני",
+  "fecha": "2026-07-09"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ Jueves 16 de julio de 2026 – ב׳ אב תשפ״ו 📖 Parashá דברים (Devarim) 📝 Tema רב לכם שבת בהר.mp3",
+  "titulo": "פרשת דברים · רב לכם שבת בהר",
+  "fecha": "2026-07-16"
+ },
+ {
+  "archivo": "parshat ekeb.mp3",
+  "titulo": "פרשת עקב · והיה אם שמוע",
+  "fecha": "2026-07-30"
+ },
+ {
+  "contiene": "20 de agosto de 2026",
+  "titulo": "פרשת כי תצא · לא קדמו בלחם ובמים",
+  "fecha": "2026-08-20"
+ },
+ {
+  "contiene": "27 de agosto de 2026",
+  "titulo": "פרשת כי תבוא · ברוך פרי בטנך",
+  "fecha": "2026-08-27"
+ },
+ {
+  "contiene": "2 de septiembre de 2026",
+  "titulo": "פרשת נצבים · והשבות אל לבבך",
+  "fecha": "2026-09-02"
+ },
+ {
+  "contiene": "וישעי",
+  "titulo": "ערב ראש השנה · אורי בראש השנה וישעי ביום הכיפורים",
+  "fecha": "2026-09-10"
+ },
+ {
+  "contiene": "17 de septiembre de 2026",
+  "titulo": "פרשת האזינו · בעצם היום הזה",
+  "fecha": "2026-09-17"
+ },
+ {
+  "contiene": "jueves 1 de octubre de 2026",
+  "titulo": "פרשת וזאת הברכה · שמח זבולון בצאתך",
+  "fecha": "2026-10-01"
+ },
+ {
+  "contiene": "8 de octubre de 2026",
+  "titulo": "פרשת בראשית · נעשה אדם",
+  "fecha": "2026-10-08"
+ },
+ {
+  "silenciar": [
+   "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves, 19 de marzo de 2026 📖 Tema אשר נשיא יחטא — Cuando un líder peca 📜 Parashá ויקר.mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 23 de abril de 2026 📖 Tema מסר פרי אחרי מות — כמעשה ארץ מצרים לא תעשו — Como la.mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 30 de abril de 2026 📖 Tema מסר פרי אמור — מקראי קודש אלה הם מועדי 📜 Parashá אמו.mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 14 de Mayo de 2026 📖 Tema ואיש על דגלו — “Y cada uno bajo su bandera” 📜 Parashá.mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 28 de mayo de 2026 📖 Tema הרואה סוטה בקלקולה — Quien ve a una sotá en su caída .mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 4 de junio de 2026 📖 Tema מסר פרי בהעלותך — ומה בכתובים 📜 Parashá בהעלותך — Beh.mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 18 de junio de 2026 📖 Tema ולא יהיה כקרח ועדתו 📜 Parashá קרח — Koraj 🎧 Se adjun.mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Fecha Viernes 26 de junio de 2026 📖 Parashá חוקת – Jukat 🎙️ Tema וישלח ה׳ את הנחשים – “Y Has.mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Jueves 9 de julio de 2026 – כ״ד תמוז תשפ״ו (24 de Tamuz 5786) 📖 Parashá מטות־מסעי (Matot-Mas.mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Jueves 16 de julio de 2026 – ב׳ אב תשפ״ו 📖 Parashá דברים (Devarim) 📝 Tema רב לכם שבת בהר.mp3",
+   "parshat ekeb.mp3",
+   "📢 Mensaje del Rav Grilak 🗓️ Fecha Jueves, 4 de septiembre de 2025 📖 Tema וְתַפְסוּ בוֹ אָבִיו וְאִמּוֹ — “Y lo tomarán s.mp3",
+   "📢 Mensaje de Rab Grilak 🗓️ Fecha Jueves, 11 de septiembre de 2025 📖 Tema וְהִשִּׂיגֻךָ כִּי־תִשְׁמַע — Y te alcanzará, p.mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves, 18 de septiembre de 2025 📖 Tema וְהִתְבָּרֵךְ בִּלְבָבוֹ — Y se bendecirá en s.mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves, 30 de octubre de 2025 📖 Tema וַיַּחְשְׁבֶהָ לּוֹ צְדָקָה — Y se lo consideró c.mp3",
+   "📢 Mensaje de Rab Grilak 🗓️ Fecha Jueves, 6 de noviembre de 2025 📖 Tema וירע הדבר בעני אברהם מאוד — “Y el asunto fue muy .mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves, 13 de noviembre de 2025 📖 Tema שְׁנֵי חַיֵּי שָׂרָה — Shné Jayéi Sará 📜 Parash.mp3",
+   "📢 Mensaje de Rab Grilak 🗓️ Fecha Jueves, 20 de noviembre de 2025 📖 Tema “וַיֵּעָתֶר לוֹ ה׳” — “Hashem aceptó su tefilá” .mp3",
+   "📢 Mensaje del Rab גרילק 🗓️ Fecha Jueves, 27 de noviembre de 2025 📖 Tema לָמָּה רִמִּיתָנִי — “¿Por qué me engañaste ” 📜 .mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves, 4 de diciembre de 2025 📖 Tema וישלח יעקב — Vayishlach Yaakov 📜 Parashá וישלח —.mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 11 de diciembre de 2025 📖 Tema נְשָׂאִים נְכֹאת וּצְרִי וָלֹט — 📜 Parashá וַיֵּ.mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 18 de diciembre de 2025 📖 Tema לָמָה תִּתְרָאוּ — ¿Por qué se miran unos a otro.mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 8 de enero de 2026 📖 Tema שלח נא ביד תשלח — Envía, por favor, a quien Tú envíes.mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 15 de enero de 2026 📖 Tema וְעָלוּ וּבָאוּ… וּבְתַנּוּרֶיךָ “Y subirán y entrar.mp3",
+   "📢 Mensaje de Rab Grilak 🗓️ Fecha Jueves 22 de enero de 2026 — יום חמישי ה׳ בשבט תשפ״ו 📖 Tema אֲשֶׁר הִתְעַלַּלְתִּי — 📜 .mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 29 de enero de 2026 יום חמישי יא׳ בשבט תשפ״ו 📖 Tema ״ויעשו כן״ — “Y así lo hici.mp3",
+   "Mensaje de Rab Grilak 🗓️ Fecha Jueves 5 de febrero de 2026 📖 Tema וַיְסַפֵּר אֶת כָּל הַתְּלָאָה — Y relató todo el esfu.mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 12 de febrero de 2026 — כ״ד שבט תשפ״ו 📖 Tema כי טוב לו עמך — Porque le es bueno.mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 19 de febrero de 2026 — ב׳ אדר תשפ״ו 📖 Tema מסר פר׳ תרומה — “וצפית אותו זהב” 📜 .mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 26 de febrero de 2026 — ט׳ אדר תשפ״ו 📖 Tema מסר פר׳ תצוה — “מעיל כליל תכלת” 📜 P.mp3",
+   "📢 Mensaje del Rab Grilak 🗓️ Fecha Jueves 12 de marzo de 2026 — כ״ג אדר תשפ״ו 📖 Tema מסר פר’ ויקהל — בצלאל בן אורי בן חור.mp3"
+  ]
+ },
+ {
+  "mensaje_rab": true,
+  "nota": "(nov/2026) lo que llega con el mensaje entero (📢 Mensaje del Rab Grilak … 📖 Tema …) sale \"פרשת X · tema\": solo hebreo, sin la fonética; la parashá de esa semana por la fecha del mensaje"
+ },
+ {
+  "contiene": "29 de octubre de 2026",
+  "titulo": "פרשת וירא · חסד לאברהם",
+  "fecha": "2026-10-29"
+ },
+ {
+  "archivo": "📢 Mensaje del Rab Grilak 🗓️ jueves 12 de noviembre de 2026 📖 Parashá תולדות — Toledot 🎙️ Tema יקרבו ימי אבל אבי “Yikrevú.mp3",
+  "titulo": "פרשת תולדות · יקרבו ימי אבל אבי",
+  "fecha": "2026-11-12"
+ },
+ {
+  "silenciar": [
+   "📢 Mensaje del Rab Grilak 🗓️ jueves 12 de noviembre de 2026 📖 Parashá תולדות — Toledot 🎙️ Tema יקרבו ימי אבל אבי “Yikrevú.mp3"
+  ],
+  "nota": "(12/11/2026) el usuario ya lo mandó a mano al grupo de Or Israel y al del Rab: no se repite"
+ },
+ {
+  "anunciar": true
+ }
 ]

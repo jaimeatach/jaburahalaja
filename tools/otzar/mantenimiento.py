@@ -672,6 +672,9 @@ def titulo_de_mensaje(texto):
         x = re.sub(r"^מסר\s+פר\S*\s+[^—–]+[—–]\s*", "", mt.group(1).strip())
         heb = [p for p in re.split(r"\s+[—–-]\s+", x)
                if re.search(r"[\u05D0-\u05EA]", p) and not re.search(r"[A-Za-zÁÉÍÓÚáéíóúÑñ]", p)]
+        if not heb:   # (nov/2026) "Tema יקרבו ימי אבל אבי “Yikrevú…": hebreo y fonética sin guion
+            m0 = re.match(r"\s*([\u05D0-\u05EA\u0591-\u05C7][\u05D0-\u05EA\u0591-\u05C7\s'׳״־-]*)", x)
+            heb = [m0.group(1).strip()] if m0 else []
         tema = re.sub(r"[\u0591-\u05C7]", "", heb[0] if heb else "")      # sin nikud, como los demás
         tema = re.sub(r"[“”״\"]", "", tema).strip(" '.,—–-")
     mp = re.search(r"Parash[aá]\s*[:：]?\s*([\u05D0-\u05EA][\u05D0-\u05EA\s\-־]*[\u05D0-\u05EA])", t)
