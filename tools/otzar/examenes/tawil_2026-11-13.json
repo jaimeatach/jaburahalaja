@@ -1,98 +1,118 @@
 {
-  "titulo": "Examen semanal · Rab Yosef Tawil · Shiurim #45–#50",
-  "descripcion": "Las leyes del Kidush de Shabat. 6 preguntas sobre lo que dijo el Rab en las clases de la semana (8 al 13 de noviembre). ¡Mucha hatzlajá!",
-  "shiurim": [
-    45,
-    46,
-    47,
-    48,
-    49,
-    50
-  ],
-  "preguntas": [
-    {
-      "nivel": "facil",
-      "shiur": 46,
-      "pregunta": "Según el Rab, ¿quién puede hacer el Kidush de la noche para que toda la casa cumpla?",
-      "opciones": [
-        "Un niño de 12 años que ya lee bien el Kidush",
-        "Cualquiera que ya cumplió bar mitzvá, aunque sea ese mismo día",
-        "Uno mayor de bar mitzvá a quien ya se le empieza a ver la barba",
-        "Solo el papá de la casa: nadie más lo puede hacer"
-      ],
-      "correcta": 2,
-      "explicacion": "El Kidush de la noche es de la Torá, así que un niño menor de bar mitzvá no sirve para que todos cumplan. Recién cumplido el bar mitzvá tampoco es conveniente: tiene que ser alguien a quien ya le empieza a salir la barba. Se acostumbra en todas las casas de Israel que lo haga el papá.",
-      "puntos": 1
-    },
-    {
-      "nivel": "facil",
-      "shiur": 50,
-      "pregunta": "¿Cómo se hace el Kidush de la MAÑANA de Shabat, según el Rab?",
-      "opciones": [
-        "Parados, igual que en la noche, porque recibimos a la novia",
-        "Sentados: el que dice Kidush y todos los demás, alrededor de la mesa",
-        "El que dice Kidush parado y los demás sentados alrededor de la mesa",
-        "Da igual parados o sentados, con tal de estar alrededor de la mesa"
-      ],
-      "correcta": 1,
-      "explicacion": "En la noche los Sefaradim se paran (recibimos a la novia). En el Kidush del día, davka nos sentamos: el que dice Kidush y los demás, juntos alrededor de la mesa, para cumplir todos.",
-      "puntos": 1
-    },
-    {
-      "nivel": "facil",
-      "shiur": 45,
-      "pregunta": "Según el Rab, ¿qué dos cosas pusieron los Jajamim sin las cuales NO se cumple la mitzvá de Kidush?",
-      "opciones": [
-        "Que se diga sobre un vaso de vino y que lo diga el papá de la casa",
-        "Que se diga sobre un vaso de vino y que antes se diga Vaijulú",
-        "Que se diga sobre un vaso de vino y que después se haga la seudá",
-        "Que haya pan en la mesa y que después se haga la seudá"
-      ],
-      "correcta": 2,
-      "explicacion": "El Kidush es de la Torá, para hombres y mujeres por igual. Los Jajamim agregaron que se haga con un vaso de vino y que después del Kidush haya seudá: sin vino y sin seudá no se cumple la mitzvá.",
-      "puntos": 1
-    },
-    {
-      "nivel": "media",
-      "shiur": 48,
-      "pregunta": "Alguien escuchó Vaijulú y \"Mekadesh HaShabat\", pero NO escuchó la berajá de Boré Perí HaGuefen. ¿Qué pasa?",
-      "opciones": [
-        "Cumplió el Kidush y puede tomar del vino: sale con la berajá del que hizo Kidush",
-        "Cumplió el Kidush, pero para tomar del vino tiene que decir él Boré Perí HaGuefen",
-        "No cumplió: tiene que volver a hacer todo el Kidush",
-        "Cumplió el Kidush, pero tiene que decir Vaijulú después de tomar el vino"
-      ],
-      "correcta": 1,
-      "explicacion": "Si no escuchó Boré Perí HaGuefen, el Kidush sí fue válido, pero no puede tomar del vino; si quiere tomar, tiene que decir otra vez Boré Perí HaGuefen. Lo que invalida el Kidush es no escuchar \"Mekadesh HaShabat\", aunque sea una sola palabra. Vaijulú se dice después solo si fue eso lo que no escuchó.",
-      "puntos": 1
-    },
-    {
-      "nivel": "medio_dificil",
-      "shiur": 47,
-      "pregunta": "El Rab explicó por qué decimos \"Yom HaShishí\" antes de Vaijulú. ¿Cómo se llega a las 72 palabras del Shem de 72?",
-      "opciones": [
-        "Vaijulú (35) + Mekadesh HaShabat (35) + \"Yom HaShishí\" (2)",
-        "Vaijulú (35) + Boré Perí HaGuefen (35) + \"Yom HaShishí\" (2)",
-        "Vaijulú (36) + Mekadesh HaShabat (36), sin contar \"Yom HaShishí\"",
-        "Vaijulú (35) + Mekadesh HaShabat (37), con \"Yom HaShishí\" adentro"
-      ],
-      "correcta": 0,
-      "explicacion": "Vaijulú tiene 35 palabras y la berajá de Mekadesh HaShabat tiene 35; con las dos palabras \"Yom HaShishí\" son 72, como el Shem Kadosh de 72. Además, las iniciales de \"Yom HaShishí Vaijulú HaShamáyim\" forman el Shem de Hashem (Y-H-V-H).",
-      "puntos": 1
-    },
-    {
-      "nivel": "muy_dificil",
-      "shiur": 49,
-      "pregunta": "Alguien se quedó dormido y NO hizo el Kidush de la noche (no estaba enfermo). ¿Qué hace el sábado en la mañana?",
-      "opciones": [
-        "Hace el Kidush de la noche completo, con Vaijulú, y ya no el de la mañana",
-        "Hace primero el Kidush de la mañana y luego el de la noche sin Vaijulú",
-        "Ya no puede reponerlo: solo hace el Kidush de la mañana",
-        "Dice Boré Perí HaGuefen y \"Mekadesh HaShabat\" (sin Vaijulú), y ya no el de la mañana"
-      ],
-      "correcta": 3,
-      "explicacion": "En la mañana tiene que hacer el Kidush de la NOCHE, el de la berajá \"Mekadesh HaShabat\", pero sin Vaijulú: dice Boré Perí HaGuefen y Mekadesh HaShabat. Con eso ya no necesita hacer el Kidush del día.",
-      "puntos": 1
-    }
-  ]
+ "titulo": "Examen semanal · Rab Yosef Tawil · Shiurim #45–#50",
+ "descripcion": "Las leyes del Kidush de Shabat. 8 preguntas sobre lo que dijo el Rab en las clases de la semana (8 al 13 de noviembre). ¡Mucha hatzlajá!",
+ "shiurim": [
+  45,
+  46,
+  47,
+  48,
+  49,
+  50
+ ],
+ "preguntas": [
+  {
+   "nivel": "dificil",
+   "shiur": 45,
+   "pregunta": "Las mujeres están exentas de las mitzvot que dependen del tiempo. Según el Rab, ¿por qué SÍ están obligadas al Kidush de la noche, que es de la Torá?",
+   "opciones": [
+    "Porque los Jajamim las obligaron cuando agregaron el vaso de vino",
+    "Porque ellas prenden las velas, y el Kidush va junto con las velas",
+    "Porque en todas las mitzvot de Shabat los hombres y las mujeres son iguales",
+    "No están obligadas de la Torá: lo hacen por costumbre, para escuchar al esposo"
+   ],
+   "correcta": 2,
+   "explicacion": "El Rab: aunque las mujeres están exentas de las mitzvot que dependen del tiempo, en todas las mitzvot de Shabat hombres y mujeres son iguales; por eso el Kidush de la Torá es para los dos."
+  },
+  {
+   "nivel": "dificil",
+   "shiur": 46,
+   "pregunta": "Un muchacho cumplió bar mitzvá esta semana y lee el Kidush perfecto. Según el Rab, ¿es bueno que haga el Kidush de la noche para toda la casa?",
+   "opciones": [
+    "Sí: ya es mayor de bar mitzvá, y con eso basta para la Torá",
+    "No es conveniente: conviene alguien a quien ya se le empiece a ver la barba",
+    "Sí, pero solo si el papá no está en la casa",
+    "No: para el Kidush de la Torá se necesita tener por lo menos 18 años"
+   ],
+   "correcta": 1,
+   "explicacion": "El Kidush de la noche es de la Torá: un menor de bar mitzvá no sirve. Y dice el Rab que incluso recién cumplido el bar mitzvá no es conveniente: que sea alguien a quien ya le empiece a salir la barba. La costumbre es que lo haga el papá."
+  },
+  {
+   "nivel": "dificil",
+   "shiur": 47,
+   "pregunta": "Según el Rab, ¿qué logra la persona que dice Vaijulú con kavaná, pensando lo que dice?",
+   "opciones": [
+    "Hashem la hace socia en la creación del mundo",
+    "Cumple el Kidush aunque no haya escuchado Mekadesh HaShabat",
+    "Recibe la neshamá yeterá en ese momento",
+    "Se le cuenta como si hubiera dicho el Shem de 72 letras"
+   ],
+   "correcta": 0,
+   "explicacion": "El Rab: quien dice Vaijulú con kavaná, Hashem lo hace shutaf (socio) en la creación del mundo: el mundo se creó en seis días y el séptimo depende de las personas; si cumplen Shabat, le da fuerza al mundo para otra semana."
+  },
+  {
+   "nivel": "dificil",
+   "shiur": 48,
+   "pregunta": "Platicaste y NO escuchaste Vaijulú, pero sí todo lo demás del Kidush. Según el Rab, ¿qué haces?",
+   "opciones": [
+    "Dices tú Vaijulú antes de tomar el vino, para que el Kidush quede completo",
+    "No cumpliste: tienes que volver a escuchar el Kidush desde Vaijulú",
+    "Ya no lo dices: ya lo dijiste dos veces en el rezo",
+    "Cumpliste: después de tomar el vino dices tú Vaijulú"
+   ],
+   "correcta": 3,
+   "explicacion": "Vaijulú no impide cumplir el Kidush. Pero como hay que decirlo tres veces (en la Amidá, después de la Amidá y en el Kidush), el que no lo escuchó lo dice él después de tomar el vino del Kidush."
+  },
+  {
+   "nivel": "dificil",
+   "shiur": 48,
+   "pregunta": "En el Kidush escuchaste todo, menos la palabra \"Mélej HaOlam\" de la berajá de Mekadesh HaShabat. Según el Rab, ¿qué pasa?",
+   "opciones": [
+    "Cumpliste: lo que importa es escuchar el final, \"Mekadesh HaShabat\"",
+    "Cumpliste el Kidush, pero no puedes tomar del vino",
+    "No cumpliste: aunque sea una sola palabra de esa berajá, tienes que hacer Kidush otra vez",
+    "Cumpliste, si contestaste Amén al final de la berajá"
+   ],
+   "correcta": 2,
+   "explicacion": "El Rab: si no escuchó la tercera berajá (Mekadesh HaShabat), no sirvió todo el Kidush, aunque sea una sola palabra que no haya escuchado: Baruj, Atá, Hashem, Mélej HaOlam… Tiene que hacer Kidush de nuevo. Si no escuchó Boré Perí HaGuefen, sí cumplió, pero no puede tomar del vino."
+  },
+  {
+   "nivel": "dificil",
+   "shiur": 49,
+   "pregunta": "El abuelito hace Kidush y se come palabras esenciales: no se le entiende. Según el Rab, ¿qué haces tú?",
+   "opciones": [
+    "Sales igual: \"shomea keoné\", el que escucha es como si lo dijera",
+    "Dices tú mismo el Kidush con tu vaso de vino, y tomas",
+    "Contestas Amén con fuerza: con eso cumples",
+    "Le pides con respeto que repita las palabras que no se entendieron"
+   ],
+   "correcta": 1,
+   "explicacion": "Si no escuchamos las palabras esenciales, no salimos: \"shomea keoné\" sirve solo cuando sí se escucha. Por eso uno mismo dice el Kidush con su vaso de vino y toma."
+  },
+  {
+   "nivel": "dificil",
+   "shiur": 49,
+   "pregunta": "Escuchando el Kidush de otro, ¿qué dijo el Rab sobre contestar \"Amén\" y \"Baruj Hu uBaruj Shemó\"?",
+   "opciones": [
+    "Amén a fuerzas (si no lo dijo cumplió, pero no está bien); Baruj Hu uBaruj Shemó, muchos opinan que no se dice",
+    "Los dos se contestan a fuerzas: sin ellos no se cumple",
+    "Amén a fuerzas: si no lo contestó, no cumplió; Baruj Hu uBaruj Shemó se dice siempre",
+    "No se contesta nada, para no interrumpir el Kidush"
+   ],
+   "correcta": 0,
+   "explicacion": "El Rab: se debe contestar Amén a fuerzas; si no lo contestó, igual cumplió la mitzvá, pero no es lo correcto. Baruj Hu uBaruj Shemó: muchas opiniones sostienen que no se dice en una berajá con la que uno sale; hay quienes dicen que sí."
+  },
+  {
+   "nivel": "dificil",
+   "shiur": 50,
+   "pregunta": "El Kidush del DÍA (el de los Jajamim): ¿con qué se cumple y cómo se está, según el Rab?",
+   "opciones": [
+    "Con los pesukim del Sidur y Boré Perí HaGuefen; todos sentados alrededor de la mesa",
+    "Con Boré Perí HaGuefen y tomar el vino; todos parados, como en la noche",
+    "Con Boré Perí HaGuefen y tomar el vino; el que dice Kidush parado y los demás sentados",
+    "Con Boré Perí HaGuefen y tomar el vino; todos sentados alrededor de la mesa"
+   ],
+   "correcta": 3,
+   "explicacion": "El Kidush del día se cumple con Boré Perí HaGuefen y tomar vino; los pesukim que acostumbramos no impiden. Y davka nos sentamos: el que dice Kidush y los demás, alrededor de la mesa donde se hace el Kidush."
+  }
+ ]
 }
