@@ -39,6 +39,8 @@ TITULO = "כל הש״ס · תלמוד בבלי המבואר · דף גמרא ב-
 DESCRIPCION = ("כל הש״ס בבלי במקום אחד, מסכת אחר מסכת ודף אחר דף: דף גמרא ב-10 דקות עם הרב נפתלי וסרמן (מחוברים לתורה). "
                "Otzar HaTorah - אוצר התורה.")
 AUTOR = "הרב נפתלי וסרמן"
+# (13/11/2026) la portada del Shas completo que mandó el usuario (no la de una masejet)
+PORTADA = PAGES + "/portada_20261113.jpg"
 
 # orden del Shas (Bavli) con las grafías que se usan en los títulos
 MASEJTOT = [
@@ -273,7 +275,7 @@ def feed_xml(lista, imagen):
     <language>he</language>
     <itunes:author>{escape(AUTOR)}</itunes:author>
     <itunes:owner><itunes:name>Otzar HaTorah</itunes:name><itunes:email>rabmeireliyahu@gmail.com</itunes:email></itunes:owner>
-    <itunes:image href="{escape(imagen or PAGES + '/portada.jpg')}"/>
+    <itunes:image href="{escape(PORTADA)}"/>
     <itunes:category text="Religion &amp; Spirituality"><itunes:category text="Judaism"/></itunes:category>
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>serial</itunes:type>"""]
