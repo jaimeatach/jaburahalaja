@@ -13,6 +13,17 @@ Contenido
   1) Siman ש״מ hasta Janucá  2) Janucá y vacaciones (שי״ז, cada quien en su casa)
   3) Regreso lunes 4 de enero  4) Vuelta 1 de los 5 simanim  5) Vuelta 2, repaso final
 - Cada día en una fila: día de la semana, fecha y lo que se estudia (siman en hebreo + dapim).
+
+Dapim reales (MUY IMPORTANTE)
+- En el archivo cada día dice "amud 1, amud 2…" contando desde el principio de cada siman. Eso hay que
+  pasarlo a la daf real del Mishná Berurá, חלק ג (la edición estándar con la tzurat hadaf de siempre,
+  la que se usa en el Daf HaYomi BeHalajá de Dirshu).
+- Investiga (busca en internet: HebrewBooks, Sefaria, Otzar HaJojmá, el luaj de Dirshu) en qué daf y
+  amud empieza cada uno de estos simanim: שי״ז, שי״ט, ש״כ, שכ״א, ש״מ, y en cuál empieza שמ״א (para
+  saber dónde termina ש״מ). Con eso cuenta cuántos amudim tiene de verdad cada siman.
+- Si un siman tiene más o menos amudim de los que trae el archivo (שי״ז 4, שי״ט 9, ש״כ 9, שכ״א 9,
+  ש״מ 10), avísame ANTES de hacer el PDF y dime cuántos son, para reacomodar las fechas.
+- Dime de dónde sacaste cada daf. Si alguna no la pudiste confirmar, dímelo; no la inventes.
 - Las dapim se escriben en hebreo con puntitos: "עז." es el amud א y "עז:" es el amud ב.
   Un tramo de varios amudim se escribe "עז. – עח:".
 - Resaltados (con otro color o una etiqueta): los exámenes (viernes 4/12 examen escrito de ש״מ,
