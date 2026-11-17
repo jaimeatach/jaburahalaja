@@ -1,4 +1,4 @@
-"""Calendario de jazarot de la jabura (Mishná Berurá, por amudim), nov/2026 – abr/2027.
+"""Calendario de jazarot de la jabura (Mishná Berurá, por amudim), nov/2026 – abr/2027 (examen Lakewood 4/4).
 Domingo a jueves. Amudim por siman: 317=4, 319=9, 320=9, 321=9, 340=10 (los de 319-321 son estimados
 por el largo del texto en Sefaria; cambiar AMUDIM y volver a correr)."""
 import datetime as dt
@@ -60,16 +60,16 @@ p("🕎 Vie 4/12 en la noche · primera vela de Janucá")
 p("")
 # 2. Janucá y vacaciones: שי״ז dos vueltas, cada quien
 p("*2) Janucá y vacaciones · Siman שי״ז (4 amudim) · cada quien en su casa*")
-d2 = dias(dt.date(2026, 12, 6), dt.date(2027, 1, 6))
+d2 = dias(dt.date(2026, 12, 6), dt.date(2027, 1, 3))
 v = amudim(["שי״ז"])
 for d, (s, a) in zip(d2, v + v):
     p(f"{f(d)} · {s} amud {a}" + ("  (1ª vuelta)" if d == d2[0] else "  (2ª vuelta)" if d == d2[4] else ""))
 resto = d2[8:]
-p(f"Del {f(resto[0])} al {f(resto[-1])} · repaso libre de שי״ז y ש״מ (vacaciones SEP: 21/12 al 6/1)")
+p(f"Del {f(resto[0])} al Dom 3/1 · vacaciones: repaso libre de שי״ז y ש״מ")
 p("")
 # 3. Regreso: 7/1
-d3 = dias(dt.date(2027, 1, 7), dt.date(2027, 4, 1))
-p("*3) Regreso · jueves 7 de enero*")
+d3 = dias(dt.date(2027, 1, 4), dt.date(2027, 4, 1))
+p("*3) Regreso · lunes 4 de enero*")
 p(f"📝 {f(d3[0])} · *Examen de שי״ז* y empezamos שי״ט")
 primera = amudim(["שי״ט", "ש״כ", "שכ״א"])
 for d, (s, a) in zip(d3, primera):
@@ -87,5 +87,5 @@ p(f"*5) Vuelta 2 · repaso final ({len(todo)} amudim en {len(d5)} días)*")
 for d, t in zip(d5, repartir(todo, len(d5))):
     p(f"{f(d)} · {tramo(t)}")
 p("🎭 Mar 23/3 · Purim, sin estudio")
-p("📝 Dom 4/4 · *Examen Haiku*")
+p("📝 Dom 4/4 · *Examen Lakewood*")
 print("\n".join(L))
