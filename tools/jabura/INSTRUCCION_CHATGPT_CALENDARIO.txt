@@ -1,0 +1,32 @@
+Copia todo lo de abajo en ChatGPT y adjunta el archivo calendario_jazarot.txt.
+------------------------------------------------------------------------------
+
+Hazme un PDF profesional y elegante del calendario de estudio que te adjunto (calendario_jazarot.txt).
+Es para el grupo de WhatsApp de una jabura de halajá (חבורת הלכה): tiene que verse bonito y quedar
+claro qué estudiar cada día. Copia los datos EXACTAMENTE como vienen: no cambies fechas, simanim ni
+amudim, no inventes días y no quites ninguno.
+
+Contenido
+- Título: "Calendario de Jazarot" y arriba, más chico, "חבורת הלכה · חזרות".
+- Subtítulo: "Mishná Berurá · simanim שי״ז · שי״ט · ש״כ · שכ״א · ש״מ · domingo a jueves".
+- Las 5 etapas del archivo, en orden, cada una con su título:
+  1) Siman ש״מ hasta Janucá  2) Janucá y vacaciones (שי״ז, cada quien en su casa)
+  3) Regreso lunes 4 de enero  4) Vuelta 1 de los 5 simanim  5) Vuelta 2, repaso final
+- Cada día en una fila: día de la semana, fecha y lo que se estudia (siman en hebreo + dapim).
+- Las dapim se escriben en hebreo con puntitos: "עז." es el amud א y "עז:" es el amud ב.
+  Un tramo de varios amudim se escribe "עז. – עח:".
+- Resaltados (con otro color o una etiqueta): los exámenes (viernes 4/12 examen escrito de ש״מ,
+  lunes 4/1 examen de שי״ז, domingo 4/4 examen Lakewood), la primera vela de Janucá (viernes 4/12
+  en la noche), las vacaciones del 16/12 al 3/1 y Purim (martes 23/3, sin estudio).
+- Separa las semanas con una línea fina para que se vea dónde empieza cada domingo.
+
+Diseño
+- Tamaño carta o A4 vertical, máximo 2 páginas, en 2 columnas si hace falta para que quepa.
+- Estilo sobrio y elegante: azul marino y dorado sobre fondo claro, tipografía serif para los títulos
+  y el hebreo (Frank Ruhl Libre o David), sans-serif clara para el español (Assistant u Open Sans).
+- El hebreo tiene que salir bien (de derecha a izquierda, con ״ y ׳ correctos), sin letras volteadas.
+- Que se lea bien en el celular: letra no muy chica, buen contraste, nada de fondos oscuros.
+- Al pie: "Se estudia de domingo a jueves · ¡Hatzlajá!".
+
+Antes de darme el PDF, revisa contra el archivo que estén TODOS los días y que cada fecha tenga su
+día de la semana correcto. Dame el PDF listo para descargar.
