@@ -173,6 +173,8 @@ def empacar(destino):
             # sesiones VIEJAS de WhatsApp apartadas (…_vieja_…, …_personal_…) y respaldos .antes_: no sirven y son
             # decenas de miles de archivos (en una USB FAT32 daban ERROR 82 por demasiados archivos en una carpeta)
             xd = ["node_modules", "audio_temp", "__pycache__", "_papelera", "*_vieja*", "*_personal_*", "*.antes_*"]
+            if "--sin-sesiones" in sys.argv:   # (nov/2026) sin las sesiones de WhatsApp: en la HP se escanea QR nuevo
+                xd += ["sesion*", "session*", "auth*", "baileys*"]
             xf = ["robot.lock", "piloto.lock", "comando.txt", "*.bak_*"]
             opc = ["/E", "/R:1", "/W:1", "/MT:8", "/NFL", "/NDL", "/NP", "/XD", *xd]
             # robocopy ORIGEN DESTINO [archivos] [opciones]: los patrones de archivo van antes de las opciones
@@ -353,7 +355,7 @@ def revisar():
 
 
 def main():
-    a = [x for x in sys.argv[1:] if x != "--ligero"]
+    a = [x for x in sys.argv[1:] if x not in ("--ligero", "--sin-sesiones")]
     if not a or a[0] not in ("empacar", "desempacar", "revisar"):
         print(__doc__)
         return 1
