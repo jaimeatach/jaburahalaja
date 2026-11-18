@@ -1684,9 +1684,16 @@ function textoDe(m) {
     # (nov/2026) link corto de la jabura
     ("""        const appLink = datos.app ? (ep.link || datos.app) : '';""", """        const appLink = datos.app ? await acortarLink(ep.link || datos.app) : '';   // (nov/2026) link corto"""),
     # (nov/2026) link corto de la jabura
-    ("""datos.app ? (ep.link || datos.app) : ''), _plat);""", """datos.app ? await acortarLink(ep.link || datos.app) : ''), _plat);"""),
+    ("""datos.app ? (ep.link || datos.app) : ''), _plat);""", """datos.app ? await acortarLink(ep.link || datos.app) : ''), _plat);"""),    # (nov/2026) hora y dias por show
+    ("""    if ((CFG.anunciar[show] || {}).no_shabat && diaSinEnvio(new Date())) { log(`${show}: hoy es Shabat o Yom Tov, no se manda.`); continue; }""", """    if ((CFG.anunciar[show] || {}).no_shabat && diaSinEnvio(new Date())) { log(`${show}: hoy es Shabat o Yom Tov, no se manda.`); continue; }
+    // (nov/2026) "hora": "08:00" en anunciar.<show> (y "dias": [1] = lunes, 0 = domingo): antes de esa hora
+    // (u otro dia) ese show no se anuncia; lo que llegue espera a su hora. Tawil 05:00, Rab Snertz lunes 08:00.
+    { const _h = String(datos.hora || ''), _ah = new Date();
+      if (Array.isArray(datos.dias) && datos.dias.length && !datos.dias.includes(_ah.getDay())) continue;
+      if (/^\d{1,2}:\d{2}$/.test(_h)) { const [_hh, _mm] = _h.split(':').map(Number);
+        if (_ah.getHours() * 60 + _ah.getMinutes() < _hh * 60 + _mm) continue; } }"""),
 ]
-MARCAS_ROBOT = ("PARCHE LID", "tambien el link de la jabura", "await acortarLink(ep.link || datos.app) : '';", "VIDEO sin texto de", "van del ${_f(delGrupo[0])}", "VIDEO repetido de", "function videoComoAudio", "r.videos && contenido(m).videoMessage", "function titulosFijos(show)", "const wa = datos.whatsapp_link ||", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
+MARCAS_ROBOT = ("PARCHE LID", "en anunciar.<show> (y \"dias\": [1]", "tambien el link de la jabura", "await acortarLink(ep.link || datos.app) : '';", "VIDEO sin texto de", "van del ${_f(delGrupo[0])}", "VIDEO repetido de", "function videoComoAudio", "r.videos && contenido(m).videoMessage", "function titulosFijos(show)", "const wa = datos.whatsapp_link ||", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
                 "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema", "temas_cache.json", "la lista del repo al dia antes de contestar", "NUNCA en Shabat ni Yom Tov", "nunca fecha futura en el archivo", "function bloqueoSagrado", "AVISOS AL ADMIN", "!reporte\" / \"!estado", "function appleCorto", "async function acortarLink", "AL FINAL el grupo de WhatsApp")
@@ -6079,6 +6086,45 @@ def portadas_fijas():
             ok(f"{show}: {datos.get('nota', 'portada nueva')}")
 
 
+# ── 61. horario por show y ajustes del piloto (nov/2026) ─────────────────────
+#   --horario=tawil@05:00,efshar@08:00@1   (hora mínima del anuncio; @1 = solo lunes, 0 = domingo …)
+#   --piloto-ajustes=youtube_min=480,desde=05:00   (jabura\piloto.json)
+def horario_y_piloto():
+    pedido = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--horario=")), "")
+    if pedido and ROBOT:
+        paso(61, "Horario de anuncio por show")
+        rw = ROBOT / "config_whatsapp.json"
+        cfg = json.loads(rw.read_text(encoding="utf-8"))
+        for x in [y.strip() for y in pedido.split(",") if y.strip()]:
+            partes = x.split("@")
+            show, hora = partes[0].strip().lower(), (partes[1].strip() if len(partes) > 1 else "")
+            an = (cfg.get("anunciar") or {}).get(show)
+            if not isinstance(an, dict):
+                aviso(f"{show}: no está en anunciar"); continue
+            if re.fullmatch(r"\d{1,2}:\d{2}", hora):
+                an["hora"] = hora
+            if len(partes) > 2 and partes[2].strip():
+                an["dias"] = [int(d) for d in re.findall(r"\d", partes[2])]
+            ok(f"{show}: se anuncia desde las {an.get('hora', '—')}" + (f", días {an['dias']}" if an.get("dias") else ""))
+        if not VER:
+            respaldar(rw)
+            escribir(rw, json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+    aj = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--piloto-ajustes=")), "")
+    if aj:
+        paso(61, "Ajustes del piloto")
+        f = BASE / "jabura" / "piloto.json"
+        try:
+            c = json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
+        except Exception:                                   # noqa: BLE001
+            c = {}
+        for par in [y for y in aj.split(",") if "=" in y]:
+            k, v = [z.strip() for z in par.split("=", 1)]
+            c[k] = int(v) if v.isdigit() else (v.lower() == "true" if v.lower() in ("true", "false") else v)
+            ok(f"piloto: {k} = {c[k]}")
+        if not VER:
+            escribir(f, json.dumps(c, ensure_ascii=False, indent=2) + "\n")
+
+
 def main():
     print("=== Instalador Otzar · jabura + nacach ===")
     print("Base:", BASE, "(prueba en seco)" if VER else "")
@@ -6145,6 +6191,7 @@ def main():
     shalom_bait()
     sacar_series()
     portadas_fijas()
+    horario_y_piloto()
     drive_sammy()
     revisar_todo()
     print("\nListo." if not VER else "\nPrueba en seco terminada: no se cambió nada.")

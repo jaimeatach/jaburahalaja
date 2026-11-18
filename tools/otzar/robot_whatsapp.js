@@ -2394,6 +2394,12 @@ async function anunciarInterno(esVigilante) {
   for (const [show, datos] of Object.entries(CFG.anunciar || {})) {
     if ((CFG.anunciar[show] || {}).pausado) { log(`${show}: EN PAUSA, no se anuncia (pausado en el config).`); continue; }
     if ((CFG.anunciar[show] || {}).no_shabat && diaSinEnvio(new Date())) { log(`${show}: hoy es Shabat o Yom Tov, no se manda.`); continue; }
+    // (nov/2026) "hora": "08:00" en anunciar.<show> (y "dias": [1] = lunes, 0 = domingo): antes de esa hora
+    // (u otro dia) ese show no se anuncia; lo que llegue espera a su hora. Tawil 05:00, Rab Snertz lunes 08:00.
+    { const _h = String(datos.hora || ''), _ah = new Date();
+      if (Array.isArray(datos.dias) && datos.dias.length && !datos.dias.includes(_ah.getDay())) continue;
+      if (/^\d{1,2}:\d{2}$/.test(_h)) { const [_hh, _mm] = _h.split(':').map(Number);
+        if (_ah.getHours() * 60 + _ah.getMinutes() < _hh * 60 + _mm) continue; } }
     // "desde": "2026-09-21" -> este show no anuncia nada antes de esa fecha
     // (sirve para arrancar un curso un dia fijo aunque ya este subido).
     const desde = String((CFG.anunciar[show] || {}).desde || '').slice(0, 10);
