@@ -179,8 +179,18 @@ def empacar(destino):
             opc = ["/E", "/R:1", "/W:1", "/MT:8", "/NFL", "/NDL", "/NP", "/XD", *xd]
             # robocopy ORIGEN DESTINO [archivos] [opciones]: los patrones de archivo van antes de las opciones
             r1 = subprocess.run(["robocopy", str(p), str(dst), "*.*"] + opc + ["/XF", *xf, *("*" + e for e in MEDIA)])
-            r2 = subprocess.run(["robocopy", str(p), str(dst), *("*" + e for e in MEDIA)] + opc + ["/XF", *xf]
-                                + (["/MAXAGE:3"] if LIGERO else []))
+            if "--sin-audios" in sys.argv:
+                # (nov/2026) USB lenta: de audio solo lo que AÚN NO se publica (las carpetas audios_whatsapp:
+                # lo publicado ya se marcó en procesados_whatsapp.txt y está en archive.org)
+                class _R: returncode = 0
+                r2 = _R()
+                for d in [x for x in p.rglob("audios_whatsapp") if x.is_dir()]:
+                    rr = subprocess.run(["robocopy", str(d), str(dst / d.relative_to(p)), "/E", "/R:1", "/W:1", "/MT:8",
+                                         "/NFL", "/NDL", "/NP", "/NJH", "/NJS", "/MAXAGE:7"])
+                    r2.returncode = max(r2.returncode, rr.returncode)
+            else:
+                r2 = subprocess.run(["robocopy", str(p), str(dst), *("*" + e for e in MEDIA)] + opc + ["/XF", *xf]
+                                    + (["/MAXAGE:3"] if LIGERO else []))
             if r1.returncode >= 8 or r2.returncode >= 8:
                 mal(f"robocopy tuvo errores copiando {p} (códigos {r1.returncode}/{r2.returncode}); revisa arriba")
         else:
@@ -355,7 +365,7 @@ def revisar():
 
 
 def main():
-    a = [x for x in sys.argv[1:] if x not in ("--ligero", "--sin-sesiones")]
+    a = [x for x in sys.argv[1:] if x not in ("--ligero", "--sin-sesiones", "--sin-audios")]
     if not a or a[0] not in ("empacar", "desempacar", "revisar"):
         print(__doc__)
         return 1
