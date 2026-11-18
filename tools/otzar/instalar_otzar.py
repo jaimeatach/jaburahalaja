@@ -5751,9 +5751,9 @@ def _sb_reiniciar_robot():
         except OSError:
             pass
         if bat:
-            subprocess.Popen(["cmd", "/c", "start", "ROBOT", "/d", str(ROBOT), str(bat)], cwd=str(ROBOT))
+            subprocess.Popen(f'start "ROBOT" /d "{ROBOT}" "{bat}"', cwd=str(ROBOT), shell=True)
         else:
-            subprocess.Popen(["cmd", "/c", "start", "ROBOT", "/d", str(ROBOT), "cmd", "/k", "node robot_whatsapp.js"], cwd=str(ROBOT))
+            subprocess.Popen(f'start "ROBOT" /d "{ROBOT}" cmd /k node robot_whatsapp.js', cwd=str(ROBOT), shell=True)
         ok("robot abierto de nuevo")
     else:
         ok("su ventana lo volvió a abrir sola")
