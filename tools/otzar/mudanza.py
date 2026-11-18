@@ -80,7 +80,7 @@ def _ignorar(dirpath, nombres):
 def tamano(p):
     total = 0
     for raiz, _d, archivos in os.walk(p):
-        if LIGERO and "_papelera" in Path(raiz).parts:
+        if (LIGERO and "_papelera" in Path(raiz).parts) or "node_modules" in Path(raiz).parts:
             continue
         for f in archivos:
             ruta = os.path.join(raiz, f)
@@ -165,7 +165,22 @@ def empacar(destino):
     paso("3. Copiar (no se mueve ni se borra nada de esta PC)")
     for p in pesos:
         print(f"   copiando {p} … (puede tardar)", flush=True)
-        shutil.copytree(p, destino / p.name, dirs_exist_ok=True, ignore=_ignorar)
+        if os.name == "nt":
+            # (nov/2026) robocopy: rápido, rutas largas, varios hilos. node_modules NO va (se reinstala en la HP
+            # con npm install: son miles de archivos y en una USB se atoraba). Primero todo menos audio/video,
+            # luego audio/video: con --ligero solo los de los últimos 3 días.
+            dst = destino / p.name
+            xd = ["node_modules", "audio_temp", "__pycache__", "_papelera"]
+            xf = ["robot.lock", "piloto.lock", "comando.txt", "*.bak_*"]
+            opc = ["/E", "/R:1", "/W:1", "/MT:8", "/NFL", "/NDL", "/NP", "/XD", *xd]
+            # robocopy ORIGEN DESTINO [archivos] [opciones]: los patrones de archivo van antes de las opciones
+            r1 = subprocess.run(["robocopy", str(p), str(dst), "*.*"] + opc + ["/XF", *xf, *("*" + e for e in MEDIA)])
+            r2 = subprocess.run(["robocopy", str(p), str(dst), *("*" + e for e in MEDIA)] + opc + ["/XF", *xf]
+                                + (["/MAXAGE:3"] if LIGERO else []))
+            if r1.returncode >= 8 or r2.returncode >= 8:
+                mal(f"robocopy tuvo errores copiando {p} (códigos {r1.returncode}/{r2.returncode}); revisa arriba")
+        else:
+            shutil.copytree(p, destino / p.name, dirs_exist_ok=True, ignore=_ignorar)
         ok(f"{p} copiado")
     if LIGERO:
         (destino / "LIGERO.txt").write_text("sin los audios de más de 3 días (están en archive.org)", encoding="utf-8")
@@ -277,7 +292,10 @@ def desempacar(origen):
             destino.rename(destino.with_name(destino.name + ".antes_" + sello))
             ok(f"lo que ya había en {destino} quedó en {destino.name}.antes_{sello}")
         print(f"   copiando {destino} … (puede tardar)", flush=True)
-        shutil.copytree(src, destino, dirs_exist_ok=True)
+        if os.name == "nt":
+            subprocess.run(["robocopy", str(src), str(destino), "/E", "/R:1", "/W:1", "/MT:8", "/NFL", "/NDL", "/NP"])
+        else:
+            shutil.copytree(src, destino, dirs_exist_ok=True)
         ok(f"{destino} listo")
     if (origen / "LIGERO.txt").exists():
         # sin los audios viejos, ningún bot puede rearmar el feed con su carpeta: solo agrega lo nuevo
@@ -288,6 +306,10 @@ def desempacar(origen):
                 c["solo_agregar"] = True
                 cfg.write_text(json.dumps(c, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
                 ok(f"{cfg.parent.name}: solo_agregar (no rearma el feed sin los audios viejos)")
+    if (ROBOT / "package.json").exists() and not (ROBOT / "node_modules").exists():
+        print("   instalando los módulos del robot (npm install) …", flush=True)
+        r = subprocess.run("npm install --no-audit --no-fund", cwd=str(ROBOT), shell=True)
+        (ok if r.returncode == 0 else mal)("módulos del robot (node_modules)" + ("" if r.returncode == 0 else ": falló npm install"))
     paso("4. Al prender la PC, y energía")
     poner_en_inicio()
     energia()
