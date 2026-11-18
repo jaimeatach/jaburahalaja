@@ -279,7 +279,8 @@ def vigilar_robot(a):
         log("robot: no está abierto y no encuentro ROBOT_WHATSAPP.bat para abrirlo")
         return
     try:
-        subprocess.Popen(["cmd", "/c", "start", "ROBOT", "/d", str(ROBOT), str(bat)], cwd=str(ROBOT))
+        # (nov/2026) el título de "start" va ENTRE COMILLAS: sin ellas Windows buscaba un programa "ROBOT"
+        subprocess.Popen(f'start "ROBOT" /d "{ROBOT}" "{bat}"', cwd=str(ROBOT), shell=True)
         log("robot: estaba cerrado o colgado; lo volví a abrir")
         avisar("robot", "⚠️ El robot de WhatsApp se había cerrado y el piloto lo volvió a abrir. Si vuelve a pasar seguido, revisa la PC.")
     except Exception as ex:
