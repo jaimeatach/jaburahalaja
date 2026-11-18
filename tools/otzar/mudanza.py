@@ -4,6 +4,8 @@
   En la PC de ahora (con el robot y el piloto CERRADOS):
       python mudanza.py empacar E:\\MUDANZA_OTZAR
       (E: = una memoria USB o disco externo con espacio; también sirve una carpeta de red)
+      python mudanza.py empacar E:\\MUDANZA_OTZAR --ligero
+      (USB chica: NO copia los audios/videos de más de 3 días, que ya están en archive.org)
   En la HP:
       python mudanza.py desempacar E:\\MUDANZA_OTZAR
   En cualquiera, para ver si está todo:
@@ -56,12 +58,36 @@ def salida(cmd):
         return ""
 
 
+LIGERO = "--ligero" in sys.argv
+MEDIA = (".mp3", ".m4a", ".ogg", ".opus", ".wav", ".mp4", ".webm", ".aac", ".mkv", ".mov", ".part")
+
+
+def _viejo_media(ruta):
+    """(nov/2026) --ligero: audio/video de más de 3 días (ya publicado: está en archive.org)."""
+    try:
+        return ruta.lower().endswith(MEDIA) and time.time() - os.path.getmtime(ruta) > 3 * 86400
+    except OSError:
+        return False
+
+
+def _ignorar(dirpath, nombres):
+    fuera = set(shutil.ignore_patterns(*NO_COPIAR)(dirpath, nombres))
+    if LIGERO:
+        fuera |= {n for n in nombres if n == "_papelera" or _viejo_media(os.path.join(dirpath, n))}
+    return fuera
+
+
 def tamano(p):
     total = 0
     for raiz, _d, archivos in os.walk(p):
+        if LIGERO and "_papelera" in Path(raiz).parts:
+            continue
         for f in archivos:
+            ruta = os.path.join(raiz, f)
+            if LIGERO and _viejo_media(ruta):
+                continue
             try:
-                total += os.path.getsize(os.path.join(raiz, f))
+                total += os.path.getsize(ruta)
             except OSError:
                 pass
     return total
@@ -139,8 +165,10 @@ def empacar(destino):
     paso("3. Copiar (no se mueve ni se borra nada de esta PC)")
     for p in pesos:
         print(f"   copiando {p} … (puede tardar)", flush=True)
-        shutil.copytree(p, destino / p.name, dirs_exist_ok=True, ignore=shutil.ignore_patterns(*NO_COPIAR))
+        shutil.copytree(p, destino / p.name, dirs_exist_ok=True, ignore=_ignorar)
         ok(f"{p} copiado")
+    if LIGERO:
+        (destino / "LIGERO.txt").write_text("sin los audios de más de 3 días (están en archive.org)", encoding="utf-8")
     paso("4. Lista de lo instalado en esta PC")
     inv = inventario()
     (destino / "inventario.json").write_text(json.dumps(inv, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -251,6 +279,15 @@ def desempacar(origen):
         print(f"   copiando {destino} … (puede tardar)", flush=True)
         shutil.copytree(src, destino, dirs_exist_ok=True)
         ok(f"{destino} listo")
+    if (origen / "LIGERO.txt").exists():
+        # sin los audios viejos, ningún bot puede rearmar el feed con su carpeta: solo agrega lo nuevo
+        for cfg in BASE.glob("*/config.json"):
+            c = leer_json(cfg)
+            if c.get("github_repo") and not c.get("solo_agregar"):
+                shutil.copy2(cfg, cfg.with_name("config.json.antes_ligero"))
+                c["solo_agregar"] = True
+                cfg.write_text(json.dumps(c, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+                ok(f"{cfg.parent.name}: solo_agregar (no rearma el feed sin los audios viejos)")
     paso("4. Al prender la PC, y energía")
     poner_en_inicio()
     energia()
@@ -292,7 +329,7 @@ def revisar():
 
 
 def main():
-    a = sys.argv[1:]
+    a = [x for x in sys.argv[1:] if x != "--ligero"]
     if not a or a[0] not in ("empacar", "desempacar", "revisar"):
         print(__doc__)
         return 1
