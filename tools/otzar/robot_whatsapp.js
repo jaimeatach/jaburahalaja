@@ -772,7 +772,8 @@ async function linkApple(show, titulo) {
 // "acortar_links": false en el config lo apaga.
 let _cortos = null;
 async function acortarLink(u) {
-  if (!u || CFG.acortar_links === false || !/^https:\/\/podcasts\.apple\.com\//.test(u)) return u;
+  // (nov/2026) tambien el link de la jabura (la app en netlify.app salia larguisimo)
+  if (!u || CFG.acortar_links === false || !/^https:\/\/(podcasts\.apple\.com|[\w-]+\.netlify\.app)\//.test(u)) return u;
   const f = path.join(__dirname, 'links_cortos.json');
   if (!_cortos) { try { _cortos = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { _cortos = {}; } }
   if (_cortos[u]) return _cortos[u];
@@ -2640,7 +2641,7 @@ async function anunciarInterno(esVigilante) {
         if (yaAnunciado(show, ep.guid)) { log(`${show}: "${ep.tit.slice(0,40)}" ya se anuncio; lo salto.`); continue; }
         // "app": link directo al shiur en la app (el <link> del feed, o el de la app);
         // "sin_whatsapp": no repetir el link del grupo cuando se anuncia en el mismo grupo
-        const appLink = datos.app ? (ep.link || datos.app) : '';
+        const appLink = datos.app ? await acortarLink(ep.link || datos.app) : '';   // (nov/2026) link corto
         let texto = appLink ? `🎧 *${tituloAnuncio(show, ep.tit)}*` : `*${tituloAnuncio(show, ep.tit)}*`;
         if (appLink) texto += `\n📲 App\n${appLink}`;
         if (spotShow) texto += appLink ? `\n🎵 Spotify\n${spotShow}` : `\n${spotShow}`;
@@ -2716,7 +2717,7 @@ async function anunciarInterno(esVigilante) {
       // SB:apple-espera>>
       const texto = datos.plantilla
         ? armarPlantilla(datos, { dedicatoria: dedicatoriaDe(show, ep.tit), titulo: tituloAnuncio(show, ep.tit), spotify: epLink, whatsapp: datos.whatsapp_link || wa, fecha: ep.fecha || Date.now(), plataformas: _plat })
-        : conPlataformas(armarMensaje(tituloAnuncio(show, ep.tit), epLink, wa, show, datos.app ? (ep.link || datos.app) : ''), _plat);
+        : conPlataformas(armarMensaje(tituloAnuncio(show, ep.tit), epLink, wa, show, datos.app ? await acortarLink(ep.link || datos.app) : ''), _plat);
       // ultima revision antes de mandar: si otra corrida ya lo anuncio, lo salto
       if (yaAnunciado(show, ep.guid)) { log(`${show}: "${ep.tit.slice(0,40)}" ya se anuncio; lo salto.`); continue; }
       const grupos = gruposDeShow(reg, show);

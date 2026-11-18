@@ -1678,9 +1678,15 @@ function textoDe(m) {
       }
       if (_ya) { log(`VIDEO sin texto de ${destinoAudio.show}: ${_def ? 'ese dia ya hay audio' : 'no trae titulo'}; no se sube`); return; }
     }
-    if (_capV && titulosVistos(destinoAudio.show, []).has(normTitulo(_capV))) {"""),
+    if (_capV && titulosVistos(destinoAudio.show, []).has(normTitulo(_capV))) {"""),    # (nov/2026) link corto de la jabura
+    ("""  if (!u || CFG.acortar_links === false || !/^https:\/\/podcasts\.apple\.com\//.test(u)) return u;""", """  // (nov/2026) tambien el link de la jabura (la app en netlify.app salia larguisimo)
+  if (!u || CFG.acortar_links === false || !/^https:\/\/(podcasts\.apple\.com|[\w-]+\.netlify\.app)\//.test(u)) return u;"""),
+    # (nov/2026) link corto de la jabura
+    ("""        const appLink = datos.app ? (ep.link || datos.app) : '';""", """        const appLink = datos.app ? await acortarLink(ep.link || datos.app) : '';   // (nov/2026) link corto"""),
+    # (nov/2026) link corto de la jabura
+    ("""datos.app ? (ep.link || datos.app) : ''), _plat);""", """datos.app ? await acortarLink(ep.link || datos.app) : ''), _plat);"""),
 ]
-MARCAS_ROBOT = ("PARCHE LID", "VIDEO sin texto de", "van del ${_f(delGrupo[0])}", "VIDEO repetido de", "function videoComoAudio", "r.videos && contenido(m).videoMessage", "function titulosFijos(show)", "const wa = datos.whatsapp_link ||", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
+MARCAS_ROBOT = ("PARCHE LID", "tambien el link de la jabura", "await acortarLink(ep.link || datos.app) : '';", "VIDEO sin texto de", "van del ${_f(delGrupo[0])}", "VIDEO repetido de", "function videoComoAudio", "r.videos && contenido(m).videoMessage", "function titulosFijos(show)", "const wa = datos.whatsapp_link ||", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
                 "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema", "temas_cache.json", "la lista del repo al dia antes de contestar", "NUNCA en Shabat ni Yom Tov", "nunca fecha futura en el archivo", "function bloqueoSagrado", "AVISOS AL ADMIN", "!reporte\" / \"!estado", "function appleCorto", "async function acortarLink", "AL FINAL el grupo de WhatsApp")
