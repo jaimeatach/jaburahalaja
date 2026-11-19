@@ -252,6 +252,33 @@ def _sellar(carpeta_show, inicio):
         pass
 
 
+_FALLOS_BOT = ("Fallo Archive", "ERROR subiendo", "No access_key")
+
+
+def _correr_bot(show):
+    """Corre podcast_bot.py mostrando su salida. False si terminó con error o si dijo que
+    no pudo subir (podcast_bot sale con 0 aunque archive.org falle: antes se sellaba y el
+    modo rápido ya no lo volvía a intentar)."""
+    import os
+    env = dict(os.environ, PYTHONIOENCODING="utf-8")
+    fallo = False
+    try:
+        pr = subprocess.Popen([sys.executable, "podcast_bot.py"], cwd=str(show), env=env,
+                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        for crudo in pr.stdout:
+            linea = crudo.decode("utf-8", "replace").rstrip()
+            print(linea, flush=True)
+            if any(x in linea for x in _FALLOS_BOT):
+                fallo = True
+        pr.wait()
+    except Exception as ex:
+        log(f"{show.name}: no pude correr podcast_bot.py ({ex})")
+        return False
+    if fallo:
+        log(f"{show.name}: no se pudo subir; se reintenta en la próxima vuelta")
+    return pr.returncode == 0 and not fallo
+
+
 def publicar(cfgw=None, rapido=False):
     """Devuelve los shows que se publicaron. Rápido: solo los que tienen audio nuevo desde su
     última publicación (los demás los revisa el mantenimiento completo, cada hora)."""
@@ -281,7 +308,7 @@ def publicar(cfgw=None, rapido=False):
         log(f"--- {show.name}: publicando lo que dejó el robot ---")
         arreglar_mp3_falsos(show)
         t0 = time.time()
-        if subprocess.run([sys.executable, "podcast_bot.py"], cwd=str(show)).returncode == 0:
+        if _correr_bot(show):
             _sellar(show, t0)
         hechos.add(show.name)
     return hechos

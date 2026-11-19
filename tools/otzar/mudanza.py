@@ -350,6 +350,11 @@ def revisar():
     for p in (ROBOT / "robot_whatsapp.js", ROBOT / "config_whatsapp.json", ROBOT / "sesion_baileys",
               ROBOT / "PILOTO.bat", BASE / "jabura" / "piloto.py", BASE / "jabura" / "mantenimiento.py"):
         (ok if p.exists() else mal)(f"{p}")
+    ia = [Path.home() / ".config" / "internetarchive" / "ia.ini", Path.home() / ".ia",
+          Path(os.environ.get("APPDATA", "")) / "ia" / "ia.ini"]
+    (ok if any(p.exists() for p in ia) else mal)(
+        "claves de archive.org" if any(p.exists() for p in ia)
+        else "claves de archive.org: NO están (no se sube nada) → corre: ia configure")
     for r in rutas_fuera():
         (ok if Path(r).exists() else mal)(f"usa también: {r}" + ("" if Path(r).exists() else "  ← falta (¿Google Drive?)"))
     inicio = Path(os.environ.get("APPDATA", "")) / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup" / "OTZAR_inicio.cmd"
