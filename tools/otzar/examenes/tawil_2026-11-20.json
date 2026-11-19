@@ -1,0 +1,98 @@
+{
+  "titulo": "Examen semanal · Rab Yosef Tawil · Shiurim #51–#56",
+  "descripcion": "La copa y el vino del Kidush. 6 preguntas sobre lo que dijo el Rab en las clases de la semana (15 al 20 de noviembre). ¡Mucha hatzlajá!",
+  "shiurim": [
+    51,
+    52,
+    53,
+    54,
+    55,
+    56
+  ],
+  "preguntas": [
+    {
+      "nivel": "facil",
+      "shiur": 52,
+      "pregunta": "En el Kidush de la NOCHE, ¿quién tiene que tomar la medida de vino (casi 80 ml de una copa de 150)?",
+      "opciones": [
+        "Davka el mismo que hizo el Kidush",
+        "Cualquiera de los que escucharon, si el que hizo Kidush solo prueba",
+        "Entre todos los de la mesa, un poquito cada uno",
+        "El que hizo el Kidush, o su esposa si a él le cuesta tomar"
+      ],
+      "correcta": 0,
+      "explicacion": "En la noche la medida la tiene que tomar davka el que hace el Kidush, no darle a otro. En la mañana sí puede solo probar y darle a otro que tome la medida. Que tomen entre todos un poquito cada uno solo sirve bediavad; lo bonito (hidur mitzvá) es que, además, todos tomen un poco.",
+      "puntos": 1
+    },
+    {
+      "nivel": "facil",
+      "shiur": 54,
+      "pregunta": "Un niño se apuró y probó el vino de la copa del Kidush. Según el Rab, ¿qué se hace?",
+      "opciones": [
+        "Nada: ya tiene la medida, así se puede hacer el Kidush",
+        "Se arregla agregando vino o agua que no estén tomados; lo mejor es cambiar el vino",
+        "Se arregla agregando más vino, pero nunca con agua",
+        "Ya no tiene arreglo: hay que cambiar el vino sí o sí"
+      ],
+      "correcta": 1,
+      "explicacion": "Una copa \"pagum\" (de la que ya se tomó) así como está no sirve. Se arregla agregando más vino o agua que no estén tomados. Lo mejor, como jumrá, es dejar ese vino para la comida y poner un vino nuevo.",
+      "puntos": 1
+    },
+    {
+      "nivel": "facil",
+      "shiur": 56,
+      "pregunta": "El sábado en la mañana, ANTES de rezar Shajarit, ¿quién puede tomar café o té?",
+      "opciones": [
+        "Hombres y mujeres, porque todavía no rezaron",
+        "Nadie: desde que entró Shabat no se toma nada antes del Kidush",
+        "Solo las mujeres, porque muchas no rezan Shajarit fijo",
+        "Solo los hombres; las mujeres hacen Kidush antes, sin esperar al esposo"
+      ],
+      "correcta": 3,
+      "explicacion": "Los hombres pueden tomar café, té o agua antes de Shajarit: antes del rezo todavía no les cae la obligación de Kidush. Las mujeres, que no siempre rezan Shajarit fijo, no pueden ni café ni té: hacen Kidush sin esperar al esposo (tomando 44 ml) y luego comen. Los niños menores de bar mitzvá sí pueden comer.",
+      "puntos": 1
+    },
+    {
+      "nivel": "media",
+      "shiur": 53,
+      "pregunta": "Estás en una ciudad donde no hay vino ni jugo de uva. ¿Cómo se hace el Kidush de la NOCHE?",
+      "opciones": [
+        "Con cerveza, que es una bebida que se toma mucho en la ciudad",
+        "Con cualquier bebida alcohólica, en vez del vino",
+        "Con pan: netilat yadáyim, Vaijulú, Hamotzí y Mekadesh HaShabat",
+        "Con pan: Vaijulú, Hamotzí, Mekadesh HaShabat y luego netilat yadáyim"
+      ],
+      "correcta": 2,
+      "explicacion": "En la noche, sin vino ni jugo, el Kidush se hace con pan: primero netilat yadáyim, luego Vaijulú, y en vez de Boré Perí HaGuefen se dice Hamotzí, Mekadesh HaShabat, y se come el pan. La cerveza sirve solo para el Kidush del DÍA (y no con pan); para los Sefaradim, otras bebidas no sirven.",
+      "puntos": 1
+    },
+    {
+      "nivel": "medio_dificil",
+      "shiur": 55,
+      "pregunta": "Un sefaradí ZURDO va a hacer Kidush. Según el Rab, ¿cómo sostiene la copa?",
+      "opciones": [
+        "Con la izquierda, porque es zurdo, como acostumbran los Ashkenazim",
+        "Con la derecha, sostenida con la punta de los dedos para no taparla",
+        "Con la derecha, apoyada en la palma y con los dedos alrededor de la copa",
+        "Con la mano que quiera, mientras los dedos estén alrededor de la copa"
+      ],
+      "correcta": 2,
+      "explicacion": "Para los Sefaradim la copa se sostiene siempre con la mano derecha, aunque sea zurdo (los Ashkenazim acostumbran que el zurdo use la izquierda). Al pi hasod, la copa se apoya en la palma de la mano con los dedos alrededor.",
+      "puntos": 1
+    },
+    {
+      "nivel": "muy_dificil",
+      "shiur": 51,
+      "pregunta": "Según el Rab, ¿cuál es la copa ideal para el Kidush de la noche y cuánto se toma?",
+      "opciones": [
+        "Copa de 150 ml y tomar casi 80; si no se puede, una de 87 ml y tomar 44",
+        "Copa de 150 ml y tomar casi 80; con una de 87 ml no se puede hacer el de la noche",
+        "Copa de 150 ml y tomar 44; con una de 87 ml hay que tomarla toda",
+        "Copa de 87 ml y tomar 44; la de 150 ml es solo para el Kidush de la mañana"
+      ],
+      "correcta": 0,
+      "explicacion": "Hay discusión si la copa debe ser de 150 o de 87 ml. Sobre todo en la noche (que es de la Torá) se cuida que sea de 150, y así sirve también para la mañana según todas las opiniones. Si no se puede, se hace con 87 (sobre todo en el de día). Se toma la mayoría: casi 80 ml de 150, o 44 de 87; lo mejor de todo es tomar toda la copa, dejando un poquito para los demás y agregando vino.",
+      "puntos": 1
+    }
+  ]
+}
