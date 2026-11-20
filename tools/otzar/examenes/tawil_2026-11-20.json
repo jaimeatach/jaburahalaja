@@ -1,6 +1,6 @@
 {
   "titulo": "Examen semanal · Rab Yosef Tawil · Shiurim #51–#56",
-  "descripcion": "La copa y el vino del Kidush. 6 preguntas sobre lo que dijo el Rab en las clases de la semana (15 al 20 de noviembre). ¡Mucha hatzlajá!",
+  "descripcion": "La copa y el vino del Kidush. 10 preguntas sobre lo que dijo el Rab en las clases de la semana (15 al 20 de noviembre). ¡Mucha hatzlajá!",
   "shiurim": [
     51,
     52,
@@ -11,7 +11,7 @@
   ],
   "preguntas": [
     {
-      "nivel": "facil",
+      "nivel": "dificil",
       "shiur": 52,
       "pregunta": "En el Kidush de la NOCHE, ¿quién tiene que tomar la medida de vino (casi 80 ml de una copa de 150)?",
       "opciones": [
@@ -25,7 +25,7 @@
       "puntos": 1
     },
     {
-      "nivel": "facil",
+      "nivel": "dificil",
       "shiur": 54,
       "pregunta": "Un niño se apuró y probó el vino de la copa del Kidush. Según el Rab, ¿qué se hace?",
       "opciones": [
@@ -39,7 +39,7 @@
       "puntos": 1
     },
     {
-      "nivel": "facil",
+      "nivel": "dificil",
       "shiur": 56,
       "pregunta": "El sábado en la mañana, ANTES de rezar Shajarit, ¿quién puede tomar café o té?",
       "opciones": [
@@ -53,7 +53,7 @@
       "puntos": 1
     },
     {
-      "nivel": "media",
+      "nivel": "dificil",
       "shiur": 53,
       "pregunta": "Estás en una ciudad donde no hay vino ni jugo de uva. ¿Cómo se hace el Kidush de la NOCHE?",
       "opciones": [
@@ -67,7 +67,7 @@
       "puntos": 1
     },
     {
-      "nivel": "medio_dificil",
+      "nivel": "dificil",
       "shiur": 55,
       "pregunta": "Un sefaradí ZURDO va a hacer Kidush. Según el Rab, ¿cómo sostiene la copa?",
       "opciones": [
@@ -81,7 +81,7 @@
       "puntos": 1
     },
     {
-      "nivel": "muy_dificil",
+      "nivel": "dificil",
       "shiur": 51,
       "pregunta": "Según el Rab, ¿cuál es la copa ideal para el Kidush de la noche y cuánto se toma?",
       "opciones": [
@@ -93,6 +93,62 @@
       "correcta": 0,
       "explicacion": "Hay discusión si la copa debe ser de 150 o de 87 ml. Sobre todo en la noche (que es de la Torá) se cuida que sea de 150, y así sirve también para la mañana según todas las opiniones. Si no se puede, se hace con 87 (sobre todo en el de día). Se toma la mayoría: casi 80 ml de 150, o 44 de 87; lo mejor de todo es tomar toda la copa, dejando un poquito para los demás y agregando vino.",
       "puntos": 1
+    },
+    {
+      "nivel": "dificil",
+      "shiur": 52,
+      "pregunta": "La medida de vino del Kidush no la tomó una sola persona: la tomaron entre todos los de la mesa, un poquito cada uno. Según el Rab, ¿qué pasa?",
+      "opciones": [
+        "No cumplieron: hay que volver a hacer el Kidush",
+        "Cumplieron, y así es lo mejor: es hidur mitzvá que todos tomen",
+        "Cumplieron solo en el Kidush de la mañana; en el de la noche hay que repetirlo",
+        "Bediavad cumplieron, pero no es bueno: una sola persona tiene que tomar toda la medida"
+      ],
+      "correcta": 3,
+      "puntos": 1,
+      "explicacion": "Si la medida no la tomó uno sino entre todos, bediavad yatzá, pero no es bueno: una sola persona debe tomar toda esa cantidad. El hidur mitzvá es que, ADEMÁS, el que hizo Kidush le sirva un poco de vino a todos (agregando a la copa si no alcanza); si no lo hizo, no pasa nada."
+    },
+    {
+      "nivel": "dificil",
+      "shiur": 55,
+      "pregunta": "¿Qué dijo el Rab sobre ponerle agua al vino del Kidush?",
+      "opciones": [
+        "Nada de agua: el agua le quita la berajá de Boré Perí HaGuefen",
+        "Al pi hasod, tres gotitas, y no más: nuestro vino (sobre todo el jugo de uva) es débil y con mucha agua ya no se dice HaGuefen",
+        "Un poco de agua siempre, porque nuestro vino es fuerte, como en tiempos de la Guemará",
+        "Tres gotitas, pero solo al vino; al jugo de uva nunca"
+      ],
+      "correcta": 1,
+      "puntos": 1,
+      "explicacion": "Al pi hasod se le agregan tres gotitas de agua. No hay que poner mucha, porque nuestro vino a veces es débil, especialmente el jugo de uva, y el agua puede hacer que ya no se pueda decir HaGuefen."
+    },
+    {
+      "nivel": "dificil",
+      "shiur": 54,
+      "pregunta": "La copa del Kidush ya tiene toda la medida de vino, pero está a la mitad, y es un vaso desechable nuevo. Según el Rab:",
+      "opciones": [
+        "Sirve así: lo que importa es la medida de vino, no que la copa esté llena",
+        "Tiene que estar llena, y no es bueno hacer Kidush en un vaso desechable",
+        "Tiene que estar llena; el desechable sí sirve si es nuevo y está limpio",
+        "Sirve a la mitad, porque no está pagum; solo la copa rota no sirve"
+      ],
+      "correcta": 1,
+      "puntos": 1,
+      "explicacion": "La copa tiene que estar llena aunque ya tenga toda la medida. Además, que no esté pagum, que esté limpia (al pi hasod se lava por dentro y por fuera), que esté entera y no rota, y no se hace Kidush en vaso desechable: aunque sea de vidrio o lo que sea, pero no desechable."
+    },
+    {
+      "nivel": "dificil",
+      "shiur": 51,
+      "pregunta": "Con una copa de 150 ml, ¿qué es lo mejor de todo (mitzvá min hamuvjar) según el Rab?",
+      "opciones": [
+        "Tomar casi 80 ml y repartir lo que queda a los demás",
+        "Tomar 44 ml, que es la mayoría del reviít",
+        "Tomar casi 80 ml y dejar lo demás en la copa para el Kidush de la mañana",
+        "Tomar los 150; para darles a los demás se deja un poquito y se le agrega vino"
+      ],
+      "correcta": 3,
+      "puntos": 1,
+      "explicacion": "Para cumplir se toma la mayoría: casi 80 ml de una copa de 150 (o 44 de una de 87). Mitzvá min hamuvjar, lo mejor de todo, es tomar los 150; y para darles a los demás, se deja un poquito y se agrega vino."
     }
   ]
 }
