@@ -309,6 +309,34 @@ def mensaje_examen(dias, link):
             "¡Hatzlajá! 🙌")
 
 
+def examen_revisar(a, est):
+    """(20/11) El viernes en la mañana le manda al chat de "!reporte" el link del examen ya armado,
+    para revisarlo antes de que salga el sábado. Una vez por semana."""
+    url = str(a.get("examen_url") or "").strip()
+    ahora = dt.datetime.now()
+    if not url or ahora.weekday() != 4 or not ("09:00" <= ahora.strftime("%H:%M") < "15:45") or bloqueo(ahora):
+        return
+    ex = est.setdefault("examen_tawil", {})
+    if ex.get("revisar") == ahora.date().isoformat():
+        return
+    try:
+        r = _pedir_json(url)
+    except Exception as e:
+        log(f"examen Tawil (revisar): no pude pedir el link ({e})")
+        return
+    if r.get("ok") and int(r.get("preguntas") or 0) < 10 and ahora.strftime("%H:%M") < "14:30":
+        return                      # todavía no subo las 10 preguntas: espera un rato
+    ex["revisar"] = ahora.date().isoformat()
+    if not r.get("ok"):
+        avisar("examen_rev", f"⚠️ El examen de Tawil de esta semana todavía no está ({r.get('error')}). Avísale a Claude.", 6)
+        return
+    sab = ahora.date() + dt.timedelta(days=1)
+    hora = puesta_sol(sab) + dt.timedelta(minutes=72 + int(a.get("examen_despues_min", 30)))
+    avisar("examen_rev", f"📝 Examen de Tawil de esta semana, para que lo revises (días {r.get('dias')}, "
+                         f"{r.get('preguntas')} preguntas):\n{r.get('link')}\n\nSale solo al grupo el sábado a las "
+                         f"{hora.strftime('%H:%M')}. Si algo está mal, díselo a Claude antes.", 1)
+
+
 def examen_tawil(a, est):
     url = str(a.get("examen_url") or "").strip()
     if not url:
@@ -626,6 +654,7 @@ def main():
             _yt["hilo"].start()
             ult_yt = time.time()
         try:
+            examen_revisar(a, est)
             examen_tawil(a, est)
         except Exception as e:
             log(f"examen Tawil: {e}")
