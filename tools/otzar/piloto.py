@@ -248,6 +248,58 @@ def avisar(clave, texto, cada_horas=3):
     log("AVISO: " + texto.replace("\n", " · "))
 
 
+def mantener_despierta():
+    """(nov/2026) La HP no se duerme ni apaga la pantalla mientras el piloto esté abierto.
+    En las laptops con "Modern Standby", al apagarse la pantalla Windows corta el internet
+    y deja los programas casi congelados: el 19-20/11 nada salió hasta que alguien abrió la
+    compu. SetThreadExecutionState vale mientras el piloto viva, sin tocar la configuración."""
+    if os.name != "nt":
+        return
+    try:
+        import ctypes
+        # ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED | ES_AWAYMODE_REQUIRED
+        ctypes.windll.kernel32.SetThreadExecutionState(0x80000000 | 0x1 | 0x2 | 0x40)
+    except Exception:
+        pass
+
+
+def sin_quickedit():
+    """Un clic en la ventana negra (modo "Edición rápida") congela al programa hasta que se
+    aprieta una tecla. Se apaga en esta ventana y, en el registro, para las que se abran después
+    (la del robot)."""
+    if os.name != "nt":
+        return
+    try:
+        import winreg
+        k = winreg.CreateKey(winreg.HKEY_CURRENT_USER, r"Console")
+        winreg.SetValueEx(k, "QuickEdit", 0, winreg.REG_DWORD, 0)
+        winreg.CloseKey(k)
+    except Exception:
+        pass
+    try:
+        import ctypes
+        k32 = ctypes.windll.kernel32
+        h = k32.GetStdHandle(-10)
+        modo = ctypes.c_uint32()
+        if k32.GetConsoleMode(h, ctypes.byref(modo)):
+            # sin ENABLE_QUICK_EDIT_MODE (0x40), con ENABLE_EXTENDED_FLAGS (0x80)
+            k32.SetConsoleMode(h, (modo.value & ~0x40) | 0x80)
+    except Exception:
+        pass
+
+
+def matar_robot_colgado():
+    """Si robot.lock quedó viejo pero su proceso sigue vivo, está colgado: se cierra antes de
+    abrir otro (si no, al despertar los dos se roban la sesión de WhatsApp)."""
+    try:
+        pid = int((ROBOT / "robot.lock").read_text(encoding="utf-8").strip() or 0)
+    except Exception:
+        return
+    if pid > 0 and os.name == "nt":
+        subprocess.run(f"taskkill /PID {pid} /T /F", shell=True,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
 def robot_vivo():
     try:
         return time.time() - (ROBOT / "robot.lock").stat().st_mtime < 180
@@ -278,6 +330,8 @@ def vigilar_robot(a):
     if not bat:
         log("robot: no está abierto y no encuentro ROBOT_WHATSAPP.bat para abrirlo")
         return
+    matar_robot_colgado()
+    time.sleep(3)
     try:
         # (nov/2026) el título de "start" va ENTRE COMILLAS: sin ellas Windows buscaba un programa "ROBOT"
         subprocess.Popen(f'start "ROBOT" /d "{ROBOT}" "{bat}"', cwd=str(ROBOT), shell=True)
@@ -381,6 +435,8 @@ def main():
         time.sleep(15)
         return 1
     log("=== PILOTO AUTOMÁTICO encendido. Deja esta ventana abierta junto al robot. ===")
+    sin_quickedit()
+    mantener_despierta()
     e = leer_json(ESTADO)
     ultimo_audio = float(e.get("ultimo_audio", 0))
     ult_mant = float(e.get("ult_mant", 0))
@@ -395,6 +451,7 @@ def main():
             pass
         a = ajustes()
         ahora = dt.datetime.now()
+        mantener_despierta()
         vigilar_robot(a)
         revisar_salud(a, est)
         motivo = "pausa (existe PILOTO_PAUSA.txt)" if PAUSA.exists() else bloqueo(ahora)
@@ -445,7 +502,14 @@ def main():
             pass
         espera = max(60, int(a["cada_min"] * 60))
         for _ in range(espera // 10):
+            antes = time.time()
             time.sleep(10)
+            hueco = time.time() - antes
+            if hueco > 300:                    # 10 s de espera que duraron minutos: la PC se durmió
+                log(f"la PC estuvo dormida o congelada {hueco / 60:.0f} min (nada corría)")
+                avisar("dormida", f"⚠️ La PC estuvo dormida o congelada {hueco / 60:.0f} minutos y no mandó nada "
+                                  "en ese rato. Ya volvió. Revisa que esté conectada a la luz y con internet.", 1)
+                break
             try:
                 LOCK.write_text(str(os.getpid()), encoding="utf-8")
             except Exception:
