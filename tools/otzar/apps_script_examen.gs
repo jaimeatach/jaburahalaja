@@ -105,13 +105,15 @@ function crearForm_(d) {
       .setChoices(p.opciones.map((o, j) => it.createChoice(o, j === p.correcta)));
     if (p.explicacion) {
       it.setFeedbackForCorrect(FormApp.createFeedback().setText('✅ ' + p.explicacion).build());
-      it.setFeedbackForIncorrect(FormApp.createFeedback().setText('📖 ' + p.explicacion).build());
     }
+    // (20/11) al terminar ven al instante cuál tuvieron mal y CUÁL era la correcta
+    it.setFeedbackForIncorrect(FormApp.createFeedback().setText('❌ La correcta era: «' + p.opciones[p.correcta] + '»' +
+      (p.explicacion ? '\n📖 ' + p.explicacion : '')).build());
   });
   try { form.setRequireLogin(false); } catch (e) { Logger.log('setRequireLogin: ' + e); }
   try { form.setLimitOneResponsePerUser(false); } catch (e) {}
   form.setConfirmationMessage('¡Gracias por participar! Tizku lemitzvot 🙏\n\n' +
-    'Toca «Ver puntuación» para ver tu calificación y cuáles tuviste bien y cuáles no.');
+    'Toca «Ver puntuación»: ahí ves tu calificación, cuáles tuviste bien y, en las que fallaste, cuál era la correcta.');
   let carpeta = null;
   try {
     const cs = DriveApp.getFoldersByName(CARPETA);
