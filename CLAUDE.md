@@ -619,3 +619,16 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    por show y rango, con robots aparte (indexadores/research) y "navegador" separado de "apps". Spotify no pasa por
    OP3 (guarda su copia): sus números salen de Creators. Shows nuevos no tienen datos hasta que estén en Podcast Index.
    El reporte de Jeshván 5787 está en el panel (artifact Cff7xbGBWcva1F1xKwtKeZ).
+24. Examen de Tawil automático (20/11/2026): 10 preguntas (tarea "Examen Tawil 10 preguntas (jueves)", 9:17, en la
+   sesión de Títulos Tawil; la vieja de 6 quedó apagada). El Motzaei Shabat, 30 min después de Rabenu Tam (puesta del sol
+   + 72 + `examen_despues_min` 30; 19:39 el 21/11), el piloto (`examen_tawil`) pide el link a la aplicación web del Apps
+   Script (`examen_url` en jabura\piloto.json, `--piloto-ajustes=examen_url=…/exec`): el script arma el Form si falta (uno
+   nuevo si el .json cambió: clave = nombre + md5) y devuelve {link, dias, resultados}; el piloto deja el mensaje en
+   `<robot>\salida\examen_tawil_<sábado>.json` ("Shavua Tov… Examen de los días A al B… autoevaluación; el examen con premio
+   es mensual… link", `mensaje_examen`) y el robot (MENSAJES PROGRAMADOS) lo manda a los grupos de Tawil que no usa otro
+   show (sin los generales 3 y 6); al pasar a salida\enviados, el piloto llama `?enviado=1` y el script manda UN correo
+   con el link y la hoja de resultados. Sin disparadores ni correos diarios (eran los "100 mails").
+   Piloto (20/11): la HP se dormía con la pantalla apagada (Modern Standby corta internet): `mantener_despierta`
+   (SetThreadExecutionState), `sin_quickedit`, `matar_robot_colgado` antes de reabrir y aviso si la PC estuvo dormida.
+   mantenimiento: no sella un show si podcast_bot dijo "Fallo Archive" (antes el modo rápido ya no lo reintentaba).
+   En la HP faltaban las claves de archive.org (`ia configure`; las guarda en el usuario de Windows, no en C:\OTZAR).

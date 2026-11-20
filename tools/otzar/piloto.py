@@ -231,6 +231,76 @@ def anunciar():
     return False
 
 
+# ── examen de Tawil en Motzaei Shabat (nov/2026) ──────────────────────────────
+#   El sábado, 30 min después de Rabenu Tam (puesta del sol + 72 min), le pide al Apps Script
+#   del usuario (aplicación web, "examen_url" en jabura\piloto.json) el link del examen de la
+#   semana, deja el mensaje en <robot>\salida\ (el robot lo manda a los grupos propios de
+#   Tawil) y, cuando el robot lo mandó, le avisa al script para que mande UN correo de
+#   confirmación con el link de resultados. Una vez por semana (candado en piloto_estado).
+SALIDA = ROBOT / "salida"
+
+
+def _pedir_json(url):
+    import urllib.request
+    req = urllib.request.Request(url, headers={"User-Agent": "otzar-piloto"})
+    with urllib.request.urlopen(req, timeout=300) as r:
+        return json.loads(r.read().decode("utf-8", "replace"))
+
+
+def mensaje_examen(dias, link):
+    return ("Shavua Tov! 🌟\n\n"
+            f"📝 Examen de los días {dias} del Rab Yosef Tawil.\n\n"
+            "Es una autoevaluación para repasar lo que aprendimos; el examen con premio es mensual.\n\n"
+            f"👉 {link}\n\n"
+            "¡Hatzlajá! 🙌")
+
+
+def examen_tawil(a, est):
+    url = str(a.get("examen_url") or "").strip()
+    if not url:
+        return
+    ahora = dt.datetime.now()
+    # el sábado de esta semana (o el de ayer, si ya es domingo de madrugada)
+    sab = ahora.date() - dt.timedelta(days=(ahora.weekday() - 5) % 7)
+    hora = puesta_sol(sab) + dt.timedelta(minutes=72 + int(a.get("examen_despues_min", 30)))
+    if not (hora <= ahora < hora + dt.timedelta(hours=6)) or bloqueo(ahora):
+        return
+    clave = sab.isoformat()
+    ex = est.setdefault("examen_tawil", {})
+    if ex.get("enviado") == clave:
+        return
+    archivo = SALIDA / f"examen_tawil_{clave}.json"
+    hecho = SALIDA / "enviados" / archivo.name
+    if hecho.exists():
+        try:
+            r = _pedir_json(url + ("&" if "?" in url else "?") + "enviado=1")
+            log(f"examen Tawil: mandado al grupo; correo de confirmación: {r.get('correo') or r.get('error')}")
+        except Exception as e:
+            log(f"examen Tawil: mandado al grupo, pero no pude pedir el correo ({e})")
+        ex["enviado"] = clave
+        return
+    if archivo.exists():
+        if time.time() - archivo.stat().st_mtime > 15 * 60:
+            avisar("examen", "⚠️ El examen de Tawil está listo pero el robot no lo ha mandado en 15 min. ¿Está abierto?", 1)
+        return
+    try:
+        r = _pedir_json(url)
+    except Exception as e:
+        log(f"examen Tawil: no pude pedir el link ({e}); reintento en la próxima vuelta")
+        if ahora > hora + dt.timedelta(minutes=30):
+            avisar("examen", f"⚠️ No pude sacar el link del examen de Tawil ({e}). Sigo intentando.", 2)
+        return
+    if not r.get("ok") or not r.get("link"):
+        log(f"examen Tawil: el script dice {r.get('error') or r}")
+        avisar("examen", f"⚠️ Examen de Tawil: {r.get('error') or 'el script no dio el link'}. Avísale a Claude.", 6)
+        return
+    SALIDA.mkdir(parents=True, exist_ok=True)
+    datos = {"show": a.get("examen_show", "tawil"), "solo_propios": True,
+             "texto": mensaje_examen(r.get("dias", ""), r["link"])}
+    archivo.write_text(json.dumps(datos, ensure_ascii=False, indent=2), encoding="utf-8")
+    log(f"examen Tawil (días {r.get('dias')}): mensaje listo para el robot → {r['link']}")
+
+
 # ── vigilancia, reporte y avisos (para cuando nadie está frente a la PC) ──────────
 _ultimo_aviso = {}
 
@@ -490,6 +560,10 @@ def main():
             _yt["hilo"] = threading.Thread(target=youtube, args=(a,), daemon=True)
             _yt["hilo"].start()
             ult_yt = time.time()
+        try:
+            examen_tawil(a, est)
+        except Exception as e:
+            log(f"examen Tawil: {e}")
         if en_horario(dt.datetime.now(), a) and (hubo or time.time() - ult_anuncio > a["anuncio_min"] * 60):
             recogio = anunciar()
             est["anuncio_fallos"] = 0 if recogio else est.get("anuncio_fallos", 0) + 1

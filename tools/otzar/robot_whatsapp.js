@@ -1628,6 +1628,48 @@ setInterval(async () => {
   }
 }, 30000);
 
+// === MENSAJES PROGRAMADOS (nov/2026) ===
+// El piloto deja <robot>\salida\*.json = {"show": "tawil", "texto": "...", "solo_propios": true}
+// (el examen de Tawil en Motzaei Shabat) y el robot lo manda a los grupos de anuncio de ese
+// show; con solo_propios, a los que NO usa ningun otro show (sin los generales). Cada grupo
+// una sola vez ("hechos"); al terminar, el archivo pasa a salida\enviados (asi el piloto sabe).
+const SALIDA_DIR = path.join(__dirname, 'salida');
+let salidaOcupada = false;
+setInterval(async () => {
+  if (!listo || salidaOcupada || bloqueoSagrado(new Date())) return;
+  let archivos = [];
+  try { archivos = fs.readdirSync(SALIDA_DIR).filter(f => f.endsWith('.json')).sort(); } catch (e) { return; }
+  if (!archivos.length) return;
+  salidaOcupada = true;
+  try {
+    for (const f of archivos) {
+      const p = path.join(SALIDA_DIR, f);
+      let m; try { m = JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { continue; }
+      if (!m || !m.texto || !m.show) continue;
+      const reg = leerRegistro();
+      let grupos = gruposDeShow(reg, m.show);
+      if (m.solo_propios) {
+        const otros = new Set();
+        for (const k of Object.keys(reg)) if (k !== m.show && !k.includes(':')) for (const g of gruposDeShow(reg, k)) otros.add(g.id);
+        grupos = grupos.filter(g => !otros.has(g.id));
+      }
+      if (!grupos.length) { log(`SALIDA ${f}: ${m.show} no tiene grupos propios registrados`); continue; }
+      const hechos = Array.isArray(m.hechos) ? m.hechos : [];
+      for (const g of grupos) {
+        if (hechos.includes(g.id)) continue;
+        try { await sock.sendMessage(g.id, { text: m.texto }); hechos.push(g.id); log(`SALIDA ${f}: mandado a "${g.nombre}"`); }
+        catch (e) { log(`SALIDA ${f}: no se pudo mandar a "${g.nombre}" (${e.message || e})`); }
+        await new Promise(r => setTimeout(r, 3000));
+      }
+      m.hechos = hechos;
+      if (grupos.every(g => hechos.includes(g.id))) {
+        try { fs.mkdirSync(path.join(SALIDA_DIR, 'enviados'), { recursive: true }); fs.renameSync(p, path.join(SALIDA_DIR, 'enviados', f)); } catch (e) {}
+      } else { try { fs.writeFileSync(p, JSON.stringify(m, null, 2)); } catch (e) {} }
+    }
+  } catch (e) { log('ERROR salida: ' + (e.message || e)); }
+  salidaOcupada = false;
+}, 30000);
+
 // ---------------- anuncios ----------------
 // Busca el link EXACTO del episodio en Spotify por su titulo.
 // METODO PROBADO (jul 2026):

@@ -1691,9 +1691,52 @@ function textoDe(m) {
     { const _h = String(datos.hora || ''), _ah = new Date();
       if (Array.isArray(datos.dias) && datos.dias.length && !datos.dias.includes(_ah.getDay())) continue;
       if (/^\d{1,2}:\d{2}$/.test(_h)) { const [_hh, _mm] = _h.split(':').map(Number);
-        if (_ah.getHours() * 60 + _ah.getMinutes() < _hh * 60 + _mm) continue; } }"""),
+        if (_ah.getHours() * 60 + _ah.getMinutes() < _hh * 60 + _mm) continue; } }"""),    # (nov/2026) mensajes programados (examen de Tawil en Motzaei Shabat)
+    ("""// ---------------- anuncios ----------------""", """// === MENSAJES PROGRAMADOS (nov/2026) ===
+// El piloto deja <robot>\\salida\\*.json = {"show": "tawil", "texto": "...", "solo_propios": true}
+// (el examen de Tawil en Motzaei Shabat) y el robot lo manda a los grupos de anuncio de ese
+// show; con solo_propios, a los que NO usa ningun otro show (sin los generales). Cada grupo
+// una sola vez ("hechos"); al terminar, el archivo pasa a salida\\enviados (asi el piloto sabe).
+const SALIDA_DIR = path.join(__dirname, 'salida');
+let salidaOcupada = false;
+setInterval(async () => {
+  if (!listo || salidaOcupada || bloqueoSagrado(new Date())) return;
+  let archivos = [];
+  try { archivos = fs.readdirSync(SALIDA_DIR).filter(f => f.endsWith('.json')).sort(); } catch (e) { return; }
+  if (!archivos.length) return;
+  salidaOcupada = true;
+  try {
+    for (const f of archivos) {
+      const p = path.join(SALIDA_DIR, f);
+      let m; try { m = JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { continue; }
+      if (!m || !m.texto || !m.show) continue;
+      const reg = leerRegistro();
+      let grupos = gruposDeShow(reg, m.show);
+      if (m.solo_propios) {
+        const otros = new Set();
+        for (const k of Object.keys(reg)) if (k !== m.show && !k.includes(':')) for (const g of gruposDeShow(reg, k)) otros.add(g.id);
+        grupos = grupos.filter(g => !otros.has(g.id));
+      }
+      if (!grupos.length) { log(`SALIDA ${f}: ${m.show} no tiene grupos propios registrados`); continue; }
+      const hechos = Array.isArray(m.hechos) ? m.hechos : [];
+      for (const g of grupos) {
+        if (hechos.includes(g.id)) continue;
+        try { await sock.sendMessage(g.id, { text: m.texto }); hechos.push(g.id); log(`SALIDA ${f}: mandado a "${g.nombre}"`); }
+        catch (e) { log(`SALIDA ${f}: no se pudo mandar a "${g.nombre}" (${e.message || e})`); }
+        await new Promise(r => setTimeout(r, 3000));
+      }
+      m.hechos = hechos;
+      if (grupos.every(g => hechos.includes(g.id))) {
+        try { fs.mkdirSync(path.join(SALIDA_DIR, 'enviados'), { recursive: true }); fs.renameSync(p, path.join(SALIDA_DIR, 'enviados', f)); } catch (e) {}
+      } else { try { fs.writeFileSync(p, JSON.stringify(m, null, 2)); } catch (e) {} }
+    }
+  } catch (e) { log('ERROR salida: ' + (e.message || e)); }
+  salidaOcupada = false;
+}, 30000);
+
+// ---------------- anuncios ----------------"""),
 ]
-MARCAS_ROBOT = ("PARCHE LID", "en anunciar.<show> (y \"dias\": [1]", "tambien el link de la jabura", "await acortarLink(ep.link || datos.app) : '';", "VIDEO sin texto de", "van del ${_f(delGrupo[0])}", "VIDEO repetido de", "function videoComoAudio", "r.videos && contenido(m).videoMessage", "function titulosFijos(show)", "const wa = datos.whatsapp_link ||", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
+MARCAS_ROBOT = ("PARCHE LID", "MENSAJES PROGRAMADOS (nov/2026)", "en anunciar.<show> (y \"dias\": [1]", "tambien el link de la jabura", "await acortarLink(ep.link || datos.app) : '';", "VIDEO sin texto de", "van del ${_f(delGrupo[0])}", "VIDEO repetido de", "function videoComoAudio", "r.videos && contenido(m).videoMessage", "function titulosFijos(show)", "const wa = datos.whatsapp_link ||", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
                 "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema", "temas_cache.json", "la lista del repo al dia antes de contestar", "NUNCA en Shabat ni Yom Tov", "nunca fecha futura en el archivo", "function bloqueoSagrado", "AVISOS AL ADMIN", "!reporte\" / \"!estado", "function appleCorto", "async function acortarLink", "AL FINAL el grupo de WhatsApp")
