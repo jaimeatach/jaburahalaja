@@ -231,6 +231,60 @@ def anunciar():
     return False
 
 
+# ── se actualiza solo (20/11/2026; el usuario: "si yo le muevo de esta compu se mueva ahí") ──
+#   Cada hora baja de la rama los scripts de Python que ya tiene la PC; si alguno cambió y compila,
+#   lo pone (con respaldo .antes_auto). Si cambió el propio piloto, se cierra y PILOTO.bat lo vuelve
+#   a abrir en 30 s con el nuevo. El robot (JavaScript) NO: eso sigue con el instalador.
+RAMA_RAW = "https://raw.githubusercontent.com/jaimeatach/jaburahalaja/claude/shiurim-halachot-shabbat-vriig5/tools/otzar/"
+AUTO = ["mantenimiento.py", "piloto.py", "diagnostico.py", "plataformas.py", "parasha_youtube.py",
+        "revisar_spotify.py", "espacio.py", "soundcloud_subir.py", "carga_youtube.py",
+        "mudanza.py", "examen_tawil.py", "drive_a_show.py", "drive_sammy.py", "shas_unido.py",
+        "estadisticas_op3.py", "mensaje_links.py"]
+
+
+def actualizarse():
+    """Devuelve True si cambió piloto.py (hay que reiniciar)."""
+    import urllib.request
+    import py_compile
+    import tempfile
+    cambiados = []
+    for nombre in AUTO:
+        local = JAB / nombre
+        if not local.exists():
+            continue
+        try:
+            with urllib.request.urlopen(RAMA_RAW + nombre + f"?t={int(time.time())}", timeout=60) as r:
+                nuevo = r.read()
+        except Exception:
+            continue
+        if len(nuevo) < 200 or nuevo == local.read_bytes():
+            continue
+        tmp = None
+        try:
+            with tempfile.NamedTemporaryFile("wb", suffix=".py", delete=False) as t:
+                tmp = t.name
+                t.write(nuevo)
+            py_compile.compile(tmp, doraise=True)
+        except Exception as e:
+            log(f"actualizar: {nombre} nuevo no compila; me quedo con el de antes ({e})")
+            continue
+        finally:
+            try:
+                if tmp:
+                    os.unlink(tmp)
+            except Exception:
+                pass
+        try:
+            (JAB / (nombre + ".antes_auto")).write_bytes(local.read_bytes())
+            local.write_bytes(nuevo)
+            cambiados.append(nombre)
+        except Exception as e:
+            log(f"actualizar: no pude escribir {nombre} ({e})")
+    if cambiados:
+        log("actualizado desde el repo: " + ", ".join(cambiados))
+    return "piloto.py" in cambiados
+
+
 # ── examen de Tawil en Motzaei Shabat (nov/2026) ──────────────────────────────
 #   El sábado, 30 min después de Rabenu Tam (puesta del sol + 72 min), le pide al Apps Script
 #   del usuario (aplicación web, "examen_url" en jabura\piloto.json) el link del examen de la
@@ -534,6 +588,17 @@ def main():
         if avisado:
             log("de vuelta: sigo con lo de siempre")
             avisado = ""
+        if a.get("auto_actualizar", True) and time.time() - est.get("ult_actualizar", 0) > 3600 \
+                and not (_yt["hilo"] is not None and _yt["hilo"].is_alive()):
+            est["ult_actualizar"] = time.time()
+            try:
+                if actualizarse():
+                    log("el piloto cambió: me reinicio con el nuevo")
+                    ESTADO.write_text(json.dumps(est), encoding="utf-8")
+                    LOCK.unlink(missing_ok=True)
+                    return 0
+            except Exception as e:
+                log(f"actualizar: {e}")
         hubo = False
         # (nov/2026) YouTube corre en paralelo (antes, mientras bajaba YouTube, un audio de WhatsApp
         # esperaba hasta media hora). Al terminar, se anuncia lo que bajó.

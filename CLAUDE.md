@@ -632,3 +632,6 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    (SetThreadExecutionState), `sin_quickedit`, `matar_robot_colgado` antes de reabrir y aviso si la PC estuvo dormida.
    mantenimiento: no sella un show si podcast_bot dijo "Fallo Archive" (antes el modo rápido ya no lo reintentaba).
    En la HP faltaban las claves de archive.org (`ia configure`; las guarda en el usuario de Windows, no en C:\OTZAR).
+   Se actualiza solo (20/11): cada hora el piloto (`actualizarse`, lista `AUTO`) baja de ESTA rama los .py que ya
+   tiene C:\OTZAR\jabura; si cambiaron y compilan, los pone (respaldo .antes_auto) y si cambió piloto.py se reinicia
+   (PILOTO.bat lo reabre). Los cambios al robot (JS) siguen necesitando el instalador. `"auto_actualizar": false` lo apaga.
