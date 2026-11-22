@@ -89,8 +89,28 @@ function examenDeLaSemana_() {
            resultados: info.hoja || info.editar, editar: info.editar };
 }
 
+// (22/11) Google no deja poner desde el script «Publicar calificación: inmediatamente» ni «ver
+// respuestas correctas»: el examen nuevo sale COPIA del de la semana #51-#56 (que ya tiene esos
+// ajustes puestos a mano) y se le cambian las preguntas. Si la copia falla, se crea uno nuevo.
+const PLANTILLA = '1O0AUOVaQexiVT7A66C1UP_Vj9yo0rt6Prk22tLhb8JU';
+
+function formNuevo_(titulo) {
+  try {
+    const id = DriveApp.getFileById(PLANTILLA).makeCopy(titulo).getId();
+    const f = FormApp.openById(id);
+    try { f.removeDestination(); } catch (e) {}
+    try { f.deleteAllResponses(); } catch (e) {}
+    f.getItems().forEach(it => f.deleteItem(it));
+    f.setTitle(titulo);
+    return f;
+  } catch (e) {
+    Logger.log('plantilla: ' + e);
+    return FormApp.create(titulo);
+  }
+}
+
 function crearForm_(d) {
-  const form = FormApp.create(d.titulo);
+  const form = formNuevo_(d.titulo);
   form.setIsQuiz(true)
       .setDescription(d.descripcion || '')
       .setCollectEmail(false)
