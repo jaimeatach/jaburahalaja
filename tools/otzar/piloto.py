@@ -645,15 +645,23 @@ def sin_quickedit():
 
 
 def matar_robot_colgado():
-    """Si robot.lock quedó viejo pero su proceso sigue vivo, está colgado: se cierra antes de
-    abrir otro (si no, al despertar los dos se roban la sesión de WhatsApp)."""
+    """Cierra TODAS las ventanas del robot (el .bat que lo relanza y su node) antes de abrir una nueva.
+    (23/11) Antes solo mataba el node de robot.lock: el .bat viejo lo volvía a abrir, el piloto abría
+    otra ventana y quedaban dos peleándose ("Deja abierta solo una ventana del robot" cada 30 s).
+    No toca otros node (enviar_daf.js, etc.)."""
+    if os.name != "nt":
+        return
+    ps = ("Get-CimInstance Win32_Process | Where-Object { "
+          "($_.Name -eq 'cmd.exe' -and $_.CommandLine -match 'ROBOT[^\\\\]*\\.bat') -or "
+          "($_.Name -eq 'node.exe' -and $_.CommandLine -match 'robot_whatsapp') } | "
+          "ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }")
+    subprocess.run(["powershell", "-NoProfile", "-Command", ps], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60)
     try:
         pid = int((ROBOT / "robot.lock").read_text(encoding="utf-8").strip() or 0)
+        if pid > 0:
+            subprocess.run(f"taskkill /PID {pid} /T /F", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception:
-        return
-    if pid > 0 and os.name == "nt":
-        subprocess.run(f"taskkill /PID {pid} /T /F", shell=True,
-                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        pass
 
 
 def robot_vivo():
