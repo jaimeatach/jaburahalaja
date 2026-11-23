@@ -648,3 +648,8 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    mudanza y shalom_bait.py creía el curso completo → `shalom_bait_remoto.py` (preparar desde G: + semana auto); el curso
    tiene 11 clases. YouTube no bajaba desde el 17-18/11: yt-dlp 2026.10.26 sin runtime de JavaScript ("Requested format
    is not available") → `actualizar_ytdlp.py` pone `--js-runtimes node` en %APPDATA%\yt-dlp\config.txt (Node ya está).
+26. Audio siempre reproducible (23/11/2026; se lo pidieron al usuario: "que se pueda reproducir en WhatsApp con la
+   flechita", la gente no descarga archivos): el robot mandaba como DOCUMENTO todo audio de más de 16 MB (`MB_COMO_AUDIO`);
+   ahora `preparaReproducible` / `compactarParaWhats` lo pasa a Opus mono (ffmpeg, `-vbr constrained`, 12-40 kbps según la
+   duración de ffprobe, para quedar < 14.5 MB) y lo manda como audio (`audio/ogg; codecs=opus`, ptt false). Si no cabe
+   (más de ~2.5 h) o ffmpeg falla, va como archivo como antes. Parche del instalador, marca "AUDIO REPRODUCIBLE (nov/2026)".

@@ -2129,6 +2129,45 @@ async function __esperarConexion(maxMs) {
 }
 // === FIN PARCHE OTZAR ===
 
+// === AUDIO REPRODUCIBLE (nov/2026): el usuario pidio que SIEMPRE salga con la flechita (play) y no
+// como archivo que hay que descargar. WhatsApp solo reproduce audios de hasta 16 MB: el que pasa de eso
+// se comprime a Opus mono (voz) con el bitrate que lo deja abajo de 15 MB y se manda como audio.
+function compactarParaWhats(origen) {
+  return new Promise(resolve => {
+    try {
+      const { spawn, spawnSync } = require('child_process');
+      const dir = path.dirname(origen);
+      try { for (const f of fs.readdirSync(dir)) if (f.endsWith('_wa.ogg') && Date.now() - fs.statSync(path.join(dir, f)).mtimeMs > 3600000) fs.unlinkSync(path.join(dir, f)); } catch (e) {}
+      let seg = 0;
+      try {
+        const p = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=nw=1:nk=1', origen], { windowsHide: true, timeout: 60000 });
+        seg = parseFloat(String(p.stdout || '')) || 0;
+      } catch (e) {}
+      let kbps = seg ? Math.floor((MB_COMO_AUDIO - 1.5) * 8388 / seg) : 24;
+      kbps = Math.max(12, Math.min(40, kbps));
+      const salida = origen.replace(/\.[^.\\/]+$/, '') + '_wa.ogg';
+      const pr = spawn('ffmpeg', ['-nostdin', '-loglevel', 'error', '-y', '-i', origen, '-vn', '-ac', '1', '-ar', '48000',
+        '-c:a', 'libopus', '-b:a', kbps + 'k', '-vbr', 'constrained', '-application', 'voip', salida], { windowsHide: true });
+      const t = setTimeout(() => { try { pr.kill(); } catch (e) {} }, 20 * 60000);
+      pr.on('error', () => { clearTimeout(t); resolve(null); });
+      pr.on('close', code => {
+        clearTimeout(t);
+        try { if (code === 0 && fs.statSync(salida).size / 1048576 <= MB_COMO_AUDIO) return resolve(salida); } catch (e) {}
+        try { fs.unlinkSync(salida); } catch (e) {}
+        log(`   no pude comprimir el audio para WhatsApp (ffmpeg ${code}); va como archivo.`);
+        resolve(null);
+      });
+    } catch (e) { resolve(null); }
+  });
+}
+async function preparaReproducible(destino, mbReal) {
+  if (mbReal <= MB_COMO_AUDIO) return { archivo: destino, mime: 'audio/mpeg', audio: true };
+  const c = await compactarParaWhats(destino);
+  if (!c) return { archivo: destino, mime: 'audio/mpeg', audio: false };
+  log(`   audio de ${mbReal.toFixed(1)} MB comprimido a ${(fs.statSync(c).size / 1048576).toFixed(1)} MB: sale con la flechita (reproducible).`);
+  return { archivo: c, mime: 'audio/ogg; codecs=opus', audio: true };
+}
+
 async function mandarAudioAVarios(grupos, urlMp3, titulo, bytesPista) {
   urlMp3 = limpiarUrlAudio(urlMp3);
   if (!MANDAR_AUDIO || !urlMp3 || !grupos.length) return false;
@@ -2151,13 +2190,14 @@ async function mandarAudioAVarios(grupos, urlMp3, titulo, bytesPista) {
       return false;
     }
 
+    const _rep = await preparaReproducible(destino, mbReal);   // (nov/2026) siempre con la flechita
     let bien = 0;
     for (const g of grupos) {
       let mandado = false;
       for (let intento = 1; intento <= 3 && !mandado; intento++) {
         try {
-          if (mbReal <= MB_COMO_AUDIO) {
-            await sock.sendMessage(g.id, { audio: { url: destino }, mimetype: 'audio/mpeg', ptt: false });
+          if (_rep.audio) {
+            await sock.sendMessage(g.id, { audio: { url: _rep.archivo }, mimetype: _rep.mime, ptt: false });
           } else {
             await sock.sendMessage(g.id, {
               document: { url: destino }, mimetype: 'audio/mpeg', fileName: `${limpio}.mp3`
@@ -2205,11 +2245,12 @@ async function mandarAudio(jid, urlMp3, titulo, bytesPista) {
       log(`   audio de ${mbReal.toFixed(1)} MB: muy grande, mando solo el link.`);
       return false;
     }
+    const _rep = await preparaReproducible(destino, mbReal);   // (nov/2026) siempre con la flechita
     for (let intento = 1; intento <= 3; intento++) {
       try {
         await __esperarConexion(90000);
-        if (mbReal <= MB_COMO_AUDIO) {
-          await sock.sendMessage(jid, { audio: { url: destino }, mimetype: 'audio/mpeg', ptt: false });
+        if (_rep.audio) {
+          await sock.sendMessage(jid, { audio: { url: _rep.archivo }, mimetype: _rep.mime, ptt: false });
           log(`   audio enviado (${mbReal.toFixed(1)} MB, reproducible).`);
         } else {
           await sock.sendMessage(jid, {

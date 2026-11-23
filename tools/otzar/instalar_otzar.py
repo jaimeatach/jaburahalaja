@@ -1735,8 +1735,69 @@ setInterval(async () => {
 }, 30000);
 
 // ---------------- anuncios ----------------"""),
+    # (nov/2026) audio siempre reproducible (con la flechita)
+    (r"""async function mandarAudioAVarios(""", r"""// === AUDIO REPRODUCIBLE (nov/2026): el usuario pidio que SIEMPRE salga con la flechita (play) y no
+// como archivo que hay que descargar. WhatsApp solo reproduce audios de hasta 16 MB: el que pasa de eso
+// se comprime a Opus mono (voz) con el bitrate que lo deja abajo de 15 MB y se manda como audio.
+function compactarParaWhats(origen) {
+  return new Promise(resolve => {
+    try {
+      const { spawn, spawnSync } = require('child_process');
+      const dir = path.dirname(origen);
+      try { for (const f of fs.readdirSync(dir)) if (f.endsWith('_wa.ogg') && Date.now() - fs.statSync(path.join(dir, f)).mtimeMs > 3600000) fs.unlinkSync(path.join(dir, f)); } catch (e) {}
+      let seg = 0;
+      try {
+        const p = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=nw=1:nk=1', origen], { windowsHide: true, timeout: 60000 });
+        seg = parseFloat(String(p.stdout || '')) || 0;
+      } catch (e) {}
+      let kbps = seg ? Math.floor((MB_COMO_AUDIO - 1.5) * 8388 / seg) : 24;
+      kbps = Math.max(12, Math.min(40, kbps));
+      const salida = origen.replace(/\.[^.\\/]+$/, '') + '_wa.ogg';
+      const pr = spawn('ffmpeg', ['-nostdin', '-loglevel', 'error', '-y', '-i', origen, '-vn', '-ac', '1', '-ar', '48000',
+        '-c:a', 'libopus', '-b:a', kbps + 'k', '-vbr', 'constrained', '-application', 'voip', salida], { windowsHide: true });
+      const t = setTimeout(() => { try { pr.kill(); } catch (e) {} }, 20 * 60000);
+      pr.on('error', () => { clearTimeout(t); resolve(null); });
+      pr.on('close', code => {
+        clearTimeout(t);
+        try { if (code === 0 && fs.statSync(salida).size / 1048576 <= MB_COMO_AUDIO) return resolve(salida); } catch (e) {}
+        try { fs.unlinkSync(salida); } catch (e) {}
+        log(`   no pude comprimir el audio para WhatsApp (ffmpeg ${code}); va como archivo.`);
+        resolve(null);
+      });
+    } catch (e) { resolve(null); }
+  });
+}
+async function preparaReproducible(destino, mbReal) {
+  if (mbReal <= MB_COMO_AUDIO) return { archivo: destino, mime: 'audio/mpeg', audio: true };
+  const c = await compactarParaWhats(destino);
+  if (!c) return { archivo: destino, mime: 'audio/mpeg', audio: false };
+  log(`   audio de ${mbReal.toFixed(1)} MB comprimido a ${(fs.statSync(c).size / 1048576).toFixed(1)} MB: sale con la flechita (reproducible).`);
+  return { archivo: c, mime: 'audio/ogg; codecs=opus', audio: true };
+}
+
+async function mandarAudioAVarios("""),
+    # (nov/2026) audio siempre reproducible (con la flechita)
+    (r"""    let bien = 0;
+    for (const g of grupos) {""", r"""    const _rep = await preparaReproducible(destino, mbReal);   // (nov/2026) siempre con la flechita
+    let bien = 0;
+    for (const g of grupos) {"""),
+    # (nov/2026) audio siempre reproducible (con la flechita)
+    (r"""          if (mbReal <= MB_COMO_AUDIO) {
+            await sock.sendMessage(g.id, { audio: { url: destino }, mimetype: 'audio/mpeg', ptt: false });""", r"""          if (_rep.audio) {
+            await sock.sendMessage(g.id, { audio: { url: _rep.archivo }, mimetype: _rep.mime, ptt: false });"""),
+    # (nov/2026) audio siempre reproducible (con la flechita)
+    (r"""    for (let intento = 1; intento <= 3; intento++) {
+      try {
+        await __esperarConexion(90000);
+        if (mbReal <= MB_COMO_AUDIO) {
+          await sock.sendMessage(jid, { audio: { url: destino }, mimetype: 'audio/mpeg', ptt: false });""", r"""    const _rep = await preparaReproducible(destino, mbReal);   // (nov/2026) siempre con la flechita
+    for (let intento = 1; intento <= 3; intento++) {
+      try {
+        await __esperarConexion(90000);
+        if (_rep.audio) {
+          await sock.sendMessage(jid, { audio: { url: _rep.archivo }, mimetype: _rep.mime, ptt: false });"""),
 ]
-MARCAS_ROBOT = ("PARCHE LID", "MENSAJES PROGRAMADOS (nov/2026)", "en anunciar.<show> (y \"dias\": [1]", "tambien el link de la jabura", "await acortarLink(ep.link || datos.app) : '';", "VIDEO sin texto de", "van del ${_f(delGrupo[0])}", "VIDEO repetido de", "function videoComoAudio", "r.videos && contenido(m).videoMessage", "function titulosFijos(show)", "const wa = datos.whatsapp_link ||", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
+MARCAS_ROBOT = ("PARCHE LID", "AUDIO REPRODUCIBLE (nov/2026)", "MENSAJES PROGRAMADOS (nov/2026)", "en anunciar.<show> (y \"dias\": [1]", "tambien el link de la jabura", "await acortarLink(ep.link || datos.app) : '';", "VIDEO sin texto de", "van del ${_f(delGrupo[0])}", "VIDEO repetido de", "function videoComoAudio", "r.videos && contenido(m).videoMessage", "function titulosFijos(show)", "const wa = datos.whatsapp_link ||", "JABURA (sep/2026)", "const sinAudio", "if (sinAudio(show))", "const appLink", "show, app)",
                 "function feedDeShow", "datos.link_audio", "const fuenteDe", "_porDefecto",
                 "REGISTRADO fuente de audios", "function showPorNombre", "FUENTE reconocida por nombre",
                 "groupFetchAllParticipating", "GUARDADO [${item.show", "function grupoPorNombre", "CFG.grupos_nombre", "!datos.invite && !datos.nombre", "prefijo_titulo", "yaTeniaTodos", "_deDirecto", "function sinLinks", "function tituloAnuncio", "quitar_lineas", "function normTitulo", "permitir_repetidos", "SIN AUDIO en la fuente", "function otroRobotVivo", "function rescatarDeHistorial", "carpeta, show: showPrefijo", "function armarPlantilla", "function tituloPorTema", "spotify_espera_horas", "esperar_fecha && ep.fecha", "sin pisar un rescate", "GUARDADO MEKOROT", "r.documentos && contenido(m)", "function elegirPorPalabras", "soundcloud_episodios.json", "function fechaDeNumero", "dedicatoria: dedicatoriaDe", "se relee del disco en cada corrida", "la rama de trabajo primero", "desde las 00:00 de su dia", "nada para hoy; el proximo es", "=== \"!tawil\" (oct/2026)", "tambien dentro del GRUPO FUENTE", "la cuenta sigue (#27 = (7))", "se busca tambien con el titulo corregido del tema", "temas_cache.json", "la lista del repo al dia antes de contestar", "NUNCA en Shabat ni Yom Tov", "nunca fecha futura en el archivo", "function bloqueoSagrado", "AVISOS AL ADMIN", "!reporte\" / \"!estado", "function appleCorto", "async function acortarLink", "AL FINAL el grupo de WhatsApp")
