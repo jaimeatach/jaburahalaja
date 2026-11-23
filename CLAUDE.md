@@ -635,3 +635,13 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    Se actualiza solo (20/11): cada hora el piloto (`actualizarse`, lista `AUTO`) baja de ESTA rama los .py que ya
    tiene C:\OTZAR\jabura; si cambiaron y compilan, los pone (respaldo .antes_auto) y si cambió piloto.py se reinicia
    (PILOTO.bat lo reabre). Los cambios al robot (JS) siguen necesitando el instalador. `"auto_actualizar": false` lo apaga.
+25. Control a distancia (23/11/2026; el usuario: "reporte de errores y poderlo arreglar a distancia"): el piloto
+   (`distancia`) crea con el github_token.txt de la PC el repo PRIVADO `<usuario del token>/otzar-estado` y cada 20 min
+   sube `estado.txt` (procesos node/python, robot vivo, unidades y espacio, claves de archive.org, ajustes, estado del
+   piloto, últimas 200 líneas de piloto.log y 250 del log del robot). Órdenes: `ordenes.json` en ese repo, lista de
+   {"id", "accion", "args"}; cada id corre UNA vez (cada 2 min se revisa) y su salida queda en `resultados/<id>.txt`.
+   Acciones: `instalar` (baja instalar_otzar.py de esta rama y lo corre con args, p. ej. ["--sin-drive","--rescatar=hilu:2"]),
+   `mantenimiento` (args, p. ej. ["--completo"]), `script` ({"script": "diagnostico.py", "args": ["hilu","2"]}, de
+   tools/otzar), `reiniciar_robot`, `reiniciar_piloto`. Nada en Shabat/Yom Tov. Para leerlo desde aquí: add_repo del repo.
+   Pendiente (23/11): Shalom Bait 4 no salió (el audio solo existe en G:, ¿la HP tiene Google Drive?) y los shows de
+   YouTube no suben nada desde el 17-18/11 (desde la mudanza).

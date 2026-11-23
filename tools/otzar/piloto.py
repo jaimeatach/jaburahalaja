@@ -285,6 +285,205 @@ def actualizarse():
     return "piloto.py" in cambiados
 
 
+# ── control a distancia (23/11/2026; el usuario: "algo de reporte de errores y poderlo arreglar a distancia") ──
+#   Cada 20 min el piloto sube a un repo PRIVADO de GitHub (otzar-estado, lo crea solo con el
+#   github_token.txt de la PC) un estado.txt: procesos, robot vivo, disco, unidades (G:), claves de
+#   archive.org, y lo último del log del piloto y del robot. Así Claude ve qué pasa sin estar en la PC.
+#   En el mismo repo, ordenes.json (lo escribe Claude) = [{"id": "...", "accion": ..., "args": [...]}];
+#   cada orden corre UNA vez y su salida queda en resultados/<id>.txt. Acciones: instalar (el instalador
+#   de la rama con esos argumentos), mantenimiento, reiniciar_robot, reiniciar_piloto, script (un .py de
+#   tools/otzar de la rama, con argumentos). Nada en Shabat/Yom Tov.
+REPO_ESTADO = "otzar-estado"
+_gh = {"user": None, "listo": False}
+
+
+def _token():
+    for p in (JAB / "github_token.txt", BASE / "github_token.txt"):
+        try:
+            t = p.read_text(encoding="utf-8").strip()
+            if t:
+                return t
+        except Exception:
+            pass
+    return ""
+
+
+def _api(metodo, ruta, datos=None):
+    import urllib.request
+    import urllib.error
+    req = urllib.request.Request("https://api.github.com" + ruta, method=metodo,
+                                 data=json.dumps(datos).encode() if datos is not None else None,
+                                 headers={"Authorization": "token " + _token(), "Accept": "application/vnd.github+json",
+                                          "User-Agent": "otzar-piloto"})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            cuerpo = r.read()
+            return r.status, (json.loads(cuerpo) if cuerpo else {})
+    except urllib.error.HTTPError as e:
+        try:
+            return e.code, json.loads(e.read() or b"{}")
+        except Exception:
+            return e.code, {}
+
+
+def _repo_estado():
+    if _gh["listo"]:
+        return _gh["user"]
+    if not _token():
+        return None
+    st, yo = _api("GET", "/user")
+    if st != 200:
+        log(f"distancia: el token de GitHub no sirve ({st})")
+        return None
+    _gh["user"] = yo.get("login")
+    st, _ = _api("GET", f"/repos/{_gh['user']}/{REPO_ESTADO}")
+    if st == 404:
+        st, r = _api("POST", "/user/repos", {"name": REPO_ESTADO, "private": True, "auto_init": True,
+                                              "description": "Estado de la PC de Otzar (lo escribe el piloto)"})
+        log(f"distancia: repo privado {REPO_ESTADO} " + ("creado" if st in (200, 201) else f"NO se pudo crear ({st} {r.get('message')})"))
+        if st not in (200, 201):
+            avisar("distancia", f"⚠️ No pude crear el repo privado {REPO_ESTADO} para el reporte a distancia ({r.get('message')}).", 24)
+            return None
+        time.sleep(3)
+    _gh["listo"] = True
+    return _gh["user"]
+
+
+def _subir(ruta, texto, mensaje):
+    import base64
+    u = _repo_estado()
+    if not u:
+        return False
+    st, viejo = _api("GET", f"/repos/{u}/{REPO_ESTADO}/contents/{ruta}")
+    datos = {"message": mensaje, "content": base64.b64encode(texto.encode("utf-8")).decode()}
+    if st == 200 and viejo.get("sha"):
+        datos["sha"] = viejo["sha"]
+    st, _ = _api("PUT", f"/repos/{u}/{REPO_ESTADO}/contents/{ruta}", datos)
+    return st in (200, 201)
+
+
+def _cola(p, n):
+    try:
+        with open(p, "rb") as f:
+            f.seek(0, 2)
+            f.seek(max(0, f.tell() - 400_000))
+            lineas = f.read().decode("utf-8", "replace").splitlines()
+        return "\n".join(lineas[-n:])
+    except Exception as e:
+        return f"(no pude leer {p}: {e})"
+
+
+def _sal(cmd):
+    try:
+        return subprocess.run(cmd, shell=True, capture_output=True, text=True, encoding="utf-8",
+                              errors="replace", timeout=60).stdout.strip()
+    except Exception as e:
+        return f"({e})"
+
+
+def estado_texto(est):
+    import shutil
+    partes = [f"Estado de la PC de Otzar · {dt.datetime.now():%d/%m/%Y %H:%M:%S}",
+              f"robot vivo (robot.lock < 3 min): {robot_vivo()}",
+              f"en espera: {bloqueo(dt.datetime.now()) or 'no'} · pausa: {PAUSA.exists()}"]
+    for u in "CDEFGH":
+        if os.path.exists(f"{u}:\\"):
+            try:
+                partes.append(f"unidad {u}: libre {shutil.disk_usage(f'{u}:/').free / 1e9:.0f} GB")
+            except Exception:
+                partes.append(f"unidad {u}: existe")
+    ia = [Path.home() / ".config" / "internetarchive" / "ia.ini", Path.home() / ".ia"]
+    partes.append(f"claves de archive.org: {any(x.exists() for x in ia)}")
+    partes.append("ajustes: " + json.dumps(ajustes(), ensure_ascii=False))
+    partes.append("estado del piloto: " + json.dumps(est, ensure_ascii=False, default=str)[:3000])
+    partes.append("\n===== PROCESOS\n" + _sal('tasklist /fo csv /nh | findstr /i "node python"'))
+    partes.append("\n===== PILOTO (últimas 200)\n" + _cola(LOG, 200))
+    partes.append("\n===== ROBOT (últimas 250)\n" + _cola(ROBOT / "robot_whatsapp.log", 250))
+    return "\n".join(partes)
+
+
+def _correr_orden(o):
+    import urllib.request
+    acc, args = o.get("accion"), [str(x) for x in (o.get("args") or [])]
+    env = dict(os.environ, PYTHONUTF8="1", PYTHONIOENCODING="utf-8")
+    def py(cmd, cwd, minutos=60):
+        r = subprocess.run(cmd, cwd=str(cwd), env=env, capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=minutos * 60)
+        return f"código {r.returncode}\n{r.stdout[-60000:]}\n{r.stderr[-20000:]}"
+    if acc in ("instalar", "script"):
+        nombre = "instalar_otzar.py" if acc == "instalar" else os.path.basename(o.get("script", ""))
+        if not nombre.endswith(".py"):
+            return "script inválido"
+        destino = (ROBOT if acc == "instalar" else JAB) / nombre
+        with urllib.request.urlopen(RAMA_RAW + nombre + f"?t={int(time.time())}", timeout=120) as r:
+            destino.write_bytes(r.read())
+        return py([sys.executable, str(destino)] + args, destino.parent, int(o.get("minutos", 60)))
+    if acc == "mantenimiento":
+        return py([sys.executable, str(JAB / "mantenimiento.py")] + args, JAB, 90)
+    if acc == "reiniciar_robot":
+        matar_robot_colgado()
+        time.sleep(5)
+        global _ult_relanzo
+        _ult_relanzo = 0
+        try:
+            (ROBOT / "robot.lock").unlink()
+        except Exception:
+            pass
+        vigilar_robot(dict(ajustes(), vigilar_robot=True))
+        return "robot reiniciado"
+    if acc == "reiniciar_piloto":
+        return "REINICIAR"
+    return f"acción desconocida: {acc}"
+
+
+def distancia(a, est):
+    """Sube el estado (cada 20 min) y corre las órdenes nuevas. Devuelve True si hay que reiniciar el piloto."""
+    if not a.get("distancia", True) or not _token():
+        return False
+    d = est.setdefault("distancia", {})
+    if time.time() - d.get("ult_estado", 0) > 20 * 60:
+        d["ult_estado"] = time.time()
+        try:
+            _subir("estado.txt", estado_texto(est), f"estado {dt.datetime.now():%d/%m %H:%M}")
+        except Exception as e:
+            log(f"distancia: no pude subir el estado ({e})")
+    if time.time() - d.get("ult_ordenes", 0) < 120:
+        return False
+    d["ult_ordenes"] = time.time()
+    u = _repo_estado()
+    if not u:
+        return False
+    import base64
+    st, f = _api("GET", f"/repos/{u}/{REPO_ESTADO}/contents/ordenes.json")
+    if st != 200:
+        return False
+    try:
+        ordenes = json.loads(base64.b64decode(f.get("content", "")).decode("utf-8") or "[]")
+    except Exception as e:
+        log(f"distancia: ordenes.json no se entiende ({e})")
+        return False
+    hechas = d.setdefault("hechas", [])
+    reiniciar = False
+    for o in ordenes if isinstance(ordenes, list) else []:
+        oid = str(o.get("id", ""))
+        if not oid or oid in hechas:
+            continue
+        hechas.append(oid)
+        d["hechas"] = hechas[-200:]
+        ESTADO.write_text(json.dumps(est), encoding="utf-8")       # que no se repita si algo truena
+        log(f"distancia: orden {oid}: {o.get('accion')} {o.get('args') or ''}")
+        try:
+            res = _correr_orden(o)
+        except Exception as e:
+            res = f"ERROR: {e}"
+        if res == "REINICIAR":
+            reiniciar, res = True, "el piloto se reinicia"
+        _subir(f"resultados/{oid}.txt", f"{dt.datetime.now():%d/%m/%Y %H:%M:%S}\n{json.dumps(o, ensure_ascii=False)}\n\n{res}",
+               f"resultado {oid}")
+        d["ult_estado"] = 0                                          # estado nuevo enseguida
+    return reiniciar
+
+
 # ── examen de Tawil en Motzaei Shabat (nov/2026) ──────────────────────────────
 #   El sábado, 30 min después de Rabenu Tam (puesta del sol + 72 min), le pide al Apps Script
 #   del usuario (aplicación web, "examen_url" en jabura\piloto.json) el link del examen de la
@@ -627,6 +826,14 @@ def main():
                     return 0
             except Exception as e:
                 log(f"actualizar: {e}")
+        try:
+            if distancia(a, est):
+                log("distancia: me reinicio por orden remota")
+                ESTADO.write_text(json.dumps(est), encoding="utf-8")
+                LOCK.unlink(missing_ok=True)
+                return 0
+        except Exception as e:
+            log(f"distancia: {e}")
         hubo = False
         # (nov/2026) YouTube corre en paralelo (antes, mientras bajaba YouTube, un audio de WhatsApp
         # esperaba hasta media hora). Al terminar, se anuncia lo que bajó.
