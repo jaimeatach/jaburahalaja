@@ -418,6 +418,11 @@ def _correr_orden(o):
         with urllib.request.urlopen(RAMA_RAW + nombre + f"?t={int(time.time())}", timeout=120) as r:
             destino.write_bytes(r.read())
         return py([sys.executable, str(destino)] + args, destino.parent, int(o.get("minutos", 60)))
+    if acc == "py":                     # un .py que ya está en la PC (p. ej. C:\\OTZAR\\efshar\\shalom_bait.py)
+        f = Path(str(o.get("archivo", "")))
+        if not f.is_file() or not str(f.resolve()).lower().startswith((str(BASE).lower(), str(ROBOT).lower())):
+            return f"archivo inválido: {f}"
+        return py([sys.executable, str(f)] + args, f.parent, int(o.get("minutos", 60)))
     if acc == "mantenimiento":
         return py([sys.executable, str(JAB / "mantenimiento.py")] + args, JAB, 90)
     if acc == "reiniciar_robot":

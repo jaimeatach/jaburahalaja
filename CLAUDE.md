@@ -642,6 +642,7 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    {"id", "accion", "args"}; cada id corre UNA vez (cada 2 min se revisa) y su salida queda en `resultados/<id>.txt`.
    Acciones: `instalar` (baja instalar_otzar.py de esta rama y lo corre con args, p. ej. ["--sin-drive","--rescatar=hilu:2"]),
    `mantenimiento` (args, p. ej. ["--completo"]), `script` ({"script": "diagnostico.py", "args": ["hilu","2"]}, de
-   tools/otzar), `reiniciar_robot`, `reiniciar_piloto`. Nada en Shabat/Yom Tov. Para leerlo desde aquí: add_repo del repo.
+   tools/otzar), `py` ({"archivo": "C:\\OTZAR\\efshar\\shalom_bait.py", "args": [...]}: un .py que ya está en C:\OTZAR o
+   C:\robotwhats), `reiniciar_robot`, `reiniciar_piloto`. Nada en Shabat/Yom Tov. Para leerlo desde aquí: add_repo del repo.
    Pendiente (23/11): Shalom Bait 4 no salió (el audio solo existe en G:, ¿la HP tiene Google Drive?) y los shows de
    YouTube no suben nada desde el 17-18/11 (desde la mudanza).
