@@ -644,5 +644,7 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    `mantenimiento` (args, p. ej. ["--completo"]), `script` ({"script": "diagnostico.py", "args": ["hilu","2"]}, de
    tools/otzar), `py` ({"archivo": "C:\\OTZAR\\efshar\\shalom_bait.py", "args": [...]}: un .py que ya está en C:\OTZAR o
    C:\robotwhats), `reiniciar_robot`, `reiniciar_piloto`. Nada en Shabat/Yom Tov. Para leerlo desde aquí: add_repo del repo.
-   Pendiente (23/11): Shalom Bait 4 no salió (el audio solo existe en G:, ¿la HP tiene Google Drive?) y los shows de
-   YouTube no suben nada desde el 17-18/11 (desde la mudanza).
+   Arreglado así el 23/11: Shalom Bait 4 no salía porque `shalom_bait_listo\` (las clases ya convertidas) no pasó en la
+   mudanza y shalom_bait.py creía el curso completo → `shalom_bait_remoto.py` (preparar desde G: + semana auto); el curso
+   tiene 11 clases. YouTube no bajaba desde el 17-18/11: yt-dlp 2026.10.26 sin runtime de JavaScript ("Requested format
+   is not available") → `actualizar_ytdlp.py` pone `--js-runtimes node` en %APPDATA%\yt-dlp\config.txt (Node ya está).
