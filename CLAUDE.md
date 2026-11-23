@@ -337,7 +337,7 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    no se tocan (el usuario lo pidió); #35-#38 tienen el archivo con otro número pero el título
    del feed ya es el correcto.
    Automático (28/10/2026, el usuario: "que se haga directo sin que yo meta mano"): la tarea
-   programada "Títulos Tawil" (domingo a viernes 7:47 y 13:47 hora de CDMX, nunca en Shabat)
+   programada "Títulos Tawil" (domingo a viernes UNA vez al día, 13:47 hora de CDMX, nunca en Shabat; así desde el 23/11 para gastar menos)
    despierta a la sesión fija "Títulos Tawil (automático)", que ya tiene el repo y hace todo
    esto sola: audios sin título desde el #39 → "Día N" → título → `temas/tawil.json` → push a
    esta rama. Si un título queda mal, el usuario lo dice y se corrige la línea del json.
