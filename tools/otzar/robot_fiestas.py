@@ -34,7 +34,7 @@ SALTAR = [x.strip().lower() for a in sys.argv if a.startswith("--saltar=") for x
 SOLO = [x.strip().lower() for a in sys.argv if a.startswith("--solo=") for x in a.split("=", 1)[1].split(",") if x.strip()]
 CANDIDATOS = max(6, POR_CANAL * 2)
 MIN_SEG = 600
-YT_CLIENT = ["--extractor-args", "youtube:player_client=web_embedded"]
+YT_CLIENT = ["--extractor-args", "youtube:player_client=default,web_embedded"]
 
 def log(m):
     linea = "[%s] %s" % (time.strftime("%d/%m %H:%M"), m)

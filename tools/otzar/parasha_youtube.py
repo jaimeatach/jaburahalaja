@@ -46,7 +46,7 @@ for a in sys.argv[1:]:
     elif not a.startswith("--"):
         SHOWS_PEDIDOS.append(a.strip().lower())
 
-YT_CLIENT = ["--extractor-args", "youtube:player_client=web_embedded"]
+YT_CLIENT = ["--extractor-args", "youtube:player_client=default,web_embedded"]
 CALMA_SEG = 3 * 3600          # si no encontró nada, no vuelve a buscar antes de esto
 
 for flujo in (sys.stdout, sys.stderr):
