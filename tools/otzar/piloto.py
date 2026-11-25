@@ -436,6 +436,9 @@ def _correr_orden(o):
             pass
         vigilar_robot(dict(ajustes(), vigilar_robot=True))
         return "robot reiniciado"
+    if acc == "reiniciar_pc":           # (25/11) reinicia Windows en 1 min; al prender, Inicio abre robot y piloto
+        subprocess.run('shutdown /r /t 60 /c "Otzar: reinicio pedido a distancia"', shell=True)
+        return "la PC se reinicia en 1 minuto"
     if acc == "reiniciar_piloto":
         return "REINICIAR"
     return f"acción desconocida: {acc}"

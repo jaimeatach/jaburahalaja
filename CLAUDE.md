@@ -643,7 +643,8 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    Acciones: `instalar` (baja instalar_otzar.py de esta rama y lo corre con args, p. ej. ["--sin-drive","--rescatar=hilu:2"]),
    `mantenimiento` (args, p. ej. ["--completo"]), `script` ({"script": "diagnostico.py", "args": ["hilu","2"]}, de
    tools/otzar), `py` ({"archivo": "C:\\OTZAR\\efshar\\shalom_bait.py", "args": [...]}: un .py que ya está en C:\OTZAR o
-   C:\robotwhats), `reiniciar_robot`, `reiniciar_piloto`. Nada en Shabat/Yom Tov. Para leerlo desde aquí: add_repo del repo.
+   C:\robotwhats), `reiniciar_robot`, `reiniciar_piloto`, `reiniciar_pc` (shutdown /r en 1 min; necesita inicio de sesión
+   automático para que al volver se abran robot y piloto). Nada en Shabat/Yom Tov. Para leerlo desde aquí: add_repo del repo.
    Arreglado así el 23/11: Shalom Bait 4 no salía porque `shalom_bait_listo\` (las clases ya convertidas) no pasó en la
    mudanza y shalom_bait.py creía el curso completo → `shalom_bait_remoto.py` (preparar desde G: + semana auto); el curso
    tiene 11 clases. YouTube no bajaba desde el 17-18/11: yt-dlp 2026.10.26 sin runtime de JavaScript ("Requested format
