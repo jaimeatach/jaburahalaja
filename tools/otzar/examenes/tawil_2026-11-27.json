@@ -1,0 +1,154 @@
+{
+  "titulo": "Examen semanal · Rab Yosef Tawil · Shiurim #57–#62",
+  "descripcion": "El Kidush en el lugar de la seudá, el pan tapado y las seudot de Shabat. 10 preguntas sobre lo que dijo el Rab en las clases de la semana (22 al 27 de noviembre). ¡Mucha hatzlajá!",
+  "shiurim": [
+    57,
+    58,
+    59,
+    60,
+    61,
+    62
+  ],
+  "preguntas": [
+    {
+      "nivel": "dificil",
+      "shiur": 57,
+      "pregunta": "Para que sea \"Kidush en el lugar de la seudá\", ¿qué cuenta como seudá según el Rab?",
+      "opciones": [
+        "Un kazait de pan, un kazait de mesonot o un revi'it (87 ml) de vino o jugo de uva",
+        "Un kazait de pan, de mesonot o de cualquier otra comida, como pescado",
+        "Un kazait de pan o de mesonot; el vino no cuenta como seudá",
+        "Un kazait de pan, de mesonot o 44 ml de vino (la mayoría de la copa)"
+      ],
+      "correcta": 0,
+      "explicacion": "Lo mejor es un kazait de pan (30 gramos); si no, un kazait de mesonot (como en los Kidush del Bet HaKnéset). Una tercera manera es un revi'it de vino, 87 ml de vino o de jugo de uva. Un kazait de otras comidas no sirve.",
+      "puntos": 1
+    },
+    {
+      "nivel": "dificil",
+      "shiur": 59,
+      "pregunta": "Llegan visitas a platicar media hora y no se van a quedar a comer. ¿Qué dice el Rab?",
+      "opciones": [
+        "Hacer Kidush enseguida y platicar después, porque no hay que esperar después de Arvit",
+        "Que platiquen primero, y luego hacer Kidush y enseguida la seudá",
+        "Hacer Kidush enseguida: la seudá puede esperar hasta 40 minutos",
+        "Hacer Kidush, comer un kazait de mesonot y luego platicar con calma"
+      ],
+      "correcta": 1,
+      "explicacion": "La seudá tiene que ser inmediatamente después del Kidush. Aunque normalmente es mejor no esperarse entre Arvit y el Kidush, cuando vienen visitas que solo van a platicar, primero se platica y luego se hace Kidush para poder hacer la seudá enseguida.",
+      "puntos": 1
+    },
+    {
+      "nivel": "dificil",
+      "shiur": 58,
+      "pregunta": "Por una necesidad, alguien hace Kidush en la cocina y va a comer en el comedor. ¿Qué dice el Rab?",
+      "opciones": [
+        "No se puede nunca: el Kidush y la seudá tienen que ser en el mismo cuarto",
+        "Se puede siempre, porque es la misma casa",
+        "Se puede solo si desde la cocina se ve el comedor, aunque no lo haya pensado",
+        "Se puede si al hacer Kidush pensó comer allá; y mejor todavía si se ve el comedor"
+      ],
+      "correcta": 3,
+      "explicacion": "Si cambia de cuarto no se puede, salvo que en el momento del Kidush haya pensado comer en el cuarto de al lado. Lo mejor es hacerlo en el mismo lugar; y si hace falta, lo mejor es que además se vea el otro cuarto.",
+      "puntos": 1
+    },
+    {
+      "nivel": "dificil",
+      "shiur": 60,
+      "pregunta": "En el Kidush del Bet HaKnéset hay mesonot en la mesa. Según el Rab, ¿qué se hace?",
+      "opciones": [
+        "Se tapan con un mantel normal, no con una bolsa transparente",
+        "Se tapan con lo que sea, aunque sea una bolsa transparente",
+        "No se tapan: lo de tapar es solo para el pan",
+        "Se tapan solo en el Kidush de la noche, no en el del día"
+      ],
+      "correcta": 0,
+      "explicacion": "Se tapa el pan para que no se avergüence (normalmente su berajá va antes que la del vino). Lo mismo los mesonot, que también van antes que el vino: se tapa todo lo que está en la mesa frente al que hace Kidush, de noche y de día, con un mantel normal y no con una bolsa transparente, porque así se ve.",
+      "puntos": 1
+    },
+    {
+      "nivel": "dificil",
+      "shiur": 57,
+      "pregunta": "Según el Rab, ¿cuánto es el kazait de pan con el que se cumple la seudá del Kidush?",
+      "opciones": [
+        "25 gramos",
+        "30 gramos",
+        "44 gramos",
+        "56 gramos"
+      ],
+      "correcta": 1,
+      "explicacion": "\"Seudá, lo mejor es comer un kazait de pan: 30 gramos de pan, con eso cumple la mitzvá de Kidush.\"",
+      "puntos": 1
+    },
+    {
+      "nivel": "dificil",
+      "shiur": 61,
+      "pregunta": "¿Qué recordamos al poner un mantel blanco abajo del pan y otro arriba?",
+      "opciones": [
+        "Las dos tablas de la Ley que se dieron en el desierto",
+        "El man, que caía doble el viernes para Shabat",
+        "El man, que caía con rocío abajo y rocío arriba",
+        "El rocío que caía solamente encima del man"
+      ],
+      "correcta": 2,
+      "explicacion": "En el desierto primero caía rocío, luego el man y arriba otra vez rocío: el man estaba tapado por abajo y por arriba. Por eso el mantel blanco abajo (como el rocío), el pan en medio (el man) y otro mantel blanco arriba. Esta jumrá se hace en la seudá principal, con el pan.",
+      "puntos": 1
+    },
+    {
+      "nivel": "dificil",
+      "shiur": 57,
+      "pregunta": "Un hombre ya hizo Kidush en el Bet HaKnéset. ¿Por qué dice el Rab que se acostumbra hacer otra vez Kidush en la casa?",
+      "opciones": [
+        "Porque el Kidush del Bet HaKnéset no sirve para el que rezó Arvit ahí",
+        "Por la esposa, y porque en el Bet HaKnéset no se tomó un revi'it completo",
+        "Por la esposa si no lo hizo, y como jumrá para hacer Kidush con seudá de pan",
+        "Solo por la esposa; para él ya no hace falta nada"
+      ],
+      "correcta": 2,
+      "explicacion": "\"Hay gente que cuando hacen el Kidush del Bet HaKnéset regresa a la casa y hace de vuelta Kidush: primero por la esposa, si no lo hizo; y aparte, como una jumrá, para hacer el Kidush con seudá de pan, ya que en el Bet HaKnéset no lo hicieron con pan.\"",
+      "puntos": 1
+    },
+    {
+      "nivel": "dificil",
+      "shiur": 59,
+      "pregunta": "¿Cuál de estas cosas NO se debe hacer entre el Kidush y la seudá?",
+      "opciones": [
+        "Dar berajot a los niños",
+        "Netilat yadáyim cuando son muchas personas",
+        "Que la mamá atienda al bebé",
+        "Ocuparse de otras cosas que no hacen falta"
+      ],
+      "correcta": 3,
+      "explicacion": "Tardarse por berajot a los niños, por netilat yadáyim de muchas personas, por ir al baño o porque la mamá atiende al bebé no es problema: son necesidades para hacer la seudá. Lo que no se puede es ocuparse de otra cosa sin necesidad.",
+      "puntos": 1
+    },
+    {
+      "nivel": "dificil",
+      "shiur": 58,
+      "pregunta": "Alguien hace Kidush en una casa, ahí toma un revi'it de vino o come un kazait de mesonot, y luego hace la seudá de pan en SU casa. ¿Qué dice el Rab?",
+      "opciones": [
+        "Está bien: hubo seudá enseguida después del Kidush",
+        "No sirve: la seudá de pan tiene que ser donde hizo el Kidush",
+        "Está bien solo si en su casa vuelve a hacer Kidush",
+        "Sirve solo si tomó el revi'it de vino, no con mesonot"
+      ],
+      "correcta": 0,
+      "explicacion": "No puede hacer Kidush e irse a otra casa a comer, aunque sea enseguida. Pero sí puede hacer Kidush en una casa, tomar ahí un revi'it de vino o un kazait de mesonot, y luego hacer la seudá con pan en su casa: \"eso no está mal, porque en el Kidush hubo una seudá enseguida\".",
+      "puntos": 1
+    },
+    {
+      "nivel": "dificil",
+      "shiur": 62,
+      "pregunta": "Según el Rab, ¿cómo se hace la seudá shelishit (la tercera seudá)?",
+      "opciones": [
+        "Con pan, obligatorio igual que las otras dos seudot",
+        "Hay que cuidarse de hacerla con pan; si no, con mesonot; bediavad con pescado, y más bediavad con fruta",
+        "Hay que cuidarse de hacerla con pan; si no, con mesonot; bediavad con fruta, y más bediavad con pescado",
+        "Hay discusión, así que lejatejilá basta con mesonot"
+      ],
+      "correcta": 1,
+      "explicacion": "En la noche y en la primera seudá del día el pan es obligatorio. En la seudá shelishit hay discusión entre los Rishonim y Poskim, y el Shulján Aruj termina diciendo que hay que cuidarse de hacerla con pan (aunque sea un kazait). El que no, con mesonot; bediavad con pescado, y más bediavad con fruta.",
+      "puntos": 1
+    }
+  ]
+}
