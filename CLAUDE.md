@@ -654,3 +654,11 @@ archive.org y en Spotify sin subir nada a mano. Todo corre en la PC de Otzar:
    ahora `preparaReproducible` / `compactarParaWhats` lo pasa a Opus mono (ffmpeg, `-vbr constrained`, 12-40 kbps según la
    duración de ffprobe, para quedar < 14.5 MB) y lo manda como audio (`audio/ogg; codecs=opus`, ptt false). Si no cabe
    (más de ~2.5 h) o ffmpeg falla, va como archivo como antes. Parche del instalador, marca "AUDIO REPRODUCIBLE (nov/2026)".
+27. Examen Tawil sin volver a pegar código (26/11/2026; el usuario recibía ~20 correos de proyectos viejos y el Form de esta
+   semana salió con «publicar calificación: más tarde» porque su proyecto tenía la versión sin plantilla): el proyecto de
+   Apps Script lleva SOLO `tools/otzar/apps_script_examen_cargador.gs`, que en cada llamada baja `apps_script_examen.gs`
+   del raw de esta rama, lo evalúa (`doGet`→`doGetReal_`, `instalar`→`instalarReal_`, `rehacerExamen`→`rehacerReal_`) y
+   guarda copia en las propiedades. `permisos_` (nunca se llama) hace que Google pida los permisos. Así cualquier cambio al
+   examen se hace en el repo. El Form nuevo sale copia de PLANTILLA (cuenta rabmeireliyahu): si el proyecto está en otra
+   cuenta, la copia falla y vuelve a salir «más tarde». Para revisar desde aquí: el Form público trae en
+   FB_PUBLIC_LOAD_DATA_[1][10] el índice 3 = 2 cuando la calificación es inmediata (None = más tarde).
